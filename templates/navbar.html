@@ -1,0 +1,37 @@
+<div class="navbar">
+  <div class="nav-container">
+
+    <!-- Main Navigation Links -->
+    <ul class="nav-menu">
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+
+      <li class="dropdown">
+        <a href="#">Core Data ▾</a>
+        <ul class="dropdown-menu">
+          <li class="dropdown-sub">
+            <a href="#">Products</a>
+            <ul class="dropdown-submenu">
+              <li><a href="{{ url_for('coredata.add_product') }}">Add Product</a></li>
+              <li><a href="{{ url_for('coredata.view_edit_product') }}">View / Edit Products</a></li>
+            </ul>
+          </li>
+          <!-- Future sections like Routes, Warehouses, etc. can be added here -->
+        </ul>
+      </li>
+
+
+      <li><a href="{{ url_for('operations.dashboard') }}">Operations</a></li>
+      <li><a href="{{ url_for('financial.dashboard') }}">Financial</a></li>
+      <li><a href="{{ url_for('users.profile') }}">User Profile</a></li>
+    </ul>
+
+    <!-- Auth Links -->
+    <div class="nav-auth">
+      <ul class="auth-links">
+        <li><a href="{{ url_for('users.login') }}">Login</a></li>
+        <li><a href="{{ url_for('users.register') }}">Register</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>

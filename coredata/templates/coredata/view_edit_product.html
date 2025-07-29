@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 style="color: #fff; margin-bottom: 1rem;">View / Edit Products</h1>
+
+<!-- Global action buttons -->
+<div style="margin-bottom: 1rem;">
+  <button class="edit-btn btn btn-warning">Edit Selected</button>
+  <button class="delete-btn btn btn-danger">Delete Selected</button>
+</div>
+
+<table class="product-table">
+  <thead>
+    <tr>
+      <th><input type="checkbox" id="select-all"></th>
+      <th>Type</th> <!-- 👈 Inserted here -->
+      <th>Name</th>
+      <th>Country</th>
+      <th>Packaging</th>
+      <th>Packaging Weight</th>
+      <th>Units per Pack</th>
+      <th>Other Info</th>
+      <th>Currency</th>
+      <th>FCA Cost/WU</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products %}
+    <tr>
+      <td><input type="checkbox" class="product-checkbox" value="{{ product.id }}"></td>
+      <td>{{ product.product_type }}</td> <!-- 👈 Inserted value -->
+      <td>{{ product.name }}</td>
+      <td>{{ product.country_id }}</td>
+      <td>{{ product.packaging }}</td>
+      <td>{{ product.packaging_weight }}</td>
+      <td>{{ product.units_per_pack }}</td>
+      <td>{{ product.other_info }}</td>
+      <td>{{ product.currency }}</td>
+      <td>${{ "{:,.2f}".format(product.fca_cost_per_wu) if product.fca_cost_per_wu is not none else "—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const checkboxes = document.querySelectorAll('.product-checkbox');
+    const editBtn = document.querySelector('.edit-btn');
+    const deleteBtn = document.querySelector('.delete-btn');
+
+    function updateButtons() {
+      const selected = Array.from(checkboxes).filter(cb => cb.checked);
+      editBtn.disabled = selected.length !== 1;
+      deleteBtn.disabled = selected.length === 0;
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateButtons));
+
+    editBtn.addEventListener('click', () => {
+      const selected = Array.from(checkboxes).filter(cb => cb.checked);
+      if (selected.length === 1) {
+        const productId = selected[0].value;
+        window.location.href = `/coredata/add-product?edit_id=${productId}`;
+      } else {
+        alert("Please select exactly one product to edit.");
+      }
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      const selected = Array.from(checkboxes).filter(cb => cb.checked);
+      if (selected.length === 0) return;
+
+      if (confirm('Delete the selected product(s)?')) {
+        const ids = selected.map(cb => cb.value);
+        fetch('/coredata/delete-multiple-products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        }).then(res => {
+          if (res.ok) window.location.reload();
+        });
+      }
+    });
+
+    updateButtons();
+  });
+</script>
+{% endblock %}

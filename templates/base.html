@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>dnamic Aircraft Services</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dark-mode">
+  <div class="overlay">
+
+  <!-- Centered Main Page Heading -->
+  <div class="centered-title-container">
+    <h1 class="main-title">Dnamic Aircraft services</h1>
+  </div>
+
+  <!-- Navbar Section -->
+  <div class="nav-wrapper">
+    <hr class="separator">
+    {% include 'navbar.html' %}
+    <hr class="separator">
+  </div>
+
+</div>
+
+    <!-- Page-Specific Content -->
+    {% block content %}
+    {% endblock %}
+
+  </div>
+  <footer class="footer-container">
+  <a href="https://www.dnamic-tech.com" target="_blank" rel="noopener noreferrer">
+    Visit DNAMIC Tech
+  </a>
+</footer>
+</body>
+</html>

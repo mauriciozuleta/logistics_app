@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <!-- Background Image -->
+  <div class="content-section">
+
+    <!-- Dashboard Subtitle -->
+    <div class="dashboard-subtitle-container">
+      <h2>Core Data Management Center</h2>
+    </div>
+
+    <!-- Dashboard Button Group -->
+    <div class="dashboard-buttons-container">
+      <!-- Products Dropdown Section -->
+      <div class="dropdown-container">
+        <button class="main-button" id="products-btn" data-tooltip="Manage and organize product records">
+          Products ▼
+        </button>
+        <div id="dropdownMenu" class="dropdown-menu">
+          <a class="dropdown-item" href="{{ url_for('coredata.add_product') }}">Add Product</a>
+          <a class="dropdown-item" href="{{ url_for('coredata.view_edit_product') }}">View / Edit Products</a>
+        </div>
+      </div>
+
+      <!-- Other Dashboard Buttons -->
+      <a class="main-button" href="{{ url_for('operations.dashboard') }}" data-tooltip="Input and edit aircraft specifications">Aircrafts</a>
+      <a class="main-button" href="{{ url_for('financial.dashboard') }}" data-tooltip="Maintain airport information and codes">Airports</a>
+      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Define and update flight route paths">Routes</a>
+      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Set up flight schedules and crew allocations">Schedules</a>
+      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Track product shipments and logistics status">Products Shipments</a>
+      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Register trading partners and access details">Traders</a>
+    </div>
+
+    <!-- Dropdown Toggle Logic -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const dropdown = document.getElementById("dropdownMenu");
+        const button = document.getElementById("products-btn");
+
+        // Toggle dropdown visibility on button click
+        button.addEventListener("click", function (e) {
+          e.stopPropagation();
+          dropdown.classList.toggle("show");
+        });
+
+        // Hide dropdown if clicking outside
+        window.addEventListener("click", function (event) {
+          if (!dropdown.contains(event.target) && !button.contains(event.target)) {
+            dropdown.classList.remove("show");
+          }
+        });
+      });
+    </script>
+{% endblock %}
