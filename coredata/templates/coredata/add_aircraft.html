@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">Add New Aircraft</h2>
+
+<div class="form-pane add-aircraft-form-container">
+  <form method="POST" action="{{ url_for('coredata.add_aircraft') }}" class="add-aircraft-form">
+
+    {{ form.hidden_tag() }}
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        {{ form.manufacturer.label(class="form-label fw-bold") }}
+        {{ form.manufacturer(class="form-control") }}
+      </div>
+      <div class="col-md-4">
+        {{ form.model.label(class="form-label fw-bold") }}
+        {{ form.model(class="form-control") }}
+      </div>
+      <div class="col-md-4">
+        {{ form.short_name.label(class="form-label fw-bold") }}
+        {{ form.short_name(class="form-control") }}
+      </div>
+    </div>
+
+    <!-- Weight Fields -->
+    <div class="row mb-3">
+      <div class="col-md-3">
+        {{ form.mtow_kg.label(class="form-label") }}
+        {{ form.mtow_kg(class="form-control", id="mtow_kg") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.mtow_lbs.label(class="form-label") }}
+        {{ form.mtow_lbs(class="form-control", id="mtow_lbs") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.mldgw_kg.label(class="form-label") }}
+        {{ form.mldgw_kg(class="form-control", id="mldgw_kg") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.mldgw_lbs.label(class="form-label") }}
+        {{ form.mldgw_lbs(class="form-control", id="mldgw_lbs") }}
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-3">
+        {{ form.empty_weight_kg.label(class="form-label") }}
+        {{ form.empty_weight_kg(class="form-control", id="empty_weight_kg") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.empty_weight_lbs.label(class="form-label") }}
+        {{ form.empty_weight_lbs(class="form-control", id="empty_weight_lbs") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.max_payload_kg.label(class="form-label") }}
+        {{ form.max_payload_kg(class="form-control", id="max_payload_kg") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.max_payload_lbs.label(class="form-label") }}
+        {{ form.max_payload_lbs(class="form-control", id="max_payload_lbs") }}
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-3">
+        {{ form.zero_fuel_kg.label(class="form-label") }}
+        {{ form.zero_fuel_kg(class="form-control", id="zero_fuel_kg") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.zero_fuel_lbs.label(class="form-label") }}
+        {{ form.zero_fuel_lbs(class="form-control", id="zero_fuel_lbs") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.max_ramp_kg.label(class="form-label") }}
+        {{ form.max_ramp_kg(class="form-control", id="max_ramp_kg") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.max_ramp_lbs.label(class="form-label") }}
+        {{ form.max_ramp_lbs(class="form-control", id="max_ramp_lbs") }}
+      </div>
+    </div>
+
+
+
+  <!-- Fuel Fields -->
+    <div class="row mb-3">
+    <div class="col-md-3">
+        {{ form.fuel_capacity_gal.label(class="form-label") }}
+        {{ form.fuel_capacity_gal(class="form-control", id="fuel_capacity_gal") }}
+    </div>
+    <div class="col-md-3">
+        {{ form.fuel_capacity_lbs.label(class="form-label") }}
+        {{ form.fuel_capacity_lbs(class="form-control", id="fuel_capacity_lbs") }}
+    </div>
+    <div class="col-md-3">
+        {{ form.fuel_burn_gal.label(class="form-label") }}
+        {{ form.fuel_burn_gal(class="form-control", id="fuel_burn_gal") }}
+    </div>
+    <div class="col-md-3">
+        {{ form.fuel_burn_lbs.label(class="form-label") }}
+        {{ form.fuel_burn_lbs(class="form-control", id="fuel_burn_lbs") }}
+    </div>
+    </div>
+
+    <div class="row mb-3">
+    <div class="col-md-3">
+        {{ form.min_fuel_landed_gal.label(class="form-label") }}
+        {{ form.min_fuel_landed_gal(class="form-control", id="min_fuel_landed_gal") }}
+    </div>
+    <div class="col-md-3">
+        {{ form.min_fuel_landed_lbs.label(class="form-label") }}
+        {{ form.min_fuel_landed_lbs(class="form-control", id="min_fuel_landed_lbs") }}
+    </div>
+    <div class="col-md-3">
+        {{ form.min_fuel_alternate_gal.label(class="form-label") }}
+        {{ form.min_fuel_alternate_gal(class="form-control", id="min_fuel_alternate_gal") }}
+    </div>
+    <div class="col-md-3">
+        {{ form.min_fuel_alternate_lbs.label(class="form-label") }}
+        {{ form.min_fuel_alternate_lbs(class="form-control", id="min_fuel_alternate_lbs") }}
+    </div>
+    </div>
+
+    <!-- Cargo & Cost Fields -->
+    <div class="row mb-3">
+    <div class="col-md-4">
+        {{ form.cargo_positions_main_deck.label(class="form-label") }}
+        {{ form.cargo_positions_main_deck(class="form-control") }}
+    </div>
+    <div class="col-md-4">
+        {{ form.cargo_positions_lower_deck.label(class="form-label") }}
+        {{ form.cargo_positions_lower_deck(class="form-control") }}
+    </div>
+    <div class="col-md-4">
+        {{ form.acmi_cost.label(class="form-label") }}
+        {{ form.acmi_cost(class="form-control") }}
+    </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Aircraft</button>
+  </form>
+</div>
+<!-- Live Conversion Script -->
+<script>
+  const KG_TO_LBS = 2.20462;
+  const GAL_TO_LBS = 6.7;
+
+  function autoConvert(srcFieldId, targetFieldId, factor) {
+    const src = document.getElementById(srcFieldId);
+    const target = document.getElementById(targetFieldId);
+    if (!src || !target) return;
+
+    src.addEventListener("blur", () => {
+      if (src.value) {
+        target.value = (parseFloat(src.value) * factor).toFixed(2);
+      }
+    });
+
+    target.addEventListener("blur", () => {
+      if (target.value) {
+        src.value = (parseFloat(target.value) / factor).toFixed(2);
+      }
+    });
+  }
+
+  window.onload = function () {
+    autoConvert("mtow_kg", "mtow_lbs", KG_TO_LBS);
+    autoConvert("mldgw_kg", "mldgw_lbs", KG_TO_LBS);
+    autoConvert("zero_fuel_kg", "zero_fuel_lbs", KG_TO_LBS);
+    autoConvert("max_ramp_kg", "max_ramp_lbs", KG_TO_LBS);
+    autoConvert("empty_weight_kg", "empty_weight_lbs", KG_TO_LBS);
+    autoConvert("max_payload_kg", "max_payload_lbs", KG_TO_LBS);
+
+    autoConvert("fuel_capacity_gal", "fuel_capacity_lbs", GAL_TO_LBS);
+    autoConvert("fuel_burn_gal", "fuel_burn_lbs", GAL_TO_LBS);
+    autoConvert("min_fuel_landed_gal", "min_fuel_landed_lbs", GAL_TO_LBS);
+    autoConvert("min_fuel_alternate_gal", "min_fuel_alternate_lbs", GAL_TO_LBS);
+  };
+</script>
+
+{% endblock %}

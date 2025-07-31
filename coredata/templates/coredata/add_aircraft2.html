@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Aircraft{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Add New Aircraft</h2>
+
+<div class="form-pane add-aircraft-form-container">
+  <form method="POST" action="{{ url_for('coredata.add_aircraft') }}" class="add-aircraft-form">
+    {{ form.hidden_tag() }}
+
+    <!-- Row 1: Manufacturer + Model -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.manufacturer.label(class="form-label fw-bold") }}
+        {{ form.manufacturer(class="form-control") }}
+      </div>
+      <div class="col-md-6">
+        {{ form.model.label(class="form-label fw-bold") }}
+        {{ form.model(class="form-control") }}
+      </div>
+    </div>
+
+    <!-- Row 2: Short Name -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.short_name.label(class="form-label fw-bold") }}
+        {{ form.short_name(class="form-control") }}
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <button type="submit" class="btn btn-primary">Save Aircraft</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -252,18 +252,19 @@ lo
 }
 
 /* Dropdown menu styling */
-#dropdownMenu {
+
+
+/* Dashboard dropdowns (JS toggled) */
+.dropdown-container .dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
-  width: 100%;
+  min-width: 180px;
   background-color: #1b1b4e;
   border-radius: 6px;
   box-shadow: 0 4px 10px #ff5c00;
   display: none;
   z-index: 1000;
-
-  display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
@@ -273,15 +274,32 @@ lo
   transform: translateY(-10px);
 }
 
-/* Visible dropdown override */
-#dropdownMenu.show {
+.dropdown-container .dropdown-menu.show {
   display: flex;
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Link styling inside dropdown */
-#dropdownMenu a {
+/* Navbar dropdowns (hover) */
+.nav-menu .dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: #1e1e1e;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+}
+
+.nav-menu .dropdown:hover > .dropdown-menu {
+  display: block;
+}
+
+
+
+
+.dropdown-container .dropdown-menu a {
   color: #ffff00;
   text-decoration: none;
   padding: 0.25rem 0;
@@ -290,7 +308,22 @@ lo
   transition: color 0.2s ease;
 }
 
-#dropdownMenu a:hover {
+.dropdown-container .dropdown-menu a:hover {
+  color: #ffcc00;
+}
+
+.nav-menu .dropdown-menu li a {
+  color: #fff;
+  text-decoration: none;
+  display: block;
+  padding: 0.5rem 1rem;
+}
+
+.nav-menu .dropdown-menu li a:hover {
+  background-color: #333;
+}
+
+.dropdown-menu a:hover {
   color: #ffcc00;
 }
 
@@ -437,7 +470,13 @@ button[type="submit"]:hover {
   border: none;
   border-radius: 4px;
   color: #ddd;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.edit-btn:disabled, .delete-btn:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 select,

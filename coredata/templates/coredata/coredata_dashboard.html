@@ -16,14 +16,24 @@
         <button class="main-button" id="products-btn" data-tooltip="Manage and organize product records">
           Products ▼
         </button>
-        <div id="dropdownMenu" class="dropdown-menu">
+        <div class="dropdown-menu">
           <a class="dropdown-item" href="{{ url_for('coredata.add_product') }}">Add Product</a>
           <a class="dropdown-item" href="{{ url_for('coredata.view_edit_product') }}">View / Edit Products</a>
         </div>
       </div>
 
+      <!-- Aircrafts Dropdown Section -->
+      <div class="dropdown-container">
+        <button class="main-button" id="aircrafts-btn" data-tooltip="Input and edit aircraft specifications">
+          Aircrafts ▼
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="#">Add Aircraft</a>
+          <a class="dropdown-item" href="#">View / Edit Aircrafts</a>
+        </div>
+      </div>
+
       <!-- Other Dashboard Buttons -->
-      <a class="main-button" href="{{ url_for('operations.dashboard') }}" data-tooltip="Input and edit aircraft specifications">Aircrafts</a>
       <a class="main-button" href="{{ url_for('financial.dashboard') }}" data-tooltip="Maintain airport information and codes">Airports</a>
       <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Define and update flight route paths">Routes</a>
       <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Set up flight schedules and crew allocations">Schedules</a>
@@ -34,20 +44,21 @@
     <!-- Dropdown Toggle Logic -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const dropdown = document.getElementById("dropdownMenu");
-        const button = document.getElementById("products-btn");
-
-        // Toggle dropdown visibility on button click
-        button.addEventListener("click", function (e) {
-          e.stopPropagation();
-          dropdown.classList.toggle("show");
+        // Generic dropdown logic for all dashboard dropdowns (only one open at a time)
+        const dropdownContainers = document.querySelectorAll('.dashboard-buttons-container .dropdown-container');
+        const allMenus = document.querySelectorAll('.dashboard-buttons-container .dropdown-menu');
+        dropdownContainers.forEach(container => {
+          const button = container.querySelector('.main-button');
+          const menu = container.querySelector('.dropdown-menu');
+          button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Close all other dropdowns
+            allMenus.forEach(m => { if (m !== menu) m.classList.remove('show'); });
+            menu.classList.toggle('show');
+          });
         });
-
-        // Hide dropdown if clicking outside
-        window.addEventListener("click", function (event) {
-          if (!dropdown.contains(event.target) && !button.contains(event.target)) {
-            dropdown.classList.remove("show");
-          }
+        window.addEventListener('click', function(event) {
+          allMenus.forEach(menu => menu.classList.remove('show'));
         });
       });
     </script>

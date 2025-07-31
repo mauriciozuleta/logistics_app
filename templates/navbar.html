@@ -6,13 +6,21 @@
       <li><a href="{{ url_for('home') }}">Home</a></li>
 
       <li class="dropdown">
-        <a href="#">Core Data ▾</a>
+        <a href="#">Core Data</a>
         <ul class="dropdown-menu">
+          <li><a href="{{ url_for('coredata.dashboard') }}">Dashboard</a></li>
           <li class="dropdown-sub">
             <a href="#">Products</a>
             <ul class="dropdown-submenu">
               <li><a href="{{ url_for('coredata.add_product') }}">Add Product</a></li>
               <li><a href="{{ url_for('coredata.view_edit_product') }}">View / Edit Products</a></li>
+            </ul>
+          </li>
+          <li class="dropdown-sub">
+            <a href="#">Aircraft</a>
+            <ul class="dropdown-submenu">
+              <li><a href="#">Add Aircraft</a></li>
+              <li><a href="#">View / Edit Aircrafts</a></li>
             </ul>
           </li>
           <!-- Future sections like Routes, Warehouses, etc. can be added here -->
