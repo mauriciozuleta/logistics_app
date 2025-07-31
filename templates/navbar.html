@@ -19,8 +19,8 @@
           <li class="dropdown-sub">
             <a href="#">Aircraft</a>
             <ul class="dropdown-submenu">
-              <li><a href="#">Add Aircraft</a></li>
-              <li><a href="#">View / Edit Aircrafts</a></li>
+              <li><a href="{{ url_for('coredata.add_aircraft') }}">Add Aircraft</a></li>
+              <li><a href="{{ url_for('coredata.view_edit_aircraft') }}">View / Edit Aircrafts</a></li>
             </ul>
           </li>
           <!-- Future sections like Routes, Warehouses, etc. can be added here -->
@@ -43,3 +43,30 @@
 
   </div>
 </div>
+
+<script>
+// --- Dropdown submenu hover fix ---
+document.addEventListener('DOMContentLoaded', function () {
+  // For each .dropdown-sub
+  document.querySelectorAll('.dropdown-sub').forEach(function(sub) {
+    let timeout;
+    const submenu = sub.querySelector('.dropdown-submenu');
+    if (!submenu) return;
+
+    sub.addEventListener('mouseenter', function() {
+      clearTimeout(timeout);
+      submenu.style.display = 'block';
+    });
+    sub.addEventListener('mouseleave', function() {
+      timeout = setTimeout(() => submenu.style.display = 'none', 150);
+    });
+    submenu.addEventListener('mouseenter', function() {
+      clearTimeout(timeout);
+      submenu.style.display = 'block';
+    });
+    submenu.addEventListener('mouseleave', function() {
+      timeout = setTimeout(() => submenu.style.display = 'none', 150);
+    });
+  });
+});
+</script>

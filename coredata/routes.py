@@ -1,9 +1,26 @@
+
 from flask import Blueprint, render_template, request, redirect, url_for
 from app import db
-from models import Product, Country
+from models import Product, Country, Aircraft
 from flask import jsonify
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+
+# View/Edit Aircraft list
+@coredata_bp.route('/view-edit-aircraft')
+def view_edit_aircraft():
+    aircraft_list = Aircraft.query.all()
+    return render_template('coredata/view_edit_aircraft.html', aircraft_list=aircraft_list)
+
+# Delete multiple aircraft (AJAX)
+@coredata_bp.route('/delete-multiple-aircraft', methods=['POST'])
+def delete_multiple_aircraft():
+    ids = request.json.get('ids', [])
+    if not ids:
+        return jsonify({'success': False, 'error': 'No IDs provided'}), 400
+    Aircraft.query.filter(Aircraft.id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+    return jsonify({'success': True})
 
 # Utility: Safe type casting
 def parse_float_or_none(val):
@@ -17,6 +34,59 @@ def parse_int_or_none(val):
         return int(val.strip()) if val and val.strip() else None
     except ValueError:
         return None
+
+
+# Aircraft add form
+from coredata.forms import AircraftForm
+@coredata_bp.route('/add-aircraft', methods=['GET', 'POST'])
+def add_aircraft():
+    # Only generate a new ID if GET (new form), not POST (preserve user input)
+    if request.method == 'GET':
+        # Find the highest existing ACFT number and increment
+        last_aircraft = Aircraft.query.filter(Aircraft.id.like('ACFT%')).order_by(Aircraft.id.desc()).first()
+        if last_aircraft and last_aircraft.id[4:].isdigit():
+            next_num = int(last_aircraft.id[4:]) + 1
+        else:
+            next_num = 1
+        new_id = f"ACFT{next_num:02d}"
+        form = AircraftForm(id=new_id)
+    else:
+        # On POST, always set the id from the submitted value (readonly field is included in POST)
+        form = AircraftForm(id=request.form.get('id'))
+    if form.validate_on_submit():
+        aircraft = Aircraft(
+            id=form.id.data,
+            manufacturer=form.manufacturer.data,
+            model=form.model.data,
+            short_name=form.short_name.data,
+            mtow_kg=form.mtow_kg.data,
+            mtow_lbs=form.mtow_lbs.data,
+            mldgw_kg=form.mldgw_kg.data,
+            mldgw_lbs=form.mldgw_lbs.data,
+            zero_fuel_kg=form.zero_fuel_kg.data,
+            zero_fuel_lbs=form.zero_fuel_lbs.data,
+            max_ramp_kg=form.max_ramp_kg.data,
+            max_ramp_lbs=form.max_ramp_lbs.data,
+            empty_weight_kg=form.empty_weight_kg.data,
+            empty_weight_lbs=form.empty_weight_lbs.data,
+            max_payload_kg=form.max_payload_kg.data,
+            max_payload_lbs=form.max_payload_lbs.data,
+            fuel_capacity_gal=form.fuel_capacity_gal.data,
+            fuel_capacity_lbs=form.fuel_capacity_lbs.data,
+            fuel_burn_gal=form.fuel_burn_gal.data,
+            fuel_burn_lbs=form.fuel_burn_lbs.data,
+            min_fuel_landed_gal=form.min_fuel_landed_gal.data,
+            min_fuel_landed_lbs=form.min_fuel_landed_lbs.data,
+            min_fuel_alternate_gal=form.min_fuel_alternate_gal.data,
+            min_fuel_alternate_lbs=form.min_fuel_alternate_lbs.data,
+            cargo_positions_main_deck=form.cargo_positions_main_deck.data,
+            cargo_positions_lower_deck=form.cargo_positions_lower_deck.data,
+            acmi_cost=form.acmi_cost.data,
+        )
+        db.session.add(aircraft)
+        db.session.commit()
+        return redirect(url_for('coredata.view_edit_aircraft'))
+    return render_template('coredata/add_aircraft.html', form=form)
 
 # Dashboard page
 @coredata_bp.route('/dashboard')

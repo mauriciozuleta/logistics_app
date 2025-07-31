@@ -1,3 +1,14 @@
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        {% for field, errors in form.errors.items() %}
+          {% for error in errors %}
+            <li><strong>{{ form[field].label.text }}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 {% extends "base.html" %}
 {% block content %}
 
@@ -9,17 +20,33 @@
     {{ form.hidden_tag() }}
 
     <div class="row mb-3">
-      <div class="col-md-4">
+      <div class="col-md-3">
+        {{ form.id.label(class="form-label fw-bold") }}
+        {{ form.id(class="form-control form-control-sm", id="aircraft_id", readonly=True) }}
+        {% if form.id.errors %}
+          <div class="text-danger small">{{ form.id.errors[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="col-md-3">
         {{ form.manufacturer.label(class="form-label fw-bold") }}
-        {{ form.manufacturer(class="form-control") }}
+        {{ form.manufacturer(class="form-control form-control-sm") }}
+        {% if form.manufacturer.errors %}
+          <div class="text-danger small">{{ form.manufacturer.errors[0] }}</div>
+        {% endif %}
       </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         {{ form.model.label(class="form-label fw-bold") }}
-        {{ form.model(class="form-control") }}
+        {{ form.model(class="form-control form-control-sm") }}
+        {% if form.model.errors %}
+          <div class="text-danger small">{{ form.model.errors[0] }}</div>
+        {% endif %}
       </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         {{ form.short_name.label(class="form-label fw-bold") }}
-        {{ form.short_name(class="form-control") }}
+        {{ form.short_name(class="form-control form-control-sm") }}
+        {% if form.short_name.errors %}
+          <div class="text-danger small">{{ form.short_name.errors[0] }}</div>
+        {% endif %}
       </div>
     </div>
 
@@ -28,18 +55,30 @@
       <div class="col-md-3">
         {{ form.mtow_kg.label(class="form-label") }}
         {{ form.mtow_kg(class="form-control", id="mtow_kg") }}
+        {% if form.mtow_kg.errors %}
+          <div class="text-danger small">{{ form.mtow_kg.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.mtow_lbs.label(class="form-label") }}
         {{ form.mtow_lbs(class="form-control", id="mtow_lbs") }}
+        {% if form.mtow_lbs.errors %}
+          <div class="text-danger small">{{ form.mtow_lbs.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.mldgw_kg.label(class="form-label") }}
         {{ form.mldgw_kg(class="form-control", id="mldgw_kg") }}
+        {% if form.mldgw_kg.errors %}
+          <div class="text-danger small">{{ form.mldgw_kg.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.mldgw_lbs.label(class="form-label") }}
         {{ form.mldgw_lbs(class="form-control", id="mldgw_lbs") }}
+        {% if form.mldgw_lbs.errors %}
+          <div class="text-danger small">{{ form.mldgw_lbs.errors[0] }}</div>
+        {% endif %}
       </div>
     </div>
 
@@ -47,18 +86,30 @@
       <div class="col-md-3">
         {{ form.empty_weight_kg.label(class="form-label") }}
         {{ form.empty_weight_kg(class="form-control", id="empty_weight_kg") }}
+        {% if form.empty_weight_kg.errors %}
+          <div class="text-danger small">{{ form.empty_weight_kg.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.empty_weight_lbs.label(class="form-label") }}
         {{ form.empty_weight_lbs(class="form-control", id="empty_weight_lbs") }}
+        {% if form.empty_weight_lbs.errors %}
+          <div class="text-danger small">{{ form.empty_weight_lbs.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.max_payload_kg.label(class="form-label") }}
         {{ form.max_payload_kg(class="form-control", id="max_payload_kg") }}
+        {% if form.max_payload_kg.errors %}
+          <div class="text-danger small">{{ form.max_payload_kg.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.max_payload_lbs.label(class="form-label") }}
         {{ form.max_payload_lbs(class="form-control", id="max_payload_lbs") }}
+        {% if form.max_payload_lbs.errors %}
+          <div class="text-danger small">{{ form.max_payload_lbs.errors[0] }}</div>
+        {% endif %}
       </div>
     </div>
 
@@ -66,18 +117,30 @@
       <div class="col-md-3">
         {{ form.zero_fuel_kg.label(class="form-label") }}
         {{ form.zero_fuel_kg(class="form-control", id="zero_fuel_kg") }}
+        {% if form.zero_fuel_kg.errors %}
+          <div class="text-danger small">{{ form.zero_fuel_kg.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.zero_fuel_lbs.label(class="form-label") }}
         {{ form.zero_fuel_lbs(class="form-control", id="zero_fuel_lbs") }}
+        {% if form.zero_fuel_lbs.errors %}
+          <div class="text-danger small">{{ form.zero_fuel_lbs.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.max_ramp_kg.label(class="form-label") }}
         {{ form.max_ramp_kg(class="form-control", id="max_ramp_kg") }}
+        {% if form.max_ramp_kg.errors %}
+          <div class="text-danger small">{{ form.max_ramp_kg.errors[0] }}</div>
+        {% endif %}
       </div>
       <div class="col-md-3">
         {{ form.max_ramp_lbs.label(class="form-label") }}
         {{ form.max_ramp_lbs(class="form-control", id="max_ramp_lbs") }}
+        {% if form.max_ramp_lbs.errors %}
+          <div class="text-danger small">{{ form.max_ramp_lbs.errors[0] }}</div>
+        {% endif %}
       </div>
     </div>
 
@@ -88,18 +151,30 @@
     <div class="col-md-3">
         {{ form.fuel_capacity_gal.label(class="form-label") }}
         {{ form.fuel_capacity_gal(class="form-control", id="fuel_capacity_gal") }}
+        {% if form.fuel_capacity_gal.errors %}
+          <div class="text-danger small">{{ form.fuel_capacity_gal.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-3">
         {{ form.fuel_capacity_lbs.label(class="form-label") }}
         {{ form.fuel_capacity_lbs(class="form-control", id="fuel_capacity_lbs") }}
+        {% if form.fuel_capacity_lbs.errors %}
+          <div class="text-danger small">{{ form.fuel_capacity_lbs.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-3">
         {{ form.fuel_burn_gal.label(class="form-label") }}
         {{ form.fuel_burn_gal(class="form-control", id="fuel_burn_gal") }}
+        {% if form.fuel_burn_gal.errors %}
+          <div class="text-danger small">{{ form.fuel_burn_gal.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-3">
         {{ form.fuel_burn_lbs.label(class="form-label") }}
         {{ form.fuel_burn_lbs(class="form-control", id="fuel_burn_lbs") }}
+        {% if form.fuel_burn_lbs.errors %}
+          <div class="text-danger small">{{ form.fuel_burn_lbs.errors[0] }}</div>
+        {% endif %}
     </div>
     </div>
 
@@ -107,18 +182,30 @@
     <div class="col-md-3">
         {{ form.min_fuel_landed_gal.label(class="form-label") }}
         {{ form.min_fuel_landed_gal(class="form-control", id="min_fuel_landed_gal") }}
+        {% if form.min_fuel_landed_gal.errors %}
+          <div class="text-danger small">{{ form.min_fuel_landed_gal.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-3">
         {{ form.min_fuel_landed_lbs.label(class="form-label") }}
         {{ form.min_fuel_landed_lbs(class="form-control", id="min_fuel_landed_lbs") }}
+        {% if form.min_fuel_landed_lbs.errors %}
+          <div class="text-danger small">{{ form.min_fuel_landed_lbs.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-3">
         {{ form.min_fuel_alternate_gal.label(class="form-label") }}
         {{ form.min_fuel_alternate_gal(class="form-control", id="min_fuel_alternate_gal") }}
+        {% if form.min_fuel_alternate_gal.errors %}
+          <div class="text-danger small">{{ form.min_fuel_alternate_gal.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-3">
         {{ form.min_fuel_alternate_lbs.label(class="form-label") }}
         {{ form.min_fuel_alternate_lbs(class="form-control", id="min_fuel_alternate_lbs") }}
+        {% if form.min_fuel_alternate_lbs.errors %}
+          <div class="text-danger small">{{ form.min_fuel_alternate_lbs.errors[0] }}</div>
+        {% endif %}
     </div>
     </div>
 
@@ -126,15 +213,24 @@
     <div class="row mb-3">
     <div class="col-md-4">
         {{ form.cargo_positions_main_deck.label(class="form-label") }}
-        {{ form.cargo_positions_main_deck(class="form-control") }}
+        {{ form.cargo_positions_main_deck(class="form-control", id="cargo_positions_main_deck") }}
+        {% if form.cargo_positions_main_deck.errors %}
+          <div class="text-danger small">{{ form.cargo_positions_main_deck.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-4">
         {{ form.cargo_positions_lower_deck.label(class="form-label") }}
-        {{ form.cargo_positions_lower_deck(class="form-control") }}
+        {{ form.cargo_positions_lower_deck(class="form-control", id="cargo_positions_lower_deck") }}
+        {% if form.cargo_positions_lower_deck.errors %}
+          <div class="text-danger small">{{ form.cargo_positions_lower_deck.errors[0] }}</div>
+        {% endif %}
     </div>
     <div class="col-md-4">
         {{ form.acmi_cost.label(class="form-label") }}
-        {{ form.acmi_cost(class="form-control") }}
+        {{ form.acmi_cost(class="form-control", id="acmi_cost") }}
+        {% if form.acmi_cost.errors %}
+          <div class="text-danger small">{{ form.acmi_cost.errors[0] }}</div>
+        {% endif %}
     </div>
     </div>
 

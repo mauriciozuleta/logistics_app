@@ -70,7 +70,8 @@ class Aircraft(BaseModel):
     min_fuel_alternate_gal = db.Column(db.Float)
     min_fuel_alternate_lbs = db.Column(db.Float)
 
-    cargo_positions = db.Column(db.Integer)
+    cargo_positions_main_deck = db.Column(db.Integer)
+    cargo_positions_lower_deck = db.Column(db.Integer)
     acmi_cost = db.Column(db.Float)
 
 

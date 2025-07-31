@@ -1,0 +1,33 @@
+from flask_wtf import FlaskForm
+from wtforms import StringField, FloatField, IntegerField, SubmitField
+from wtforms.validators import DataRequired, Optional
+
+class AircraftForm(FlaskForm):
+    id = StringField('ID', validators=[DataRequired()])
+    manufacturer = StringField('Manufacturer', validators=[Optional()])
+    model = StringField('Model', validators=[Optional()])
+    short_name = StringField('Short Name', validators=[Optional()])
+    mtow_kg = FloatField('MTOW (kg)', validators=[Optional()])
+    mtow_lbs = FloatField('MTOW (lbs)', validators=[Optional()])
+    mldgw_kg = FloatField('MLDGW (kg)', validators=[Optional()])
+    mldgw_lbs = FloatField('MLDGW (lbs)', validators=[Optional()])
+    zero_fuel_kg = FloatField('Zero Fuel (kg)', validators=[Optional()])
+    zero_fuel_lbs = FloatField('Zero Fuel (lbs)', validators=[Optional()])
+    max_ramp_kg = FloatField('Max Ramp (kg)', validators=[Optional()])
+    max_ramp_lbs = FloatField('Max Ramp (lbs)', validators=[Optional()])
+    empty_weight_kg = FloatField('Empty Weight (kg)', validators=[Optional()])
+    empty_weight_lbs = FloatField('Empty Weight (lbs)', validators=[Optional()])
+    max_payload_kg = FloatField('Max Payload (kg)', validators=[Optional()])
+    max_payload_lbs = FloatField('Max Payload (lbs)', validators=[Optional()])
+    fuel_capacity_gal = FloatField('Fuel Capacity (gal)', validators=[Optional()])
+    fuel_capacity_lbs = FloatField('Fuel Capacity (lbs)', validators=[Optional()])
+    fuel_burn_gal = FloatField('Fuel Burn (gal)', validators=[Optional()])
+    fuel_burn_lbs = FloatField('Fuel Burn (lbs)', validators=[Optional()])
+    min_fuel_landed_gal = FloatField('Min Fuel Landed (gal)', validators=[Optional()])
+    min_fuel_landed_lbs = FloatField('Min Fuel Landed (lbs)', validators=[Optional()])
+    min_fuel_alternate_gal = FloatField('Min Fuel Alternate (gal)', validators=[Optional()])
+    min_fuel_alternate_lbs = FloatField('Min Fuel Alternate (lbs)', validators=[Optional()])
+    cargo_positions_main_deck = IntegerField('Cargo Positions Main Deck', validators=[Optional()])
+    cargo_positions_lower_deck = IntegerField('Cargo Positions Lower Deck', validators=[Optional()])
+    acmi_cost = FloatField('ACMI Cost', validators=[Optional()])
+    submit = SubmitField('Add Aircraft')

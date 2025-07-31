@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="color: #fff; margin-bottom: 1rem;">View / Edit Aircraft</h1>
+
+<!-- Action buttons -->
+<div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap;">
+  <div>
+    <button class="edit-btn btn btn-warning">Edit Selected</button>
+    <button class="delete-btn btn btn-danger">Delete Selected</button>
+  </div>
+</div>
+
+<div style="max-height: 410px; overflow-y: auto; border-radius: 8px; border: 1px solid #444; background: #181818;">
+  <table class="product-table" style="margin-bottom: 0;">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="select-all"></th>
+        <th>ID</th>
+        <th>Manufacturer</th>
+        <th>Model</th>
+        <th>Short Name</th>
+        <th>MTOW (kg)</th>
+        <th>MTOW (lbs)</th>
+        <th>MLDGW (kg)</th>
+        <th>MLDGW (lbs)</th>
+        <th>Empty Weight (kg)</th>
+        <th>Empty Weight (lbs)</th>
+        <th>Max Payload (kg)</th>
+        <th>Max Payload (lbs)</th>
+        <th>Fuel Capacity (gal)</th>
+        <th>Fuel Capacity (lbs)</th>
+        <th>Fuel Burn (gal)</th>
+        <th>Fuel Burn (lbs)</th>
+        <th>Min Fuel Landed (gal)</th>
+        <th>Min Fuel Landed (lbs)</th>
+        <th>Min Fuel Alternate (gal)</th>
+        <th>Min Fuel Alternate (lbs)</th>
+        <th>Cargo Main Deck</th>
+        <th>Cargo Lower Deck</th>
+        <th>ACMI Cost</th>
+      </tr>
+    </thead>
+    <tbody id="aircraftTableBody">
+      {% for aircraft in aircraft_list %}
+      <tr>
+        <td><input type="checkbox" class="aircraft-checkbox" value="{{ aircraft.id }}"></td>
+        <td>{{ aircraft.id }}</td>
+        <td>{{ aircraft.manufacturer }}</td>
+        <td>{{ aircraft.model }}</td>
+        <td>{{ aircraft.short_name }}</td>
+        <td>{{ aircraft.mtow_kg }}</td>
+        <td>{{ aircraft.mtow_lbs }}</td>
+        <td>{{ aircraft.mldgw_kg }}</td>
+        <td>{{ aircraft.mldgw_lbs }}</td>
+        <td>{{ aircraft.empty_weight_kg }}</td>
+        <td>{{ aircraft.empty_weight_lbs }}</td>
+        <td>{{ aircraft.max_payload_kg }}</td>
+        <td>{{ aircraft.max_payload_lbs }}</td>
+        <td>{{ aircraft.fuel_capacity_gal }}</td>
+        <td>{{ aircraft.fuel_capacity_lbs }}</td>
+        <td>{{ aircraft.fuel_burn_gal }}</td>
+        <td>{{ aircraft.fuel_burn_lbs }}</td>
+        <td>{{ aircraft.min_fuel_landed_gal }}</td>
+        <td>{{ aircraft.min_fuel_landed_lbs }}</td>
+        <td>{{ aircraft.min_fuel_alternate_gal }}</td>
+        <td>{{ aircraft.min_fuel_alternate_lbs }}</td>
+        <td>{{ aircraft.cargo_positions_main_deck }}</td>
+        <td>{{ aircraft.cargo_positions_lower_deck }}</td>
+        <td>{{ aircraft.acmi_cost }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const checkboxes = document.querySelectorAll('.aircraft-checkbox');
+    const editBtn = document.querySelector('.edit-btn');
+    const deleteBtn = document.querySelector('.delete-btn');
+    const selectAll = document.getElementById('select-all');
+    const tableBody = document.getElementById('aircraftTableBody');
+
+    function updateButtons() {
+      const selected = Array.from(document.querySelectorAll('.aircraft-checkbox')).filter(cb => cb.checked);
+      editBtn.disabled = selected.length !== 1;
+      deleteBtn.disabled = selected.length === 0;
+    }
+
+    // Select all functionality
+    if (selectAll) {
+      selectAll.addEventListener('change', function() {
+        const visibleCheckboxes = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none').map(row => row.querySelector('.aircraft-checkbox'));
+        visibleCheckboxes.forEach(cb => { if (cb) cb.checked = selectAll.checked; });
+        updateButtons();
+      });
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateButtons));
+
+    editBtn.addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('.aircraft-checkbox')).filter(cb => cb.checked);
+      if (selected.length === 1) {
+        const aircraftId = selected[0].value;
+        window.location.href = `/coredata/add-aircraft?edit_id=${aircraftId}`;
+      } else {
+        alert("Please select exactly one aircraft to edit.");
+      }
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('.aircraft-checkbox')).filter(cb => cb.checked);
+      if (selected.length === 0) return;
+
+      if (confirm('Delete the selected aircraft(s)?')) {
+        const ids = selected.map(cb => cb.value);
+        fetch('/coredata/delete-multiple-aircraft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        }).then(res => {
+          if (res.ok) window.location.reload();
+        });
+      }
+    });
+
+    updateButtons();
+  });
+</script>
+{% endblock %}
