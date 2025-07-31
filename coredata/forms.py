@@ -1,3 +1,19 @@
+from wtforms import SelectField
+class AirportForm(FlaskForm):
+    name = StringField('Airport Name', validators=[DataRequired()])
+    iata_code = StringField('IATA Code', validators=[DataRequired()])
+    city = StringField('City', validators=[DataRequired()])
+    country_id = SelectField('Country', coerce=str, validators=[DataRequired()])
+    fuel_cost_gl = FloatField('Fuel Cost (per gal)', validators=[Optional()])
+    cargo_handling_cost_kg = FloatField('Cargo Handling Cost (per kg)', validators=[Optional()])
+    airport_fee = FloatField('Airport Fee', validators=[Optional()])
+    turnaround_cost = FloatField('Turnaround Cost', validators=[Optional()])
+    other_desc = StringField('Other Description', validators=[Optional()])
+    other_cost = FloatField('Other Cost', validators=[Optional()])
+    latitude = FloatField('Latitude', validators=[Optional()])
+    longitude = FloatField('Longitude', validators=[Optional()])
+    geo_source = StringField('Geo Source', validators=[Optional()])
+    submit = SubmitField('Add Airport')
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, IntegerField, SubmitField
 from wtforms.validators import DataRequired, Optional

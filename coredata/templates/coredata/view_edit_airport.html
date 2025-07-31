@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="color: #fff; margin-bottom: 1rem;">View / Edit Airports</h1>
+
+<!-- Action buttons -->
+<div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap;">
+  <div>
+    <button class="edit-btn btn btn-warning">Edit Selected</button>
+    <button class="delete-btn btn btn-danger">Delete Selected</button>
+  </div>
+</div>
+
+<div style="max-height: 410px; overflow-y: auto; border-radius: 8px; border: 1px solid #444; background: #181818;">
+  <table class="product-table" style="margin-bottom: 0;">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="select-all"></th>
+        <th>Name</th>
+        <th>IATA</th>
+        <th>City</th>
+        <th>Country</th>
+        <th>Fuel Cost</th>
+        <th>Cargo Handling</th>
+        <th>Airport Fee</th>
+        <th>Turnaround</th>
+        <th>Other Desc</th>
+        <th>Other Cost</th>
+        <th>Lat</th>
+        <th>Lon</th>
+        <th>Geo Src</th>
+      </tr>
+    </thead>
+    <tbody id="airportTableBody">
+      {% for airport in airport_list %}
+      <tr>
+        <td><input type="checkbox" class="airport-checkbox" value="{{ airport.id }}"></td>
+        <td>{{ airport.name }}</td>
+        <td>{{ airport.iata_code }}</td>
+        <td>{{ airport.city }}</td>
+        <td>{{ airport.country.country_name if airport.country else '' }}</td>
+        <td>{{ airport.fuel_cost_gl }}</td>
+        <td>{{ airport.cargo_handling_cost_kg }}</td>
+        <td>{{ airport.airport_fee }}</td>
+        <td>{{ airport.turnaround_cost }}</td>
+        <td>{{ airport.other_desc }}</td>
+        <td>{{ airport.other_cost }}</td>
+        <td>{{ airport.latitude }}</td>
+        <td>{{ airport.longitude }}</td>
+        <td>{{ airport.geo_source }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const checkboxes = document.querySelectorAll('.airport-checkbox');
+    const editBtn = document.querySelector('.edit-btn');
+    const deleteBtn = document.querySelector('.delete-btn');
+    const selectAll = document.getElementById('select-all');
+    const tableBody = document.getElementById('airportTableBody');
+
+    function updateButtons() {
+      const selected = Array.from(document.querySelectorAll('.airport-checkbox')).filter(cb => cb.checked);
+      editBtn.disabled = selected.length !== 1;
+      deleteBtn.disabled = selected.length === 0;
+    }
+
+    // Select all functionality
+    if (selectAll) {
+      selectAll.addEventListener('change', function() {
+        const visibleCheckboxes = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none').map(row => row.querySelector('.airport-checkbox'));
+        visibleCheckboxes.forEach(cb => { if (cb) cb.checked = selectAll.checked; });
+        updateButtons();
+      });
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateButtons));
+
+    editBtn.addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('.airport-checkbox')).filter(cb => cb.checked);
+      if (selected.length === 1) {
+        const airportId = selected[0].value;
+        window.location.href = `/coredata/add-airport?edit_id=${airportId}`;
+      } else {
+        alert("Please select exactly one airport to edit.");
+      }
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('.airport-checkbox')).filter(cb => cb.checked);
+      if (selected.length === 0) return;
+
+      if (confirm('Delete the selected airport(s)?')) {
+        const ids = selected.map(cb => cb.value);
+        fetch('/coredata/delete-multiple-airports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        }).then(res => {
+          if (res.ok) window.location.reload();
+        });
+      }
+    });
+
+    updateButtons();
+  });
+</script>
+{% endblock %}

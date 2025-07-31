@@ -1,3 +1,51 @@
+# View/Edit Airport list
+@coredata_bp.route('/view-edit-airport')
+def view_edit_airport():
+    from models import Airport
+    airport_list = Airport.query.all()
+    return render_template('coredata/view_edit_airport.html', airport_list=airport_list)
+
+# Delete multiple airports (AJAX)
+@coredata_bp.route('/delete-multiple-airports', methods=['POST'])
+def delete_multiple_airports():
+    from models import Airport
+    ids = request.json.get('ids', [])
+    if not ids:
+        return jsonify({'success': False, 'error': 'No IDs provided'}), 400
+    Airport.query.filter(Airport.id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+    return jsonify({'success': True})
+from models import Airport
+from coredata.forms import AirportForm
+# Add Airport
+@coredata_bp.route('/add-airport', methods=['GET', 'POST'])
+def add_airport():
+    # Populate country dropdown (country_code, country_name)
+    countries = Country.query.order_by(Country.country_name).all()
+    country_choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
+    form = AirportForm()
+    form.country_id.choices = country_choices
+
+    if form.validate_on_submit():
+        airport = Airport(
+            name=form.name.data,
+            iata_code=form.iata_code.data.upper(),
+            city=form.city.data,
+            country_id=form.country_id.data,
+            fuel_cost_gl=form.fuel_cost_gl.data,
+            cargo_handling_cost_kg=form.cargo_handling_cost_kg.data,
+            airport_fee=form.airport_fee.data,
+            turnaround_cost=form.turnaround_cost.data,
+            other_desc=form.other_desc.data,
+            other_cost=form.other_cost.data,
+            latitude=form.latitude.data,
+            longitude=form.longitude.data,
+            geo_source=form.geo_source.data
+        )
+        db.session.add(airport)
+        db.session.commit()
+        return redirect(url_for('coredata.view_edit_airport'))
+    return render_template('coredata/add_airport.html', form=form)
 
 from flask import Blueprint, render_template, request, redirect, url_for
 from app import db

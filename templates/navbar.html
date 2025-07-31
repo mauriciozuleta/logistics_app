@@ -23,6 +23,13 @@
               <li><a href="{{ url_for('coredata.view_edit_aircraft') }}">View / Edit Aircrafts</a></li>
             </ul>
           </li>
+          <li class="dropdown-sub">
+            <a href="#">Airports</a>
+            <ul class="dropdown-submenu">
+              <li><a href="{{ url_for('coredata.add_airport') }}">Add Airport</a></li>
+              <li><a href="{{ url_for('coredata.view_edit_airport') }}">View / Edit Airports</a></li>
+            </ul>
+          </li>
           <!-- Future sections like Routes, Warehouses, etc. can be added here -->
         </ul>
       </li>

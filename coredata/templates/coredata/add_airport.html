@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 style="color: #fff; margin-bottom: 1rem;">Add Airport</h1>
+<div class="form-container" style="max-width: 600px; margin: 0 auto; background: #181818; padding: 2rem; border-radius: 10px; border: 1.5px solid #2196f3;">
+  <form method="POST" autocomplete="off">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-control", placeholder="Full Airport Name") }}
+      {% for error in form.name.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.iata_code.label(class="form-label") }}
+      {{ form.iata_code(class="form-control", maxlength=3, placeholder="IATA Code (e.g. JFK)") }}
+      {% for error in form.iata_code.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.city.label(class="form-label") }}
+      {{ form.city(class="form-control", placeholder="City") }}
+      {% for error in form.city.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.country_id.label(class="form-label") }}
+      {{ form.country_id(class="form-control") }}
+      {% for error in form.country_id.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.fuel_cost_gl.label(class="form-label") }}
+      {{ form.fuel_cost_gl(class="form-control", placeholder="Fuel Cost per Gallon") }}
+    </div>
+    <div class="form-group">
+      {{ form.cargo_handling_cost_kg.label(class="form-label") }}
+      {{ form.cargo_handling_cost_kg(class="form-control", placeholder="Cargo Handling Cost per KG") }}
+    </div>
+    <div class="form-group">
+      {{ form.airport_fee.label(class="form-label") }}
+      {{ form.airport_fee(class="form-control", placeholder="Airport Fee") }}
+    </div>
+    <div class="form-group">
+      {{ form.turnaround_cost.label(class="form-label") }}
+      {{ form.turnaround_cost(class="form-control", placeholder="Turnaround Cost") }}
+    </div>
+    <div class="form-group">
+      {{ form.other_desc.label(class="form-label") }}
+      {{ form.other_desc(class="form-control", placeholder="Other Description") }}
+    </div>
+    <div class="form-group">
+      {{ form.other_cost.label(class="form-label") }}
+      {{ form.other_cost(class="form-control", placeholder="Other Cost") }}
+    </div>
+    <div class="form-group">
+      {{ form.latitude.label(class="form-label") }}
+      {{ form.latitude(class="form-control", placeholder="Latitude") }}
+    </div>
+    <div class="form-group">
+      {{ form.longitude.label(class="form-label") }}
+      {{ form.longitude(class="form-control", placeholder="Longitude") }}
+    </div>
+    <div class="form-group">
+      {{ form.geo_source.label(class="form-label") }}
+      {{ form.geo_source(class="form-control", placeholder="Geo Source") }}
+    </div>
+    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Add Airport</button>
+  </form>
+</div>
+{% endblock %}
