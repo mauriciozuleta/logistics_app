@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-4">Add Trader</h2>
+<div class="form-pane add-trader-form-container">
+  <form method="POST" action="{{ url_for('coredata.add_trader') }}" class="add-trader-form">
+    {{ form.hidden_tag() }}
+    <div class="row mb-3">
+      <div class="col-md-4">
+        {{ form.country_id.label(class="form-label fw-bold") }}
+        {{ form.country_id(class="form-control form-control-sm") }}
+      </div>
+      <div class="col-md-8">
+        {{ form.name.label(class="form-label fw-bold") }}
+        {{ form.name(class="form-control form-control-sm") }}
+      </div>
+    </div>
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <fieldset class="border p-2 rounded">
+          <legend class="w-auto px-2">Export Information</legend>
+          {{ form.export_year_operating_costs.label(class="form-label") }}
+          {{ form.export_year_operating_costs(class="form-control") }}
+          {{ form.export_operating_expenses_pct.label(class="form-label mt-2") }}
+          {{ form.export_operating_expenses_pct(class="form-control") }}
+          {{ form.export_profit_pct.label(class="form-label mt-2") }}
+          {{ form.export_profit_pct(class="form-control") }}
+          {{ form.export_sales_tax.label(class="form-label mt-2") }}
+          {{ form.export_sales_tax(class="form-control") }}
+          {{ form.export_other_taxes.label(class="form-label mt-2") }}
+          {{ form.export_other_taxes(class="form-control") }}
+        </fieldset>
+      </div>
+      <div class="col-md-6">
+        <fieldset class="border p-2 rounded">
+          <legend class="w-auto px-2">Import Information</legend>
+          {{ form.import_year_operating_costs.label(class="form-label") }}
+          {{ form.import_year_operating_costs(class="form-control") }}
+          {{ form.import_operating_expenses_pct.label(class="form-label mt-2") }}
+          {{ form.import_operating_expenses_pct(class="form-control") }}
+          {{ form.import_profit_pct.label(class="form-label mt-2") }}
+          {{ form.import_profit_pct(class="form-control") }}
+          {{ form.import_import_taxes.label(class="form-label mt-2") }}
+          {{ form.import_import_taxes(class="form-control") }}
+          {{ form.import_sales_tax.label(class="form-label mt-2") }}
+          {{ form.import_sales_tax(class="form-control") }}
+          {{ form.import_other_taxes.label(class="form-label mt-2") }}
+          {{ form.import_other_taxes(class="form-control") }}
+        </fieldset>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Add Trader</button>
+  </form>
+</div>
+{% endblock %}

@@ -12,10 +12,13 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-4">Add New Aircraft</h2>
+<h2 class="mb-4">{{ 'Edit Aircraft' if edit_id else 'Add New Aircraft' }}</h2>
 
 <div class="form-pane add-aircraft-form-container">
   <form method="POST" action="{{ url_for('coredata.add_aircraft') }}" class="add-aircraft-form">
+    {% if edit_id %}
+      <input type="hidden" name="edit_id" value="{{ edit_id }}">
+    {% endif %}
 
     {{ form.hidden_tag() }}
 
@@ -234,7 +237,7 @@
     </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">Add Aircraft</button>
+    <button type="submit" class="btn btn-primary">{{ 'Update Aircraft' if edit_id else 'Add Aircraft' }}</button>
   </form>
 </div>
 <!-- Live Conversion Script -->

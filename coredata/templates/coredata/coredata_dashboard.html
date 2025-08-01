@@ -43,10 +43,16 @@
           <a class="dropdown-item" href="{{ url_for('coredata.view_edit_airport') }}">View / Edit Airports</a>
         </div>
       </div>
-      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Define and update flight route paths">Routes</a>
-      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Set up flight schedules and crew allocations">Schedules</a>
-      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Track product shipments and logistics status">Products Shipments</a>
-      <a class="main-button" href="{{ url_for('users.profile') }}" data-tooltip="Register trading partners and access details">Traders</a>
+      <!-- Traders Dropdown Section -->
+      <div class="dropdown-container">
+        <button class="main-button" id="traders-btn" data-tooltip="Register trading partners and access details">
+          Traders ▼
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="{{ url_for('coredata.add_trader') }}">Add Trader</a>
+          <a class="dropdown-item" href="{{ url_for('coredata.view_edit_traders') }}">View / Edit Traders</a>
+        </div>
+      </div>
     </div>
 
     <!-- Dropdown Toggle Logic -->

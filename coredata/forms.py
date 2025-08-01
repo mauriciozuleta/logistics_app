@@ -1,4 +1,33 @@
-from wtforms import SelectField
+from wtforms import StringField, FloatField, SelectField, SubmitField
+from wtforms.validators import DataRequired, Optional
+from flask_wtf import FlaskForm
+from wtforms import FormField
+
+class TraderForm(FlaskForm):
+    country_id = SelectField('Country', coerce=str, validators=[DataRequired()])
+    name = StringField('Name', validators=[DataRequired()])
+
+    # Export Information
+    export_year_operating_costs = FloatField('Year Operating Costs (Export)', validators=[Optional()])
+    export_operating_expenses_pct = FloatField('% for Operating Expenses (Export)', validators=[Optional()])
+    export_profit_pct = FloatField('% Profit (Export)', validators=[Optional()])
+    export_sales_tax = FloatField('Sales Tax (Export)', validators=[Optional()])
+    export_other_taxes = FloatField('Other Taxes (Export)', validators=[Optional()])
+
+    # Import Information
+    import_year_operating_costs = FloatField('Year Operating Costs (Import)', validators=[Optional()])
+    import_operating_expenses_pct = FloatField('% for Operating Expenses (Import)', validators=[Optional()])
+    import_profit_pct = FloatField('% Profit (Import)', validators=[Optional()])
+    import_import_taxes = FloatField('Import Taxes (Import)', validators=[Optional()])
+    import_sales_tax = FloatField('Sales Tax (Import)', validators=[Optional()])
+    import_other_taxes = FloatField('Other Taxes (Import)', validators=[Optional()])
+
+    submit = SubmitField('Add Trader')
+
+from flask_wtf import FlaskForm
+from wtforms import StringField, FloatField, IntegerField, SubmitField, SelectField
+from wtforms.validators import DataRequired, Optional
+
 class AirportForm(FlaskForm):
     name = StringField('Airport Name', validators=[DataRequired()])
     iata_code = StringField('IATA Code', validators=[DataRequired()])
@@ -10,13 +39,8 @@ class AirportForm(FlaskForm):
     turnaround_cost = FloatField('Turnaround Cost', validators=[Optional()])
     other_desc = StringField('Other Description', validators=[Optional()])
     other_cost = FloatField('Other Cost', validators=[Optional()])
-    latitude = FloatField('Latitude', validators=[Optional()])
-    longitude = FloatField('Longitude', validators=[Optional()])
-    geo_source = StringField('Geo Source', validators=[Optional()])
     submit = SubmitField('Add Airport')
-from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, IntegerField, SubmitField
-from wtforms.validators import DataRequired, Optional
+
 
 class AircraftForm(FlaskForm):
     id = StringField('ID', validators=[DataRequired()])

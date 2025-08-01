@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-4">View / Edit Traders</h2>
+<div class="form-pane view-trader-list-container">
+  <table class="product-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Country</th>
+        <th>Export Year Op. Costs</th>
+        <th>Export Op. %</th>
+        <th>Export Profit %</th>
+        <th>Export Sales Tax</th>
+        <th>Export Other Taxes</th>
+        <th>Import Year Op. Costs</th>
+        <th>Import Op. %</th>
+        <th>Import Profit %</th>
+        <th>Import Taxes</th>
+        <th>Import Sales Tax</th>
+        <th>Import Other Taxes</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trader in trader_list %}
+      <tr>
+        <td>{{ trader.name }}</td>
+        <td>{{ trader.country.country_name if trader.country else '' }}</td>
+        <td>{{ trader.export_year_operating_costs }}</td>
+        <td>{{ trader.export_operating_expenses_pct }}</td>
+        <td>{{ trader.export_profit_pct }}</td>
+        <td>{{ trader.export_sales_tax }}</td>
+        <td>{{ trader.export_other_taxes }}</td>
+        <td>{{ trader.import_year_operating_costs }}</td>
+        <td>{{ trader.import_operating_expenses_pct }}</td>
+        <td>{{ trader.import_profit_pct }}</td>
+        <td>{{ trader.import_import_taxes }}</td>
+        <td>{{ trader.import_sales_tax }}</td>
+        <td>{{ trader.import_other_taxes }}</td>
+        <td>
+          <a href="{{ url_for('coredata.add_trader', edit_id=trader.id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <a href="{{ url_for('coredata.delete_trader', trader_id=trader.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this trader?');">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+
 from datetime import datetime
 from extensions import db
 # Then define your models like normal
@@ -72,7 +73,37 @@ class Aircraft(BaseModel):
 
     cargo_positions_main_deck = db.Column(db.Integer)
     cargo_positions_lower_deck = db.Column(db.Integer)
+
     acmi_cost = db.Column(db.Float)
+
+
+# Trader model
+class Trader(BaseModel):
+    __tablename__ = 'traders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=False)
+    name = db.Column(db.String(128), nullable=False)
+
+    # Export info
+    export_year_operating_costs = db.Column(db.Float)
+    export_operating_expenses_pct = db.Column(db.Float)
+    export_profit_pct = db.Column(db.Float)
+    export_sales_tax = db.Column(db.Float)
+    export_other_taxes = db.Column(db.Float)
+
+    # Import info
+    import_year_operating_costs = db.Column(db.Float)
+    import_operating_expenses_pct = db.Column(db.Float)
+    import_profit_pct = db.Column(db.Float)
+    import_import_taxes = db.Column(db.Float)
+    import_sales_tax = db.Column(db.Float)
+    import_other_taxes = db.Column(db.Float)
+
+    country = db.relationship('Country', backref='traders')
+
+    def __repr__(self):
+        return f"<Trader {self.name} ({self.country_id})>"
 
 
 class Airport(BaseModel):

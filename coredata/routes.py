@@ -1,58 +1,126 @@
+
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from app import db
+from models import Product, Country, Aircraft, Airport, Trader
+from coredata.forms import AircraftForm, AirportForm, TraderForm
+
+coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+
+
+# Add Trader
+@coredata_bp.route('/add-trader', methods=['GET', 'POST'])
+def add_trader():
+    countries = Country.query.order_by(Country.country_name).all()
+    country_choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
+    edit_id = request.args.get('edit_id') or request.form.get('edit_id')
+    trader = Trader.query.get(edit_id) if edit_id else None
+    if request.method == 'POST':
+        form = TraderForm(request.form)
+        form.country_id.choices = country_choices
+        if form.validate_on_submit():
+            if trader:
+                form.populate_obj(trader)
+            else:
+                trader = Trader()
+                form.populate_obj(trader)
+                db.session.add(trader)
+            db.session.commit()
+            return redirect(url_for('coredata.view_edit_traders'))
+    else:
+        if trader:
+            form = TraderForm(obj=trader)
+        else:
+            form = TraderForm()
+        form.country_id.choices = country_choices
+    return render_template('coredata/add_trader.html', form=form, edit_id=edit_id)
+
+# View/Edit Traders
+@coredata_bp.route('/view-edit-traders')
+def view_edit_traders():
+    trader_list = Trader.query.all()
+    return render_template('coredata/view_edit_traders.html', trader_list=trader_list)
+
+# Delete Trader
+@coredata_bp.route('/delete-trader/<int:trader_id>')
+def delete_trader(trader_id):
+    trader = Trader.query.get_or_404(trader_id)
+    db.session.delete(trader)
+    db.session.commit()
+    return redirect(url_for('coredata.view_edit_traders'))
+
+
+
 # View/Edit Airport list
 @coredata_bp.route('/view-edit-airport')
 def view_edit_airport():
-    from models import Airport
     airport_list = Airport.query.all()
     return render_template('coredata/view_edit_airport.html', airport_list=airport_list)
 
 # Delete multiple airports (AJAX)
 @coredata_bp.route('/delete-multiple-airports', methods=['POST'])
 def delete_multiple_airports():
-    from models import Airport
     ids = request.json.get('ids', [])
     if not ids:
         return jsonify({'success': False, 'error': 'No IDs provided'}), 400
     Airport.query.filter(Airport.id.in_(ids)).delete(synchronize_session=False)
     db.session.commit()
     return jsonify({'success': True})
-from models import Airport
-from coredata.forms import AirportForm
+
 # Add Airport
 @coredata_bp.route('/add-airport', methods=['GET', 'POST'])
 def add_airport():
-    # Populate country dropdown (country_code, country_name)
     countries = Country.query.order_by(Country.country_name).all()
     country_choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
-    form = AirportForm()
-    form.country_id.choices = country_choices
-
-    if form.validate_on_submit():
-        airport = Airport(
-            name=form.name.data,
-            iata_code=form.iata_code.data.upper(),
-            city=form.city.data,
-            country_id=form.country_id.data,
-            fuel_cost_gl=form.fuel_cost_gl.data,
-            cargo_handling_cost_kg=form.cargo_handling_cost_kg.data,
-            airport_fee=form.airport_fee.data,
-            turnaround_cost=form.turnaround_cost.data,
-            other_desc=form.other_desc.data,
-            other_cost=form.other_cost.data,
-            latitude=form.latitude.data,
-            longitude=form.longitude.data,
-            geo_source=form.geo_source.data
-        )
-        db.session.add(airport)
-        db.session.commit()
-        return redirect(url_for('coredata.view_edit_airport'))
-    return render_template('coredata/add_airport.html', form=form)
-
-from flask import Blueprint, render_template, request, redirect, url_for
-from app import db
-from models import Product, Country, Aircraft
-from flask import jsonify
-
-coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+    edit_id = request.args.get('edit_id') or request.form.get('edit_id')
+    airport = Airport.query.get(edit_id) if edit_id else None
+    if request.method == 'POST':
+        form = AirportForm(request.form)
+        form.country_id.choices = country_choices
+        if form.validate_on_submit():
+            # Fetch coordinates using OpenFlights data (local function, no API key required)
+            iata = form.iata_code.data.strip().upper()
+            latitude = None
+            longitude = None
+            if iata and len(iata) == 3:
+                import requests, csv
+                from io import StringIO
+                API_URL = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+                try:
+                    resp = requests.get(API_URL, timeout=10)
+                    if resp.ok:
+                        reader = csv.reader(StringIO(resp.text))
+                        for fields in reader:
+                            if len(fields) > 7 and fields[4].strip('"').upper() == iata:
+                                try:
+                                    latitude = float(fields[6])
+                                    longitude = float(fields[7])
+                                    break
+                                except Exception:
+                                    latitude = None
+                                    longitude = None
+                                    break
+                except Exception:
+                    latitude = None
+                    longitude = None
+            if airport:
+                form.populate_obj(airport)
+                airport.latitude = latitude
+                airport.longitude = longitude
+            else:
+                airport = Airport()
+                form.populate_obj(airport)
+                airport.latitude = latitude
+                airport.longitude = longitude
+                db.session.add(airport)
+            db.session.commit()
+            return redirect(url_for('coredata.view_edit_airport'))
+    else:
+        if airport:
+            form = AirportForm(obj=airport)
+        else:
+            form = AirportForm()
+        form.country_id.choices = country_choices
+    return render_template('coredata/add_airport.html', form=form, edit_id=edit_id)
 
 # View/Edit Aircraft list
 @coredata_bp.route('/view-edit-aircraft')
@@ -88,53 +156,32 @@ def parse_int_or_none(val):
 from coredata.forms import AircraftForm
 @coredata_bp.route('/add-aircraft', methods=['GET', 'POST'])
 def add_aircraft():
-    # Only generate a new ID if GET (new form), not POST (preserve user input)
-    if request.method == 'GET':
-        # Find the highest existing ACFT number and increment
-        last_aircraft = Aircraft.query.filter(Aircraft.id.like('ACFT%')).order_by(Aircraft.id.desc()).first()
-        if last_aircraft and last_aircraft.id[4:].isdigit():
-            next_num = int(last_aircraft.id[4:]) + 1
-        else:
-            next_num = 1
-        new_id = f"ACFT{next_num:02d}"
-        form = AircraftForm(id=new_id)
+    edit_id = request.args.get('edit_id') or request.form.get('edit_id')
+    aircraft = Aircraft.query.get(edit_id) if edit_id else None
+    if request.method == 'POST':
+        form = AircraftForm(request.form)
+        if form.validate_on_submit():
+            if aircraft:
+                form.populate_obj(aircraft)
+            else:
+                aircraft = Aircraft()
+                form.populate_obj(aircraft)
+                db.session.add(aircraft)
+            db.session.commit()
+            return redirect(url_for('coredata.view_edit_aircraft'))
     else:
-        # On POST, always set the id from the submitted value (readonly field is included in POST)
-        form = AircraftForm(id=request.form.get('id'))
-    if form.validate_on_submit():
-        aircraft = Aircraft(
-            id=form.id.data,
-            manufacturer=form.manufacturer.data,
-            model=form.model.data,
-            short_name=form.short_name.data,
-            mtow_kg=form.mtow_kg.data,
-            mtow_lbs=form.mtow_lbs.data,
-            mldgw_kg=form.mldgw_kg.data,
-            mldgw_lbs=form.mldgw_lbs.data,
-            zero_fuel_kg=form.zero_fuel_kg.data,
-            zero_fuel_lbs=form.zero_fuel_lbs.data,
-            max_ramp_kg=form.max_ramp_kg.data,
-            max_ramp_lbs=form.max_ramp_lbs.data,
-            empty_weight_kg=form.empty_weight_kg.data,
-            empty_weight_lbs=form.empty_weight_lbs.data,
-            max_payload_kg=form.max_payload_kg.data,
-            max_payload_lbs=form.max_payload_lbs.data,
-            fuel_capacity_gal=form.fuel_capacity_gal.data,
-            fuel_capacity_lbs=form.fuel_capacity_lbs.data,
-            fuel_burn_gal=form.fuel_burn_gal.data,
-            fuel_burn_lbs=form.fuel_burn_lbs.data,
-            min_fuel_landed_gal=form.min_fuel_landed_gal.data,
-            min_fuel_landed_lbs=form.min_fuel_landed_lbs.data,
-            min_fuel_alternate_gal=form.min_fuel_alternate_gal.data,
-            min_fuel_alternate_lbs=form.min_fuel_alternate_lbs.data,
-            cargo_positions_main_deck=form.cargo_positions_main_deck.data,
-            cargo_positions_lower_deck=form.cargo_positions_lower_deck.data,
-            acmi_cost=form.acmi_cost.data,
-        )
-        db.session.add(aircraft)
-        db.session.commit()
-        return redirect(url_for('coredata.view_edit_aircraft'))
-    return render_template('coredata/add_aircraft.html', form=form)
+        if aircraft:
+            form = AircraftForm(obj=aircraft)
+        else:
+            # Generate new ID for new aircraft
+            last_aircraft = Aircraft.query.filter(Aircraft.id.like('ACFT%')).order_by(Aircraft.id.desc()).first()
+            if last_aircraft and last_aircraft.id[4:].isdigit():
+                next_num = int(last_aircraft.id[4:]) + 1
+            else:
+                next_num = 1
+            new_id = f"ACFT{next_num:02d}"
+            form = AircraftForm(id=new_id)
+    return render_template('coredata/add_aircraft.html', form=form, edit_id=edit_id)
 
 # Dashboard page
 @coredata_bp.route('/dashboard')
