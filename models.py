@@ -122,6 +122,7 @@ class Airport(BaseModel):
     cargo_handling_cost_kg = db.Column(db.Float)
     airport_fee = db.Column(db.Float)
     turnaround_cost = db.Column(db.Float)
+    altitude_ft = db.Column(db.Float)  # Altitude in feet
     other_desc = db.Column(db.String(100))
     other_cost = db.Column(db.Float)
 

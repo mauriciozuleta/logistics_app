@@ -66,8 +66,13 @@
 
     <div class="row mb-3">
       <div class="col-md-4">
-        {{ form.other_desc.label(class="form-label") }}
-        {{ form.other_desc(class="form-control") }}
+        <label for="restrictions">Restrictions</label>
+        <select class="form-control" id="restrictions" name="restrictions">
+            <option value="none">None</option>
+            <option value="altitude">Altitude</option>
+            <option value="temperature">Temperature</option>
+            <option value="altitude and temperature">Alt / Temp</option>
+        </select>
       </div>
       <div class="col-md-4">
         {{ form.other_cost.label(class="form-label") }}
