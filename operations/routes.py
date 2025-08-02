@@ -32,7 +32,9 @@ def aircraft_cruise_speed():
             'fuel_burn_lbs': aircraft.fuel_burn_lbs,
             'min_fuel_landed_lbs': aircraft.min_fuel_landed_lbs,
             'min_fuel_alternate_lbs': aircraft.min_fuel_alternate_lbs,
-            'acmi_cost': aircraft.acmi_cost
+            'acmi_cost': aircraft.acmi_cost,
+            'empty_weight_lbs': aircraft.empty_weight_lbs,
+            'max_payload_lbs': aircraft.max_payload_lbs
         })
 # API endpoint to get airport fuel cost
 @operations_api.route('/airport-fuel-cost', methods=['POST'])

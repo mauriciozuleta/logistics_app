@@ -165,6 +165,13 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           rows[i].cells[4].innerText = '';
         }
+         // Populate payload summary table for this leg
+         populatePayloadSummaryTable(
+           aircraftData,
+           routeFuelGal,
+           reserveFuelGal,
+           i // row index
+         );
         // B/H cost = acmi_cost * flightTime, but if flightTime < 1, use 1
         if (aircraftData.acmi_cost && flightTime) {
           var bhMultiplier = flightTime < 1 ? 1 : flightTime;
@@ -402,7 +409,32 @@ document.addEventListener('DOMContentLoaded', function() {
           <thead style="background:#23272e !important; font-weight: normal;">
             <tr style="font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important;">
               <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Leg</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Aircraft E/W (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">O-E-W (Lbs.)</th>
+<script>
+function populatePayloadSummaryTable(aircraftData, routeFuelGals, reserveFuelGals, rowIdx) {
+  // Conversion factor: 1 gal = 6.7 lbs (typical jet fuel)
+  const galToLbs = 6.7;
+  var payloadTable = document.getElementById('payload-summary-table');
+  if (!payloadTable) return;
+  var rows = payloadTable.getElementsByTagName('tr');
+  if (rows.length < rowIdx + 1) return;
+  var cells = rows[rowIdx].getElementsByTagName('td');
+  if (cells.length < 7) return;
+  // O-E-W cell
+  // Format helper
+  function formatNumber(value, decimals = 2) {
+    return value !== undefined && value !== null && value !== '' ? Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : '';
+  }
+  cells[1].textContent = formatNumber(aircraftData.empty_weight_lbs, 2);
+  // Fuel Weight cell: sum of route fuel and reserve fuel (in gals) converted to lbs
+  var routeFuelLbs = (parseFloat(routeFuelGals) || 0) * galToLbs;
+  var reserveFuelLbs = (parseFloat(reserveFuelGals) || 0) * galToLbs;
+  cells[2].textContent = formatNumber(routeFuelLbs + reserveFuelLbs, 2);
+  // Max Payload cell
+  cells[3].textContent = formatNumber(aircraftData.max_payload_lbs, 2);
+  // Avail Extra Fuel, No-Tank T/O/W, Tank T/O/W: leave blank or add logic as needed
+}
+</script>
               <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Fuel Weight (Lbs.)</th>
               <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Max Payload (Lbs.)</th>
               <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Avail Extra Fuel (Lbs.)</th>
