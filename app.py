@@ -8,7 +8,7 @@ from coredata.routes import coredata_bp
 from financial.routes import financial
 from users.routes import users
 from ops.routes import ops
-from operations.routes import operations
+from operations.routes import operations, operations_api
 
 app = Flask(__name__)
 
@@ -26,6 +26,7 @@ app.register_blueprint(coredata_bp, url_prefix='/coredata')
 app.register_blueprint(financial, url_prefix='/financial')
 app.register_blueprint(users, url_prefix='/users')
 app.register_blueprint(operations, url_prefix='/operations')
+app.register_blueprint(operations_api, url_prefix='/api')
 app.register_blueprint(ops, url_prefix='/ops')
 
 # Homepage route

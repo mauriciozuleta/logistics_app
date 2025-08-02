@@ -6,12 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
   var toSelect = document.getElementById('to_airport');
   var finishSelect = document.getElementById('finish_airport');
   var aircraftSelect = document.getElementById('aircraft_type');
-  // Helper to get IATA code from selected option
   function getIata(select) {
     var opt = select.options[select.selectedIndex];
     if (!opt || !opt.text) return '';
-    var match = opt.text.match(/\/(\w{3})$/);
-    return match ? match[1] : opt.text;
+    // If option value is the airport ID, get the IATA code from the option text
+    var match = opt.text.match(/\/\s*(\w{3})$/);
+    return match ? match[1] : opt.text.trim();
   }
   function freezeLists() {
     fromSelect.disabled = true;
@@ -20,26 +20,24 @@ document.addEventListener('DOMContentLoaded', function() {
     aircraftSelect.disabled = true;
     routeType.disabled = true;
   }
-  function setLegs() {
+  function setLegsAndDistances(distances) {
     var fromIata = getIata(fromSelect);
     var toIata = getIata(toSelect);
     var finishIata = getIata(finishSelect);
     var type = routeType.value;
-    // Route Summary Table
     var routeTable = document.getElementById('route-summary-table');
     if (routeTable) {
       var rows = routeTable.getElementsByTagName('tr');
       if (type === 'one-way') {
-        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] || ''; }
       } else if (type === 'round-trip') {
-        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
-        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + fromIata;
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] || ''; }
+        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + fromIata; rows[2].cells[1].innerText = distances[1] || ''; }
       } else if (type === 'multiple') {
-        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
-        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + finishIata;
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] || ''; }
+        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + finishIata; rows[2].cells[1].innerText = distances[1] || ''; }
       }
     }
-    // Payload Summary Table
     var payloadTable = document.getElementById('payload-summary-table');
     if (payloadTable) {
       var rows = payloadTable.getElementsByTagName('tr');
@@ -54,10 +52,38 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
+  function getLegs() {
+    var fromIata = getIata(fromSelect);
+    var toIata = getIata(toSelect);
+    var finishIata = getIata(finishSelect);
+    var type = routeType.value;
+    var legs = [];
+    if (type === 'one-way') {
+      legs.push({from: fromIata, to: toIata});
+    } else if (type === 'round-trip') {
+      legs.push({from: fromIata, to: toIata});
+      legs.push({from: toIata, to: fromIata});
+    } else if (type === 'multiple') {
+      legs.push({from: fromIata, to: toIata});
+      legs.push({from: toIata, to: finishIata});
+    }
+    return legs;
+  }
+  async function fetchDistances(legs) {
+    const response = await fetch('/api/leg-distances', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({legs: legs})
+    });
+    const data = await response.json();
+    return data.distances.map(d => d.distance);
+  }
   if (loadBtn) {
-    loadBtn.addEventListener('click', function() {
+    loadBtn.addEventListener('click', async function() {
       freezeLists();
-      setLegs();
+      const legs = getLegs();
+      const distances = await fetchDistances(legs);
+      setLegsAndDistances(distances);
     });
   }
 });
@@ -200,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <tr style="font-weight: normal;">
             <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Leg</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Distance</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Flight Time</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Lbs.)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Reserve Fuel (Lbs.)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Max L/W (Lbs.)</th>
@@ -210,13 +237,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </thead>
         <tbody style="font-weight: normal;">
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-          </tr>
-          <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
           <!-- Totals row removed as requested -->
         </tbody>
@@ -238,9 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
           </thead>
           <tbody style="font-weight: normal;">
-            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
-              <td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td>
-            </tr>
             <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
               <td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td>
             </tr>
