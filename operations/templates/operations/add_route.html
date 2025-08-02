@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+<style>
+  .route-form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    margin: 0 auto;
+  }
+  .route-form-row .form-group {
+    flex: 1 1 20%;
+    min-width: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  #load_finish_btn {
+    width: 100%;
+    height: 38px;
+  }
+  #route-table-wrapper table {
+    width: 100% !important;
+    background-color: #181c22 !important;
+    color: #FF5C00 !important;
+    border-radius: 8px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  #route-table-wrapper th, #route-table-wrapper td {
+    background-color: #181c22 !important;
+    color: #FF5C00 !important;
+    border: 0.5px solid #2196f3 !important;
+    min-width: 150px;
+    text-align: center;
+    padding: 12px 8px;
+  }
+  #route-table-wrapper thead {
+    background: #23272e !important;
+  }
+</style>
+  <h2>Route Information</h2>
+  <form method="post">
+      <form method="post">
+        <div class="route-form-row">
+          <div class="form-group">
+            <label for="aircraft_type">Aircraft Type</label>
+            <select id="aircraft_type" name="aircraft_type" required style="width: 100%;">
+              <option value="">Select...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="route_type">Route Type</label>
+            <select id="route_type" name="route_type" required style="width: 100%;">
+              <option value="round-trip">Round-Trip</option>
+              <option value="one-way">One-Way</option>
+              <option value="multiple">Multiple</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="from_airport"><strong>From</strong></label>
+            <select id="from_airport" name="from_airport" required style="width: 100%;">
+              <option value="">Select...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="to_airport"><strong>To</strong></label>
+            <select id="to_airport" name="to_airport" required style="width: 100%;">
+              <option value="">Select...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="finish_airport"><strong>Finish in</strong></label>
+            <select id="finish_airport" name="finish_airport" style="width: 100%;">
+              <option value="">Select...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <a href="/coredata/add-airport" class="btn btn-success" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #176c3a; border: 0.5px solid #176c3a; display: flex; align-items: center; justify-content: center; text-align: center;">Add airport</a>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <button type="button" id="load_finish_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #2196f3; border: 0.5px solid #2196f3;">Load</button>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <button type="button" id="edit_route_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #b34700; border: 0.5px solid #b34700; display: flex; align-items: center; justify-content: center; text-align: center;">Edit Route</button>
+          </div>
+          <!-- Save Route button moved below the table -->
+        </div>
+      </form>
+  <div id="finish-warning" style="display:none; color: #b94a48; margin-top: 0.5rem; font-weight: bold;">The "Finish" field is only available for Route Type: Multiple.</div>
+  <div id="load-table-container" style="width:100%; display:flex; justify-content:center; margin-top:2rem; flex-direction:column; align-items:center;">
+    <div style="width:100%; max-width:1400px; margin-bottom: 0.5rem; text-align: center;">
+      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px;">Route Summary</label>
+    </div>
+    <!-- Save Route button removed as requested -->
+    <div id="route-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
+      <table class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22; color:#FF5C00; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+        <thead style="background:#23272e; font-weight: normal;">
+          <tr style="font-weight: normal;">
+            <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Leg</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Distance</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Lbs.)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Reserve Fuel (Lbs.)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Max L/W (Lbs.)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost</th>
+          </tr>
+        </thead>
+        <tbody style="font-weight: normal;">
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <!-- Totals row removed as requested -->
+        </tbody>
+      </table>
+    </div>
+    <div style="width:100%; max-width:1400px; margin-top:2rem; text-align:center;">
+      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px; margin-bottom: 0.5rem;">Payload Summary</label>
+      <div id="payload-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
+        <table class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22 !important; color:#FF5C00 !important; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+          <thead style="background:#23272e !important; font-weight: normal;">
+            <tr style="font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important;">
+              <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Leg</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Aircraft E/W (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Fuel Weight (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Max Payload (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Avail Extra Fuel (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">No-Tank T/O/W</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Tank T/O/W</th>
+            </tr>
+          </thead>
+          <tbody style="font-weight: normal;">
+            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
+              <td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td>
+            </tr>
+            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
+              <td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td>
+            </tr>
+            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
+              <td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
