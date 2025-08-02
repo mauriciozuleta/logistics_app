@@ -69,5 +69,6 @@ class AircraftForm(FlaskForm):
     min_fuel_alternate_lbs = FloatField('Min Fuel Alternate (lbs)', validators=[Optional()])
     cargo_positions_main_deck = IntegerField('Cargo Positions Main Deck', validators=[Optional()])
     cargo_positions_lower_deck = IntegerField('Cargo Positions Lower Deck', validators=[Optional()])
+    cruise_speed = FloatField('Cruise Speed', validators=[Optional()])
     acmi_cost = FloatField('ACMI Cost', validators=[Optional()])
     submit = SubmitField('Add Aircraft')
