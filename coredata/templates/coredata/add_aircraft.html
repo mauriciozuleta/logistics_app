@@ -214,21 +214,28 @@
 
     <!-- Cargo & Cost Fields -->
     <div class="row mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
         {{ form.cargo_positions_main_deck.label(class="form-label") }}
         {{ form.cargo_positions_main_deck(class="form-control", id="cargo_positions_main_deck") }}
         {% if form.cargo_positions_main_deck.errors %}
           <div class="text-danger small">{{ form.cargo_positions_main_deck.errors[0] }}</div>
         {% endif %}
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         {{ form.cargo_positions_lower_deck.label(class="form-label") }}
         {{ form.cargo_positions_lower_deck(class="form-control", id="cargo_positions_lower_deck") }}
         {% if form.cargo_positions_lower_deck.errors %}
           <div class="text-danger small">{{ form.cargo_positions_lower_deck.errors[0] }}</div>
         {% endif %}
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        {{ form.cruise_speed.label(class="form-label") }}
+        {{ form.cruise_speed(class="form-control", id="cruise_speed") }}
+        {% if form.cruise_speed.errors %}
+          <div class="text-danger small">{{ form.cruise_speed.errors[0] }}</div>
+        {% endif %}
+    </div>
+    <div class="col-md-3">
         {{ form.acmi_cost.label(class="form-label") }}
         {{ form.acmi_cost(class="form-control", id="acmi_cost") }}
         {% if form.acmi_cost.errors %}

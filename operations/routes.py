@@ -21,6 +21,29 @@ def add_route():
     return render_template('operations/add_route.html', airport_choices=airport_choices, aircraft_choices=aircraft_choices)
 
 # API endpoint for distance calculation
+@operations_api.route('/aircraft-cruise-speed', methods=['POST'])
+def aircraft_cruise_speed():
+    data = request.get_json()
+    aircraft_id = data.get('aircraft_id')
+    aircraft = Aircraft.query.filter_by(id=aircraft_id).first()
+    if aircraft:
+        return jsonify({
+            'cruise_speed': aircraft.cruise_speed,
+            'fuel_burn_lbs': aircraft.fuel_burn_lbs,
+            'min_fuel_landed_lbs': aircraft.min_fuel_landed_lbs,
+            'min_fuel_alternate_lbs': aircraft.min_fuel_alternate_lbs,
+            'acmi_cost': aircraft.acmi_cost
+        })
+# API endpoint to get airport fuel cost
+@operations_api.route('/airport-fuel-cost', methods=['POST'])
+def airport_fuel_cost():
+    data = request.get_json()
+    airport_id = data.get('airport_id')
+    airport = Airport.query.filter_by(id=airport_id).first()
+    if airport:
+        return jsonify({'fuel_cost_gl': airport.fuel_cost_gl})
+    return jsonify({'fuel_cost_gl': None}), 404
+    return jsonify({'cruise_speed': None, 'fuel_burn_lbs': None, 'min_fuel_landed_lbs': None, 'min_fuel_alternate_lbs': None}), 404
 
 # API endpoint for distance calculation
 @operations_api.route('/leg-distances', methods=['POST'])

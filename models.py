@@ -73,6 +73,7 @@ class Aircraft(BaseModel):
 
     cargo_positions_main_deck = db.Column(db.Integer)
     cargo_positions_lower_deck = db.Column(db.Integer)
+    cruise_speed = db.Column(db.Float)
 
     acmi_cost = db.Column(db.Float)
 

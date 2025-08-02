@@ -6,13 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
   var toSelect = document.getElementById('to_airport');
   var finishSelect = document.getElementById('finish_airport');
   var aircraftSelect = document.getElementById('aircraft_type');
+
   function getIata(select) {
     var opt = select.options[select.selectedIndex];
     if (!opt || !opt.text) return '';
-    // If option value is the airport ID, get the IATA code from the option text
     var match = opt.text.match(/\/\s*(\w{3})$/);
     return match ? match[1] : opt.text.trim();
   }
+
   function freezeLists() {
     fromSelect.disabled = true;
     toSelect.disabled = true;
@@ -20,6 +21,48 @@ document.addEventListener('DOMContentLoaded', function() {
     aircraftSelect.disabled = true;
     routeType.disabled = true;
   }
+
+  function getLegs() {
+    var fromIata = getIata(fromSelect);
+    var toIata = getIata(toSelect);
+    var finishIata = getIata(finishSelect);
+    var type = routeType.value;
+    var legs = [];
+    if (type === 'one-way') {
+      legs.push({from: fromIata, to: toIata});
+    } else if (type === 'round-trip') {
+      legs.push({from: fromIata, to: toIata});
+      legs.push({from: toIata, to: fromIata});
+    } else if (type === 'multiple') {
+      legs.push({from: fromIata, to: toIata});
+      legs.push({from: toIata, to: finishIata});
+    }
+    return legs;
+  }
+
+  async function fetchDistances(legs) {
+    const response = await fetch('/api/leg-distances', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({legs: legs})
+    });
+    const data = await response.json();
+    return data.distances.map(d => d.distance);
+  }
+
+  async function fetchAircraftData(aircraftId) {
+    const response = await fetch('/api/aircraft-cruise-speed', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({aircraft_id: aircraftId})
+    });
+    if (response.ok) {
+      const data = await response.json();
+      // Extend API to return all needed fields
+      return data;
+    }
+  }
+
   function setLegsAndDistances(distances) {
     var fromIata = getIata(fromSelect);
     var toIata = getIata(toSelect);
@@ -52,40 +95,97 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
-  function getLegs() {
-    var fromIata = getIata(fromSelect);
-    var toIata = getIata(toSelect);
-    var finishIata = getIata(finishSelect);
-    var type = routeType.value;
-    var legs = [];
-    if (type === 'one-way') {
-      legs.push({from: fromIata, to: toIata});
-    } else if (type === 'round-trip') {
-      legs.push({from: fromIata, to: toIata});
-      legs.push({from: toIata, to: fromIata});
-    } else if (type === 'multiple') {
-      legs.push({from: fromIata, to: toIata});
-      legs.push({from: toIata, to: finishIata});
+
+  function setFlightTimesAndFuel(distances, aircraftData) {
+    console.log('Aircraft Data:', aircraftData);
+    var routeTable = document.getElementById('route-summary-table');
+    if (!routeTable || !aircraftData.cruise_speed) return;
+    var rows = routeTable.getElementsByTagName('tr');
+    for (var i = 1; i < rows.length; i++) {
+      var dist = parseFloat(rows[i].cells[1].innerText);
+      let flightTime = '';
+      let routeFuel = '';
+      let reserveFuel = '';
+      let bhCost = '';
+      let fuelCost = '';
+      let totalLegCost = '';
+      if (!isNaN(dist) && aircraftData.cruise_speed > 0) {
+        flightTime = dist / aircraftData.cruise_speed;
+        rows[i].cells[2].innerText = flightTime ? flightTime.toFixed(2) + ' hr' : '';
+        if (aircraftData.fuel_burn_lbs && flightTime) {
+          routeFuel = aircraftData.fuel_burn_lbs * flightTime;
+          rows[i].cells[3].innerText = routeFuel ? formatNumber(routeFuel, 0) : '';
+        } else {
+          rows[i].cells[3].innerText = '';
+        }
+        if (aircraftData.min_fuel_landed_lbs !== undefined && aircraftData.min_fuel_alternate_lbs !== undefined) {
+          reserveFuel = (parseFloat(aircraftData.min_fuel_landed_lbs) || 0) + (parseFloat(aircraftData.min_fuel_alternate_lbs) || 0);
+          rows[i].cells[4].innerText = reserveFuel ? formatNumber(reserveFuel, 0) : '';
+        } else {
+          rows[i].cells[4].innerText = '';
+        }
+        // B/H cost = acmi_cost * flightTime
+        if (aircraftData.acmi_cost && flightTime) {
+          bhCost = aircraftData.acmi_cost * flightTime;
+          rows[i].cells[5].innerText = bhCost ? formatCurrency(bhCost) : '';
+        } else {
+          rows[i].cells[5].innerText = '';
+        }
+        // Fuel cost: convert routeFuel (lbs) to gallons, then multiply by from airport fuel cost
+        var jetAGal = routeFuel ? routeFuel / 6.7 : 0; // 6.7 lbs per gal
+        var fromAirportId = fromSelect.value;
+        rows[i].cells[6].innerText = '';
+        rows[i].cells[7].innerText = '';
+        if (jetAGal > 0 && fromAirportId) {
+          (function(rowIdx, jetAGalVal) {
+            fetch('/api/airport-fuel-cost', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({airport_id: fromAirportId})
+            })
+            .then(resp => resp.json())
+            .then(data => {
+              var fuelCostVal = (data.fuel_cost_gl && jetAGalVal) ? data.fuel_cost_gl * jetAGalVal : 0;
+              rows[rowIdx].cells[6].innerText = fuelCostVal ? formatCurrency(fuelCostVal) : '';
+              // Total leg cost = bhCost + fuelCost
+              var bhCostVal = aircraftData.acmi_cost && flightTime ? aircraftData.acmi_cost * flightTime : 0;
+              var totalLegCostVal = bhCostVal + fuelCostVal;
+              rows[rowIdx].cells[7].innerText = totalLegCostVal ? formatCurrency(totalLegCostVal) : '';
+            });
+          })(i, jetAGal);
+        }
+      } else {
+        rows[i].cells[2].innerText = '';
+        rows[i].cells[3].innerText = '';
+        rows[i].cells[4].innerText = '';
+        rows[i].cells[5].innerText = '';
+        rows[i].cells[6].innerText = '';
+        rows[i].cells[7].innerText = '';
+      }
     }
-    return legs;
   }
-  async function fetchDistances(legs) {
-    const response = await fetch('/api/leg-distances', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({legs: legs})
-    });
-    const data = await response.json();
-    return data.distances.map(d => d.distance);
-  }
+
   if (loadBtn) {
     loadBtn.addEventListener('click', async function() {
       freezeLists();
       const legs = getLegs();
       const distances = await fetchDistances(legs);
       setLegsAndDistances(distances);
+      const aircraftId = aircraftSelect.value;
+      const aircraftData = await fetchAircraftData(aircraftId);
+      setFlightTimesAndFuel(distances, aircraftData);
     });
   }
+
+  // Format number with comma for thousands and dot for decimals
+  function formatNumber(value, decimals = 0) {
+    return value ? Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : '';
+  }
+  // Format number as currency with comma for thousands and dot for decimals
+  function formatCurrency(value) {
+    return value ? `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+  }
+
 });
 </script>
 {% extends 'base.html' %}
@@ -229,18 +329,17 @@ document.addEventListener('DOMContentLoaded', function() {
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Flight Time</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Lbs.)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Reserve Fuel (Lbs.)</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Max L/W (Lbs.)</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost (USD)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost (USD)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost (USD)</th>
           </tr>
         </thead>
         <tbody style="font-weight: normal;">
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
           <!-- Totals row removed as requested -->
         </tbody>
