@@ -52,6 +52,9 @@
             <label for="aircraft_type">Aircraft Type</label>
             <select id="aircraft_type" name="aircraft_type" required style="width: 100%;">
               <option value="">Select...</option>
+              {% for ac_id, ac_short in aircraft_choices %}
+                <option value="{{ ac_id }}">{{ ac_short }}</option>
+              {% endfor %}
             </select>
           </div>
           <div class="form-group">
@@ -66,18 +69,27 @@
             <label for="from_airport"><strong>From</strong></label>
             <select id="from_airport" name="from_airport" required style="width: 100%;">
               <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
             </select>
           </div>
           <div class="form-group">
             <label for="to_airport"><strong>To</strong></label>
             <select id="to_airport" name="to_airport" required style="width: 100%;">
               <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
             </select>
           </div>
           <div class="form-group">
-            <label for="finish_airport"><strong>Finish in</strong></label>
-            <select id="finish_airport" name="finish_airport" style="width: 100%;">
+            <label for="finish_airport" id="finish_airport_label"><strong>Finish in</strong></label>
+            <select id="finish_airport" name="finish_airport" style="width: 100%;" disabled title="The 'Finish' field is only available for Route Type: Multiple.">
               <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
             </select>
           </div>
           <div class="form-group">
@@ -96,6 +108,23 @@
         </div>
       </form>
   <div id="finish-warning" style="display:none; color: #b94a48; margin-top: 0.5rem; font-weight: bold;">The "Finish" field is only available for Route Type: Multiple.</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var routeType = document.getElementById('route_type');
+  var finishSelect = document.getElementById('finish_airport');
+  function toggleFinish() {
+    if (routeType.value === 'multiple') {
+      finishSelect.disabled = false;
+      finishSelect.removeAttribute('title');
+    } else {
+      finishSelect.disabled = true;
+      finishSelect.setAttribute('title', "The 'Finish' field is only available for Route Type: Multiple.");
+    }
+  }
+  routeType.addEventListener('change', toggleFinish);
+  toggleFinish();
+});
+</script>
   <div id="load-table-container" style="width:100%; display:flex; justify-content:center; margin-top:2rem; flex-direction:column; align-items:center;">
     <div style="width:100%; max-width:1400px; margin-bottom: 0.5rem; text-align: center;">
       <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px;">Route Summary</label>
