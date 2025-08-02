@@ -1,5 +1,44 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  var editRouteBtn = document.getElementById('edit_route_btn');
+
+  function clearTables() {
+    // Clear route summary table
+    var routeTable = document.getElementById('route-summary-table');
+    if (routeTable) {
+      var rows = routeTable.getElementsByTagName('tr');
+      for (var i = 1; i < rows.length; i++) {
+        for (var j = 0; j < rows[i].cells.length; j++) {
+          rows[i].cells[j].innerText = '';
+        }
+      }
+    }
+    // Clear payload summary table
+    var payloadTable = document.getElementById('payload-summary-table');
+    if (payloadTable) {
+      var rows = payloadTable.getElementsByTagName('tr');
+      for (var i = 1; i < rows.length; i++) {
+        for (var j = 0; j < rows[i].cells.length; j++) {
+          rows[i].cells[j].innerText = '';
+        }
+      }
+    }
+  }
+
+  function activateSelections() {
+    fromSelect.disabled = false;
+    toSelect.disabled = false;
+    finishSelect.disabled = false;
+    aircraftSelect.disabled = false;
+    routeType.disabled = false;
+  }
+
+  if (editRouteBtn) {
+    editRouteBtn.addEventListener('click', function() {
+      clearTables();
+      activateSelections();
+    });
+  }
   var loadBtn = document.getElementById('load_finish_btn');
   var routeType = document.getElementById('route_type');
   var fromSelect = document.getElementById('from_airport');
@@ -114,30 +153,34 @@ document.addEventListener('DOMContentLoaded', function() {
         rows[i].cells[2].innerText = flightTime ? flightTime.toFixed(2) + ' hr' : '';
         if (aircraftData.fuel_burn_lbs && flightTime) {
           routeFuel = aircraftData.fuel_burn_lbs * flightTime;
-          rows[i].cells[3].innerText = routeFuel ? formatNumber(routeFuel, 0) : '';
+          var routeFuelGal = routeFuel / 6.7;
+          rows[i].cells[3].innerText = routeFuelGal ? formatNumber(routeFuelGal, 0) : '';
         } else {
           rows[i].cells[3].innerText = '';
         }
         if (aircraftData.min_fuel_landed_lbs !== undefined && aircraftData.min_fuel_alternate_lbs !== undefined) {
           reserveFuel = (parseFloat(aircraftData.min_fuel_landed_lbs) || 0) + (parseFloat(aircraftData.min_fuel_alternate_lbs) || 0);
-          rows[i].cells[4].innerText = reserveFuel ? formatNumber(reserveFuel, 0) : '';
+          var reserveFuelGal = reserveFuel / 6.7;
+          rows[i].cells[4].innerText = reserveFuelGal ? formatNumber(reserveFuelGal, 0) : '';
         } else {
           rows[i].cells[4].innerText = '';
         }
-        // B/H cost = acmi_cost * flightTime
+        // B/H cost = acmi_cost * flightTime, but if flightTime < 1, use 1
         if (aircraftData.acmi_cost && flightTime) {
-          bhCost = aircraftData.acmi_cost * flightTime;
+          var bhMultiplier = flightTime < 1 ? 1 : flightTime;
+          bhCost = aircraftData.acmi_cost * bhMultiplier;
           rows[i].cells[5].innerText = bhCost ? formatCurrency(bhCost) : '';
         } else {
           rows[i].cells[5].innerText = '';
         }
-        // Fuel cost: convert routeFuel (lbs) to gallons, then multiply by from airport fuel cost
-        var jetAGal = routeFuel ? routeFuel / 6.7 : 0; // 6.7 lbs per gal
+        // Fuel cost: convert routeFuel (lbs) to gallons, then multiply by from airport fuel cost, and if flightTime < 1, multiply result by 2
+        // Use route fuel in gallons directly for fuel cost calculation
+        var jetAGal = routeFuelGal ? routeFuelGal : 0;
         var fromAirportId = fromSelect.value;
         rows[i].cells[6].innerText = '';
         rows[i].cells[7].innerText = '';
         if (jetAGal > 0 && fromAirportId) {
-          (function(rowIdx, jetAGalVal) {
+          (function(rowIdx, jetAGalVal, flightTimeVal) {
             fetch('/api/airport-fuel-cost', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
@@ -146,13 +189,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(resp => resp.json())
             .then(data => {
               var fuelCostVal = (data.fuel_cost_gl && jetAGalVal) ? data.fuel_cost_gl * jetAGalVal : 0;
+              if (flightTimeVal < 1) fuelCostVal *= 2;
               rows[rowIdx].cells[6].innerText = fuelCostVal ? formatCurrency(fuelCostVal) : '';
               // Total leg cost = bhCost + fuelCost
-              var bhCostVal = aircraftData.acmi_cost && flightTime ? aircraftData.acmi_cost * flightTime : 0;
+              var bhCostVal = aircraftData.acmi_cost && flightTimeVal ? aircraftData.acmi_cost * (flightTimeVal < 1 ? 1 : flightTimeVal) : 0;
               var totalLegCostVal = bhCostVal + fuelCostVal;
               rows[rowIdx].cells[7].innerText = totalLegCostVal ? formatCurrency(totalLegCostVal) : '';
             });
-          })(i, jetAGal);
+          })(i, jetAGal, flightTime);
         }
       } else {
         rows[i].cells[2].innerText = '';
@@ -223,15 +267,20 @@ document.addEventListener('DOMContentLoaded', function() {
     border-spacing: 0;
   }
   #route-table-wrapper th, #route-table-wrapper td {
-    background-color: #181c22 !important;
-    color: #FF5C00 !important;
-    border: 0.5px solid #2196f3 !important;
-    min-width: 150px;
-    text-align: center;
-    padding: 12px 8px;
+  background-color: #181c22 !important;
+  color: #fff !important;
+  border: 0.5px solid #2196f3 !important;
+  min-width: 150px;
+  text-align: center;
+  padding: 12px 8px;
   }
   #route-table-wrapper thead {
-    background: #23272e !important;
+  background: #23272e !important;
+}
+
+#route-table-wrapper thead th {
+  color: #FF5C00 !important;
+}
   }
 </style>
   <h2>Route Information</h2>
@@ -327,8 +376,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Leg</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Distance</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Flight Time</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Lbs.)</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Reserve Fuel (Lbs.)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Gls.)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Reserve Fuel (Gls.)</th>
+
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost (USD)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost (USD)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost (USD)</th>
@@ -362,10 +412,10 @@ document.addEventListener('DOMContentLoaded', function() {
           </thead>
           <tbody style="font-weight: normal;">
             <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
-              <td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td>
+              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td>
             </tr>
             <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
-              <td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#FF5C00 !important; border:0.5px solid #2196f3 !important;"></td>
+              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important;"></td>
             </tr>
           </tbody>
         </table>
