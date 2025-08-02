@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="content-section">
+    <div class="dashboard-subtitle-container">
+      <h2>Operations Management Center</h2>
+    </div>
+
+    <div class="dashboard-buttons-container">
+      <div class="dropdown-container">
+        <button class="main-button" id="routes-freight-btn" data-tooltip="Analyze routes and freight costs">
+          Routes and Flight Analysis ▼
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="{{ url_for('operations.add_route') }}">Route Analysis</a>
+          <a class="dropdown-item" href="#">Cost Analysis</a>
+        </div>
+      </div>
+      <div class="dropdown-container">
+        <button class="main-button" id="shipments-btn" data-tooltip="Manage and track shipments">
+          Shipments ▼
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="#">Add Shipment</a>
+          <a class="dropdown-item" href="#">View / Edit Shipments</a>
+        </div>
+      </div>
+      <div class="dropdown-container">
+        <button class="main-button" id="operations-programming-btn" data-tooltip="Plan and program operations">
+          Operations Programming ▼
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="#">Add Program</a>
+          <a class="dropdown-item" href="#">View / Edit Programs</a>
+        </div>
+      </div>
+      <div class="dropdown-container">
+        <button class="main-button" id="operations-schedule-btn" data-tooltip="View and manage operations schedule">
+          Operations Schedule ▼
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="#">Add Schedule</a>
+          <a class="dropdown-item" href="#">View / Edit Schedules</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Generic dropdown logic for all dashboard dropdowns (only one open at a time)
+      const dropdownContainers = document.querySelectorAll('.dashboard-buttons-container .dropdown-container');
+      const allMenus = document.querySelectorAll('.dashboard-buttons-container .dropdown-menu');
+      dropdownContainers.forEach(container => {
+        const button = container.querySelector('.main-button');
+        const menu = container.querySelector('.dropdown-menu');
+        button.addEventListener('click', function(e) {
+          e.stopPropagation();
+          // Close all other dropdowns
+          allMenus.forEach(m => { if (m !== menu) m.classList.remove('show'); });
+          menu.classList.toggle('show');
+        });
+      });
+      window.addEventListener('click', function(event) {
+        allMenus.forEach(menu => menu.classList.remove('show'));
+      });
+    });
+  </script>
+{% endblock %}
+
+

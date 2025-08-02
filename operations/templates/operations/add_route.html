@@ -1,3 +1,67 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var loadBtn = document.getElementById('load_finish_btn');
+  var routeType = document.getElementById('route_type');
+  var fromSelect = document.getElementById('from_airport');
+  var toSelect = document.getElementById('to_airport');
+  var finishSelect = document.getElementById('finish_airport');
+  var aircraftSelect = document.getElementById('aircraft_type');
+  // Helper to get IATA code from selected option
+  function getIata(select) {
+    var opt = select.options[select.selectedIndex];
+    if (!opt || !opt.text) return '';
+    var match = opt.text.match(/\/(\w{3})$/);
+    return match ? match[1] : opt.text;
+  }
+  function freezeLists() {
+    fromSelect.disabled = true;
+    toSelect.disabled = true;
+    finishSelect.disabled = true;
+    aircraftSelect.disabled = true;
+    routeType.disabled = true;
+  }
+  function setLegs() {
+    var fromIata = getIata(fromSelect);
+    var toIata = getIata(toSelect);
+    var finishIata = getIata(finishSelect);
+    var type = routeType.value;
+    // Route Summary Table
+    var routeTable = document.getElementById('route-summary-table');
+    if (routeTable) {
+      var rows = routeTable.getElementsByTagName('tr');
+      if (type === 'one-way') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+      } else if (type === 'round-trip') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + fromIata;
+      } else if (type === 'multiple') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + finishIata;
+      }
+    }
+    // Payload Summary Table
+    var payloadTable = document.getElementById('payload-summary-table');
+    if (payloadTable) {
+      var rows = payloadTable.getElementsByTagName('tr');
+      if (type === 'one-way') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+      } else if (type === 'round-trip') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + fromIata;
+      } else if (type === 'multiple') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + finishIata;
+      }
+    }
+  }
+  if (loadBtn) {
+    loadBtn.addEventListener('click', function() {
+      freezeLists();
+      setLegs();
+    });
+  }
+});
+</script>
 {% extends 'base.html' %}
 
 {% block content %}
@@ -131,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <!-- Save Route button removed as requested -->
     <div id="route-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
-      <table class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22; color:#FF5C00; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+      <table id="route-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22; color:#FF5C00; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
         <thead style="background:#23272e; font-weight: normal;">
           <tr style="font-weight: normal;">
             <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Leg</th>
@@ -161,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div style="width:100%; max-width:1400px; margin-top:2rem; text-align:center;">
       <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px; margin-bottom: 0.5rem;">Payload Summary</label>
       <div id="payload-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
-        <table class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22 !important; color:#FF5C00 !important; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+        <table id="payload-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22 !important; color:#FF5C00 !important; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
           <thead style="background:#23272e !important; font-weight: normal;">
             <tr style="font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important;">
               <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Leg</th>

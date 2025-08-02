@@ -296,9 +296,9 @@ lo
 }
 
 .dropdown-container .dropdown-menu.show {
-  display: flex;
-  opacity: 1;
-  transform: translateY(0);
+  display: flex !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 /* Navbar dropdowns (hover) */

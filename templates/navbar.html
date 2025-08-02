@@ -3,6 +3,7 @@
 
     <!-- Main Navigation Links -->
     <ul class="nav-menu">
+
       <li><a href="{{ url_for('home') }}">Home</a></li>
 
       <li class="dropdown">
@@ -42,7 +43,22 @@
       </li>
 
 
-      <li><a href="{{ url_for('operations.dashboard') }}">Operations</a></li>
+      <li class="dropdown">
+        <a href="#">Operations</a>
+        <ul class="dropdown-menu">
+          <li><a href="{{ url_for('operations.dashboard') }}"><strong>Dashboard</strong></a></li>
+          <li class="dropdown-sub">
+            <a href="#">Routes and Freight Analysis</a>
+            <ul class="dropdown-submenu">
+              <li><a href="{{ url_for('operations.add_route') }}">Route Analysis</a></li>
+              <li><a href="#">Cost Analysis</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Shipments</a></li>
+          <li><a href="#">Operations Programming</a></li>
+          <li><a href="#">Operations Schedule</a></li>
+        </ul>
+      </li>
       <li><a href="{{ url_for('financial.dashboard') }}">Financial</a></li>
       <li><a href="{{ url_for('users.profile') }}">User Profile</a></li>
     </ul>
