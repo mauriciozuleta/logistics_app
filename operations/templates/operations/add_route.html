@@ -129,8 +129,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
         if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + fromIata;
       } else if (type === 'multiple') {
-        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
-        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + finishIata;
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] || ''; }
+        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + finishIata; rows[2].cells[1].innerText = distances[1] || ''; }
+        if (rows[3]) { rows[3].cells[0].innerText = 'Totals'; rows[3].cells[1].innerText = ''; } // Totals row
       }
     }
   }
@@ -206,8 +207,62 @@ document.addEventListener('DOMContentLoaded', function() {
         rows[i].cells[6].innerText = '';
         rows[i].cells[7].innerText = '';
       }
-    }
   }
+
+  function calculateTotals() {
+    var routeTable = document.getElementById('route-summary-table');
+    if (!routeTable) return;
+    var rows = routeTable.getElementsByTagName('tr');
+    if (rows.length < 4) return; // Need at least 3 data rows plus header
+    
+    // Initialize totals (skip leg column [0])
+    var totals = [0, 0, 0, 0, 0, 0, 0]; // distance, flight time, route fuel, reserve fuel, B/H cost, fuel cost, total cost
+    
+    // Sum rows 1 and 2 (data rows)
+    for (var i = 1; i <= 2; i++) {
+      if (rows[i]) {
+        // Distance (column 1)
+        var distance = parseFloat(rows[i].cells[1].innerText) || 0;
+        totals[0] += distance;
+        
+        // Flight Time (column 2) - remove 'hr' and parse
+        var flightTimeText = rows[i].cells[2].innerText.replace(' hr', '');
+        var flightTime = parseFloat(flightTimeText) || 0;
+        totals[1] += flightTime;
+        
+        // Route Fuel (column 3) - remove commas and parse
+        var routeFuel = parseFloat(rows[i].cells[3].innerText.replace(/,/g, '')) || 0;
+        totals[2] += routeFuel;
+        
+        // Reserve Fuel (column 4) - DON'T sum, take the value from first non-empty row
+        if (totals[3] === 0 && rows[i].cells[4].innerText) {
+          totals[3] = parseFloat(rows[i].cells[4].innerText.replace(/,/g, '')) || 0;
+        }
+        
+        // B/H Cost (column 5) - remove $ and commas
+        var bhCost = parseFloat(rows[i].cells[5].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[4] += bhCost;
+        
+        // Fuel Cost (column 6) - remove $ and commas  
+        var fuelCost = parseFloat(rows[i].cells[6].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[5] += fuelCost;
+        
+        // Total Leg Cost (column 7) - remove $ and commas
+        var totalCost = parseFloat(rows[i].cells[7].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[6] += totalCost;
+      }
+    }
+    
+    // Update totals row (row 3)
+    if (rows[3]) {
+      rows[3].cells[1].innerText = totals[0] ? formatNumber(totals[0], 0) : '';
+      rows[3].cells[2].innerText = totals[1] ? totals[1].toFixed(2) + ' hr' : '';
+      rows[3].cells[3].innerText = totals[2] ? formatNumber(totals[2], 0) : '';
+      rows[3].cells[4].innerText = totals[3] ? formatNumber(totals[3], 0) : ''; // Reserve fuel (not summed)
+      rows[3].cells[5].innerText = totals[4] ? formatCurrency(totals[4]) : '';
+      rows[3].cells[6].innerText = totals[5] ? formatCurrency(totals[5]) : '';
+      rows[3].cells[7].innerText = totals[6] ? formatCurrency(totals[6]) : '';
+    }
 
   if (loadBtn) {
     loadBtn.addEventListener('click', async function() {
@@ -218,6 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const aircraftId = aircraftSelect.value;
       const aircraftData = await fetchAircraftData(aircraftId);
       setFlightTimesAndFuel(distances, aircraftData);
+      calculateTotals();
     });
   }
 
@@ -281,6 +337,18 @@ document.addEventListener('DOMContentLoaded', function() {
 #route-table-wrapper thead th {
   color: #FF5C00 !important;
 }
+  }
+  /* Totals row styling */
+  #route-summary-table tbody tr:nth-child(3) {
+    background-color: #2a3038 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #FF5C00 !important;
+  }
+  #route-summary-table tbody tr:nth-child(3) td {
+    background-color: #2a3038 !important;
+    color: #FF5C00 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #FF5C00 !important;
   }
 </style>
   <h2>Route Information</h2>
@@ -391,6 +459,9 @@ document.addEventListener('DOMContentLoaded', function() {
           <tr>
             <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
           <!-- Totals row removed as requested -->
         </tbody>
       </table>
@@ -402,11 +473,11 @@ document.addEventListener('DOMContentLoaded', function() {
           <thead style="background:#23272e !important; font-weight: normal;">
             <tr style="font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important;">
               <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Leg</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Aircraft E/W (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">OEW (Lbs.)</th>
               <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Fuel Weight (Lbs.)</th>
               <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Max Payload (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">No-Tank T/O/W (Lbs.)</th>
               <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Avail Extra Fuel (Lbs.)</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">No-Tank T/O/W</th>
               <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Tank T/O/W</th>
             </tr>
           </thead>
@@ -428,3 +499,12 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+
+
