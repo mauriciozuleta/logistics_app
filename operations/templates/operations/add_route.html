@@ -256,8 +256,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fuel conversion factor: gallons to pounds (Jet A fuel)
     var galToLbsFactor = 6.7;
     
+    // Determine how many rows to process based on route type
+    var maxRows = type === 'one-way' ? 2 : 3; // one-way: 1 leg (row 1), others: 2 legs (rows 1&2)
+    
     // Process each leg for payload calculations
-    for (var i = 1; i < payloadRows.length; i++) {
+    for (var i = 1; i < maxRows; i++) {
       if (payloadRows[i] && payloadRows[i].cells[1]) {
         // Column 1 is OEW (Lbs.)
         payloadRows[i].cells[1].innerText = aircraftData.empty_weight_lbs ? formatNumber(aircraftData.empty_weight_lbs, 0) : '';
