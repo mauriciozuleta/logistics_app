@@ -33,7 +33,10 @@ def aircraft_cruise_speed():
             'min_fuel_landed_lbs': aircraft.min_fuel_landed_lbs,
             'min_fuel_alternate_lbs': aircraft.min_fuel_alternate_lbs,
             'acmi_cost': aircraft.acmi_cost,
-            'empty_weight_lbs': aircraft.empty_weight_lbs
+            'empty_weight_lbs': aircraft.empty_weight_lbs,
+            'mtow_lbs': aircraft.mtow_lbs,
+            'mldgw_lbs': aircraft.mldgw_lbs,
+            'max_payload_lbs': aircraft.max_payload_lbs
         })
     return jsonify({
         'cruise_speed': None, 
@@ -41,7 +44,10 @@ def aircraft_cruise_speed():
         'min_fuel_landed_lbs': None, 
         'min_fuel_alternate_lbs': None, 
         'acmi_cost': None,
-        'empty_weight_lbs': None
+        'empty_weight_lbs': None,
+        'mtow_lbs': None,
+        'mldgw_lbs': None,
+        'max_payload_lbs': None
     }), 404
 
 # API endpoint to get airport fuel cost
@@ -53,6 +59,16 @@ def airport_fuel_cost():
     if airport:
         return jsonify({'fuel_cost_gl': airport.fuel_cost_gl})
     return jsonify({'fuel_cost_gl': None}), 404
+
+# API endpoint to get airport altitude
+@operations_api.route('/airport-altitude', methods=['POST'])
+def airport_altitude():
+    data = request.get_json()
+    iata_code = data.get('iata_code')
+    airport = Airport.query.filter_by(iata_code=iata_code).first()
+    if airport:
+        return jsonify({'altitude_ft': airport.altitude_ft})
+    return jsonify({'altitude_ft': None}), 404
 
 # API endpoint for distance calculation
 @operations_api.route('/leg-distances', methods=['POST'])

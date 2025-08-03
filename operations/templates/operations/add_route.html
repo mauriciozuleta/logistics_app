@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fuel conversion factor: gallons to pounds (Jet A fuel)
     var galToLbsFactor = 6.7;
     
-    // Set OEW (Operating Empty Weight) and Fuel Weight for all legs
+    // Process each leg for payload calculations
     for (var i = 1; i < payloadRows.length; i++) {
       if (payloadRows[i] && payloadRows[i].cells[1]) {
         // Column 1 is OEW (Lbs.)
@@ -271,8 +271,81 @@ document.addEventListener('DOMContentLoaded', function() {
           var totalFuelWeight = routeFuelLbs + minLandingFuel + altFuel;
           
           payloadRows[i].cells[2].innerText = formatNumber(totalFuelWeight, 0);
+          
+          // Calculate Max Payload (Column 3) with altitude-adjusted MTOW and constraints
+          calculateMaxPayload(i, payloadRows[i], aircraftData, totalFuelWeight, routeFuelLbs);
         }
       }
+    }
+  }
+
+  // Function to calculate altitude performance gradient
+  function getAltitudeGradient(altitude) {
+    if (altitude < 4000) return 0;
+    if (altitude >= 4000 && altitude <= 4999) return 0.02; // 2%
+    if (altitude >= 5000 && altitude <= 5999) return 0.05; // 5%
+    if (altitude >= 6000 && altitude <= 7500) return 0.10; // 10%
+    if (altitude >= 7500 && altitude <= 9000) return 0.12; // 12%
+    if (altitude > 9000) return 0.16; // 16%
+    return 0;
+  }
+
+  // Function to calculate max payload with all constraints
+  async function calculateMaxPayload(rowIndex, payloadRow, aircraftData, totalFuelWeight, routeFuelLbs) {
+    try {
+      // Get departure airport IATA code from leg column
+      var legText = payloadRow.cells[0].innerText;
+      var departureIata = legText.split(' / ')[0];
+      
+      // Fetch airport altitude
+      const altitudeResponse = await fetch('/api/airport-altitude', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({iata_code: departureIata})
+      });
+      
+      if (!altitudeResponse.ok) {
+        throw new Error(`Failed to fetch altitude for ${departureIata}`);
+      }
+      
+      const altitudeData = await altitudeResponse.json();
+      var airportAltitude = altitudeData.altitude_ft || 0;
+      
+      // Calculate altitude gradient and adjusted MTOW
+      var gradient = getAltitudeGradient(airportAltitude);
+      var adjustedMTOW = aircraftData.mtow_lbs * (1 - gradient);
+      
+      // Show warning for high altitude airports
+      if (airportAltitude > 9000) {
+        console.warn(`High altitude departure (${departureIata}: ${airportAltitude} ft) - Special performance analysis required`);
+      }
+      
+      // Base Max Payload calculation: Adjusted MTOW - (OEW + Fuel Weight)
+      var baseMaxPayload = adjustedMTOW - (aircraftData.empty_weight_lbs + totalFuelWeight);
+      
+      // First constraint: Aircraft structural payload limit
+      var maxPayload = Math.min(baseMaxPayload, aircraftData.max_payload_lbs || baseMaxPayload);
+      
+      // Second constraint: Landing weight limit
+      // Leg Landing Weight = Aircraft Empty Weight + Fuel Weight - Route Fuel (lbs) + Max Payload
+      var legLandingWeight = aircraftData.empty_weight_lbs + totalFuelWeight - routeFuelLbs + maxPayload;
+      
+      if (legLandingWeight > aircraftData.mldgw_lbs) {
+        var excess = legLandingWeight - aircraftData.mldgw_lbs;
+        maxPayload = maxPayload - excess;
+      }
+      
+      // Ensure max payload is not negative
+      maxPayload = Math.max(0, maxPayload);
+      
+      // Update Max Payload column (Column 3)
+      payloadRow.cells[3].innerText = formatNumber(maxPayload, 0);
+      
+      console.log(`${departureIata} Altitude: ${airportAltitude} ft, Gradient: ${gradient * 100}%, Adjusted MTOW: ${formatNumber(adjustedMTOW, 0)}, Max Payload: ${formatNumber(maxPayload, 0)}`);
+      
+    } catch (error) {
+      console.error('Error calculating max payload:', error);
+      payloadRow.cells[3].innerText = 'Error';
     }
   }
 
