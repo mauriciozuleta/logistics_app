@@ -196,13 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </table>
       </div>
       <div style="width:100%; max-width:1400px; display: flex; justify-content: center; margin-top: 1.5rem;">
-        <button type="button" id="save_route_btn" class="btn btn-primary" style="width: 45%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #FFD600; border: 0.5px solid #FFD600; display: flex; align-items: center; justify-content: center; text-align: center; margin-right: 10px;">Save Route</button>
-        
-        <!-- TEST BUTTON: Simple form submission with different action -->
-        <form method="post" action="/operations/test-form" style="width: 45%; margin: 0;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
-          <button type="submit" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #28a745; color: white; border: 1px solid #28a745; display: flex; align-items: center; justify-content: center; text-align: center;">SIMPLE TEST</button>
-        </form>
+        <button type="button" id="save_route_btn" class="btn btn-primary" style="width: 300px; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #FFD600; border: 0.5px solid #FFD600; display: flex; align-items: center; justify-content: center; text-align: center;">Save Route</button>
       </div>
     </div>
     </div>
@@ -394,19 +388,35 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           rows[i].cells[4].innerText = '';
         }
-        // Fuel cost: convert routeFuel (lbs) to gallons, then multiply by from airport fuel cost, and if flightTime < 1, multiply result by 2
+        // Fuel cost: convert routeFuel (lbs) to gallons, then multiply by departure airport fuel cost, and if flightTime < 1, multiply result by 2
         // Use route fuel in gallons directly for fuel cost calculation
         var jetAGal = routeFuelGal ? routeFuelGal : 0;
-        var fromAirportId = fromSelect.value;
+        
+        // Determine which airport to use for fuel cost based on route type and leg
+        var fuelAirportId;
+        var routeTypeVal = routeType.value;
+        if (routeTypeVal === 'one-way') {
+          // One-way: always use from airport
+          fuelAirportId = fromSelect.value;
+        } else if (routeTypeVal === 'round-trip') {
+          // Round-trip: leg 1 uses from airport, leg 2 uses to airport
+          fuelAirportId = (i === 1) ? fromSelect.value : toSelect.value;
+        } else if (routeTypeVal === 'multiple') {
+          // Multiple: leg 1 uses from airport, leg 2 uses to airport
+          fuelAirportId = (i === 1) ? fromSelect.value : toSelect.value;
+        } else {
+          fuelAirportId = fromSelect.value; // fallback
+        }
+        
         rows[i].cells[5].innerText = '';
         rows[i].cells[6].innerText = '';
-        if (jetAGal > 0 && fromAirportId) {
+        if (jetAGal > 0 && fuelAirportId) {
           pendingRequests++; // Increment pending requests
           (function(rowIdx, jetAGalVal, flightTimeVal, aircraft) {
             fetch('/api/airport-fuel-cost', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({airport_id: fromAirportId})
+              body: JSON.stringify({airport_id: fuelAirportId})
             })
             .then(resp => resp.json())
             .then(data => {
