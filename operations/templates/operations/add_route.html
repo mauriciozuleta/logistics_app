@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           payloadRows[i].cells[2].innerText = formatNumber(totalFuelWeight, 0);
           
-          // Calculate Max Payload (Column 3) with altitude-adjusted MTOW and constraints
+          // Calculate Max Payload (Column 3) and No-Tank T/O/W (Column 4)
           calculateMaxPayload(i, payloadRows[i], aircraftData, totalFuelWeight, routeFuelLbs);
         }
       }
@@ -344,11 +344,18 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update Max Payload column (Column 3)
       payloadRow.cells[3].innerText = formatNumber(maxPayload, 0);
       
-      console.log(`${departureIata} Altitude: ${airportAltitude} ft, Gradient: ${gradient * 100}%, Adjusted MTOW: ${formatNumber(adjustedMTOW, 0)}, Max Payload: ${formatNumber(maxPayload, 0)}`);
+      // Calculate No-Tank T/O/W (Column 4) = OEW + Fuel Weight + Max Payload
+      var oew = parseFloat(payloadRow.cells[1].innerText.replace(/,/g, '')) || 0;
+      var fuelWeight = parseFloat(payloadRow.cells[2].innerText.replace(/,/g, '')) || 0;
+      var noTankTOW = oew + fuelWeight + maxPayload;
+      payloadRow.cells[4].innerText = formatNumber(noTankTOW, 0);
+      
+      console.log(`${departureIata} Altitude: ${airportAltitude} ft, Gradient: ${gradient * 100}%, Adjusted MTOW: ${formatNumber(adjustedMTOW, 0)}, Max Payload: ${formatNumber(maxPayload, 0)}, No-Tank T/O/W: ${formatNumber(noTankTOW, 0)}`);
       
     } catch (error) {
       console.error('Error calculating max payload:', error);
       payloadRow.cells[3].innerText = 'Error';
+      payloadRow.cells[4].innerText = 'Error';
     }
   }
 
