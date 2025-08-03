@@ -77,10 +77,11 @@ def add_airport():
         form = AirportForm(request.form)
         form.country_id.choices = country_choices
         if form.validate_on_submit():
-            # Fetch coordinates using OpenFlights data (local function, no API key required)
+            # Fetch coordinates and altitude using OpenFlights data (local API, no key required)
             iata = form.iata_code.data.strip().upper()
             latitude = None
             longitude = None
+            altitude_ft = None
             if iata and len(iata) == 3:
                 import requests, csv
                 from io import StringIO
@@ -90,27 +91,33 @@ def add_airport():
                     if resp.ok:
                         reader = csv.reader(StringIO(resp.text))
                         for fields in reader:
-                            if len(fields) > 7 and fields[4].strip('"').upper() == iata:
+                            if len(fields) > 8 and fields[4].strip('"').upper() == iata:
                                 try:
                                     latitude = float(fields[6])
                                     longitude = float(fields[7])
+                                    # Field 8 contains altitude in feet
+                                    altitude_ft = float(fields[8]) if fields[8] and fields[8] != '\\N' else None
                                     break
                                 except Exception:
                                     latitude = None
                                     longitude = None
+                                    altitude_ft = None
                                     break
                 except Exception:
                     latitude = None
                     longitude = None
+                    altitude_ft = None
             if airport:
                 form.populate_obj(airport)
                 airport.latitude = latitude
                 airport.longitude = longitude
+                airport.altitude_ft = altitude_ft
             else:
                 airport = Airport()
                 form.populate_obj(airport)
                 airport.latitude = latitude
                 airport.longitude = longitude
+                airport.altitude_ft = altitude_ft
                 db.session.add(airport)
             db.session.commit()
             return redirect(url_for('coredata.view_edit_airport'))

@@ -39,6 +39,7 @@ class AirportForm(FlaskForm):
     turnaround_cost = FloatField('Turnaround Cost', validators=[Optional()])
     other_desc = StringField('Other Description', validators=[Optional()])
     other_cost = FloatField('Other Cost', validators=[Optional()])
+    altitude_ft = FloatField('Airport Altitude (ft)', validators=[Optional()])
     submit = SubmitField('Add Airport')
 
 

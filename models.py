@@ -127,5 +127,6 @@ class Airport(BaseModel):
 
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    altitude_ft = db.Column(db.Float)
     geo_source = db.Column(db.String(50))
     last_verified_at = db.Column(db.DateTime)
