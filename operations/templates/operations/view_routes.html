@@ -336,8 +336,96 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  // Edit Selected functionality
+  editBtn.addEventListener('click', function() {
+    const checkedBoxes = document.querySelectorAll('.routes-checkbox:not(#select-all):checked');
+    if (checkedBoxes.length === 0) return;
+    
+    if (checkedBoxes.length === 1) {
+      // Single route - redirect to add_route form with route_id for editing
+      const routeId = checkedBoxes[0].value;
+      window.location.href = `/operations/add-route/${routeId}`;
+    } else {
+      // Multiple routes - show options
+      const routeIds = Array.from(checkedBoxes).map(cb => cb.value);
+      const message = `You have selected ${routeIds.length} routes for editing.\n\nOptions:\n1. Edit routes individually (opens tabs)\n2. Cancel`;
+      
+      if (confirm(message + '\n\nClick OK to edit individually, Cancel to abort.')) {
+        // Open each route in a new tab for editing
+        routeIds.forEach((routeId, index) => {
+          setTimeout(() => {
+            window.open(`/operations/add-route/${routeId}`, '_blank');
+          }, index * 100); // Small delay to prevent browser blocking
+        });
+      }
+    }
+  });
+
+  // Delete Selected functionality
+  deleteBtn.addEventListener('click', function() {
+    const checkedBoxes = document.querySelectorAll('.routes-checkbox:not(#select-all):checked');
+    if (checkedBoxes.length === 0) return;
+    
+    const routeIds = Array.from(checkedBoxes).map(cb => cb.value);
+    const routeNames = Array.from(checkedBoxes).map(cb => {
+      const row = cb.closest('tr');
+      return row.cells[2].textContent.trim(); // Route Summary column
+    });
+    
+    const message = `Are you sure you want to delete ${routeIds.length} route(s)?\n\nRoutes to delete:\n${routeNames.join('\n')}\n\nThis action cannot be undone.`;
+    
+    if (confirm(message)) {
+      // Show loading state
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting...';
+      
+      // Delete routes one by one
+      deleteMultipleRoutes(routeIds).then(results => {
+        const successful = results.filter(r => r.success).length;
+        const failed = results.filter(r => !r.success).length;
+        
+        if (successful > 0) {
+          alert(`Successfully deleted ${successful} route(s).${failed > 0 ? ` Failed to delete ${failed} route(s).` : ''}`);
+          location.reload(); // Refresh the page to show updated data
+        } else {
+          alert('Failed to delete any routes. Please try again.');
+        }
+      }).catch(error => {
+        alert('Error deleting routes: ' + error.message);
+      }).finally(() => {
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete Selected';
+      });
+    }
+  });
+
   updateSelectedCount();
 });
+
+// Helper function to delete multiple routes
+async function deleteMultipleRoutes(routeIds) {
+  const results = [];
+  
+  for (const routeId of routeIds) {
+    try {
+      const response = await fetch(`/operations/delete-route/${routeId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      });
+      
+      const result = await response.json();
+      results.push({ routeId, success: result.success, error: result.error });
+    } catch (error) {
+      results.push({ routeId, success: false, error: error.message });
+    }
+  }
+  
+  return results;
+}
 
 function viewRouteDetails(routeId) {
   // Implement view details functionality

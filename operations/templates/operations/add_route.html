@@ -69,16 +69,16 @@
             <select id="aircraft_type" name="aircraft_type" required style="width: 100%;">
               <option value="">Select...</option>
               {% for ac_id, ac_short in aircraft_choices %}
-                <option value="{{ ac_id }}">{{ ac_short }}</option>
+                <option value="{{ ac_id }}" {% if route_to_edit and route_to_edit.aircraft_id == ac_id %}selected{% endif %}>{{ ac_short }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="form-group">
             <label for="route_type">Route Type</label>
             <select id="route_type" name="route_type" required style="width: 100%;">
-              <option value="round-trip">Round-Trip</option>
-              <option value="one-way">One-Way</option>
-              <option value="multiple">Multiple</option>
+              <option value="round-trip" {% if route_to_edit and route_to_edit.route_type == 'round-trip' %}selected{% endif %}>Round-Trip</option>
+              <option value="one-way" {% if route_to_edit and route_to_edit.route_type == 'one-way' %}selected{% endif %}>One-Way</option>
+              <option value="multiple" {% if route_to_edit and route_to_edit.route_type == 'multiple' %}selected{% endif %}>Multiple</option>
             </select>
           </div>
           <div class="form-group">
@@ -86,7 +86,7 @@
             <select id="from_airport" name="from_airport" required style="width: 100%;">
               <option value="">Select...</option>
               {% for ap_id, ap_label in airport_choices %}
-                <option value="{{ ap_id }}">{{ ap_label }}</option>
+                <option value="{{ ap_id }}" {% if route_to_edit and route_to_edit.from_airport_id == ap_id %}selected{% endif %}>{{ ap_label }}</option>
               {% endfor %}
             </select>
           </div>
@@ -95,16 +95,16 @@
             <select id="to_airport" name="to_airport" required style="width: 100%;">
               <option value="">Select...</option>
               {% for ap_id, ap_label in airport_choices %}
-                <option value="{{ ap_id }}">{{ ap_label }}</option>
+                <option value="{{ ap_id }}" {% if route_to_edit and route_to_edit.to_airport_id == ap_id %}selected{% endif %}>{{ ap_label }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="form-group">
             <label for="finish_airport" id="finish_airport_label"><strong>Finish in</strong></label>
-            <select id="finish_airport" name="finish_airport" style="width: 100%;" disabled title="The 'Finish' field is only available for Route Type: Multiple.">
+            <select id="finish_airport" name="finish_airport" style="width: 100%;" {% if not route_to_edit or route_to_edit.route_type != 'multiple' %}disabled{% endif %} title="The 'Finish' field is only available for Route Type: Multiple.">
               <option value="">Select...</option>
               {% for ap_id, ap_label in airport_choices %}
-                <option value="{{ ap_id }}">{{ ap_label }}</option>
+                <option value="{{ ap_id }}" {% if route_to_edit and route_to_edit.finish_airport_id == ap_id %}selected{% endif %}>{{ ap_label }}</option>
               {% endfor %}
             </select>
           </div>
