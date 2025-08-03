@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
         rows[i].cells[6].innerText = '';
         if (jetAGal > 0 && fromAirportId) {
           pendingRequests++; // Increment pending requests
-          (function(rowIdx, jetAGalVal, flightTimeVal) {
+          (function(rowIdx, jetAGalVal, flightTimeVal, aircraft) {
             fetch('/api/airport-fuel-cost', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
@@ -211,6 +211,8 @@ document.addEventListener('DOMContentLoaded', function() {
               pendingRequests--;
               if (pendingRequests === 0) {
                 calculateTotals();
+                // Call setPayloadData after all async operations are complete
+                setPayloadData(aircraft);
               }
             })
             .catch(error => {
@@ -218,9 +220,11 @@ document.addEventListener('DOMContentLoaded', function() {
               pendingRequests--;
               if (pendingRequests === 0) {
                 calculateTotals();
+                // Call setPayloadData after all async operations are complete
+                setPayloadData(aircraft);
               }
             });
-          })(i, jetAGal, flightTime);
+          })(i, jetAGal, flightTime, aircraftData);
         }
       } else {
         rows[i].cells[2].innerText = '';
@@ -234,22 +238,40 @@ document.addEventListener('DOMContentLoaded', function() {
     // If no pending requests, calculate totals immediately
     if (pendingRequests === 0) {
       calculateTotals();
+      // Call setPayloadData when no async operations are needed
+      setPayloadData(aircraftData);
     }
   }
 
   function setPayloadData(aircraftData) {
     console.log('Setting payload data:', aircraftData);
     var payloadTable = document.getElementById('payload-summary-table');
-    if (!payloadTable || !aircraftData.empty_weight_lbs) return;
+    var routeTable = document.getElementById('route-summary-table');
+    if (!payloadTable || !aircraftData.empty_weight_lbs || !routeTable) return;
     
-    var rows = payloadTable.getElementsByTagName('tr');
+    var payloadRows = payloadTable.getElementsByTagName('tr');
+    var routeRows = routeTable.getElementsByTagName('tr');
     var type = routeType.value;
     
-    // Set OEW (Operating Empty Weight) for all legs
-    for (var i = 1; i < rows.length; i++) {
-      if (rows[i] && rows[i].cells[1]) {
+    // Fuel conversion factor: gallons to pounds (Jet A fuel)
+    var galToLbsFactor = 6.7;
+    
+    // Set OEW (Operating Empty Weight) and Fuel Weight for all legs
+    for (var i = 1; i < payloadRows.length; i++) {
+      if (payloadRows[i] && payloadRows[i].cells[1]) {
         // Column 1 is OEW (Lbs.)
-        rows[i].cells[1].innerText = aircraftData.empty_weight_lbs ? formatNumber(aircraftData.empty_weight_lbs, 0) : '';
+        payloadRows[i].cells[1].innerText = aircraftData.empty_weight_lbs ? formatNumber(aircraftData.empty_weight_lbs, 0) : '';
+        
+        // Column 2 is Fuel Weight (Lbs.) = Route Fuel (gls) * 6.7 + Min Land + Alt Fuel
+        if (payloadRows[i].cells[2] && routeRows[i] && routeRows[i].cells[3]) {
+          var routeFuelGls = parseFloat(routeRows[i].cells[3].innerText.replace(/,/g, '')) || 0;
+          var routeFuelLbs = routeFuelGls * galToLbsFactor;
+          var minLandingFuel = aircraftData.min_fuel_landed_lbs || 0;
+          var altFuel = aircraftData.min_fuel_alternate_lbs || 0;
+          var totalFuelWeight = routeFuelLbs + minLandingFuel + altFuel;
+          
+          payloadRows[i].cells[2].innerText = formatNumber(totalFuelWeight, 0);
+        }
       }
     }
   }
@@ -343,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Aircraft data:', aircraftData);
         
         setFlightTimesAndFuel(distances, aircraftData);
-        setPayloadData(aircraftData);
+        // Note: setPayloadData is called automatically after async operations complete
         // Note: calculateTotals() is now called automatically after async operations complete
         
         console.log('Load completed successfully');
