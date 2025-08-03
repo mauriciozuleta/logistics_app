@@ -145,13 +145,32 @@ class Route(BaseModel):
     to_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
     finish_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'))  # Only for multiple routes
     
-    # Route Summary Data (Totals)
+    # Route Summary Data (Totals) - Original columns
     total_distance = db.Column(db.Float)
     total_flight_time = db.Column(db.Float)
     total_route_fuel_gls = db.Column(db.Float)
     total_bh_cost_usd = db.Column(db.Float)
     total_fuel_cost_usd = db.Column(db.Float)
     total_leg_cost_usd = db.Column(db.Float)
+    
+    # Additional fields for enhanced saving functionality
+    route_summary = db.Column(db.String(255))
+    aircraft_name = db.Column(db.String(128))
+    from_airport_name = db.Column(db.String(255))
+    to_airport_name = db.Column(db.String(255))
+    finish_airport_name = db.Column(db.String(255))
+    
+    # New fields to match the save functionality
+    total_distance_nm = db.Column(db.Float)
+    total_flight_time_hours = db.Column(db.Float)
+    total_fuel_gallons = db.Column(db.Float)
+    total_fuel_cost = db.Column(db.Float)
+    total_block_hours_cost = db.Column(db.Float)
+    total_cost = db.Column(db.Float)
+    
+    # JSON fields for detailed leg and payload data
+    leg_details = db.Column(db.Text)  # JSON string of leg details
+    payload_details = db.Column(db.Text)  # JSON string of payload details
     
     # Leg 1 Data
     leg1_route = db.Column(db.String(128))

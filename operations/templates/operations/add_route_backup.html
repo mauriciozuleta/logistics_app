@@ -1,0 +1,803 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var editRouteBtn = document.getElementById('edit_route_btn');
+
+  function clearTables() {
+    // Clear route summary table
+    var routeTable = document.getElementById('route-summary-table');
+    if (routeTable) {
+      var rows = routeTable.getElementsByTagName('tr');
+      for (var i = 1; i < rows.length; i++) {
+        for (var j = 0; j < rows[i].cells.length; j++) {
+          rows[i].cells[j].innerText = '';
+        }
+      }
+    }
+    // Clear payload summary table
+    var payloadTable = document.getElementById('payload-summary-table');
+    if (payloadTable) {
+      var rows = payloadTable.getElementsByTagName('tr');
+      for (var i = 1; i < rows.length; i++) {
+        for (var j = 0; j < rows[i].cells.length; j++) {
+          rows[i].cells[j].innerText = '';
+        }
+      }
+    }
+  }
+
+  function activateSelections() {
+    fromSelect.disabled = false;
+    toSelect.disabled = false;
+    finishSelect.disabled = false;
+    aircraftSelect.disabled = false;
+    routeType.disabled = false;
+  }
+
+  if (editRouteBtn) {
+    editRouteBtn.addEventListener('click', function() {
+      clearTables();
+      activateSelections();
+    });
+  }
+  var loadBtn = document.getElementById('load_finish_btn');
+  var routeType = document.getElementById('route_type');
+  var fromSelect = document.getElementById('from_airport');
+  var toSelect = document.getElementById('to_airport');
+  var finishSelect = document.getElementById('finish_airport');
+  var aircraftSelect = document.getElementById('aircraft_type');
+
+  function getIata(select) {
+    var opt = select.options[select.selectedIndex];
+    if (!opt || !opt.text) return '';
+    var match = opt.text.match(/\/\s*(\w{3})$/);
+    return match ? match[1] : opt.text.trim();
+  }
+
+  function freezeLists() {
+    fromSelect.disabled = true;
+    toSelect.disabled = true;
+    finishSelect.disabled = true;
+    aircraftSelect.disabled = true;
+    routeType.disabled = true;
+  }
+
+  function getLegs() {
+    var fromIata = getIata(fromSelect);
+    var toIata = getIata(toSelect);
+    var finishIata = getIata(finishSelect);
+    var type = routeType.value;
+    var legs = [];
+    if (type === 'one-way') {
+      legs.push({from: fromIata, to: toIata});
+    } else if (type === 'round-trip') {
+      legs.push({from: fromIata, to: toIata});
+      legs.push({from: toIata, to: fromIata});
+    } else if (type === 'multiple') {
+      legs.push({from: fromIata, to: toIata});
+      legs.push({from: toIata, to: finishIata});
+    }
+    return legs;
+  }
+
+  async function fetchDistances(legs) {
+    try {
+      const response = await fetch('/api/leg-distances', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({legs: legs})
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.distances.map(d => d.distance);
+    } catch (error) {
+      console.error('Error fetching distances:', error);
+      throw error;
+    }
+  }
+
+  async function fetchAircraftData(aircraftId) {
+    try {
+      const response = await fetch('/api/aircraft-cruise-speed', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({aircraft_id: aircraftId})
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching aircraft data:', error);
+      throw error;
+    }
+  }
+
+  function setLegsAndDistances(distances) {
+    var fromIata = getIata(fromSelect);
+    var toIata = getIata(toSelect);
+    var finishIata = getIata(finishSelect);
+    var type = routeType.value;
+    var routeTable = document.getElementById('route-summary-table');
+    if (routeTable) {
+      var rows = routeTable.getElementsByTagName('tr');
+      if (type === 'one-way') {
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] ? formatNumber(distances[0], 0) : ''; }
+      } else if (type === 'round-trip') {
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] ? formatNumber(distances[0], 0) : ''; }
+        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + fromIata; rows[2].cells[1].innerText = distances[1] ? formatNumber(distances[1], 0) : ''; }
+      } else if (type === 'multiple') {
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] ? formatNumber(distances[0], 0) : ''; }
+        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + finishIata; rows[2].cells[1].innerText = distances[1] ? formatNumber(distances[1], 0) : ''; }
+      }
+      // Add "Totals" label in the third row
+      if (rows[3]) { rows[3].cells[0].innerText = 'Totals'; }
+    }
+    var payloadTable = document.getElementById('payload-summary-table');
+    if (payloadTable) {
+      var rows = payloadTable.getElementsByTagName('tr');
+      if (type === 'one-way') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+      } else if (type === 'round-trip') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + fromIata;
+      } else if (type === 'multiple') {
+        if (rows[1]) rows[1].cells[0].innerText = fromIata + ' / ' + toIata;
+        if (rows[2]) rows[2].cells[0].innerText = toIata + ' / ' + finishIata;
+      }
+    }
+  }
+
+  function setFlightTimesAndFuel(distances, aircraftData) {
+    console.log('Aircraft Data:', aircraftData);
+    var routeTable = document.getElementById('route-summary-table');
+    if (!routeTable || !aircraftData.cruise_speed) return;
+    var rows = routeTable.getElementsByTagName('tr');
+    var pendingRequests = 0; // Track pending async requests
+    
+    for (var i = 1; i < rows.length; i++) {
+      // Remove commas from distance before parsing
+      var dist = parseFloat(rows[i].cells[1].innerText.replace(/,/g, ''));
+      let flightTime = '';
+      let routeFuel = '';
+      let bhCost = '';
+      let fuelCost = '';
+      let totalLegCost = '';
+      if (!isNaN(dist) && aircraftData.cruise_speed > 0) {
+        flightTime = dist / aircraftData.cruise_speed;
+        rows[i].cells[2].innerText = flightTime ? flightTime.toFixed(2) + ' hr' : '';
+        if (aircraftData.fuel_burn_lbs && flightTime) {
+          routeFuel = aircraftData.fuel_burn_lbs * flightTime;
+          var routeFuelGal = routeFuel / 6.7;
+          rows[i].cells[3].innerText = routeFuelGal ? formatNumber(routeFuelGal, 0) : '';
+        } else {
+          rows[i].cells[3].innerText = '';
+        }
+        // B/H cost = acmi_cost * flightTime, but if flightTime < 1, use 1
+        if (aircraftData.acmi_cost && flightTime) {
+          var bhMultiplier = flightTime < 1 ? 1 : flightTime;
+          bhCost = aircraftData.acmi_cost * bhMultiplier;
+          rows[i].cells[4].innerText = bhCost ? formatCurrency(bhCost) : '';
+        } else {
+          rows[i].cells[4].innerText = '';
+        }
+        // Fuel cost: convert routeFuel (lbs) to gallons, then multiply by from airport fuel cost, and if flightTime < 1, multiply result by 2
+        // Use route fuel in gallons directly for fuel cost calculation
+        var jetAGal = routeFuelGal ? routeFuelGal : 0;
+        var fromAirportId = fromSelect.value;
+        rows[i].cells[5].innerText = '';
+        rows[i].cells[6].innerText = '';
+        if (jetAGal > 0 && fromAirportId) {
+          pendingRequests++; // Increment pending requests
+          (function(rowIdx, jetAGalVal, flightTimeVal, aircraft) {
+            fetch('/api/airport-fuel-cost', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({airport_id: fromAirportId})
+            })
+            .then(resp => resp.json())
+            .then(data => {
+              var fuelCostVal = (data.fuel_cost_gl && jetAGalVal) ? data.fuel_cost_gl * jetAGalVal : 0;
+              if (flightTimeVal < 1) fuelCostVal *= 2;
+              rows[rowIdx].cells[5].innerText = fuelCostVal ? formatCurrency(fuelCostVal) : '';
+              // Total leg cost = bhCost + fuelCost
+              var bhCostVal = aircraftData.acmi_cost && flightTimeVal ? aircraftData.acmi_cost * (flightTimeVal < 1 ? 1 : flightTimeVal) : 0;
+              var totalLegCostVal = bhCostVal + fuelCostVal;
+              rows[rowIdx].cells[6].innerText = totalLegCostVal ? formatCurrency(totalLegCostVal) : '';
+              
+              // Decrement pending requests and call calculateTotals when all are done
+              pendingRequests--;
+              if (pendingRequests === 0) {
+                calculateTotals();
+                // Call setPayloadData after all async operations are complete
+                setPayloadData(aircraft);
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching fuel cost:', error);
+              pendingRequests--;
+              if (pendingRequests === 0) {
+                calculateTotals();
+                // Call setPayloadData after all async operations are complete
+                setPayloadData(aircraft);
+              }
+            });
+          })(i, jetAGal, flightTime, aircraftData);
+        }
+      } else {
+        rows[i].cells[2].innerText = '';
+        rows[i].cells[3].innerText = '';
+        rows[i].cells[4].innerText = '';
+        rows[i].cells[5].innerText = '';
+        rows[i].cells[6].innerText = '';
+      }
+    }
+    
+    // If no pending requests, calculate totals immediately
+    if (pendingRequests === 0) {
+      calculateTotals();
+      // Call setPayloadData when no async operations are needed
+      setPayloadData(aircraftData);
+    }
+  }
+
+  function setPayloadData(aircraftData) {
+    console.log('Setting payload data:', aircraftData);
+    var payloadTable = document.getElementById('payload-summary-table');
+    var routeTable = document.getElementById('route-summary-table');
+    if (!payloadTable || !aircraftData.empty_weight_lbs || !routeTable) return;
+    
+    var payloadRows = payloadTable.getElementsByTagName('tr');
+    var routeRows = routeTable.getElementsByTagName('tr');
+    var type = routeType.value;
+    
+    // Fuel conversion factor: gallons to pounds (Jet A fuel)
+    var galToLbsFactor = 6.7;
+    
+    // Determine how many rows to process based on route type
+    var maxRows = type === 'one-way' ? 2 : 3; // one-way: 1 leg (row 1), others: 2 legs (rows 1&2)
+    
+    // Process each leg for payload calculations
+    for (var i = 1; i < maxRows; i++) {
+      if (payloadRows[i] && payloadRows[i].cells[1]) {
+        // Column 1 is OEW (Lbs.)
+        payloadRows[i].cells[1].innerText = aircraftData.empty_weight_lbs ? formatNumber(aircraftData.empty_weight_lbs, 0) : '';
+        
+        // Column 2 is Fuel Weight (Lbs.) = Route Fuel (gls) * 6.7 + Min Land + Alt Fuel
+        if (payloadRows[i].cells[2] && routeRows[i] && routeRows[i].cells[3]) {
+          var routeFuelGls = parseFloat(routeRows[i].cells[3].innerText.replace(/,/g, '')) || 0;
+          var routeFuelLbs = routeFuelGls * galToLbsFactor;
+          var minLandingFuel = aircraftData.min_fuel_landed_lbs || 0;
+          var altFuel = aircraftData.min_fuel_alternate_lbs || 0;
+          var totalFuelWeight = routeFuelLbs + minLandingFuel + altFuel;
+          
+          payloadRows[i].cells[2].innerText = formatNumber(totalFuelWeight, 0);
+          
+          // Calculate Max Payload (Column 3) and No-Tank T/O/W (Column 4)
+          calculateMaxPayload(i, payloadRows[i], aircraftData, totalFuelWeight, routeFuelLbs);
+        }
+      }
+    }
+  }
+
+  // Function to calculate altitude performance gradient
+  function getAltitudeGradient(altitude) {
+    if (altitude < 4000) return 0;
+    if (altitude >= 4000 && altitude <= 4999) return 0.02; // 2%
+    if (altitude >= 5000 && altitude <= 5999) return 0.05; // 5%
+    if (altitude >= 6000 && altitude <= 7500) return 0.10; // 10%
+    if (altitude >= 7500 && altitude <= 9000) return 0.12; // 12%
+    if (altitude > 9000) return 0.16; // 16%
+    return 0;
+  }
+
+  // Function to calculate max payload with all constraints
+  async function calculateMaxPayload(rowIndex, payloadRow, aircraftData, totalFuelWeight, routeFuelLbs) {
+    try {
+      // Get departure airport IATA code from leg column
+      var legText = payloadRow.cells[0].innerText;
+      var departureIata = legText.split(' / ')[0];
+      
+      // Fetch airport altitude
+      const altitudeResponse = await fetch('/api/airport-altitude', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({iata_code: departureIata})
+      });
+      
+      if (!altitudeResponse.ok) {
+        throw new Error(`Failed to fetch altitude for ${departureIata}`);
+      }
+      
+      const altitudeData = await altitudeResponse.json();
+      var airportAltitude = altitudeData.altitude_ft || 0;
+      
+      // Calculate altitude gradient and adjusted MTOW
+      var gradient = getAltitudeGradient(airportAltitude);
+      var adjustedMTOW = aircraftData.mtow_lbs * (1 - gradient);
+      
+      // Show warning for high altitude airports
+      if (airportAltitude > 9000) {
+        console.warn(`High altitude departure (${departureIata}: ${airportAltitude} ft) - Special performance analysis required`);
+      }
+      
+      // Base Max Payload calculation: Adjusted MTOW - (OEW + Fuel Weight)
+      var baseMaxPayload = adjustedMTOW - (aircraftData.empty_weight_lbs + totalFuelWeight);
+      
+      // First constraint: Aircraft structural payload limit
+      var maxPayload = Math.min(baseMaxPayload, aircraftData.max_payload_lbs || baseMaxPayload);
+      
+      // Second constraint: Landing weight limit
+      // Leg Landing Weight = Aircraft Empty Weight + Fuel Weight - Route Fuel (lbs) + Max Payload
+      var legLandingWeight = aircraftData.empty_weight_lbs + totalFuelWeight - routeFuelLbs + maxPayload;
+      
+      if (legLandingWeight > aircraftData.mldgw_lbs) {
+        var excess = legLandingWeight - aircraftData.mldgw_lbs;
+        maxPayload = maxPayload - excess;
+      }
+      
+      // Ensure max payload is not negative
+      maxPayload = Math.max(0, maxPayload);
+      
+      // Update Max Payload column (Column 3)
+      payloadRow.cells[3].innerText = formatNumber(maxPayload, 0);
+      
+      // Calculate No-Tank T/O/W (Column 4) = OEW + Fuel Weight + Max Payload
+      var oew = parseFloat(payloadRow.cells[1].innerText.replace(/,/g, '')) || 0;
+      var fuelWeight = parseFloat(payloadRow.cells[2].innerText.replace(/,/g, '')) || 0;
+      var noTankTOW = oew + fuelWeight + maxPayload;
+      payloadRow.cells[4].innerText = formatNumber(noTankTOW, 0);
+      
+      console.log(`${departureIata} Altitude: ${airportAltitude} ft, Gradient: ${gradient * 100}%, Adjusted MTOW: ${formatNumber(adjustedMTOW, 0)}, Max Payload: ${formatNumber(maxPayload, 0)}, No-Tank T/O/W: ${formatNumber(noTankTOW, 0)}`);
+      
+    } catch (error) {
+      console.error('Error calculating max payload:', error);
+      payloadRow.cells[3].innerText = 'Error';
+      payloadRow.cells[4].innerText = 'Error';
+    }
+  }
+
+  function calculateTotals() {
+    var routeTable = document.getElementById('route-summary-table');
+    if (!routeTable) return;
+    var rows = routeTable.getElementsByTagName('tr');
+    if (rows.length < 4) return; // Need at least 3 data rows plus header
+    
+    console.log('Calculating totals...');
+    
+    // Initialize totals (skip leg column [0])
+    var totals = [0, 0, 0, 0, 0, 0]; // distance, flight time, route fuel, B/H cost, fuel cost, total cost
+    
+    // Sum rows 1 and 2 (data rows)
+    for (var i = 1; i <= 2; i++) {
+      if (rows[i]) {
+        // Distance (column 1) - remove commas and parse
+        var distance = parseFloat(rows[i].cells[1].innerText.replace(/,/g, '')) || 0;
+        totals[0] += distance;
+        
+        // Flight Time (column 2) - remove 'hr' and parse
+        var flightTimeText = rows[i].cells[2].innerText.replace(' hr', '');
+        var flightTime = parseFloat(flightTimeText) || 0;
+        totals[1] += flightTime;
+        
+        // Route Fuel (column 3) - remove commas and parse
+        var routeFuel = parseFloat(rows[i].cells[3].innerText.replace(/,/g, '')) || 0;
+        totals[2] += routeFuel;
+        
+        // B/H Cost (column 4) - remove $ and commas
+        var bhCost = parseFloat(rows[i].cells[4].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[3] += bhCost;
+        
+        // Fuel Cost (column 5) - remove $ and commas  
+        var fuelCost = parseFloat(rows[i].cells[5].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[4] += fuelCost;
+        
+        // Total Leg Cost (column 6) - remove $ and commas
+        var totalCost = parseFloat(rows[i].cells[6].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[5] += totalCost;
+      }
+    }
+    
+    console.log('Totals calculated:', totals);
+    
+    // Update totals row (row 3)
+    if (rows[3]) {
+      rows[3].cells[1].innerText = totals[0] ? formatNumber(totals[0], 0) : '';
+      rows[3].cells[2].innerText = totals[1] ? totals[1].toFixed(2) + ' hr' : '';
+      rows[3].cells[3].innerText = totals[2] ? formatNumber(totals[2], 0) : '';
+      rows[3].cells[4].innerText = totals[3] ? formatCurrency(totals[3]) : '';
+      rows[3].cells[5].innerText = totals[4] ? formatCurrency(totals[4]) : '';
+      rows[3].cells[6].innerText = totals[5] ? formatCurrency(totals[5]) : '';
+    }
+  }
+
+  // Load button event listener
+  if (loadBtn) {
+    loadBtn.addEventListener('click', async function() {
+      console.log('Load button clicked');
+      
+      // Validate form selections
+      if (!fromSelect.value || !toSelect.value || !aircraftSelect.value) {
+        alert('Please select Aircraft Type, From airport, and To airport before loading.');
+        return;
+      }
+      
+      // For multiple route type, finish airport is also required
+      if (routeType.value === 'multiple' && !finishSelect.value) {
+        alert('Please select Finish airport for multiple route type.');
+        return;
+      }
+      
+      try {
+        freezeLists();
+        console.log('Getting legs...');
+        const legs = getLegs();
+        console.log('Legs:', legs);
+        
+        console.log('Fetching distances...');
+        const distances = await fetchDistances(legs);
+        console.log('Distances:', distances);
+        
+        setLegsAndDistances(distances);
+        
+        console.log('Fetching aircraft data...');
+        const aircraftId = aircraftSelect.value;
+        const aircraftData = await fetchAircraftData(aircraftId);
+        console.log('Aircraft data:', aircraftData);
+        
+        setFlightTimesAndFuel(distances, aircraftData);
+        // Note: setPayloadData is called automatically after async operations complete
+        // Note: calculateTotals() is now called automatically after async operations complete
+        
+        console.log('Load completed successfully');
+      } catch (error) {
+        console.error('Error during load:', error);
+        alert('An error occurred while loading route data. Please check the console for details.');
+        activateSelections(); // Re-enable selections on error
+      }
+    });
+  } else {
+    console.error('Load button not found!');
+  }
+
+  // Format number with comma for thousands and dot for decimals
+  function formatNumber(value, decimals = 0) {
+    return value ? Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : '';
+  }
+  // Format number as currency with comma for thousands and dot for decimals
+  function formatCurrency(value) {
+    return value ? `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+  }
+
+  // Function to extract calculated route data from tables
+  function extractRouteData() {
+    const routeData = {
+      legs: [],
+      payloadData: [],
+      totals: {}
+    };
+
+    // Extract route summary data
+    const routeTable = document.getElementById('route-summary-table');
+    if (routeTable) {
+      const rows = routeTable.getElementsByTagName('tr');
+      for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].cells;
+        if (cells.length >= 7 && cells[0].innerText && cells[0].innerText !== 'Totals') {
+          const legData = {
+            route: cells[0].innerText,
+            distance_nm: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
+            flight_time_hours: parseFloat(cells[2].innerText) || 0,
+            fuel_gallons: parseFloat(cells[3].innerText.replace(/,/g, '')) || 0,
+            block_hours_cost: parseFloat(cells[4].innerText.replace(/[$,]/g, '')) || 0,
+            fuel_cost: parseFloat(cells[5].innerText.replace(/[$,]/g, '')) || 0,
+            total_leg_cost: parseFloat(cells[6].innerText.replace(/[$,]/g, '')) || 0
+          };
+          routeData.legs.push(legData);
+        } else if (cells[0].innerText === 'Totals') {
+          routeData.totals = {
+            total_distance_nm: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
+            total_flight_time_hours: parseFloat(cells[2].innerText) || 0,
+            total_fuel_gallons: parseFloat(cells[3].innerText.replace(/,/g, '')) || 0,
+            total_block_hours_cost: parseFloat(cells[4].innerText.replace(/[$,]/g, '')) || 0,
+            total_fuel_cost: parseFloat(cells[5].innerText.replace(/[$,]/g, '')) || 0,
+            total_cost: parseFloat(cells[6].innerText.replace(/[$,]/g, '')) || 0
+          };
+        }
+      }
+    }
+
+    // Extract payload data
+    const payloadTable = document.getElementById('payload-summary-table');
+    if (payloadTable) {
+      const rows = payloadTable.getElementsByTagName('tr');
+      for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].cells;
+        if (cells.length >= 5 && cells[0].innerText) {
+          const payloadData = {
+            route: cells[0].innerText,
+            empty_weight_lbs: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
+            fuel_weight_lbs: parseFloat(cells[2].innerText.replace(/,/g, '')) || 0,
+            max_payload_lbs: parseFloat(cells[3].innerText.replace(/,/g, '')) || 0,
+            no_tank_tow_lbs: parseFloat(cells[4].innerText.replace(/,/g, '')) || 0
+          };
+          routeData.payloadData.push(payloadData);
+        }
+      }
+    }
+
+    return routeData;
+  }
+
+  // Handle Save Route button click
+  const saveRouteBtn = document.getElementById('save_route_btn');
+  if (saveRouteBtn) {
+    saveRouteBtn.addEventListener('click', function(e) {
+      e.preventDefault(); // Prevent default form submission
+      
+      // Check if route has been analyzed
+      const routeTable = document.getElementById('route-summary-table');
+      const hasData = routeTable && routeTable.getElementsByTagName('tr')[1].cells[1].innerText !== '';
+      
+      if (!hasData) {
+        alert('Please analyze the route first by clicking "Load & Finish" before saving.');
+        return;
+      }
+
+      // Extract all calculated data
+      const routeData = extractRouteData();
+      
+      // Get form data
+      const form = document.getElementById('route-form');
+      const formData = new FormData(form);
+      
+      // Add calculated data to form
+      formData.append('route_data', JSON.stringify(routeData));
+      
+      // Submit form via AJAX to preserve data
+      fetch(form.action || window.location.pathname, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          // Redirect to Available Routes page
+          window.location.href = '/operations/view-routes';
+        } else {
+          return response.text().then(text => {
+            throw new Error(`Server error: ${response.status} - ${text}`);
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error saving route:', error);
+        alert('Error saving route: ' + error.message);
+      });
+    });
+  }
+
+});
+</script>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+<style>
+  .route-form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    margin: 0 auto;
+  }
+  .route-form-row .form-group {
+    flex: 1 1 20%;
+    min-width: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  #load_finish_btn {
+    width: 100%;
+    height: 38px;
+  }
+  #route-table-wrapper table {
+    width: 100% !important;
+    background-color: #181c22 !important;
+    color: #FF5C00 !important;
+    border-radius: 8px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  #route-table-wrapper th, #route-table-wrapper td {
+  background-color: #181c22 !important;
+  color: #fff !important;
+  border: 0.5px solid #2196f3 !important;
+  min-width: 150px;
+  text-align: center;
+  padding: 12px 8px;
+  }
+  #route-table-wrapper thead {
+  background: #23272e !important;
+}
+
+#route-table-wrapper thead th {
+  color: #FF5C00 !important;
+}
+  }
+  /* Totals row styling */
+  #route-summary-table tbody tr:nth-child(3) {
+    background-color: #2a3038 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #FF5C00 !important;
+  }
+  #route-summary-table tbody tr:nth-child(3) td {
+    background-color: #2a3038 !important;
+    color: #FF5C00 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #FF5C00 !important;
+  }
+</style>
+  <h2>Route Information</h2>
+  <form method="post" id="route-form">
+      {{ csrf_token() }}
+      <div class="route-form-row">
+          <div class="form-group">
+            <label for="aircraft_type">Aircraft Type</label>
+            <select id="aircraft_type" name="aircraft_type" required style="width: 100%;">
+              <option value="">Select...</option>
+              {% for ac_id, ac_short in aircraft_choices %}
+                <option value="{{ ac_id }}">{{ ac_short }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="route_type">Route Type</label>
+            <select id="route_type" name="route_type" required style="width: 100%;">
+              <option value="round-trip">Round-Trip</option>
+              <option value="one-way">One-Way</option>
+              <option value="multiple">Multiple</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="from_airport"><strong>From</strong></label>
+            <select id="from_airport" name="from_airport" required style="width: 100%;">
+              <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="to_airport"><strong>To</strong></label>
+            <select id="to_airport" name="to_airport" required style="width: 100%;">
+              <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="finish_airport" id="finish_airport_label"><strong>Finish in</strong></label>
+            <select id="finish_airport" name="finish_airport" style="width: 100%;" disabled title="The 'Finish' field is only available for Route Type: Multiple.">
+              <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <a href="/coredata/add-airport" class="btn btn-success" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #176c3a; border: 0.5px solid #176c3a; display: flex; align-items: center; justify-content: center; text-align: center;">Add airport</a>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <button type="button" id="load_finish_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #2196f3; border: 0.5px solid #2196f3;">Load</button>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <button type="button" id="edit_route_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #b34700; border: 0.5px solid #b34700; display: flex; align-items: center; justify-content: center; text-align: center;">Edit Route</button>
+          </div>
+          <!-- Save Route button moved below the table -->
+        </div>
+  </form>
+  <div id="finish-warning" style="display:none; color: #b94a48; margin-top: 0.5rem; font-weight: bold;">The "Finish" field is only available for Route Type: Multiple.</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var routeType = document.getElementById('route_type');
+  var finishSelect = document.getElementById('finish_airport');
+  function toggleFinish() {
+    if (routeType.value === 'multiple') {
+      finishSelect.disabled = false;
+      finishSelect.removeAttribute('title');
+    } else {
+      finishSelect.disabled = true;
+      finishSelect.setAttribute('title', "The 'Finish' field is only available for Route Type: Multiple.");
+    }
+  }
+  routeType.addEventListener('change', toggleFinish);
+  toggleFinish();
+});
+</script>
+  <div id="load-table-container" style="width:100%; display:flex; justify-content:center; margin-top:2rem; flex-direction:column; align-items:center;">
+    <div style="width:100%; max-width:1400px; margin-bottom: 0.5rem; text-align: center;">
+      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px;">Route Summary</label>
+    </div>
+    <!-- Save Route button removed as requested -->
+    <div id="route-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
+      <table id="route-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22; color:#FF5C00; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+        <thead style="background:#23272e; font-weight: normal;">
+          <tr style="font-weight: normal;">
+            <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Leg</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Distance</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Flight Time</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Gls.)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost (USD)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost (USD)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost (USD)</th>
+          </tr>
+        </thead>
+        <tbody style="font-weight: normal;">
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <!-- Totals row removed as requested -->
+        </tbody>
+      </table>
+    </div>
+    <div style="width:100%; max-width:1400px; margin-top:2rem; text-align:center;">
+      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px; margin-bottom: 0.5rem;">Payload Summary</label>
+      <div id="payload-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
+        <table id="payload-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22 !important; color:#FF5C00 !important; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+          <thead style="background:#23272e !important; font-weight: normal;">
+            <tr style="font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important;">
+              <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Leg</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">OEW (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Fuel Weight (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Max Payload (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">No-Tank T/O/W (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Avail Extra Fuel (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Tank T/O/W</th>
+            </tr>
+          </thead>
+          <tbody style="font-weight: normal;">
+            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
+              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td>
+            </tr>
+            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
+              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="width:100%; max-width:1400px; display: flex; justify-content: center; margin-top: 1.5rem;">
+        <button type="submit" id="save_route_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #FFD600; border: 0.5px solid #FFD600; display: flex; align-items: center; justify-content: center; text-align: center;">Save Route</button>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+

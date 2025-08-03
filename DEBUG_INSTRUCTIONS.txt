@@ -1,0 +1,79 @@
+DEBUGGING ROUTE SAVE FUNCTIONALITY - POST RESTART INSTRUCTIONS
+============================================================
+
+PROBLEM: Route save functionality redirects correctly but no records appear in view routes page.
+No debug output visible in terminal despite having debug print statements in code.
+
+STEPS TO DEBUG AFTER RESTART:
+
+1. CLEAR PYTHON CACHE (Very Important!)
+   =====================================
+   cd d:\OneDrive\logistics_app
+   Remove-Item -Recurse -Force __pycache__
+   Remove-Item -Recurse -Force *\__pycache__
+
+2. START FLASK WITH EXPLICIT OUTPUT FLUSHING
+   =========================================
+   In PowerShell:
+   $env:PYTHONUNBUFFERED=1
+   python app.py
+
+   Alternative - if still no output, modify routes.py to use:
+   import sys
+   print("=== DEBUG: POST request received ===", file=sys.stderr, flush=True)
+
+3. WHAT TO LOOK FOR WHEN TESTING:
+   ===============================
+   
+   A) Basic Flask logs should show:
+      127.0.0.1 - - [timestamp] "GET /operations/add-route HTTP/1.1" 200 -
+      127.0.0.1 - - [timestamp] "POST /operations/add-route HTTP/1.1" 302 -
+
+   B) Our debug logs should show:
+      - === DEBUG: POST request received ===
+      - Form data: aircraft_id=X, route_type=Y, from=X, to=Y
+      - Route data received: X items (or "No route data received!")
+      - === DEBUG: Route object created ===
+      - Route summary: XXX to YYY
+      - Total cost: XXXXX
+      - Route data keys: [...]
+      - Totals keys: [...]
+      - === DEBUG: Route saved to database with ID=X ===
+
+   C) When visiting view routes page:
+      - === DEBUG: Fetched X routes from database ===
+      - Route ID: X, Summary: XXX to YYY, Cost: XXXXX
+
+4. TESTING PROCEDURE:
+   ==================
+   a) Go to http://127.0.0.1:5000/operations/add-route
+   b) Fill aircraft and airports
+   c) Calculate route (make sure route data appears in tables)
+   d) Click Save button
+   e) Check terminal for debug output
+   f) Verify redirect to view routes page
+   g) Check if route appears in list
+
+5. POTENTIAL ISSUES TO CHECK:
+   ==========================
+   - If no debug output: Server might be using cached bytecode
+   - If "No route data received!": JavaScript not sending route_data properly
+   - If route saves but doesn't appear in view: Database transaction issue
+   - If error occurs: Check exception handling in try/catch block
+
+6. FILES WITH DEBUG LOGGING:
+   =========================
+   - operations/routes.py (lines 20-85) - Main save logic with debug prints
+   - operations/routes.py (lines 110-115) - View routes with debug prints
+
+CURRENT STATUS:
+- Template structure: FIXED ✅
+- CSRF token issues: FIXED ✅  
+- Save button functionality: IMPLEMENTED ✅
+- Redirect functionality: WORKING ✅
+- Database persistence: ISSUE UNDER INVESTIGATION ❌
+
+NEXT STEPS IF STILL NO DEBUG OUTPUT:
+- Add sys.stderr.write() instead of print()
+- Check if Flask is in production mode (should be debug=True)
+- Verify routes.py changes are actually loaded (add timestamp to debug message)

@@ -1,161 +1,363 @@
-{% extends "base.html" %}
-{% block title %}Available Routes - Logistics App{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
-  <div class="row justify-content-center">
-    <div class="col-12">
-      <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
-        <div class="card-body" style="color: #fff;">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 style="color: #2196f3; margin: 0;">📋 Available Routes</h2>
-            <a href="{{ url_for('operations.add_route') }}" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff;">
-              ➕ Add New Route
-            </a>
-          </div>
+<div class="content-section">
+<style>
+  .routes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .routes-title {
+    color: #FF5C00;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+  .routes-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .routes-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+  }
+  .routes-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .routes-btn-primary {
+    background-color: #2196f3;
+    color: #fff;
+  }
+  .routes-btn-primary:hover:not(:disabled) {
+    background-color: #1976d2;
+  }
+  .routes-btn-warning {
+    background-color: #ff9800;
+    color: #fff;
+  }
+  .routes-btn-warning:hover:not(:disabled) {
+    background-color: #f57c00;
+  }
+  .routes-btn-danger {
+    background-color: #f44336;
+    color: #fff;
+  }
+  .routes-btn-danger:hover:not(:disabled) {
+    background-color: #d32f2f;
+  }
+  .routes-btn-success {
+    background-color: #4caf50;
+    color: #fff;
+  }
+  .routes-btn-success:hover:not(:disabled) {
+    background-color: #388e3c;
+  }
+  .routes-table-wrapper {
+    background-color: #181c22;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+  .routes-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+    min-width: 2500px; /* Ensure table doesn't compress too much */
+  }
+  .routes-table thead {
+    background-color: #23272e;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .routes-table th {
+    color: #FF5C00;
+    font-weight: bold;
+    padding: 1rem 0.5rem;
+    text-align: center;
+    border-bottom: 2px solid #FF5C00;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .routes-table td {
+    background-color: #181c22;
+    color: #fff;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    border-bottom: 1px solid #2196f3;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .routes-table tbody tr:hover {
+    background-color: #23272e;
+  }
+  .routes-table .checkbox-col {
+    width: 40px;
+    min-width: 40px;
+  }
+  .routes-table .id-col {
+    width: 60px;
+    min-width: 60px;
+    color: #2196f3;
+    font-weight: bold;
+  }
+  .routes-table .route-col {
+    min-width: 150px;
+    color: #ff9800;
+    font-weight: bold;
+    text-align: left;
+  }
+  .routes-table .aircraft-col {
+    min-width: 100px;
+    color: #4caf50;
+    font-weight: bold;
+  }
+  .routes-table .type-col {
+    min-width: 80px;
+    color: #2196f3;
+    font-weight: bold;
+  }
+  .routes-table .distance-col {
+    min-width: 90px;
+    color: #4caf50;
+    font-family: monospace;
+  }
+  .routes-table .time-col {
+    min-width: 80px;
+    color: #ff9800;
+    font-family: monospace;
+  }
+  .routes-table .fuel-col {
+    min-width: 90px;
+    color: #ff9800;
+    font-family: monospace;
+  }
+  .routes-table .cost-col {
+    min-width: 100px;
+    color: #4caf50;
+    font-family: monospace;
+  }
+  .routes-table .payload-col {
+    min-width: 90px;
+    color: #2196f3;
+    font-family: monospace;
+  }
+  .routes-table .weight-col {
+    min-width: 90px;
+    color: #4caf50;
+    font-family: monospace;
+  }
+  .routes-table .date-col {
+    min-width: 120px;
+    color: #888;
+    font-size: 0.75rem;
+  }
+  .routes-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #FF5C00;
+  }
+  .selected-count {
+    color: #FF5C00;
+    font-weight: bold;
+    margin-left: 1rem;
+    font-size: 0.9rem;
+  }
+  .no-routes {
+    text-align: center;
+    color: #888;
+    padding: 2rem;
+    font-style: italic;
+  }
+</style>
 
-          {% if routes %}
-            <div class="table-responsive">
-              <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden;">
-                <thead style="background-color: #23272e;">
-                  <tr>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">Route Summary</th>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">Aircraft</th>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">Route Type</th>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">From</th>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">To</th>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">Finish</th>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">Created</th>
-                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px;">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for route in routes %}
-                    <tr style="background-color: #181c22;">
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px; font-weight: bold;">
-                        {{ route.route_summary }}
-                      </td>
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        {{ route.aircraft_name }}
-                      </td>
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        <span class="badge" style="background-color: {% if route.route_type == 'one-way' %}#ff9800{% elif route.route_type == 'round-trip' %}#4caf50{% else %}#9c27b0{% endif %}; color: #fff; padding: 4px 8px; border-radius: 4px;">
-                          {{ route.route_type|title }}
-                        </span>
-                      </td>
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        {{ route.from_airport_name }}
-                      </td>
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        {{ route.to_airport_name }}
-                      </td>
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        {{ route.finish_airport_name if route.finish_airport_name else '-' }}
-                      </td>
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        {{ route.created_at.strftime('%Y-%m-%d %H:%M') if route.created_at else '-' }}
-                      </td>
-                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        <div style="display: flex; gap: 8px; justify-content: center;">
-                          <button class="btn btn-sm" onclick="viewRouteDetails({{ route.id }})" style="background-color: #2196f3; color: #fff; border: none; padding: 4px 8px; border-radius: 4px;">
-                            👁️ View
-                          </button>
-                          <button class="btn btn-sm" onclick="editRoute({{ route.id }})" style="background-color: #ff9800; color: #fff; border: none; padding: 4px 8px; border-radius: 4px;">
-                            ✏️ Edit
-                          </button>
-                          <button class="btn btn-sm" onclick="deleteRoute({{ route.id }})" style="background-color: #f44336; color: #fff; border: none; padding: 4px 8px; border-radius: 4px;">
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          {% else %}
-            <div style="text-align: center; padding: 4rem; color: #bbb;">
-              <h4>No routes available</h4>
-              <p>Click "Add New Route" to create your first route</p>
-              <a href="{{ url_for('operations.add_route') }}" class="btn btn-primary" style="background-color: #2196f3; border: 1px solid #2196f3; color: #fff; margin-top: 1rem;">
-                ➕ Create First Route
-              </a>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
+<div class="routes-header">
+  <h1 class="routes-title">Route Management</h1>
+  <div class="routes-actions">
+    <button class="routes-btn routes-btn-success" onclick="window.location.href='/operations/add-route'">
+      Add Route
+    </button>
   </div>
 </div>
 
-<!-- Route Details Modal -->
-<div class="modal fade" id="routeDetailsModal" tabindex="-1" aria-labelledby="routeDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
-      <div class="modal-header" style="border-bottom: 1px solid #2196f3;">
-        <h5 class="modal-title" id="routeDetailsModalLabel" style="color: #2196f3;">Route Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
-      </div>
-      <div class="modal-body" id="routeDetailsContent">
-        <!-- Content will be loaded here -->
-      </div>
-    </div>
+<div class="routes-actions" style="margin-bottom: 1rem;">
+  <div>
+    <button class="routes-btn routes-btn-warning edit-btn" disabled>Edit Selected</button>
+    <button class="routes-btn routes-btn-danger delete-btn" disabled>Delete Selected</button>
+    <span class="selected-count" id="selectedCount">0 selected</span>
   </div>
+</div>
+
+<div class="routes-table-wrapper">
+  <table class="routes-table">
+    <thead>
+      <tr>
+        <th class="checkbox-col">
+          <input type="checkbox" id="select-all" class="routes-checkbox">
+        </th>
+        <th class="id-col">ID</th>
+        <th class="route-col">Route Summary</th>
+        <th class="aircraft-col">Aircraft</th>
+        <th class="type-col">Type</th>
+        <th class="distance-col">Distance (NM)</th>
+        <th class="time-col">Flight Time (hrs)</th>
+        <th class="fuel-col">Fuel (gal)</th>
+        <th class="cost-col">Fuel Cost</th>
+        <th class="cost-col">Block Hrs Cost</th>
+        <th class="cost-col">Total Cost</th>
+        <th class="payload-col">Max Payload (lbs)</th>
+        <th class="weight-col">OEW (lbs)</th>
+        <th class="weight-col">Fuel Weight (lbs)</th>
+        <th class="weight-col">TOW (lbs)</th>
+        <th class="distance-col">Leg1 Dist (NM)</th>
+        <th class="cost-col">Leg1 Cost</th>
+        <th class="distance-col">Leg2 Dist (NM)</th>
+        <th class="cost-col">Leg2 Cost</th>
+        <th class="date-col">Created</th>
+      </tr>
+    </thead>
+    <tbody id="routesTableBody">
+      {% if routes %}
+        {% for route in routes %}
+        <tr data-route-id="{{ route.id }}" class="route-row">
+          <td class="checkbox-col">
+            <input type="checkbox" class="routes-checkbox" value="{{ route.id }}">
+          </td>
+          <td class="id-col">{{ route.id }}</td>
+          <td class="route-col" title="{{ route.route_summary if route.route_summary else 'N/A' }}">
+            {{ route.route_summary if route.route_summary else 'N/A' }}
+          </td>
+          <td class="aircraft-col">{{ route.aircraft_name if route.aircraft_name else '-' }}</td>
+          <td class="type-col">{{ route.route_type|title if route.route_type else '-' }}</td>
+          <td class="distance-col">
+            {% if route.total_distance_nm %}{{ "{:,.0f}".format(route.total_distance_nm) }}{% else %}-{% endif %}
+          </td>
+          <td class="time-col">
+            {% if route.total_flight_time_hours %}{{ "{:.1f}".format(route.total_flight_time_hours) }}{% else %}-{% endif %}
+          </td>
+          <td class="fuel-col">
+            {% if route.total_fuel_gallons %}{{ "{:,.0f}".format(route.total_fuel_gallons) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if route.total_fuel_cost %}${{ "{:,.2f}".format(route.total_fuel_cost) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if route.total_block_hours_cost %}${{ "{:,.2f}".format(route.total_block_hours_cost) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if route.total_cost %}${{ "{:,.2f}".format(route.total_cost) }}{% else %}-{% endif %}
+          </td>
+          <td class="payload-col">
+            {% if route.leg1_max_payload_lbs %}{{ "{:,.0f}".format(route.leg1_max_payload_lbs) }}{% else %}-{% endif %}
+          </td>
+          <td class="weight-col">
+            {% if route.leg1_oew_lbs %}{{ "{:,.0f}".format(route.leg1_oew_lbs) }}{% else %}-{% endif %}
+          </td>
+          <td class="weight-col">
+            {% if route.leg1_fuel_weight_lbs %}{{ "{:,.0f}".format(route.leg1_fuel_weight_lbs) }}{% else %}-{% endif %}
+          </td>
+          <td class="weight-col">
+            {% if route.leg1_tank_tow_lbs %}{{ "{:,.0f}".format(route.leg1_tank_tow_lbs) }}{% else %}-{% endif %}
+          </td>
+          <td class="distance-col">
+            {% if route.leg1_distance %}{{ "{:,.0f}".format(route.leg1_distance) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if route.leg1_total_cost_usd %}${{ "{:,.2f}".format(route.leg1_total_cost_usd) }}{% else %}-{% endif %}
+          </td>
+          <td class="distance-col">
+            {% if route.leg2_distance %}{{ "{:,.0f}".format(route.leg2_distance) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if route.leg2_total_cost_usd %}${{ "{:,.2f}".format(route.leg2_total_cost_usd) }}{% else %}-{% endif %}
+          </td>
+          <td class="date-col">{{ route.created_at.strftime('%Y-%m-%d %H:%M') if route.created_at else '-' }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="20" class="no-routes">
+            No routes available. <a href="/operations/add-route" style="color: #FF5C00;">Create your first route</a>
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
 </div>
 
 <script>
-function viewRouteDetails(routeId) {
-  // Fetch route details and show in modal
-  fetch(`/operations/route-details/${routeId}`)
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('routeDetailsContent').innerHTML = `
-        <div style="color: #fff;">
-          <h6 style="color: #2196f3;">Route Summary</h6>
-          <p>${data.route_summary}</p>
-          <h6 style="color: #2196f3;">Aircraft</h6>
-          <p>${data.aircraft_name}</p>
-          <h6 style="color: #2196f3;">Route Type</h6>
-          <p>${data.route_type}</p>
-          <!-- Add more details as needed -->
-        </div>
-      `;
-      var modal = new bootstrap.Modal(document.getElementById('routeDetailsModal'));
-      modal.show();
-    })
-    .catch(error => {
-      console.error('Error fetching route details:', error);
-      alert('Error loading route details');
+// Checkbox functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const selectAll = document.getElementById('select-all');
+  const checkboxes = document.querySelectorAll('.routes-checkbox:not(#select-all)');
+  const selectedCount = document.getElementById('selectedCount');
+  const editBtn = document.querySelector('.edit-btn');
+  const deleteBtn = document.querySelector('.delete-btn');
+
+  function updateSelectedCount() {
+    const checked = document.querySelectorAll('.routes-checkbox:not(#select-all):checked');
+    selectedCount.textContent = `${checked.length} selected`;
+    editBtn.disabled = checked.length === 0;
+    deleteBtn.disabled = checked.length === 0;
+  }
+
+  selectAll.addEventListener('change', function() {
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = this.checked;
     });
+    updateSelectedCount();
+  });
+
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+      
+      selectAll.checked = allChecked;
+      selectAll.indeterminate = someChecked && !allChecked;
+      
+      updateSelectedCount();
+    });
+  });
+
+  updateSelectedCount();
+});
+
+function viewRouteDetails(routeId) {
+  // Implement view details functionality
+  console.log('View route details:', routeId);
+  alert('View details functionality will be implemented');
 }
 
 function editRoute(routeId) {
-  // Redirect to edit route page (to be implemented)
-  window.location.href = `/operations/edit-route/${routeId}`;
+  // Implement edit functionality
+  console.log('Edit route:', routeId);
+  alert('Edit functionality will be implemented');
 }
 
 function deleteRoute(routeId) {
-  if (confirm('Are you sure you want to delete this route?')) {
-    fetch(`/operations/delete-route/${routeId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': '{{ csrf_token() }}'
-      }
-    })
-    .then(response => {
-      if (response.ok) {
-        location.reload();
-      } else {
-        alert('Error deleting route');
-      }
-    })
-    .catch(error => {
-      console.error('Error deleting route:', error);
-      alert('Error deleting route');
-    });
+  if (confirm('Are you sure you want to delete this route? This action cannot be undone.')) {
+    console.log('Delete route:', routeId);
+    alert('Delete functionality will be implemented');
   }
 }
 </script>
 
+</div>
 {% endblock %}

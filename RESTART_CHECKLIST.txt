@@ -1,0 +1,38 @@
+EXPECTED CHANGES AFTER FRESH RESTART
+=====================================
+
+When you restart the server and go to the Add Route page, you should see:
+
+1. TWO BUTTONS instead of one:
+   - "Save Route" (yellow/black button) - Original JavaScript approach
+   - "TEST SAVE" (green button) - Simple HTML form test
+
+2. The TEST SAVE button should:
+   - Submit the form directly to the server
+   - Show "=== TEST SAVE BUTTON CLICKED ===" in terminal
+   - Display "TEST SAVE: Form submission works!" message
+   - Redirect to the Available Routes page
+
+3. Terminal output when clicking TEST SAVE:
+   ```
+   === DEBUG: POST request received ===
+   === TEST SAVE BUTTON CLICKED ===
+   Form data received: {'test_save': 'true', 'csrf_token': '...', 'aircraft_type': '...', etc}
+   ```
+
+IF YOU DON'T SEE THE GREEN "TEST SAVE" BUTTON:
+- The template changes aren't being loaded
+- Try hard refresh (Ctrl+F5) in browser
+- Check if template file was actually saved
+
+IF THE TEST SAVE BUTTON WORKS:
+- Basic form submission is working
+- The issue is with the JavaScript "Save Route" button
+- We can fix the JavaScript approach
+
+IF NEITHER BUTTON WORKS:
+- There's a deeper server/CSRF/form issue
+- We'll need to investigate further
+
+Current template location: operations/templates/operations/add_route.html
+Current server code: operations/routes.py (with test_save handler added)

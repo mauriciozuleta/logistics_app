@@ -1,9 +1,221 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+<style>
+  .route-form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    margin: 0 auto;
+  }
+  .route-form-row .form-group {
+    flex: 1 1 20%;
+    min-width: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  #load_finish_btn {
+    width: 100%;
+    height: 38px;
+  }
+  #route-table-wrapper table {
+    width: 100% !important;
+    background-color: #181c22 !important;
+    color: #FF5C00 !important;
+    border-radius: 8px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  #route-table-wrapper th, #route-table-wrapper td {
+  background-color: #181c22 !important;
+  color: #fff !important;
+  border: 0.5px solid #2196f3 !important;
+  min-width: 150px;
+  text-align: center;
+  padding: 12px 8px;
+  }
+  #route-table-wrapper thead {
+    background: #23272e !important;
+  }
+
+  #route-table-wrapper thead th {
+    color: #FF5C00 !important;
+  }
+  /* Totals row styling */
+  #route-summary-table tbody tr:nth-child(3) {
+    background-color: #2a3038 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #FF5C00 !important;
+  }
+  #route-summary-table tbody tr:nth-child(3) td {
+    background-color: #2a3038 !important;
+    color: #FF5C00 !important;
+    font-weight: bold !important;
+    border-top: 2px solid #FF5C00 !important;
+  }
+</style>
+  <h2>Route Information</h2>
+  <form method="post" id="route-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+      <div class="route-form-row">
+          <div class="form-group">
+            <label for="aircraft_type">Aircraft Type</label>
+            <select id="aircraft_type" name="aircraft_type" required style="width: 100%;">
+              <option value="">Select...</option>
+              {% for ac_id, ac_short in aircraft_choices %}
+                <option value="{{ ac_id }}">{{ ac_short }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="route_type">Route Type</label>
+            <select id="route_type" name="route_type" required style="width: 100%;">
+              <option value="round-trip">Round-Trip</option>
+              <option value="one-way">One-Way</option>
+              <option value="multiple">Multiple</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="from_airport"><strong>From</strong></label>
+            <select id="from_airport" name="from_airport" required style="width: 100%;">
+              <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="to_airport"><strong>To</strong></label>
+            <select id="to_airport" name="to_airport" required style="width: 100%;">
+              <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="finish_airport" id="finish_airport_label"><strong>Finish in</strong></label>
+            <select id="finish_airport" name="finish_airport" style="width: 100%;" disabled title="The 'Finish' field is only available for Route Type: Multiple.">
+              <option value="">Select...</option>
+              {% for ap_id, ap_label in airport_choices %}
+                <option value="{{ ap_id }}">{{ ap_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <a href="/coredata/add-airport" class="btn btn-success" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #176c3a; border: 0.5px solid #176c3a; display: flex; align-items: center; justify-content: center; text-align: center;">Add airport</a>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <button type="button" id="load_finish_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #2196f3; border: 0.5px solid #2196f3;">Load</button>
+          </div>
+          <div class="form-group">
+            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
+            <button type="button" id="edit_route_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #b34700; border: 0.5px solid #b34700; display: flex; align-items: center; justify-content: center; text-align: center;">Edit Route</button>
+          </div>
+        </div>
+  </form>
+  <div id="finish-warning" style="display:none; color: #b94a48; margin-top: 0.5rem; font-weight: bold;">The "Finish" field is only available for Route Type: Multiple.</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  var routeType = document.getElementById('route_type');
+  var finishSelect = document.getElementById('finish_airport');
+  function toggleFinish() {
+    if (routeType.value === 'multiple') {
+      finishSelect.disabled = false;
+      finishSelect.removeAttribute('title');
+    } else {
+      finishSelect.disabled = true;
+      finishSelect.setAttribute('title', "The 'Finish' field is only available for Route Type: Multiple.");
+    }
+  }
+  routeType.addEventListener('change', toggleFinish);
+  toggleFinish();
+});
+</script>
+  <div id="load-table-container" style="width:100%; display:flex; justify-content:center; margin-top:2rem; flex-direction:column; align-items:center;">
+    <div style="width:100%; max-width:1400px; margin-bottom: 0.5rem; text-align: center;">
+      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px;">Route Summary</label>
+    </div>
+    <div id="route-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
+      <table id="route-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22; color:#FF5C00; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+        <thead style="background:#23272e; font-weight: normal;">
+          <tr style="font-weight: normal;">
+            <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Leg</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Distance</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Flight Time</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Gls.)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost (USD)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost (USD)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost (USD)</th>
+          </tr>
+        </thead>
+        <tbody style="font-weight: normal;">
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="width:100%; max-width:1400px; margin-top:2rem; text-align:center;">
+      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px; margin-bottom: 0.5rem;">Payload Summary</label>
+      <div id="payload-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
+        <table id="payload-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22 !important; color:#FF5C00 !important; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
+          <thead style="background:#23272e !important; font-weight: normal;">
+            <tr style="font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important;">
+              <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Leg</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">OEW (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Fuel Weight (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Max Payload (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">No-Tank T/O/W (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Avail Extra Fuel (Lbs.)</th>
+              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Tank T/O/W</th>
+            </tr>
+          </thead>
+          <tbody style="font-weight: normal;">
+            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
+              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td>
+            </tr>
+            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
+              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="width:100%; max-width:1400px; display: flex; justify-content: center; margin-top: 1.5rem;">
+        <button type="button" id="save_route_btn" class="btn btn-primary" style="width: 45%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #FFD600; border: 0.5px solid #FFD600; display: flex; align-items: center; justify-content: center; text-align: center; margin-right: 10px;">Save Route</button>
+        
+        <!-- TEST BUTTON: Simple form submission with different action -->
+        <form method="post" action="/operations/test-form" style="width: 45%; margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+          <button type="submit" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #28a745; color: white; border: 1px solid #28a745; display: flex; align-items: center; justify-content: center; text-align: center;">SIMPLE TEST</button>
+        </form>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, initializing add_route page...');
+  
   var editRouteBtn = document.getElementById('edit_route_btn');
 
   function clearTables() {
-    // Clear route summary table
     var routeTable = document.getElementById('route-summary-table');
     if (routeTable) {
       var rows = routeTable.getElementsByTagName('tr');
@@ -13,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     }
-    // Clear payload summary table
     var payloadTable = document.getElementById('payload-summary-table');
     if (payloadTable) {
       var rows = payloadTable.getElementsByTagName('tr');
@@ -471,223 +682,246 @@ document.addEventListener('DOMContentLoaded', function() {
     return value ? `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
   }
 
-});
-</script>
-{% extends 'base.html' %}
+  // Function to extract calculated route data from tables
+  function extractRouteData() {
+    const routeData = {
+      legs: [],
+      payloadData: [],
+      totals: {}
+    };
 
-{% block content %}
-<div class="content-section">
-<style>
-  .route-form-row {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    justify-content: center;
-    width: 80%;
-    margin: 0 auto;
-  }
-  .route-form-row .form-group {
-    flex: 1 1 20%;
-    min-width: 0;
-    margin-bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  #load_finish_btn {
-    width: 100%;
-    height: 38px;
-  }
-  #route-table-wrapper table {
-    width: 100% !important;
-    background-color: #181c22 !important;
-    color: #FF5C00 !important;
-    border-radius: 8px;
-    border-collapse: separate;
-    border-spacing: 0;
-  }
-  #route-table-wrapper th, #route-table-wrapper td {
-  background-color: #181c22 !important;
-  color: #fff !important;
-  border: 0.5px solid #2196f3 !important;
-  min-width: 150px;
-  text-align: center;
-  padding: 12px 8px;
-  }
-  #route-table-wrapper thead {
-  background: #23272e !important;
-}
-
-#route-table-wrapper thead th {
-  color: #FF5C00 !important;
-}
-  }
-  /* Totals row styling */
-  #route-summary-table tbody tr:nth-child(3) {
-    background-color: #2a3038 !important;
-    font-weight: bold !important;
-    border-top: 2px solid #FF5C00 !important;
-  }
-  #route-summary-table tbody tr:nth-child(3) td {
-    background-color: #2a3038 !important;
-    color: #FF5C00 !important;
-    font-weight: bold !important;
-    border-top: 2px solid #FF5C00 !important;
-  }
-</style>
-  <h2>Route Information</h2>
-  <form method="post" id="route-form">
-      {{ csrf_token() }}
-      <div class="route-form-row">
-          <div class="form-group">
-            <label for="aircraft_type">Aircraft Type</label>
-            <select id="aircraft_type" name="aircraft_type" required style="width: 100%;">
-              <option value="">Select...</option>
-              {% for ac_id, ac_short in aircraft_choices %}
-                <option value="{{ ac_id }}">{{ ac_short }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="route_type">Route Type</label>
-            <select id="route_type" name="route_type" required style="width: 100%;">
-              <option value="round-trip">Round-Trip</option>
-              <option value="one-way">One-Way</option>
-              <option value="multiple">Multiple</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="from_airport"><strong>From</strong></label>
-            <select id="from_airport" name="from_airport" required style="width: 100%;">
-              <option value="">Select...</option>
-              {% for ap_id, ap_label in airport_choices %}
-                <option value="{{ ap_id }}">{{ ap_label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="to_airport"><strong>To</strong></label>
-            <select id="to_airport" name="to_airport" required style="width: 100%;">
-              <option value="">Select...</option>
-              {% for ap_id, ap_label in airport_choices %}
-                <option value="{{ ap_id }}">{{ ap_label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="finish_airport" id="finish_airport_label"><strong>Finish in</strong></label>
-            <select id="finish_airport" name="finish_airport" style="width: 100%;" disabled title="The 'Finish' field is only available for Route Type: Multiple.">
-              <option value="">Select...</option>
-              {% for ap_id, ap_label in airport_choices %}
-                <option value="{{ ap_id }}">{{ ap_label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
-            <a href="/coredata/add-airport" class="btn btn-success" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #176c3a; border: 0.5px solid #176c3a; display: flex; align-items: center; justify-content: center; text-align: center;">Add airport</a>
-          </div>
-          <div class="form-group">
-            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
-            <button type="button" id="load_finish_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #2196f3; border: 0.5px solid #2196f3;">Load</button>
-          </div>
-          <div class="form-group">
-            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
-            <button type="button" id="edit_route_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #b34700; border: 0.5px solid #b34700; display: flex; align-items: center; justify-content: center; text-align: center;">Edit Route</button>
-          </div>
-          <!-- Save Route button moved below the table -->
-        </div>
-  </form>
-  <div id="finish-warning" style="display:none; color: #b94a48; margin-top: 0.5rem; font-weight: bold;">The "Finish" field is only available for Route Type: Multiple.</div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var routeType = document.getElementById('route_type');
-  var finishSelect = document.getElementById('finish_airport');
-  function toggleFinish() {
-    if (routeType.value === 'multiple') {
-      finishSelect.disabled = false;
-      finishSelect.removeAttribute('title');
-    } else {
-      finishSelect.disabled = true;
-      finishSelect.setAttribute('title', "The 'Finish' field is only available for Route Type: Multiple.");
+    // Extract route summary data
+    const routeTable = document.getElementById('route-summary-table');
+    if (routeTable) {
+      const rows = routeTable.getElementsByTagName('tr');
+      for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].cells;
+        if (cells.length >= 7 && cells[0].innerText && cells[0].innerText !== 'Totals') {
+          const legData = {
+            route: cells[0].innerText,
+            distance_nm: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
+            flight_time_hours: parseFloat(cells[2].innerText) || 0,
+            fuel_gallons: parseFloat(cells[3].innerText.replace(/,/g, '')) || 0,
+            block_hours_cost: parseFloat(cells[4].innerText.replace(/[$,]/g, '')) || 0,
+            fuel_cost: parseFloat(cells[5].innerText.replace(/[$,]/g, '')) || 0,
+            total_leg_cost: parseFloat(cells[6].innerText.replace(/[$,]/g, '')) || 0
+          };
+          routeData.legs.push(legData);
+        } else if (cells[0].innerText === 'Totals') {
+          routeData.totals = {
+            total_distance_nm: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
+            total_flight_time_hours: parseFloat(cells[2].innerText) || 0,
+            total_fuel_gallons: parseFloat(cells[3].innerText.replace(/,/g, '')) || 0,
+            total_block_hours_cost: parseFloat(cells[4].innerText.replace(/[$,]/g, '')) || 0,
+            total_fuel_cost: parseFloat(cells[5].innerText.replace(/[$,]/g, '')) || 0,
+            total_cost: parseFloat(cells[6].innerText.replace(/[$,]/g, '')) || 0
+          };
+        }
+      }
     }
+
+    // Extract payload data
+    const payloadTable = document.getElementById('payload-summary-table');
+    if (payloadTable) {
+      const rows = payloadTable.getElementsByTagName('tr');
+      for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].cells;
+        if (cells.length >= 5 && cells[0].innerText) {
+          const payloadData = {
+            route: cells[0].innerText,
+            empty_weight_lbs: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
+            fuel_weight_lbs: parseFloat(cells[2].innerText.replace(/,/g, '')) || 0,
+            max_payload_lbs: parseFloat(cells[3].innerText.replace(/,/g, '')) || 0,
+            no_tank_tow_lbs: parseFloat(cells[4].innerText.replace(/,/g, '')) || 0
+          };
+          routeData.payloadData.push(payloadData);
+        }
+      }
+    }
+
+    return routeData;
   }
-  routeType.addEventListener('change', toggleFinish);
-  toggleFinish();
+
+  // Handle Save Route button click
+  const saveRouteBtn = document.getElementById('save_route_btn');
+  console.log('Save button element found:', saveRouteBtn); // Debug log
+  if (saveRouteBtn) {
+    console.log('Adding event listener to save button'); // Debug log
+    saveRouteBtn.addEventListener('click', function(e) {
+      e.preventDefault(); // Prevent default form submission
+      console.log('Save Route button clicked'); // Debug log
+      
+      // Check if route has been analyzed
+      const routeTable = document.getElementById('route-summary-table');
+      const hasData = routeTable && routeTable.getElementsByTagName('tr')[1].cells[1].innerText !== '';
+      
+      if (!hasData) {
+        alert('Please analyze the route first by clicking "Load" before saving.');
+        return;
+      }
+
+      // Extract all calculated data
+      const routeData = extractRouteData();
+      console.log('Extracted route data:', routeData); // Debug log
+      
+      // Get form field values
+      const aircraftSelect = document.getElementById('aircraft_type');
+      const routeTypeSelect = document.getElementById('route_type');
+      const fromSelect = document.getElementById('from_airport');
+      const toSelect = document.getElementById('to_airport');
+      const finishSelect = document.getElementById('finish_airport');
+      
+      // Gather all data for confirmation
+      const formData = {
+        aircraft_type: aircraftSelect.value,
+        aircraft_text: aircraftSelect.options[aircraftSelect.selectedIndex]?.text || 'Not selected',
+        route_type: routeTypeSelect.value,
+        from_airport: fromSelect.value,
+        from_text: fromSelect.options[fromSelect.selectedIndex]?.text || 'Not selected',
+        to_airport: toSelect.value,
+        to_text: toSelect.options[toSelect.selectedIndex]?.text || 'Not selected',
+        finish_airport: finishSelect.value,
+        finish_text: finishSelect.options[finishSelect.selectedIndex]?.text || 'Not selected'
+      };
+      
+      console.log('Form data gathered:', formData); // Debug log
+      console.log('Route data gathered:', routeData); // Debug log
+      
+      // Create confirmation message with all data
+      let confirmMsg = "ROUTE SAVE CONFIRMATION\\n\\n";
+      confirmMsg += "=== FORM DATA ===\\n";
+      confirmMsg += `Aircraft: ${formData.aircraft_text} (ID: ${formData.aircraft_type})\\n`;
+      confirmMsg += `Route Type: ${formData.route_type}\\n`;
+      confirmMsg += `From: ${formData.from_text} (ID: ${formData.from_airport})\\n`;
+      confirmMsg += `To: ${formData.to_text} (ID: ${formData.to_airport})\\n`;
+      confirmMsg += `Finish: ${formData.finish_text} (ID: ${formData.finish_airport})\\n`;
+      
+      confirmMsg += "\\n=== ROUTE CALCULATION DATA ===\\n";
+      confirmMsg += `Route Data Keys: ${Object.keys(routeData).join(', ')}\\n`;
+      
+      if (routeData.totals) {
+        confirmMsg += `Total Distance: ${routeData.totals.total_distance_nm || 'N/A'} nm\\n`;
+        confirmMsg += `Total Time: ${routeData.totals.total_flight_time_hours || 'N/A'} hrs\\n`;
+        confirmMsg += `Total Cost: $${routeData.totals.total_cost || 'N/A'}\\n`;
+        confirmMsg += `Fuel Cost: $${routeData.totals.total_fuel_cost || 'N/A'}\\n`;
+      } else {
+        confirmMsg += "No totals data found!\\n";
+      }
+      
+      if (routeData.legs) {
+        confirmMsg += `Number of legs: ${routeData.legs.length}\\n`;
+      }
+      
+      confirmMsg += "\\n=== DEBUG INFO ===\\n";
+      confirmMsg += `Form fields disabled? Aircraft: ${aircraftSelect.disabled}, From: ${fromSelect.disabled}\\n`;
+      confirmMsg += `Route data size: ${JSON.stringify(routeData).length} characters\\n`;
+      
+      confirmMsg += "\\nDo you want to save this route?";
+      
+      console.log('About to show confirmation dialog'); // Debug log
+      
+      // Show simple confirmation dialog
+      const userConfirmed = confirm("Save this route to the database?");
+      console.log('User confirmation result:', userConfirmed); // Debug log
+      
+      if (userConfirmed) {
+        console.log('User confirmed save - proceeding with submission'); // Debug log
+        
+        // Get form and temporarily enable all fields for submission
+        const form = document.getElementById('route-form');
+        console.log('Form element found:', form); // Debug log
+        
+        if (!form) {
+          console.error('ERROR: Form element not found!');
+          alert('Error: Could not find form element. Please refresh the page and try again.');
+          return;
+        }
+        
+        // Store disabled states
+        const disabledStates = {
+          aircraft: aircraftSelect.disabled,
+          routeType: routeTypeSelect.disabled,
+          from: fromSelect.disabled,
+          to: toSelect.disabled,
+          finish: finishSelect.disabled
+        };
+        
+        console.log('Original disabled states:', disabledStates); // Debug log
+        
+        // Temporarily enable all fields
+        aircraftSelect.disabled = false;
+        routeTypeSelect.disabled = false;
+        fromSelect.disabled = false;
+        toSelect.disabled = false;
+        finishSelect.disabled = false;
+        
+        console.log('Form fields temporarily enabled for submission'); // Debug log
+        console.log('Field values after enabling:', {
+          aircraft: aircraftSelect.value,
+          routeType: routeTypeSelect.value,
+          from: fromSelect.value,
+          to: toSelect.value,
+          finish: finishSelect.value
+        }); // Debug log
+        
+        // Create and add route data as hidden input
+        const routeDataInput = document.createElement('input');
+        routeDataInput.type = 'hidden';
+        routeDataInput.name = 'route_data';
+        routeDataInput.value = JSON.stringify(routeData);
+        form.appendChild(routeDataInput);
+        
+        console.log('Route data input added to form'); // Debug log
+        console.log('Form action:', form.action); // Debug log
+        console.log('Form method:', form.method); // Debug log
+        
+        // SIMPLE APPROACH: Create a new form and submit it
+        console.log('Creating new form for submission...'); // Debug log
+        const newForm = document.createElement('form');
+        newForm.method = 'POST';
+        newForm.action = '/operations/add-route';
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = '{{ csrf_token }}';
+        newForm.appendChild(csrfInput);
+        
+        // Add form fields
+        const fields = {
+          'aircraft_type': aircraftSelect.value,
+          'route_type': routeTypeSelect.value,
+          'from_airport': fromSelect.value,
+          'to_airport': toSelect.value,
+          'finish_airport': finishSelect.value,
+          'route_data': JSON.stringify(routeData)
+        };
+        
+        for (const [name, value] of Object.entries(fields)) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = name;
+          input.value = value;
+          newForm.appendChild(input);
+          console.log(`Added field: ${name} = ${value}`); // Debug log
+        }
+        
+        // Add form to document and submit
+        document.body.appendChild(newForm);
+        console.log('Submitting new form...'); // Debug log
+        newForm.submit();
+        
+      } else {
+        console.log('User cancelled save operation'); // Debug log
+      }
+    });
+  } else {
+    console.error('Save Route button not found!');
+  }
+
+  console.log('Add route page JavaScript initialization completed'); // Debug log
+
 });
 </script>
-  <div id="load-table-container" style="width:100%; display:flex; justify-content:center; margin-top:2rem; flex-direction:column; align-items:center;">
-    <div style="width:100%; max-width:1400px; margin-bottom: 0.5rem; text-align: center;">
-      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px;">Route Summary</label>
-    </div>
-    <!-- Save Route button removed as requested -->
-    <div id="route-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
-      <table id="route-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22; color:#FF5C00; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
-        <thead style="background:#23272e; font-weight: normal;">
-          <tr style="font-weight: normal;">
-            <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Leg</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Distance</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Flight Time</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Gls.)</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost (USD)</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost (USD)</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost (USD)</th>
-          </tr>
-        </thead>
-        <tbody style="font-weight: normal;">
-          <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-          </tr>
-          <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-          </tr>
-          <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-          </tr>
-          <!-- Totals row removed as requested -->
-        </tbody>
-      </table>
-    </div>
-    <div style="width:100%; max-width:1400px; margin-top:2rem; text-align:center;">
-      <label style="font-size: 1.3rem; color: #FF5C00; font-weight: bold; letter-spacing: 1px; margin-bottom: 0.5rem;">Payload Summary</label>
-      <div id="payload-table-wrapper" style="width:100%; max-width:1400px; display: flex; justify-content: center;">
-        <table id="payload-summary-table" class="table table-bordered" style="width:100%; margin: 0 auto; background-color:#181c22 !important; color:#FF5C00 !important; border-radius:8px; border-collapse: separate; border-spacing: 0; font-weight: normal;">
-          <thead style="background:#23272e !important; font-weight: normal;">
-            <tr style="font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important;">
-              <th style="min-width:220px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Leg</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">OEW (Lbs.)</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Fuel Weight (Lbs.)</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Max Payload (Lbs.)</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">No-Tank T/O/W (Lbs.)</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Avail Extra Fuel (Lbs.)</th>
-              <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3 !important; font-weight: normal; background-color:#23272e !important; color:#FF5C00 !important; height:38px;">Tank T/O/W</th>
-            </tr>
-          </thead>
-          <tbody style="font-weight: normal;">
-            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
-              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td>
-            </tr>
-            <tr style="background-color:#181c22 !important; color:#FF5C00 !important;">
-              <td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td><td style="background-color:#181c22 !important; color:#fff !important; border:0.5px solid #2196f3 !important; text-align:center !important;"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="width:100%; max-width:1400px; display: flex; justify-content: center; margin-top: 1.5rem;">
-        <button type="submit" id="save_route_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #FFD600; border: 0.5px solid #FFD600; display: flex; align-items: center; justify-content: center; text-align: center;">Save Route</button>
-      </div>
-    </div>
-    </div>
-  </div>
-</div>
 {% endblock %}
-
-
-
-
-
-
-
-
-
