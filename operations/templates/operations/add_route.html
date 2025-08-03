@@ -80,25 +80,38 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   async function fetchDistances(legs) {
-    const response = await fetch('/api/leg-distances', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({legs: legs})
-    });
-    const data = await response.json();
-    return data.distances.map(d => d.distance);
+    try {
+      const response = await fetch('/api/leg-distances', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({legs: legs})
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.distances.map(d => d.distance);
+    } catch (error) {
+      console.error('Error fetching distances:', error);
+      throw error;
+    }
   }
 
   async function fetchAircraftData(aircraftId) {
-    const response = await fetch('/api/aircraft-cruise-speed', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({aircraft_id: aircraftId})
-    });
-    if (response.ok) {
+    try {
+      const response = await fetch('/api/aircraft-cruise-speed', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({aircraft_id: aircraftId})
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      // Extend API to return all needed fields
       return data;
+    } catch (error) {
+      console.error('Error fetching aircraft data:', error);
+      throw error;
     }
   }
 
@@ -111,14 +124,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (routeTable) {
       var rows = routeTable.getElementsByTagName('tr');
       if (type === 'one-way') {
-        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] || ''; }
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] ? formatNumber(distances[0], 0) : ''; }
       } else if (type === 'round-trip') {
-        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] || ''; }
-        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + fromIata; rows[2].cells[1].innerText = distances[1] || ''; }
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] ? formatNumber(distances[0], 0) : ''; }
+        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + fromIata; rows[2].cells[1].innerText = distances[1] ? formatNumber(distances[1], 0) : ''; }
       } else if (type === 'multiple') {
-        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] || ''; }
-        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + finishIata; rows[2].cells[1].innerText = distances[1] || ''; }
+        if (rows[1]) { rows[1].cells[0].innerText = fromIata + ' / ' + toIata; rows[1].cells[1].innerText = distances[0] ? formatNumber(distances[0], 0) : ''; }
+        if (rows[2]) { rows[2].cells[0].innerText = toIata + ' / ' + finishIata; rows[2].cells[1].innerText = distances[1] ? formatNumber(distances[1], 0) : ''; }
       }
+      // Add "Totals" label in the third row
+      if (rows[3]) { rows[3].cells[0].innerText = 'Totals'; }
     }
     var payloadTable = document.getElementById('payload-summary-table');
     if (payloadTable) {
@@ -141,11 +156,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var routeTable = document.getElementById('route-summary-table');
     if (!routeTable || !aircraftData.cruise_speed) return;
     var rows = routeTable.getElementsByTagName('tr');
+    var pendingRequests = 0; // Track pending async requests
+    
     for (var i = 1; i < rows.length; i++) {
-      var dist = parseFloat(rows[i].cells[1].innerText);
+      // Remove commas from distance before parsing
+      var dist = parseFloat(rows[i].cells[1].innerText.replace(/,/g, ''));
       let flightTime = '';
       let routeFuel = '';
-      let reserveFuel = '';
       let bhCost = '';
       let fuelCost = '';
       let totalLegCost = '';
@@ -159,28 +176,22 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           rows[i].cells[3].innerText = '';
         }
-        if (aircraftData.min_fuel_landed_lbs !== undefined && aircraftData.min_fuel_alternate_lbs !== undefined) {
-          reserveFuel = (parseFloat(aircraftData.min_fuel_landed_lbs) || 0) + (parseFloat(aircraftData.min_fuel_alternate_lbs) || 0);
-          var reserveFuelGal = reserveFuel / 6.7;
-          rows[i].cells[4].innerText = reserveFuelGal ? formatNumber(reserveFuelGal, 0) : '';
-        } else {
-          rows[i].cells[4].innerText = '';
-        }
         // B/H cost = acmi_cost * flightTime, but if flightTime < 1, use 1
         if (aircraftData.acmi_cost && flightTime) {
           var bhMultiplier = flightTime < 1 ? 1 : flightTime;
           bhCost = aircraftData.acmi_cost * bhMultiplier;
-          rows[i].cells[5].innerText = bhCost ? formatCurrency(bhCost) : '';
+          rows[i].cells[4].innerText = bhCost ? formatCurrency(bhCost) : '';
         } else {
-          rows[i].cells[5].innerText = '';
+          rows[i].cells[4].innerText = '';
         }
         // Fuel cost: convert routeFuel (lbs) to gallons, then multiply by from airport fuel cost, and if flightTime < 1, multiply result by 2
         // Use route fuel in gallons directly for fuel cost calculation
         var jetAGal = routeFuelGal ? routeFuelGal : 0;
         var fromAirportId = fromSelect.value;
+        rows[i].cells[5].innerText = '';
         rows[i].cells[6].innerText = '';
-        rows[i].cells[7].innerText = '';
         if (jetAGal > 0 && fromAirportId) {
+          pendingRequests++; // Increment pending requests
           (function(rowIdx, jetAGalVal, flightTimeVal) {
             fetch('/api/airport-fuel-cost', {
               method: 'POST',
@@ -191,11 +202,24 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
               var fuelCostVal = (data.fuel_cost_gl && jetAGalVal) ? data.fuel_cost_gl * jetAGalVal : 0;
               if (flightTimeVal < 1) fuelCostVal *= 2;
-              rows[rowIdx].cells[6].innerText = fuelCostVal ? formatCurrency(fuelCostVal) : '';
+              rows[rowIdx].cells[5].innerText = fuelCostVal ? formatCurrency(fuelCostVal) : '';
               // Total leg cost = bhCost + fuelCost
               var bhCostVal = aircraftData.acmi_cost && flightTimeVal ? aircraftData.acmi_cost * (flightTimeVal < 1 ? 1 : flightTimeVal) : 0;
               var totalLegCostVal = bhCostVal + fuelCostVal;
-              rows[rowIdx].cells[7].innerText = totalLegCostVal ? formatCurrency(totalLegCostVal) : '';
+              rows[rowIdx].cells[6].innerText = totalLegCostVal ? formatCurrency(totalLegCostVal) : '';
+              
+              // Decrement pending requests and call calculateTotals when all are done
+              pendingRequests--;
+              if (pendingRequests === 0) {
+                calculateTotals();
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching fuel cost:', error);
+              pendingRequests--;
+              if (pendingRequests === 0) {
+                calculateTotals();
+              }
             });
           })(i, jetAGal, flightTime);
         }
@@ -205,8 +229,13 @@ document.addEventListener('DOMContentLoaded', function() {
         rows[i].cells[4].innerText = '';
         rows[i].cells[5].innerText = '';
         rows[i].cells[6].innerText = '';
-        rows[i].cells[7].innerText = '';
       }
+    }
+    
+    // If no pending requests, calculate totals immediately
+    if (pendingRequests === 0) {
+      calculateTotals();
+    }
   }
 
   function calculateTotals() {
@@ -215,14 +244,16 @@ document.addEventListener('DOMContentLoaded', function() {
     var rows = routeTable.getElementsByTagName('tr');
     if (rows.length < 4) return; // Need at least 3 data rows plus header
     
+    console.log('Calculating totals...');
+    
     // Initialize totals (skip leg column [0])
-    var totals = [0, 0, 0, 0, 0, 0, 0]; // distance, flight time, route fuel, reserve fuel, B/H cost, fuel cost, total cost
+    var totals = [0, 0, 0, 0, 0, 0]; // distance, flight time, route fuel, B/H cost, fuel cost, total cost
     
     // Sum rows 1 and 2 (data rows)
     for (var i = 1; i <= 2; i++) {
       if (rows[i]) {
-        // Distance (column 1)
-        var distance = parseFloat(rows[i].cells[1].innerText) || 0;
+        // Distance (column 1) - remove commas and parse
+        var distance = parseFloat(rows[i].cells[1].innerText.replace(/,/g, '')) || 0;
         totals[0] += distance;
         
         // Flight Time (column 2) - remove 'hr' and parse
@@ -234,47 +265,79 @@ document.addEventListener('DOMContentLoaded', function() {
         var routeFuel = parseFloat(rows[i].cells[3].innerText.replace(/,/g, '')) || 0;
         totals[2] += routeFuel;
         
-        // Reserve Fuel (column 4) - DON'T sum, take the value from first non-empty row
-        if (totals[3] === 0 && rows[i].cells[4].innerText) {
-          totals[3] = parseFloat(rows[i].cells[4].innerText.replace(/,/g, '')) || 0;
-        }
+        // B/H Cost (column 4) - remove $ and commas
+        var bhCost = parseFloat(rows[i].cells[4].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[3] += bhCost;
         
-        // B/H Cost (column 5) - remove $ and commas
-        var bhCost = parseFloat(rows[i].cells[5].innerText.replace(/[\$,]/g, '')) || 0;
-        totals[4] += bhCost;
+        // Fuel Cost (column 5) - remove $ and commas  
+        var fuelCost = parseFloat(rows[i].cells[5].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[4] += fuelCost;
         
-        // Fuel Cost (column 6) - remove $ and commas  
-        var fuelCost = parseFloat(rows[i].cells[6].innerText.replace(/[\$,]/g, '')) || 0;
-        totals[5] += fuelCost;
-        
-        // Total Leg Cost (column 7) - remove $ and commas
-        var totalCost = parseFloat(rows[i].cells[7].innerText.replace(/[\$,]/g, '')) || 0;
-        totals[6] += totalCost;
+        // Total Leg Cost (column 6) - remove $ and commas
+        var totalCost = parseFloat(rows[i].cells[6].innerText.replace(/[\$,]/g, '')) || 0;
+        totals[5] += totalCost;
       }
     }
+    
+    console.log('Totals calculated:', totals);
     
     // Update totals row (row 3)
     if (rows[3]) {
       rows[3].cells[1].innerText = totals[0] ? formatNumber(totals[0], 0) : '';
       rows[3].cells[2].innerText = totals[1] ? totals[1].toFixed(2) + ' hr' : '';
       rows[3].cells[3].innerText = totals[2] ? formatNumber(totals[2], 0) : '';
-      rows[3].cells[4].innerText = totals[3] ? formatNumber(totals[3], 0) : ''; // Reserve fuel (not summed)
+      rows[3].cells[4].innerText = totals[3] ? formatCurrency(totals[3]) : '';
       rows[3].cells[5].innerText = totals[4] ? formatCurrency(totals[4]) : '';
       rows[3].cells[6].innerText = totals[5] ? formatCurrency(totals[5]) : '';
-      rows[3].cells[7].innerText = totals[6] ? formatCurrency(totals[6]) : '';
     }
+  }
 
+  // Load button event listener
   if (loadBtn) {
     loadBtn.addEventListener('click', async function() {
-      freezeLists();
-      const legs = getLegs();
-      const distances = await fetchDistances(legs);
-      setLegsAndDistances(distances);
-      const aircraftId = aircraftSelect.value;
-      const aircraftData = await fetchAircraftData(aircraftId);
-      setFlightTimesAndFuel(distances, aircraftData);
-      calculateTotals();
+      console.log('Load button clicked');
+      
+      // Validate form selections
+      if (!fromSelect.value || !toSelect.value || !aircraftSelect.value) {
+        alert('Please select Aircraft Type, From airport, and To airport before loading.');
+        return;
+      }
+      
+      // For multiple route type, finish airport is also required
+      if (routeType.value === 'multiple' && !finishSelect.value) {
+        alert('Please select Finish airport for multiple route type.');
+        return;
+      }
+      
+      try {
+        freezeLists();
+        console.log('Getting legs...');
+        const legs = getLegs();
+        console.log('Legs:', legs);
+        
+        console.log('Fetching distances...');
+        const distances = await fetchDistances(legs);
+        console.log('Distances:', distances);
+        
+        setLegsAndDistances(distances);
+        
+        console.log('Fetching aircraft data...');
+        const aircraftId = aircraftSelect.value;
+        const aircraftData = await fetchAircraftData(aircraftId);
+        console.log('Aircraft data:', aircraftData);
+        
+        setFlightTimesAndFuel(distances, aircraftData);
+        // Note: calculateTotals() is now called automatically after async operations complete
+        
+        console.log('Load completed successfully');
+      } catch (error) {
+        console.error('Error during load:', error);
+        alert('An error occurred while loading route data. Please check the console for details.');
+        activateSelections(); // Re-enable selections on error
+      }
     });
+  } else {
+    console.error('Load button not found!');
   }
 
   // Format number with comma for thousands and dot for decimals
@@ -445,8 +508,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Distance</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Flight Time</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Gls.)</th>
-            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Reserve Fuel (Gls.)</th>
-
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost (USD)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost (USD)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost (USD)</th>
@@ -454,13 +515,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </thead>
         <tbody style="font-weight: normal;">
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
           <!-- Totals row removed as requested -->
         </tbody>

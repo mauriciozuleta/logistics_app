@@ -1,6 +1,6 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
-from app import db
+from extensions import db
 from models import Product, Country, Aircraft, Airport, Trader
 from coredata.forms import AircraftForm, AirportForm, TraderForm
 
