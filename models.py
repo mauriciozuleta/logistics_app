@@ -130,3 +130,73 @@ class Airport(BaseModel):
     altitude_ft = db.Column(db.Float)
     geo_source = db.Column(db.String(50))
     last_verified_at = db.Column(db.DateTime)
+
+
+class Route(BaseModel):
+    __tablename__ = 'routes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    route_name = db.Column(db.String(128))
+    aircraft_id = db.Column(db.String, db.ForeignKey('aircraft.id'), nullable=False)
+    route_type = db.Column(db.String(20), nullable=False)  # one-way, round-trip, multiple
+    
+    # Airport references
+    from_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
+    to_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
+    finish_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'))  # Only for multiple routes
+    
+    # Route Summary Data (Totals)
+    total_distance = db.Column(db.Float)
+    total_flight_time = db.Column(db.Float)
+    total_route_fuel_gls = db.Column(db.Float)
+    total_bh_cost_usd = db.Column(db.Float)
+    total_fuel_cost_usd = db.Column(db.Float)
+    total_leg_cost_usd = db.Column(db.Float)
+    
+    # Leg 1 Data
+    leg1_route = db.Column(db.String(128))
+    leg1_distance = db.Column(db.Float)
+    leg1_flight_time = db.Column(db.Float)
+    leg1_route_fuel_gls = db.Column(db.Float)
+    leg1_bh_cost_usd = db.Column(db.Float)
+    leg1_fuel_cost_usd = db.Column(db.Float)
+    leg1_total_cost_usd = db.Column(db.Float)
+    
+    # Leg 1 Payload Data
+    leg1_oew_lbs = db.Column(db.Float)
+    leg1_fuel_weight_lbs = db.Column(db.Float)
+    leg1_max_payload_lbs = db.Column(db.Float)
+    leg1_no_tank_tow_lbs = db.Column(db.Float)
+    leg1_avail_extra_fuel_lbs = db.Column(db.Float)
+    leg1_tank_tow_lbs = db.Column(db.Float)
+    
+    # Leg 2 Data (for round-trip and multiple routes)
+    leg2_route = db.Column(db.String(128))
+    leg2_distance = db.Column(db.Float)
+    leg2_flight_time = db.Column(db.Float)
+    leg2_route_fuel_gls = db.Column(db.Float)
+    leg2_bh_cost_usd = db.Column(db.Float)
+    leg2_fuel_cost_usd = db.Column(db.Float)
+    leg2_total_cost_usd = db.Column(db.Float)
+    
+    # Leg 2 Payload Data
+    leg2_oew_lbs = db.Column(db.Float)
+    leg2_fuel_weight_lbs = db.Column(db.Float)
+    leg2_max_payload_lbs = db.Column(db.Float)
+    leg2_no_tank_tow_lbs = db.Column(db.Float)
+    leg2_avail_extra_fuel_lbs = db.Column(db.Float)
+    leg2_tank_tow_lbs = db.Column(db.Float)
+    
+    # Status and metadata
+    status = db.Column(db.String(20), default='active')  # active, archived, draft
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.String(128))
+    
+    # Relationships
+    aircraft = db.relationship('Aircraft', backref='routes')
+    from_airport = db.relationship('Airport', foreign_keys=[from_airport_id], backref='routes_from')
+    to_airport = db.relationship('Airport', foreign_keys=[to_airport_id], backref='routes_to')
+    finish_airport = db.relationship('Airport', foreign_keys=[finish_airport_id], backref='routes_finish')
+    
+    def __repr__(self):
+        return f"<Route {self.route_name or f'{self.leg1_route}'} ({self.route_type})>"

@@ -537,9 +537,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 </style>
   <h2>Route Information</h2>
-  <form method="post">
-      <form method="post">
-        <div class="route-form-row">
+  <form method="post" id="route-form">
+      {{ csrf_token() }}
+      <div class="route-form-row">
           <div class="form-group">
             <label for="aircraft_type">Aircraft Type</label>
             <select id="aircraft_type" name="aircraft_type" required style="width: 100%;">
@@ -598,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
           <!-- Save Route button moved below the table -->
         </div>
-      </form>
+  </form>
   <div id="finish-warning" style="display:none; color: #b94a48; margin-top: 0.5rem; font-weight: bold;">The "Finish" field is only available for Route Type: Multiple.</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

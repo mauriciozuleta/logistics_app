@@ -1,54 +1,104 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2 class="mb-4">Add Trader</h2>
-<div class="form-pane add-trader-form-container">
-  <form method="POST" action="{{ url_for('coredata.add_trader') }}" class="add-trader-form">
-    {{ form.hidden_tag() }}
-    <div class="row mb-3">
-      <div class="col-md-4">
-        {{ form.country_id.label(class="form-label fw-bold") }}
-        {{ form.country_id(class="form-control form-control-sm") }}
-      </div>
-      <div class="col-md-8">
-        {{ form.name.label(class="form-label fw-bold") }}
-        {{ form.name(class="form-control form-control-sm") }}
+<div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+      <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
+        <div class="card-body" style="color: #fff;">
+          <h2 class="mb-4" style="color: #2196f3; text-align: center;">Add Trader</h2>
+          
+          <form method="POST" action="{{ url_for('coredata.add_trader') }}" class="add-trader-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="row mb-4">
+              <div class="col-md-4">
+                {{ form.country_id.label(class="form-label", style="color: #2196f3; font-weight: bold;") }}
+                {{ form.country_id(class="form-control", style="background-color: #181c22; color: #fff; border: 1px solid #2196f3;") }}
+              </div>
+              <div class="col-md-8">
+                {{ form.name.label(class="form-label", style="color: #2196f3; font-weight: bold;") }}
+                {{ form.name(class="form-control", style="background-color: #181c22; color: #fff; border: 1px solid #2196f3;") }}
+              </div>
+            </div>
+            
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <fieldset style="border: 1px solid #FF5C00; padding: 1rem; border-radius: 8px; background-color: #181c22;">
+                  <legend style="color: #FF5C00; font-weight: bold; font-size: 1.1rem; padding: 0 10px;">Export Information</legend>
+                  
+                  <div class="mb-3">
+                    {{ form.export_year_operating_costs.label(class="form-label", style="color: #fff;") }}
+                    {{ form.export_year_operating_costs(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #FF5C00;") }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.export_operating_expenses_pct.label(class="form-label", style="color: #fff;") }}
+                    {{ form.export_operating_expenses_pct(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #FF5C00;") }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.export_profit_pct.label(class="form-label", style="color: #fff;") }}
+                    {{ form.export_profit_pct(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #FF5C00;") }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.export_sales_tax.label(class="form-label", style="color: #fff;") }}
+                    {{ form.export_sales_tax(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #FF5C00;") }}
+                  </div>
+                  
+                  <div class="mb-0">
+                    {{ form.export_other_taxes.label(class="form-label", style="color: #fff;") }}
+                    {{ form.export_other_taxes(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #FF5C00;") }}
+                  </div>
+                </fieldset>
+              </div>
+              
+              <div class="col-md-6">
+                <fieldset style="border: 1px solid #176c3a; padding: 1rem; border-radius: 8px; background-color: #181c22;">
+                  <legend style="color: #176c3a; font-weight: bold; font-size: 1.1rem; padding: 0 10px;">Import Information</legend>
+                  
+                  <div class="mb-3">
+                    {{ form.import_year_operating_costs.label(class="form-label", style="color: #fff;") }}
+                    {{ form.import_year_operating_costs(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #176c3a;") }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.import_operating_expenses_pct.label(class="form-label", style="color: #fff;") }}
+                    {{ form.import_operating_expenses_pct(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #176c3a;") }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.import_profit_pct.label(class="form-label", style="color: #fff;") }}
+                    {{ form.import_profit_pct(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #176c3a;") }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.import_import_taxes.label(class="form-label", style="color: #fff;") }}
+                    {{ form.import_import_taxes(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #176c3a;") }}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.import_sales_tax.label(class="form-label", style="color: #fff;") }}
+                    {{ form.import_sales_tax(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #176c3a;") }}
+                  </div>
+                  
+                  <div class="mb-0">
+                    {{ form.import_other_taxes.label(class="form-label", style="color: #fff;") }}
+                    {{ form.import_other_taxes(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #176c3a;") }}
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <button type="submit" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                Add Trader
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-    <div class="row mb-3">
-      <div class="col-md-6">
-        <fieldset class="border p-2 rounded">
-          <legend class="w-auto px-2">Export Information</legend>
-          {{ form.export_year_operating_costs.label(class="form-label") }}
-          {{ form.export_year_operating_costs(class="form-control") }}
-          {{ form.export_operating_expenses_pct.label(class="form-label mt-2") }}
-          {{ form.export_operating_expenses_pct(class="form-control") }}
-          {{ form.export_profit_pct.label(class="form-label mt-2") }}
-          {{ form.export_profit_pct(class="form-control") }}
-          {{ form.export_sales_tax.label(class="form-label mt-2") }}
-          {{ form.export_sales_tax(class="form-control") }}
-          {{ form.export_other_taxes.label(class="form-label mt-2") }}
-          {{ form.export_other_taxes(class="form-control") }}
-        </fieldset>
-      </div>
-      <div class="col-md-6">
-        <fieldset class="border p-2 rounded">
-          <legend class="w-auto px-2">Import Information</legend>
-          {{ form.import_year_operating_costs.label(class="form-label") }}
-          {{ form.import_year_operating_costs(class="form-control") }}
-          {{ form.import_operating_expenses_pct.label(class="form-label mt-2") }}
-          {{ form.import_operating_expenses_pct(class="form-control") }}
-          {{ form.import_profit_pct.label(class="form-label mt-2") }}
-          {{ form.import_profit_pct(class="form-control") }}
-          {{ form.import_import_taxes.label(class="form-label mt-2") }}
-          {{ form.import_import_taxes(class="form-control") }}
-          {{ form.import_sales_tax.label(class="form-label mt-2") }}
-          {{ form.import_sales_tax(class="form-control") }}
-          {{ form.import_other_taxes.label(class="form-label mt-2") }}
-          {{ form.import_other_taxes(class="form-control") }}
-        </fieldset>
-      </div>
-    </div>
-    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Add Trader</button>
-  </form>
+  </div>
 </div>
 {% endblock %}

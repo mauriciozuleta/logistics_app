@@ -1,49 +1,81 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2 class="mb-4">View / Edit Traders</h2>
-<div class="form-pane view-trader-list-container">
-  <table class="product-table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Country</th>
-        <th>Export Year Op. Costs</th>
-        <th>Export Op. %</th>
-        <th>Export Profit %</th>
-        <th>Export Sales Tax</th>
-        <th>Export Other Taxes</th>
-        <th>Import Year Op. Costs</th>
-        <th>Import Op. %</th>
-        <th>Import Profit %</th>
-        <th>Import Taxes</th>
-        <th>Import Sales Tax</th>
-        <th>Import Other Taxes</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for trader in trader_list %}
-      <tr>
-        <td>{{ trader.name }}</td>
-        <td>{{ trader.country.country_name if trader.country else '' }}</td>
-        <td>{{ trader.export_year_operating_costs }}</td>
-        <td>{{ trader.export_operating_expenses_pct }}</td>
-        <td>{{ trader.export_profit_pct }}</td>
-        <td>{{ trader.export_sales_tax }}</td>
-        <td>{{ trader.export_other_taxes }}</td>
-        <td>{{ trader.import_year_operating_costs }}</td>
-        <td>{{ trader.import_operating_expenses_pct }}</td>
-        <td>{{ trader.import_profit_pct }}</td>
-        <td>{{ trader.import_import_taxes }}</td>
-        <td>{{ trader.import_sales_tax }}</td>
-        <td>{{ trader.import_other_taxes }}</td>
-        <td>
-          <a href="{{ url_for('coredata.add_trader', edit_id=trader.id) }}" class="btn btn-sm btn-warning">Edit</a>
-          <a href="{{ url_for('coredata.delete_trader', trader_id=trader.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this trader?');">Delete</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
+        <div class="card-body" style="color: #fff;">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 style="color: #2196f3; margin: 0;">🏢 View / Edit Traders</h2>
+            <a href="{{ url_for('coredata.add_trader') }}" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff;">
+              ➕ Add New Trader
+            </a>
+          </div>
+
+          {% if trader_list %}
+            <div class="table-responsive">
+              <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden;">
+                <thead style="background-color: #23272e;">
+                  <tr>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Name</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Country</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Year Op. Costs</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Op. %</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Profit %</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Sales Tax</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Other Taxes</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Year Op. Costs</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Op. %</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Profit %</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Taxes</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Sales Tax</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Other Taxes</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for trader in trader_list %}
+                    <tr style="background-color: #181c22;">
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px; font-weight: bold;">{{ trader.name }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ trader.country.country_name if trader.country else '' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_year_operating_costs }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_operating_expenses_pct }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_profit_pct }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_sales_tax }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_other_taxes }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_year_operating_costs }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_operating_expenses_pct }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_profit_pct }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_import_taxes }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_sales_tax }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_other_taxes }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                          <a href="{{ url_for('coredata.add_trader', edit_id=trader.id) }}" class="btn btn-sm" style="background-color: #ff9800; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none;">
+                            ✏️ Edit
+                          </a>
+                          <a href="{{ url_for('coredata.delete_trader', trader_id=trader.id) }}" class="btn btn-sm" onclick="return confirm('Delete this trader?');" style="background-color: #f44336; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none;">
+                            🗑️ Delete
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div style="text-align: center; padding: 4rem; color: #bbb;">
+              <h4>No traders available</h4>
+              <p>Click "Add New Trader" to create your first trader</p>
+              <a href="{{ url_for('coredata.add_trader') }}" class="btn btn-primary" style="background-color: #2196f3; border: 1px solid #2196f3; color: #fff; margin-top: 1rem;">
+                ➕ Create First Trader
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
