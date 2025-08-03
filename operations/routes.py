@@ -105,155 +105,273 @@ def add_route(route_id=None):
             if leg2_data:
                 print(f"Leg 2 data values: {leg2_data}")  # Debug log
             
-            # Create new route record with calculated data
-            print("Creating/Updating Route object...")  # Debug log
+            # Create separate route records based on route type
+            print("Creating route records...")  # Debug log
+            created_routes = []
+            
             try:
                 if route_to_edit:
-                    # Update existing route
-                    print(f"Updating existing route with ID: {route_to_edit.id}")  # Debug log
-                    route_to_edit.aircraft_id = aircraft_id
-                    route_to_edit.route_type = route_type
-                    route_to_edit.from_airport_id = from_airport_id
-                    route_to_edit.to_airport_id = to_airport_id
-                    route_to_edit.finish_airport_id = finish_airport_id
-                    route_to_edit.route_summary = route_summary
-                    route_to_edit.aircraft_name = aircraft.short_name
-                    route_to_edit.from_airport_name = f"{from_airport.iata_code} - {from_airport.name}"
-                    route_to_edit.to_airport_name = f"{to_airport.iata_code} - {to_airport.name}"
-                    route_to_edit.finish_airport_name = f"{finish_airport.iata_code} - {finish_airport.name}" if finish_airport else None
-                    
-                    # Update calculated route data (totals)
-                    route_to_edit.total_distance_nm = totals.get('total_distance_nm', 0)
-                    route_to_edit.total_flight_time_hours = totals.get('total_flight_time_hours', 0)
-                    route_to_edit.total_fuel_gallons = totals.get('total_fuel_gallons', 0)
-                    route_to_edit.total_fuel_cost = totals.get('total_fuel_cost', 0)
-                    route_to_edit.total_block_hours_cost = totals.get('total_block_hours_cost', 0)
-                    route_to_edit.total_cost = totals.get('total_cost', 0)
-                    
-                    # Update Leg 1 route data
-                    route_to_edit.leg1_route = leg1_data.get('route', '')
-                    route_to_edit.leg1_distance = leg1_data.get('distance_nm', 0)
-                    route_to_edit.leg1_flight_time = leg1_data.get('flight_time_hours', 0)
-                    route_to_edit.leg1_route_fuel_gls = leg1_data.get('fuel_gallons', 0)
-                    route_to_edit.leg1_bh_cost_usd = leg1_data.get('block_hours_cost', 0)
-                    route_to_edit.leg1_fuel_cost_usd = leg1_data.get('fuel_cost', 0)
-                    route_to_edit.leg1_total_cost_usd = leg1_data.get('total_leg_cost', 0)
-                    
-                    # Update Leg 1 payload data
-                    route_to_edit.leg1_oew_lbs = leg1_payload.get('empty_weight_lbs', 0)
-                    route_to_edit.leg1_fuel_weight_lbs = leg1_payload.get('fuel_weight_lbs', 0)
-                    route_to_edit.leg1_max_payload_lbs = leg1_payload.get('max_payload_lbs', 0)
-                    route_to_edit.leg1_no_tank_tow_lbs = leg1_payload.get('no_tank_tow_lbs', 0)
-                    route_to_edit.leg1_avail_extra_fuel_lbs = leg1_payload.get('avail_extra_fuel_lbs', 0)
-                    route_to_edit.leg1_tank_tow_lbs = leg1_payload.get('tank_tow_lbs', 0)
-                    
-                    # Update Leg 2 route data (for round-trip and multiple routes)
-                    route_to_edit.leg2_route = leg2_data.get('route', '') if leg2_data else None
-                    route_to_edit.leg2_distance = leg2_data.get('distance_nm', 0) if leg2_data else None
-                    route_to_edit.leg2_flight_time = leg2_data.get('flight_time_hours', 0) if leg2_data else None
-                    route_to_edit.leg2_route_fuel_gls = leg2_data.get('fuel_gallons', 0) if leg2_data else None
-                    route_to_edit.leg2_bh_cost_usd = leg2_data.get('block_hours_cost', 0) if leg2_data else None
-                    route_to_edit.leg2_fuel_cost_usd = leg2_data.get('fuel_cost', 0) if leg2_data else None
-                    route_to_edit.leg2_total_cost_usd = leg2_data.get('total_leg_cost', 0) if leg2_data else None
-                    
-                    # Update Leg 2 payload data
-                    route_to_edit.leg2_oew_lbs = leg2_payload.get('empty_weight_lbs', 0) if leg2_payload else None
-                    route_to_edit.leg2_fuel_weight_lbs = leg2_payload.get('fuel_weight_lbs', 0) if leg2_payload else None
-                    route_to_edit.leg2_max_payload_lbs = leg2_payload.get('max_payload_lbs', 0) if leg2_payload else None
-                    route_to_edit.leg2_no_tank_tow_lbs = leg2_payload.get('no_tank_tow_lbs', 0) if leg2_payload else None
-                    route_to_edit.leg2_avail_extra_fuel_lbs = leg2_payload.get('avail_extra_fuel_lbs', 0) if leg2_payload else None
-                    route_to_edit.leg2_tank_tow_lbs = leg2_payload.get('tank_tow_lbs', 0) if leg2_payload else None
-                    
-                    # Update detailed leg and payload data as JSON (for backup/reference)
-                    route_to_edit.leg_details = json.dumps(route_data.get('legs', []))
-                    route_to_edit.payload_details = json.dumps(route_data.get('payloadData', []))
-                    
-                    new_route = route_to_edit
-                    print("Route object updated successfully")  # Debug log
+                    # For editing, we'll handle this differently - for now, let's focus on new routes
+                    flash('Route editing is not supported with the new multi-record system yet', 'warning')
+                    return redirect(url_for('operations.add_route'))
                 else:
-                    # Create new route
-                    new_route = Route(
-                        aircraft_id=aircraft_id,
-                        route_type=route_type,
-                        from_airport_id=from_airport_id,
-                        to_airport_id=to_airport_id,
-                        finish_airport_id=finish_airport_id,
-                        route_summary=route_summary,
-                        aircraft_name=aircraft.short_name,
-                        from_airport_name=f"{from_airport.iata_code} - {from_airport.name}",
-                        to_airport_name=f"{to_airport.iata_code} - {to_airport.name}",
-                        finish_airport_name=f"{finish_airport.iata_code} - {finish_airport.name}" if finish_airport else None,
+                    # Create separate records for each leg
+                    if route_type == 'one-way':
+                        # One record: from → to
+                        print("Creating one-way route record")
+                        route_record = Route(
+                            aircraft_id=aircraft_id,
+                            route_type=route_type,
+                            from_airport_id=from_airport_id,
+                            to_airport_id=to_airport_id,
+                            finish_airport_id=None,
+                            route_summary=f"{from_airport.iata_code} → {to_airport.iata_code}",
+                            aircraft_name=aircraft.short_name,
+                            from_airport_name=f"{from_airport.iata_code} - {from_airport.name}",
+                            to_airport_name=f"{to_airport.iata_code} - {to_airport.name}",
+                            finish_airport_name=None,
+                            
+                            # Individual leg data (using leg1 data)
+                            total_distance_nm=leg1_data.get('distance_nm', 0),
+                            total_flight_time_hours=leg1_data.get('flight_time_hours', 0),
+                            total_fuel_gallons=leg1_data.get('fuel_gallons', 0),
+                            total_fuel_cost=leg1_data.get('fuel_cost', 0),
+                            total_block_hours_cost=leg1_data.get('block_hours_cost', 0),
+                            total_cost=leg1_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 route data
+                            leg1_route=leg1_data.get('route', ''),
+                            leg1_distance=leg1_data.get('distance_nm', 0),
+                            leg1_flight_time=leg1_data.get('flight_time_hours', 0),
+                            leg1_route_fuel_gls=leg1_data.get('fuel_gallons', 0),
+                            leg1_bh_cost_usd=leg1_data.get('block_hours_cost', 0),
+                            leg1_fuel_cost_usd=leg1_data.get('fuel_cost', 0),
+                            leg1_total_cost_usd=leg1_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 payload data
+                            leg1_oew_lbs=leg1_payload.get('empty_weight_lbs', 0),
+                            leg1_fuel_weight_lbs=leg1_payload.get('fuel_weight_lbs', 0),
+                            leg1_max_payload_lbs=leg1_payload.get('max_payload_lbs', 0),
+                            leg1_no_tank_tow_lbs=leg1_payload.get('no_tank_tow_lbs', 0),
+                            leg1_avail_extra_fuel_lbs=leg1_payload.get('avail_extra_fuel_lbs', 0),
+                            leg1_tank_tow_lbs=leg1_payload.get('tank_tow_lbs', 0),
+                            
+                            # Store JSON for reference
+                            leg_details=json.dumps([leg1_data]),
+                            payload_details=json.dumps([leg1_payload])
+                        )
+                        created_routes.append(route_record)
                         
-                        # Add calculated route data (totals)
-                        total_distance_nm=totals.get('total_distance_nm', 0),
-                        total_flight_time_hours=totals.get('total_flight_time_hours', 0),
-                        total_fuel_gallons=totals.get('total_fuel_gallons', 0),
-                        total_fuel_cost=totals.get('total_fuel_cost', 0),
-                        total_block_hours_cost=totals.get('total_block_hours_cost', 0),
-                        total_cost=totals.get('total_cost', 0),
+                    elif route_type == 'round-trip':
+                        # Two records: from → to, to → from
+                        print("Creating round-trip route records")
                         
-                        # Leg 1 route data
-                        leg1_route=leg1_data.get('route', ''),
-                        leg1_distance=leg1_data.get('distance_nm', 0),
-                        leg1_flight_time=leg1_data.get('flight_time_hours', 0),
-                        leg1_route_fuel_gls=leg1_data.get('fuel_gallons', 0),
-                        leg1_bh_cost_usd=leg1_data.get('block_hours_cost', 0),
-                        leg1_fuel_cost_usd=leg1_data.get('fuel_cost', 0),
-                        leg1_total_cost_usd=leg1_data.get('total_leg_cost', 0),
+                        # First leg: from → to
+                        route_record_1 = Route(
+                            aircraft_id=aircraft_id,
+                            route_type='one-way',  # Each record is stored as one-way
+                            from_airport_id=from_airport_id,
+                            to_airport_id=to_airport_id,
+                            finish_airport_id=None,
+                            route_summary=f"{from_airport.iata_code} → {to_airport.iata_code} (Leg 1 of Round-trip)",
+                            aircraft_name=aircraft.short_name,
+                            from_airport_name=f"{from_airport.iata_code} - {from_airport.name}",
+                            to_airport_name=f"{to_airport.iata_code} - {to_airport.name}",
+                            finish_airport_name=None,
+                            
+                            # Individual leg data (using leg1 data)
+                            total_distance_nm=leg1_data.get('distance_nm', 0),
+                            total_flight_time_hours=leg1_data.get('flight_time_hours', 0),
+                            total_fuel_gallons=leg1_data.get('fuel_gallons', 0),
+                            total_fuel_cost=leg1_data.get('fuel_cost', 0),
+                            total_block_hours_cost=leg1_data.get('block_hours_cost', 0),
+                            total_cost=leg1_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 route data
+                            leg1_route=leg1_data.get('route', ''),
+                            leg1_distance=leg1_data.get('distance_nm', 0),
+                            leg1_flight_time=leg1_data.get('flight_time_hours', 0),
+                            leg1_route_fuel_gls=leg1_data.get('fuel_gallons', 0),
+                            leg1_bh_cost_usd=leg1_data.get('block_hours_cost', 0),
+                            leg1_fuel_cost_usd=leg1_data.get('fuel_cost', 0),
+                            leg1_total_cost_usd=leg1_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 payload data
+                            leg1_oew_lbs=leg1_payload.get('empty_weight_lbs', 0),
+                            leg1_fuel_weight_lbs=leg1_payload.get('fuel_weight_lbs', 0),
+                            leg1_max_payload_lbs=leg1_payload.get('max_payload_lbs', 0),
+                            leg1_no_tank_tow_lbs=leg1_payload.get('no_tank_tow_lbs', 0),
+                            leg1_avail_extra_fuel_lbs=leg1_payload.get('avail_extra_fuel_lbs', 0),
+                            leg1_tank_tow_lbs=leg1_payload.get('tank_tow_lbs', 0),
+                            
+                            # Store JSON for reference
+                            leg_details=json.dumps([leg1_data]),
+                            payload_details=json.dumps([leg1_payload])
+                        )
+                        created_routes.append(route_record_1)
                         
-                        # Leg 1 payload data
-                        leg1_oew_lbs=leg1_payload.get('empty_weight_lbs', 0),
-                        leg1_fuel_weight_lbs=leg1_payload.get('fuel_weight_lbs', 0),
-                        leg1_max_payload_lbs=leg1_payload.get('max_payload_lbs', 0),
-                        leg1_no_tank_tow_lbs=leg1_payload.get('no_tank_tow_lbs', 0),
-                        leg1_avail_extra_fuel_lbs=leg1_payload.get('avail_extra_fuel_lbs', 0),  # This might not exist
-                        leg1_tank_tow_lbs=leg1_payload.get('tank_tow_lbs', 0),  # This might not exist
+                        # Second leg: to → from (using leg2 data)
+                        route_record_2 = Route(
+                            aircraft_id=aircraft_id,
+                            route_type='one-way',  # Each record is stored as one-way
+                            from_airport_id=to_airport_id,  # Reversed
+                            to_airport_id=from_airport_id,  # Reversed
+                            finish_airport_id=None,
+                            route_summary=f"{to_airport.iata_code} → {from_airport.iata_code} (Leg 2 of Round-trip)",
+                            aircraft_name=aircraft.short_name,
+                            from_airport_name=f"{to_airport.iata_code} - {to_airport.name}",
+                            to_airport_name=f"{from_airport.iata_code} - {from_airport.name}",
+                            finish_airport_name=None,
+                            
+                            # Individual leg data (using leg2 data)
+                            total_distance_nm=leg2_data.get('distance_nm', 0),
+                            total_flight_time_hours=leg2_data.get('flight_time_hours', 0),
+                            total_fuel_gallons=leg2_data.get('fuel_gallons', 0),
+                            total_fuel_cost=leg2_data.get('fuel_cost', 0),
+                            total_block_hours_cost=leg2_data.get('block_hours_cost', 0),
+                            total_cost=leg2_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 route data (storing leg2 data in leg1 fields for this record)
+                            leg1_route=leg2_data.get('route', ''),
+                            leg1_distance=leg2_data.get('distance_nm', 0),
+                            leg1_flight_time=leg2_data.get('flight_time_hours', 0),
+                            leg1_route_fuel_gls=leg2_data.get('fuel_gallons', 0),
+                            leg1_bh_cost_usd=leg2_data.get('block_hours_cost', 0),
+                            leg1_fuel_cost_usd=leg2_data.get('fuel_cost', 0),
+                            leg1_total_cost_usd=leg2_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 payload data (storing leg2 payload in leg1 fields for this record)
+                            leg1_oew_lbs=leg2_payload.get('empty_weight_lbs', 0),
+                            leg1_fuel_weight_lbs=leg2_payload.get('fuel_weight_lbs', 0),
+                            leg1_max_payload_lbs=leg2_payload.get('max_payload_lbs', 0),
+                            leg1_no_tank_tow_lbs=leg2_payload.get('no_tank_tow_lbs', 0),
+                            leg1_avail_extra_fuel_lbs=leg2_payload.get('avail_extra_fuel_lbs', 0),
+                            leg1_tank_tow_lbs=leg2_payload.get('tank_tow_lbs', 0),
+                            
+                            # Store JSON for reference
+                            leg_details=json.dumps([leg2_data]),
+                            payload_details=json.dumps([leg2_payload])
+                        )
+                        created_routes.append(route_record_2)
                         
-                        # Leg 2 route data (for round-trip and multiple routes)
-                        leg2_route=leg2_data.get('route', '') if leg2_data else None,
-                        leg2_distance=leg2_data.get('distance_nm', 0) if leg2_data else None,
-                        leg2_flight_time=leg2_data.get('flight_time_hours', 0) if leg2_data else None,
-                        leg2_route_fuel_gls=leg2_data.get('fuel_gallons', 0) if leg2_data else None,
-                        leg2_bh_cost_usd=leg2_data.get('block_hours_cost', 0) if leg2_data else None,
-                        leg2_fuel_cost_usd=leg2_data.get('fuel_cost', 0) if leg2_data else None,
-                        leg2_total_cost_usd=leg2_data.get('total_leg_cost', 0) if leg2_data else None,
+                    elif route_type == 'multiple':
+                        # Two records: from → to, to → finish
+                        print("Creating multiple route records")
                         
-                        # Leg 2 payload data
-                        leg2_oew_lbs=leg2_payload.get('empty_weight_lbs', 0) if leg2_payload else None,
-                        leg2_fuel_weight_lbs=leg2_payload.get('fuel_weight_lbs', 0) if leg2_payload else None,
-                        leg2_max_payload_lbs=leg2_payload.get('max_payload_lbs', 0) if leg2_payload else None,
-                        leg2_no_tank_tow_lbs=leg2_payload.get('no_tank_tow_lbs', 0) if leg2_payload else None,
-                        leg2_avail_extra_fuel_lbs=leg2_payload.get('avail_extra_fuel_lbs', 0) if leg2_payload else None,
-                        leg2_tank_tow_lbs=leg2_payload.get('tank_tow_lbs', 0) if leg2_payload else None,
+                        # First leg: from → to
+                        route_record_1 = Route(
+                            aircraft_id=aircraft_id,
+                            route_type='one-way',  # Each record is stored as one-way
+                            from_airport_id=from_airport_id,
+                            to_airport_id=to_airport_id,
+                            finish_airport_id=None,
+                            route_summary=f"{from_airport.iata_code} → {to_airport.iata_code} (Leg 1 of Multiple)",
+                            aircraft_name=aircraft.short_name,
+                            from_airport_name=f"{from_airport.iata_code} - {from_airport.name}",
+                            to_airport_name=f"{to_airport.iata_code} - {to_airport.name}",
+                            finish_airport_name=None,
+                            
+                            # Individual leg data (using leg1 data)
+                            total_distance_nm=leg1_data.get('distance_nm', 0),
+                            total_flight_time_hours=leg1_data.get('flight_time_hours', 0),
+                            total_fuel_gallons=leg1_data.get('fuel_gallons', 0),
+                            total_fuel_cost=leg1_data.get('fuel_cost', 0),
+                            total_block_hours_cost=leg1_data.get('block_hours_cost', 0),
+                            total_cost=leg1_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 route data
+                            leg1_route=leg1_data.get('route', ''),
+                            leg1_distance=leg1_data.get('distance_nm', 0),
+                            leg1_flight_time=leg1_data.get('flight_time_hours', 0),
+                            leg1_route_fuel_gls=leg1_data.get('fuel_gallons', 0),
+                            leg1_bh_cost_usd=leg1_data.get('block_hours_cost', 0),
+                            leg1_fuel_cost_usd=leg1_data.get('fuel_cost', 0),
+                            leg1_total_cost_usd=leg1_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 payload data
+                            leg1_oew_lbs=leg1_payload.get('empty_weight_lbs', 0),
+                            leg1_fuel_weight_lbs=leg1_payload.get('fuel_weight_lbs', 0),
+                            leg1_max_payload_lbs=leg1_payload.get('max_payload_lbs', 0),
+                            leg1_no_tank_tow_lbs=leg1_payload.get('no_tank_tow_lbs', 0),
+                            leg1_avail_extra_fuel_lbs=leg1_payload.get('avail_extra_fuel_lbs', 0),
+                            leg1_tank_tow_lbs=leg1_payload.get('tank_tow_lbs', 0),
+                            
+                            # Store JSON for reference
+                            leg_details=json.dumps([leg1_data]),
+                            payload_details=json.dumps([leg1_payload])
+                        )
+                        created_routes.append(route_record_1)
                         
-                        # Store detailed leg and payload data as JSON (for backup/reference)
-                        leg_details=json.dumps(route_data.get('legs', [])),
-                        payload_details=json.dumps(route_data.get('payloadData', []))
-                    )
-                    print("Route object created successfully")  # Debug log
+                        # Second leg: to → finish (using leg2 data)
+                        route_record_2 = Route(
+                            aircraft_id=aircraft_id,
+                            route_type='one-way',  # Each record is stored as one-way
+                            from_airport_id=to_airport_id,
+                            to_airport_id=finish_airport_id,
+                            finish_airport_id=None,
+                            route_summary=f"{to_airport.iata_code} → {finish_airport.iata_code} (Leg 2 of Multiple)",
+                            aircraft_name=aircraft.short_name,
+                            from_airport_name=f"{to_airport.iata_code} - {to_airport.name}",
+                            to_airport_name=f"{finish_airport.iata_code} - {finish_airport.name}",
+                            finish_airport_name=None,
+                            
+                            # Individual leg data (using leg2 data)
+                            total_distance_nm=leg2_data.get('distance_nm', 0),
+                            total_flight_time_hours=leg2_data.get('flight_time_hours', 0),
+                            total_fuel_gallons=leg2_data.get('fuel_gallons', 0),
+                            total_fuel_cost=leg2_data.get('fuel_cost', 0),
+                            total_block_hours_cost=leg2_data.get('block_hours_cost', 0),
+                            total_cost=leg2_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 route data (storing leg2 data in leg1 fields for this record)
+                            leg1_route=leg2_data.get('route', ''),
+                            leg1_distance=leg2_data.get('distance_nm', 0),
+                            leg1_flight_time=leg2_data.get('flight_time_hours', 0),
+                            leg1_route_fuel_gls=leg2_data.get('fuel_gallons', 0),
+                            leg1_bh_cost_usd=leg2_data.get('block_hours_cost', 0),
+                            leg1_fuel_cost_usd=leg2_data.get('fuel_cost', 0),
+                            leg1_total_cost_usd=leg2_data.get('total_leg_cost', 0),
+                            
+                            # Leg 1 payload data (storing leg2 payload in leg1 fields for this record)
+                            leg1_oew_lbs=leg2_payload.get('empty_weight_lbs', 0),
+                            leg1_fuel_weight_lbs=leg2_payload.get('fuel_weight_lbs', 0),
+                            leg1_max_payload_lbs=leg2_payload.get('max_payload_lbs', 0),
+                            leg1_no_tank_tow_lbs=leg2_payload.get('no_tank_tow_lbs', 0),
+                            leg1_avail_extra_fuel_lbs=leg2_payload.get('avail_extra_fuel_lbs', 0),
+                            leg1_tank_tow_lbs=leg2_payload.get('tank_tow_lbs', 0),
+                            
+                            # Store JSON for reference
+                            leg_details=json.dumps([leg2_data]),
+                            payload_details=json.dumps([leg2_payload])
+                        )
+                        created_routes.append(route_record_2)
+                    
+                    print(f"Created {len(created_routes)} route records")  # Debug log
+                    
             except Exception as route_create_error:
-                print(f"ERROR creating/updating Route object: {route_create_error}")  # Debug log
+                print(f"ERROR creating Route objects: {route_create_error}")  # Debug log
                 raise route_create_error
             
-            print(f"=== DEBUG: Route object {'updated' if route_to_edit else 'created'} ===")  # Debug log
-            print(f"Route summary: {route_summary}")  # Debug log
-            print(f"Total cost: {totals.get('total_cost', 0)}")  # Debug log
-            print(f"Route data keys: {list(route_data.keys())}")  # Debug log
-            print(f"Totals keys: {list(totals.keys())}")  # Debug log
+            print(f"=== DEBUG: Route records created ===")  # Debug log
+            for i, route in enumerate(created_routes):
+                print(f"Route {i+1} summary: {route.route_summary}")  # Debug log
+                print(f"Route {i+1} cost: {route.total_cost}")  # Debug log
             
-            if not route_to_edit:
-                print("Adding new route to database session...")  # Debug log
-                db.session.add(new_route)
+            # Add all route records to database
+            for route in created_routes:
+                db.session.add(route)
             print("Committing to database...")  # Debug log
             db.session.commit()
             
-            print(f"=== DEBUG: Route {'updated' if route_to_edit else 'saved'} to database with ID={new_route.id} ===")  # Debug log
+            print(f"=== DEBUG: {len(created_routes)} route records saved to database ===")  # Debug log
+            for route in created_routes:
+                print(f"Saved route ID={route.id}, Summary={route.route_summary}")  # Debug log
             
             # Handle AJAX requests
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'success': True, 'message': f'Route {"updated" if route_to_edit else "saved"} successfully!'})
+                return jsonify({'success': True, 'message': f'{len(created_routes)} route records saved successfully!'})
             
-            flash(f'Route {"updated" if route_to_edit else "saved"} successfully!', 'success')
+            flash(f'{len(created_routes)} route records saved successfully!', 'success')
             return redirect(url_for('operations.view_routes'))
             
         except Exception as e:
@@ -266,8 +384,8 @@ def add_route(route_id=None):
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'success': False, 'error': str(e)}), 500
             
-            flash(f'Error {"updating" if route_to_edit else "saving"} route: {str(e)}', 'error')
-            return redirect(url_for('operations.add_route', route_id=route_id) if route_to_edit else url_for('operations.add_route'))
+            flash(f'Error saving route records: {str(e)}', 'error')
+            return redirect(url_for('operations.add_route'))
     
     # GET request - show form
     airports = Airport.query.order_by(Airport.city, Airport.iata_code).all()

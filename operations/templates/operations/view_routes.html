@@ -95,6 +95,12 @@
     font-size: 0.8rem;
     white-space: nowrap;
   }
+  /* Special styling for weight columns (Lbs.) */
+  .routes-table th.weight-col,
+  .routes-table th.payload-col {
+    color: #00D4FF;
+    border-bottom: 2px solid #00D4FF;
+  }
   .routes-table td {
     background-color: #181c22;
     color: #fff;
@@ -214,22 +220,19 @@
         <th class="id-col">ID</th>
         <th class="route-col">Route Summary</th>
         <th class="aircraft-col">Aircraft</th>
-        <th class="type-col">Type</th>
-        <th class="distance-col">Distance (NM)</th>
-        <th class="time-col">Flight Time (hrs)</th>
-        <th class="fuel-col">Fuel (gal)</th>
-        <th class="cost-col">Fuel Cost</th>
-        <th class="cost-col">Block Hrs Cost</th>
-        <th class="cost-col">Total Cost</th>
-        <th class="payload-col">Max Payload (lbs)</th>
-        <th class="weight-col">OEW (lbs)</th>
-        <th class="weight-col">Fuel Weight (lbs)</th>
-        <th class="weight-col">TOW (lbs)</th>
-        <th class="distance-col">Leg1 Dist (NM)</th>
-        <th class="cost-col">Leg1 Cost</th>
-        <th class="distance-col">Leg2 Dist (NM)</th>
-        <th class="cost-col">Leg2 Cost</th>
-        <th class="date-col">Created</th>
+        <th class="type-col">Route Type</th>
+        <th class="distance-col">Distance</th>
+        <th class="time-col">Flight Time</th>
+        <th class="fuel-col">Route Fuel (Gls.)</th>
+        <th class="cost-col">B/H Cost (USD)</th>
+        <th class="cost-col">Fuel Cost (USD)</th>
+        <th class="cost-col">Total Leg Cost (USD)</th>
+        <th class="weight-col">OEW (Lbs.)</th>
+        <th class="weight-col">Fuel Weight (Lbs.)</th>
+        <th class="payload-col">Max Payload (Lbs.)</th>
+        <th class="weight-col">No-Tank T/O/W (Lbs.)</th>
+        <th class="weight-col">Avail Extra Fuel (Lbs.)</th>
+        <th class="weight-col">Tank T/O/W</th>
       </tr>
     </thead>
     <tbody id="routesTableBody">
@@ -255,16 +258,13 @@
             {% if route.total_fuel_gallons %}{{ "{:,.0f}".format(route.total_fuel_gallons) }}{% else %}-{% endif %}
           </td>
           <td class="cost-col">
-            {% if route.total_fuel_cost %}${{ "{:,.2f}".format(route.total_fuel_cost) }}{% else %}-{% endif %}
-          </td>
-          <td class="cost-col">
             {% if route.total_block_hours_cost %}${{ "{:,.2f}".format(route.total_block_hours_cost) }}{% else %}-{% endif %}
           </td>
           <td class="cost-col">
-            {% if route.total_cost %}${{ "{:,.2f}".format(route.total_cost) }}{% else %}-{% endif %}
+            {% if route.total_fuel_cost %}${{ "{:,.2f}".format(route.total_fuel_cost) }}{% else %}-{% endif %}
           </td>
-          <td class="payload-col">
-            {% if route.leg1_max_payload_lbs %}{{ "{:,.0f}".format(route.leg1_max_payload_lbs) }}{% else %}-{% endif %}
+          <td class="cost-col">
+            {% if route.total_cost %}${{ "{:,.2f}".format(route.total_cost) }}{% else %}-{% endif %}
           </td>
           <td class="weight-col">
             {% if route.leg1_oew_lbs %}{{ "{:,.0f}".format(route.leg1_oew_lbs) }}{% else %}-{% endif %}
@@ -272,27 +272,23 @@
           <td class="weight-col">
             {% if route.leg1_fuel_weight_lbs %}{{ "{:,.0f}".format(route.leg1_fuel_weight_lbs) }}{% else %}-{% endif %}
           </td>
+          <td class="payload-col">
+            {% if route.leg1_max_payload_lbs %}{{ "{:,.0f}".format(route.leg1_max_payload_lbs) }}{% else %}-{% endif %}
+          </td>
+          <td class="weight-col">
+            {% if route.leg1_no_tank_tow_lbs %}{{ "{:,.0f}".format(route.leg1_no_tank_tow_lbs) }}{% else %}-{% endif %}
+          </td>
+          <td class="weight-col">
+            {% if route.leg1_avail_extra_fuel_lbs %}{{ "{:,.0f}".format(route.leg1_avail_extra_fuel_lbs) }}{% else %}-{% endif %}
+          </td>
           <td class="weight-col">
             {% if route.leg1_tank_tow_lbs %}{{ "{:,.0f}".format(route.leg1_tank_tow_lbs) }}{% else %}-{% endif %}
           </td>
-          <td class="distance-col">
-            {% if route.leg1_distance %}{{ "{:,.0f}".format(route.leg1_distance) }}{% else %}-{% endif %}
-          </td>
-          <td class="cost-col">
-            {% if route.leg1_total_cost_usd %}${{ "{:,.2f}".format(route.leg1_total_cost_usd) }}{% else %}-{% endif %}
-          </td>
-          <td class="distance-col">
-            {% if route.leg2_distance %}{{ "{:,.0f}".format(route.leg2_distance) }}{% else %}-{% endif %}
-          </td>
-          <td class="cost-col">
-            {% if route.leg2_total_cost_usd %}${{ "{:,.2f}".format(route.leg2_total_cost_usd) }}{% else %}-{% endif %}
-          </td>
-          <td class="date-col">{{ route.created_at.strftime('%Y-%m-%d %H:%M') if route.created_at else '-' }}</td>
         </tr>
         {% endfor %}
       {% else %}
         <tr>
-          <td colspan="20" class="no-routes">
+          <td colspan="17" class="no-routes">
             No routes available. <a href="/operations/add-route" style="color: #FF5C00;">Create your first route</a>
           </td>
         </tr>
