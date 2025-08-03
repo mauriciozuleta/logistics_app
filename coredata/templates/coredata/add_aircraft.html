@@ -1,253 +1,492 @@
-  {% if form.errors %}
-    <div class="alert alert-danger">
-      <ul class="mb-0">
-        {% for field, errors in form.errors.items() %}
-          {% for error in errors %}
-            <li><strong>{{ form[field].label.text }}:</strong> {{ error }}</li>
-          {% endfor %}
-        {% endfor %}
-      </ul>
-    </div>
-  {% endif %}
 {% extends "base.html" %}
+
 {% block content %}
+<div class="content-section">
+<style>
+  .aircraft-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .aircraft-title {
+    color: #FF5C00;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+  .aircraft-form-container {
+    background-color: #181c22;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .aircraft-form-section {
+    margin-bottom: 2rem;
+  }
+  .aircraft-form-section:last-child {
+    margin-bottom: 0;
+  }
+  .aircraft-section-title {
+    color: #FF5C00;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #2196f3;
+  }
+  .aircraft-form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .aircraft-form-row .form-group {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 0;
+  }
+  .aircraft-form-group {
+    margin-bottom: 1rem;
+  }
+  .aircraft-form-group label {
+    display: block;
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+  .aircraft-form-control {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #23272e;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+  }
+  .aircraft-form-control:focus {
+    outline: none;
+    border-color: #FF5C00;
+    box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.2);
+  }
+  .aircraft-form-control[readonly] {
+    background-color: #1a1d23;
+    color: #888;
+    cursor: not-allowed;
+  }
+  .aircraft-form-control.is-invalid {
+    border-color: #f44336;
+    box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2);
+  }
+  .aircraft-error {
+    color: #f44336;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+  .aircraft-btn {
+    background-color: #2196f3;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    width: 100%;
+    margin-top: 1rem;
+  }
+  .aircraft-btn:hover {
+    background-color: #1976d2;
+    transform: translateY(-1px);
+  }
+  .aircraft-btn:active {
+    transform: translateY(0);
+  }
+  .conversion-note {
+    background-color: #23272e;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    color: #fff;
+    font-size: 0.9rem;
+  }
+  .conversion-note-title {
+    color: #FF5C00;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  .alert-error {
+    background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid #f44336;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    color: #f44336;
+  }
+  .alert-error ul {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+  .alert-error strong {
+    color: #FF5C00;
+  }
+</style>
 
-<h2 class="mb-4">{{ 'Edit Aircraft' if edit_id else 'Add New Aircraft' }}</h2>
+{% if form.errors %}
+  <div class="alert-error">
+    <ul>
+      {% for field, errors in form.errors.items() %}
+        {% for error in errors %}
+          <li><strong>{{ form[field].label.text }}:</strong> {{ error }}</li>
+        {% endfor %}
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
 
-<div class="form-pane add-aircraft-form-container">
-  <form method="POST" action="{{ url_for('coredata.add_aircraft') }}" class="add-aircraft-form">
+<div class="aircraft-header">
+  <h1 class="aircraft-title">{{ 'Edit Aircraft' if edit_id else 'Add New Aircraft' }}</h1>
+</div>
+
+<div class="conversion-note">
+  <div class="conversion-note-title">Auto-Conversion Feature</div>
+  <p>Enter values in either unit (kg/lbs or gal/lbs) and the corresponding field will be automatically calculated when you move to the next field.</p>
+</div>
+
+<div class="aircraft-form-container">
+  <form method="POST" action="{{ url_for('coredata.add_aircraft') }}">
     {% if edit_id %}
       <input type="hidden" name="edit_id" value="{{ edit_id }}">
     {% endif %}
-
     {{ form.hidden_tag() }}
 
-    <div class="row mb-3">
-      <div class="col-md-3">
-        {{ form.id.label(class="form-label fw-bold") }}
-        {{ form.id(class="form-control form-control-sm", id="aircraft_id", readonly=True) }}
-        {% if form.id.errors %}
-          <div class="text-danger small">{{ form.id.errors[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-3">
-        {{ form.manufacturer.label(class="form-label fw-bold") }}
-        {{ form.manufacturer(class="form-control form-control-sm") }}
-        {% if form.manufacturer.errors %}
-          <div class="text-danger small">{{ form.manufacturer.errors[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-3">
-        {{ form.model.label(class="form-label fw-bold") }}
-        {{ form.model(class="form-control form-control-sm") }}
-        {% if form.model.errors %}
-          <div class="text-danger small">{{ form.model.errors[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-3">
-        {{ form.short_name.label(class="form-label fw-bold") }}
-        {{ form.short_name(class="form-control form-control-sm") }}
-        {% if form.short_name.errors %}
-          <div class="text-danger small">{{ form.short_name.errors[0] }}</div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Weight Fields -->
-    <div class="row mb-3">
-      <div class="col-md-3">
-        {{ form.mtow_kg.label(class="form-label") }}
-        {{ form.mtow_kg(class="form-control", id="mtow_kg") }}
-        {% if form.mtow_kg.errors %}
-          <div class="text-danger small">{{ form.mtow_kg.errors[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-3">
-        {{ form.mtow_lbs.label(class="form-label") }}
-        {{ form.mtow_lbs(class="form-control", id="mtow_lbs") }}
-        {% if form.mtow_lbs.errors %}
-          <div class="text-danger small">{{ form.mtow_lbs.errors[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-3">
-        {{ form.mldgw_kg.label(class="form-label") }}
-        {{ form.mldgw_kg(class="form-control", id="mldgw_kg") }}
-        {% if form.mldgw_kg.errors %}
-          <div class="text-danger small">{{ form.mldgw_kg.errors[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-3">
-        {{ form.mldgw_lbs.label(class="form-label") }}
-        {{ form.mldgw_lbs(class="form-control", id="mldgw_lbs") }}
-        {% if form.mldgw_lbs.errors %}
-          <div class="text-danger small">{{ form.mldgw_lbs.errors[0] }}</div>
-        {% endif %}
+    <!-- Basic Information Section -->
+    <div class="aircraft-form-section">
+      <div class="aircraft-section-title">Basic Information</div>
+      
+      <div class="aircraft-form-row">
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="aircraft_id">Aircraft ID</label>
+            {{ form.id(class="aircraft-form-control", id="aircraft_id", readonly=True) }}
+            {% if form.id.errors %}
+              <div class="aircraft-error">{{ form.id.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="manufacturer">Manufacturer</label>
+            {{ form.manufacturer(class="aircraft-form-control", placeholder="e.g., Boeing, Airbus") }}
+            {% if form.manufacturer.errors %}
+              <div class="aircraft-error">{{ form.manufacturer.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="model">Model</label>
+            {{ form.model(class="aircraft-form-control", placeholder="e.g., 737-800, A320") }}
+            {% if form.model.errors %}
+              <div class="aircraft-error">{{ form.model.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="short_name">Short Name</label>
+            {{ form.short_name(class="aircraft-form-control", placeholder="e.g., B738, A320") }}
+            {% if form.short_name.errors %}
+              <div class="aircraft-error">{{ form.short_name.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="row mb-3">
-      <div class="col-md-3">
-        {{ form.empty_weight_kg.label(class="form-label") }}
-        {{ form.empty_weight_kg(class="form-control", id="empty_weight_kg") }}
-        {% if form.empty_weight_kg.errors %}
-          <div class="text-danger small">{{ form.empty_weight_kg.errors[0] }}</div>
-        {% endif %}
+    <!-- Weight Information Section -->
+    <div class="aircraft-form-section">
+      <div class="aircraft-section-title">Weight Information</div>
+      
+      <div class="aircraft-form-row">
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="mtow_kg">MTOW (kg)</label>
+            {{ form.mtow_kg(class="aircraft-form-control", id="mtow_kg", placeholder="0") }}
+            {% if form.mtow_kg.errors %}
+              <div class="aircraft-error">{{ form.mtow_kg.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="mtow_lbs">MTOW (lbs)</label>
+            {{ form.mtow_lbs(class="aircraft-form-control", id="mtow_lbs", placeholder="0") }}
+            {% if form.mtow_lbs.errors %}
+              <div class="aircraft-error">{{ form.mtow_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="mldgw_kg">MLDGW (kg)</label>
+            {{ form.mldgw_kg(class="aircraft-form-control", id="mldgw_kg", placeholder="0") }}
+            {% if form.mldgw_kg.errors %}
+              <div class="aircraft-error">{{ form.mldgw_kg.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="mldgw_lbs">MLDGW (lbs)</label>
+            {{ form.mldgw_lbs(class="aircraft-form-control", id="mldgw_lbs", placeholder="0") }}
+            {% if form.mldgw_lbs.errors %}
+              <div class="aircraft-error">{{ form.mldgw_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div class="col-md-3">
-        {{ form.empty_weight_lbs.label(class="form-label") }}
-        {{ form.empty_weight_lbs(class="form-control", id="empty_weight_lbs") }}
-        {% if form.empty_weight_lbs.errors %}
-          <div class="text-danger small">{{ form.empty_weight_lbs.errors[0] }}</div>
-        {% endif %}
+
+      <div class="aircraft-form-row">
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="empty_weight_kg">Empty Weight (kg)</label>
+            {{ form.empty_weight_kg(class="aircraft-form-control", id="empty_weight_kg", placeholder="0") }}
+            {% if form.empty_weight_kg.errors %}
+              <div class="aircraft-error">{{ form.empty_weight_kg.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="empty_weight_lbs">Empty Weight (lbs)</label>
+            {{ form.empty_weight_lbs(class="aircraft-form-control", id="empty_weight_lbs", placeholder="0") }}
+            {% if form.empty_weight_lbs.errors %}
+              <div class="aircraft-error">{{ form.empty_weight_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="max_payload_kg">Max Payload (kg)</label>
+            {{ form.max_payload_kg(class="aircraft-form-control", id="max_payload_kg", placeholder="0") }}
+            {% if form.max_payload_kg.errors %}
+              <div class="aircraft-error">{{ form.max_payload_kg.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="max_payload_lbs">Max Payload (lbs)</label>
+            {{ form.max_payload_lbs(class="aircraft-form-control", id="max_payload_lbs", placeholder="0") }}
+            {% if form.max_payload_lbs.errors %}
+              <div class="aircraft-error">{{ form.max_payload_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div class="col-md-3">
-        {{ form.max_payload_kg.label(class="form-label") }}
-        {{ form.max_payload_kg(class="form-control", id="max_payload_kg") }}
-        {% if form.max_payload_kg.errors %}
-          <div class="text-danger small">{{ form.max_payload_kg.errors[0] }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-3">
-        {{ form.max_payload_lbs.label(class="form-label") }}
-        {{ form.max_payload_lbs(class="form-control", id="max_payload_lbs") }}
-        {% if form.max_payload_lbs.errors %}
-          <div class="text-danger small">{{ form.max_payload_lbs.errors[0] }}</div>
-        {% endif %}
+
+      <div class="aircraft-form-row">
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="zero_fuel_kg">Zero Fuel Weight (kg)</label>
+            {{ form.zero_fuel_kg(class="aircraft-form-control", id="zero_fuel_kg", placeholder="0") }}
+            {% if form.zero_fuel_kg.errors %}
+              <div class="aircraft-error">{{ form.zero_fuel_kg.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="zero_fuel_lbs">Zero Fuel Weight (lbs)</label>
+            {{ form.zero_fuel_lbs(class="aircraft-form-control", id="zero_fuel_lbs", placeholder="0") }}
+            {% if form.zero_fuel_lbs.errors %}
+              <div class="aircraft-error">{{ form.zero_fuel_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="max_ramp_kg">Max Ramp Weight (kg)</label>
+            {{ form.max_ramp_kg(class="aircraft-form-control", id="max_ramp_kg", placeholder="0") }}
+            {% if form.max_ramp_kg.errors %}
+              <div class="aircraft-error">{{ form.max_ramp_kg.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="max_ramp_lbs">Max Ramp Weight (lbs)</label>
+            {{ form.max_ramp_lbs(class="aircraft-form-control", id="max_ramp_lbs", placeholder="0") }}
+            {% if form.max_ramp_lbs.errors %}
+              <div class="aircraft-error">{{ form.max_ramp_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="row mb-3">
-      <div class="col-md-3">
-        {{ form.zero_fuel_kg.label(class="form-label") }}
-        {{ form.zero_fuel_kg(class="form-control", id="zero_fuel_kg") }}
-        {% if form.zero_fuel_kg.errors %}
-          <div class="text-danger small">{{ form.zero_fuel_kg.errors[0] }}</div>
-        {% endif %}
+
+    <!-- Fuel Information Section -->
+    <div class="aircraft-form-section">
+      <div class="aircraft-section-title">Fuel Information</div>
+      
+      <div class="aircraft-form-row">
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="fuel_capacity_gal">Fuel Capacity (gal)</label>
+            {{ form.fuel_capacity_gal(class="aircraft-form-control", id="fuel_capacity_gal", placeholder="0") }}
+            {% if form.fuel_capacity_gal.errors %}
+              <div class="aircraft-error">{{ form.fuel_capacity_gal.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="fuel_capacity_lbs">Fuel Capacity (lbs)</label>
+            {{ form.fuel_capacity_lbs(class="aircraft-form-control", id="fuel_capacity_lbs", placeholder="0") }}
+            {% if form.fuel_capacity_lbs.errors %}
+              <div class="aircraft-error">{{ form.fuel_capacity_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="fuel_burn_gal">Fuel Burn (gal/hr)</label>
+            {{ form.fuel_burn_gal(class="aircraft-form-control", id="fuel_burn_gal", placeholder="0") }}
+            {% if form.fuel_burn_gal.errors %}
+              <div class="aircraft-error">{{ form.fuel_burn_gal.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="fuel_burn_lbs">Fuel Burn (lbs/hr)</label>
+            {{ form.fuel_burn_lbs(class="aircraft-form-control", id="fuel_burn_lbs", placeholder="0") }}
+            {% if form.fuel_burn_lbs.errors %}
+              <div class="aircraft-error">{{ form.fuel_burn_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div class="col-md-3">
-        {{ form.zero_fuel_lbs.label(class="form-label") }}
-        {{ form.zero_fuel_lbs(class="form-control", id="zero_fuel_lbs") }}
-        {% if form.zero_fuel_lbs.errors %}
-          <div class="text-danger small">{{ form.zero_fuel_lbs.errors[0] }}</div>
-        {% endif %}
+
+      <div class="aircraft-form-row">
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="min_fuel_landed_gal">Min Fuel Landed (gal)</label>
+            {{ form.min_fuel_landed_gal(class="aircraft-form-control", id="min_fuel_landed_gal", placeholder="0") }}
+            {% if form.min_fuel_landed_gal.errors %}
+              <div class="aircraft-error">{{ form.min_fuel_landed_gal.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="min_fuel_landed_lbs">Min Fuel Landed (lbs)</label>
+            {{ form.min_fuel_landed_lbs(class="aircraft-form-control", id="min_fuel_landed_lbs", placeholder="0") }}
+            {% if form.min_fuel_landed_lbs.errors %}
+              <div class="aircraft-error">{{ form.min_fuel_landed_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="min_fuel_alternate_gal">Min Fuel Alternate (gal)</label>
+            {{ form.min_fuel_alternate_gal(class="aircraft-form-control", id="min_fuel_alternate_gal", placeholder="0") }}
+            {% if form.min_fuel_alternate_gal.errors %}
+              <div class="aircraft-error">{{ form.min_fuel_alternate_gal.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="min_fuel_alternate_lbs">Min Fuel Alternate (lbs)</label>
+            {{ form.min_fuel_alternate_lbs(class="aircraft-form-control", id="min_fuel_alternate_lbs", placeholder="0") }}
+            {% if form.min_fuel_alternate_lbs.errors %}
+              <div class="aircraft-error">{{ form.min_fuel_alternate_lbs.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div class="col-md-3">
-        {{ form.max_ramp_kg.label(class="form-label") }}
-        {{ form.max_ramp_kg(class="form-control", id="max_ramp_kg") }}
-        {% if form.max_ramp_kg.errors %}
-          <div class="text-danger small">{{ form.max_ramp_kg.errors[0] }}</div>
-        {% endif %}
+    </div>
+
+    <!-- Operations & Cost Information Section -->
+    <div class="aircraft-form-section">
+      <div class="aircraft-section-title">Operations & Cost Information</div>
+      
+      <div class="aircraft-form-row">
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="cargo_positions_main_deck">Cargo Positions Main Deck</label>
+            {{ form.cargo_positions_main_deck(class="aircraft-form-control", id="cargo_positions_main_deck", placeholder="0") }}
+            {% if form.cargo_positions_main_deck.errors %}
+              <div class="aircraft-error">{{ form.cargo_positions_main_deck.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="cargo_positions_lower_deck">Cargo Positions Lower Deck</label>
+            {{ form.cargo_positions_lower_deck(class="aircraft-form-control", id="cargo_positions_lower_deck", placeholder="0") }}
+            {% if form.cargo_positions_lower_deck.errors %}
+              <div class="aircraft-error">{{ form.cargo_positions_lower_deck.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="cruise_speed">Cruise Speed (mph)</label>
+            {{ form.cruise_speed(class="aircraft-form-control", id="cruise_speed", placeholder="0") }}
+            {% if form.cruise_speed.errors %}
+              <div class="aircraft-error">{{ form.cruise_speed.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="aircraft-form-group">
+            <label for="acmi_cost">ACMI Cost (USD/hr)</label>
+            {{ form.acmi_cost(class="aircraft-form-control", id="acmi_cost", placeholder="0.00") }}
+            {% if form.acmi_cost.errors %}
+              <div class="aircraft-error">{{ form.acmi_cost.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div class="col-md-3">
-        {{ form.max_ramp_lbs.label(class="form-label") }}
-        {{ form.max_ramp_lbs(class="form-control", id="max_ramp_lbs") }}
-        {% if form.max_ramp_lbs.errors %}
-          <div class="text-danger small">{{ form.max_ramp_lbs.errors[0] }}</div>
-        {% endif %}
-      </div>
     </div>
 
-
-
-  <!-- Fuel Fields -->
-    <div class="row mb-3">
-    <div class="col-md-3">
-        {{ form.fuel_capacity_gal.label(class="form-label") }}
-        {{ form.fuel_capacity_gal(class="form-control", id="fuel_capacity_gal") }}
-        {% if form.fuel_capacity_gal.errors %}
-          <div class="text-danger small">{{ form.fuel_capacity_gal.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.fuel_capacity_lbs.label(class="form-label") }}
-        {{ form.fuel_capacity_lbs(class="form-control", id="fuel_capacity_lbs") }}
-        {% if form.fuel_capacity_lbs.errors %}
-          <div class="text-danger small">{{ form.fuel_capacity_lbs.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.fuel_burn_gal.label(class="form-label") }}
-        {{ form.fuel_burn_gal(class="form-control", id="fuel_burn_gal") }}
-        {% if form.fuel_burn_gal.errors %}
-          <div class="text-danger small">{{ form.fuel_burn_gal.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.fuel_burn_lbs.label(class="form-label") }}
-        {{ form.fuel_burn_lbs(class="form-control", id="fuel_burn_lbs") }}
-        {% if form.fuel_burn_lbs.errors %}
-          <div class="text-danger small">{{ form.fuel_burn_lbs.errors[0] }}</div>
-        {% endif %}
-    </div>
-    </div>
-
-    <div class="row mb-3">
-    <div class="col-md-3">
-        {{ form.min_fuel_landed_gal.label(class="form-label") }}
-        {{ form.min_fuel_landed_gal(class="form-control", id="min_fuel_landed_gal") }}
-        {% if form.min_fuel_landed_gal.errors %}
-          <div class="text-danger small">{{ form.min_fuel_landed_gal.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.min_fuel_landed_lbs.label(class="form-label") }}
-        {{ form.min_fuel_landed_lbs(class="form-control", id="min_fuel_landed_lbs") }}
-        {% if form.min_fuel_landed_lbs.errors %}
-          <div class="text-danger small">{{ form.min_fuel_landed_lbs.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.min_fuel_alternate_gal.label(class="form-label") }}
-        {{ form.min_fuel_alternate_gal(class="form-control", id="min_fuel_alternate_gal") }}
-        {% if form.min_fuel_alternate_gal.errors %}
-          <div class="text-danger small">{{ form.min_fuel_alternate_gal.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.min_fuel_alternate_lbs.label(class="form-label") }}
-        {{ form.min_fuel_alternate_lbs(class="form-control", id="min_fuel_alternate_lbs") }}
-        {% if form.min_fuel_alternate_lbs.errors %}
-          <div class="text-danger small">{{ form.min_fuel_alternate_lbs.errors[0] }}</div>
-        {% endif %}
-    </div>
-    </div>
-
-    <!-- Cargo & Cost Fields -->
-    <div class="row mb-3">
-    <div class="col-md-3">
-        {{ form.cargo_positions_main_deck.label(class="form-label") }}
-        {{ form.cargo_positions_main_deck(class="form-control", id="cargo_positions_main_deck") }}
-        {% if form.cargo_positions_main_deck.errors %}
-          <div class="text-danger small">{{ form.cargo_positions_main_deck.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.cargo_positions_lower_deck.label(class="form-label") }}
-        {{ form.cargo_positions_lower_deck(class="form-control", id="cargo_positions_lower_deck") }}
-        {% if form.cargo_positions_lower_deck.errors %}
-          <div class="text-danger small">{{ form.cargo_positions_lower_deck.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.cruise_speed.label(class="form-label") }}
-        {{ form.cruise_speed(class="form-control", id="cruise_speed") }}
-        {% if form.cruise_speed.errors %}
-          <div class="text-danger small">{{ form.cruise_speed.errors[0] }}</div>
-        {% endif %}
-    </div>
-    <div class="col-md-3">
-        {{ form.acmi_cost.label(class="form-label") }}
-        {{ form.acmi_cost(class="form-control", id="acmi_cost") }}
-        {% if form.acmi_cost.errors %}
-          <div class="text-danger small">{{ form.acmi_cost.errors[0] }}</div>
-        {% endif %}
-    </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary">{{ 'Update Aircraft' if edit_id else 'Add Aircraft' }}</button>
+    <button type="submit" class="aircraft-btn">{{ 'Update Aircraft' if edit_id else 'Add Aircraft' }}</button>
   </form>
 </div>
-<!-- Live Conversion Script -->
+
 <script>
   const KG_TO_LBS = 2.20462;
   const GAL_TO_LBS = 6.7;
@@ -284,5 +523,5 @@
     autoConvert("min_fuel_alternate_gal", "min_fuel_alternate_lbs", GAL_TO_LBS);
   };
 </script>
-
+</div>
 {% endblock %}
