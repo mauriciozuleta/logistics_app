@@ -605,3 +605,70 @@ def leg_distances():
         dist = calculate_distance_db(from_iata, to_iata)
         results.append({'from': from_iata, 'to': to_iata, 'distance': dist})
     return jsonify({'distances': results})
+
+
+# =====================================
+# SHIPMENT MANAGEMENT ROUTES
+# =====================================
+
+@operations.route('/add-shipment', methods=['GET', 'POST'])
+@operations.route('/add-shipment/<int:shipment_id>', methods=['GET', 'POST'])
+def add_shipment(shipment_id=None):
+    """Add or edit a shipment"""
+    # Check if we're editing an existing shipment
+    shipment_to_edit = None
+    if shipment_id:
+        # TODO: Implement shipment model and query
+        # shipment_to_edit = Shipment.query.get_or_404(shipment_id)
+        pass
+    
+    if request.method == 'POST':
+        try:
+            # TODO: Implement shipment creation/update logic
+            flash('Shipment functionality coming soon!', 'info')
+            return redirect(url_for('operations.view_shipments'))
+        except Exception as e:
+            flash(f'Error processing shipment: {str(e)}', 'error')
+            return redirect(url_for('operations.add_shipment'))
+    
+    # TODO: Get choices for form dropdowns (traders, products, routes, etc.)
+    # For now, using placeholder data
+    trader_choices = []  # TODO: Get from Trader model
+    product_choices = []  # TODO: Get from Product model
+    route_choices = []   # TODO: Get from Route model
+    
+    return render_template('operations/add_shipment.html',
+                         shipment_to_edit=shipment_to_edit,
+                         trader_choices=trader_choices,
+                         product_choices=product_choices,
+                         route_choices=route_choices)
+
+
+@operations.route('/view-shipments')
+def view_shipments():
+    """View and manage existing shipments"""
+    try:
+        # TODO: Implement shipment queries
+        # shipments = Shipment.query.all()
+        shipments = []  # Placeholder
+        
+        return render_template('operations/view_edit_shipments.html',
+                             shipments=shipments)
+    except Exception as e:
+        flash(f'Error loading shipments: {str(e)}', 'error')
+        return redirect(url_for('operations.dashboard'))
+
+
+@operations.route('/delete-shipment/<int:shipment_id>', methods=['POST'])
+def delete_shipment(shipment_id):
+    """Delete a shipment"""
+    try:
+        # TODO: Implement shipment deletion
+        # shipment = Shipment.query.get_or_404(shipment_id)
+        # db.session.delete(shipment)
+        # db.session.commit()
+        flash('Shipment deletion functionality coming soon!', 'info')
+        return redirect(url_for('operations.view_shipments'))
+    except Exception as e:
+        flash(f'Error deleting shipment: {str(e)}', 'error')
+        return redirect(url_for('operations.view_shipments'))

@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+<style>
+  .shipments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 92, 0, 0.3);
+  }
+  .shipments-table-wrapper {
+    background-color: rgba(24, 28, 34, 0.8);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  .shipments-table {
+    width: 100%;
+    background-color: #181c22;
+    color: #e0e0e0;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .shipments-table thead {
+    background-color: #23272e;
+  }
+  .shipments-table th,
+  .shipments-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid rgba(33, 150, 243, 0.3);
+  }
+  .shipments-table th {
+    color: #FF5C00;
+    font-weight: bold;
+    text-align: center;
+  }
+  .shipments-table tbody tr:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+  }
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-align: center;
+  }
+  .status-pending { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; }
+  .status-confirmed { background-color: rgba(40, 167, 69, 0.2); color: #28a745; }
+  .status-in-transit { background-color: rgba(0, 123, 255, 0.2); color: #007bff; }
+  .status-delivered { background-color: rgba(108, 117, 125, 0.2); color: #6c757d; }
+  .action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+  }
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+  }
+  .coming-soon-notice {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+  }
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+  }
+</style>
+
+  <div class="shipments-header">
+    <h2>Shipment Management</h2>
+    <a href="{{ url_for('operations.add_shipment') }}" class="btn btn-primary"
+       style="background-color: #181c22; color: #FFD600; border: 1px solid #FFD600; padding: 10px 20px; border-radius: 4px; text-decoration: none;">
+      <strong>+ Add New Shipment</strong>
+    </a>
+  </div>
+
+  <div class="coming-soon-notice">
+    <strong>🚧 Under Development</strong><br>
+    Shipment management functionality is currently being developed.<br>
+    This is a placeholder interface for future implementation.
+  </div>
+
+  <div class="shipments-table-wrapper">
+    {% if shipments and shipments|length > 0 %}
+      <table class="shipments-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Date</th>
+            <th>Shipper</th>
+            <th>Consignee</th>
+            <th>Route</th>
+            <th>Product</th>
+            <th>Weight (kg)</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for shipment in shipments %}
+          <tr>
+            <td><strong>{{ shipment.reference }}</strong></td>
+            <td>{{ shipment.date.strftime('%Y-%m-%d') if shipment.date else 'N/A' }}</td>
+            <td>{{ shipment.shipper_name if shipment.shipper_name else 'N/A' }}</td>
+            <td>{{ shipment.consignee_name if shipment.consignee_name else 'N/A' }}</td>
+            <td>{{ shipment.route_summary if shipment.route_summary else 'N/A' }}</td>
+            <td>{{ shipment.product_name if shipment.product_name else 'N/A' }}</td>
+            <td>{{ "{:,.2f}".format(shipment.weight_kg) if shipment.weight_kg else '0.00' }}</td>
+            <td>
+              <span class="status-badge status-{{ shipment.status.lower().replace(' ', '-') if shipment.status else 'pending' }}">
+                {{ shipment.status if shipment.status else 'Pending' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge status-{{ shipment.priority.lower() if shipment.priority else 'standard' }}">
+                {{ shipment.priority.title() if shipment.priority else 'Standard' }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('operations.add_shipment', shipment_id=shipment.id) }}" 
+                   class="btn-sm" style="background-color: #181c22; color: #17a2b8; border: 1px solid #17a2b8;">
+                  Edit
+                </a>
+                <button onclick="deleteShipment({{ shipment.id }})" 
+                        class="btn-sm" style="background-color: #181c22; color: #dc3545; border: 1px solid #dc3545;">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;">📦</div>
+        <h3>No Shipments Found</h3>
+        <p>You haven't created any shipments yet.</p>
+        <a href="{{ url_for('operations.add_shipment') }}" class="btn btn-primary"
+           style="background-color: #181c22; color: #FFD600; border: 1px solid #FFD600; padding: 12px 24px; border-radius: 4px; text-decoration: none; margin-top: 15px; display: inline-block;">
+          Create Your First Shipment
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Statistics Cards (Future Implementation) -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+    <div style="background-color: rgba(24, 28, 34, 0.8); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px; padding: 20px; text-align: center;">
+      <h4 style="color: #FF5C00; margin-bottom: 10px;">Total Shipments</h4>
+      <div style="font-size: 2rem; font-weight: bold; color: #e0e0e0;">{{ shipments|length if shipments else 0 }}</div>
+    </div>
+    <div style="background-color: rgba(24, 28, 34, 0.8); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px; padding: 20px; text-align: center;">
+      <h4 style="color: #FF5C00; margin-bottom: 10px;">Pending</h4>
+      <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">0</div>
+    </div>
+    <div style="background-color: rgba(24, 28, 34, 0.8); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px; padding: 20px; text-align: center;">
+      <h4 style="color: #FF5C00; margin-bottom: 10px;">In Transit</h4>
+      <div style="font-size: 2rem; font-weight: bold; color: #007bff;">0</div>
+    </div>
+    <div style="background-color: rgba(24, 28, 34, 0.8); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px; padding: 20px; text-align: center;">
+      <h4 style="color: #FF5C00; margin-bottom: 10px;">Delivered</h4>
+      <div style="font-size: 2rem; font-weight: bold; color: #28a745;">0</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function deleteShipment(shipmentId) {
+  if (confirm('Are you sure you want to delete this shipment? This action cannot be undone.')) {
+    // Create a form and submit it
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/operations/delete-shipment/${shipmentId}`;
+    
+    // Add CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrf_token';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('View shipments page loaded');
+  
+  // Add any additional functionality here
+  // For example: filtering, sorting, bulk operations
+});
+</script>
+{% endblock %}

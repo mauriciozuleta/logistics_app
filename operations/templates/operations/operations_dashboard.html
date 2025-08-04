@@ -21,8 +21,8 @@
           Shipments ▼
         </button>
         <div class="dropdown-menu">
-          <a class="dropdown-item" href="#">Add Shipment</a>
-          <a class="dropdown-item" href="#">View / Edit Shipments</a>
+          <a class="dropdown-item" href="{{ url_for('operations.add_shipment') }}">Add Shipment</a>
+          <a class="dropdown-item" href="{{ url_for('operations.view_shipments') }}">View / Edit Shipments</a>
         </div>
       </div>
       <div class="dropdown-container">

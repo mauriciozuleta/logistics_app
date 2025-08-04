@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+<style>
+  .shipment-form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+    margin: 0 auto 1rem auto;
+  }
+  .shipment-form-row .form-group {
+    flex: 1 1 20%;
+    min-width: 0;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .shipment-section {
+    background-color: rgba(24, 28, 34, 0.8);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    color: #FF5C00;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 92, 0, 0.3);
+    padding-bottom: 5px;
+  }
+  .coming-soon-notice {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+  }
+</style>
+
+  <h2>{% if shipment_to_edit %}Edit Shipment{% else %}Add New Shipment{% endif %}</h2>
+  
+  <div class="coming-soon-notice">
+    <strong>🚧 Under Development</strong><br>
+    Shipment management functionality is currently being developed.<br>
+    This is a placeholder interface for future implementation.
+  </div>
+
+  <form method="post" id="shipment-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+    
+    <!-- Basic Shipment Information -->
+    <div class="shipment-section">
+      <div class="section-title">Basic Information</div>
+      
+      <div class="shipment-form-row">
+        <div class="form-group">
+          <label for="shipment_reference">Shipment Reference</label>
+          <input type="text" id="shipment_reference" name="shipment_reference" 
+                 placeholder="e.g., SH-2025-001" 
+                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        </div>
+        <div class="form-group">
+          <label for="shipper">Shipper</label>
+          <select id="shipper" name="shipper" style="width: 100%;">
+            <option value="">Select Shipper...</option>
+            {% for trader_id, trader_name in trader_choices %}
+              <option value="{{ trader_id }}">{{ trader_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="consignee">Consignee</label>
+          <select id="consignee" name="consignee" style="width: 100%;">
+            <option value="">Select Consignee...</option>
+            {% for trader_id, trader_name in trader_choices %}
+              <option value="{{ trader_id }}">{{ trader_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="shipment_date">Shipment Date</label>
+          <input type="date" id="shipment_date" name="shipment_date" 
+                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Route and Transportation -->
+    <div class="shipment-section">
+      <div class="section-title">Route & Transportation</div>
+      
+      <div class="shipment-form-row">
+        <div class="form-group">
+          <label for="route">Route</label>
+          <select id="route" name="route" style="width: 100%;">
+            <option value="">Select Route...</option>
+            {% for route_id, route_summary in route_choices %}
+              <option value="{{ route_id }}">{{ route_summary }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority" style="width: 100%;">
+            <option value="standard">Standard</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="service_type">Service Type</label>
+          <select id="service_type" name="service_type" style="width: 100%;">
+            <option value="door-to-door">Door to Door</option>
+            <option value="airport-to-airport">Airport to Airport</option>
+            <option value="door-to-airport">Door to Airport</option>
+            <option value="airport-to-door">Airport to Door</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cargo Information -->
+    <div class="shipment-section">
+      <div class="section-title">Cargo Information</div>
+      
+      <div class="shipment-form-row">
+        <div class="form-group">
+          <label for="product">Product Type</label>
+          <select id="product" name="product" style="width: 100%;">
+            <option value="">Select Product...</option>
+            {% for product_id, product_name in product_choices %}
+              <option value="{{ product_id }}">{{ product_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="weight_kg">Weight (kg)</label>
+          <input type="number" id="weight_kg" name="weight_kg" step="0.01" 
+                 placeholder="0.00"
+                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        </div>
+        <div class="form-group">
+          <label for="volume_m3">Volume (m³)</label>
+          <input type="number" id="volume_m3" name="volume_m3" step="0.001" 
+                 placeholder="0.000"
+                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        </div>
+        <div class="form-group">
+          <label for="pieces">Number of Pieces</label>
+          <input type="number" id="pieces" name="pieces" min="1" 
+                 placeholder="1"
+                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Special Requirements -->
+    <div class="shipment-section">
+      <div class="section-title">Special Requirements</div>
+      
+      <div class="shipment-form-row">
+        <div class="form-group" style="flex: 2;">
+          <label for="special_instructions">Special Instructions</label>
+          <textarea id="special_instructions" name="special_instructions" rows="3"
+                    placeholder="Any special handling instructions, dangerous goods declarations, etc."
+                    style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3; resize: vertical;"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="declared_value">Declared Value (USD)</label>
+          <input type="number" id="declared_value" name="declared_value" step="0.01" 
+                 placeholder="0.00"
+                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 30px;">
+      <button type="submit" class="btn btn-primary" 
+              style="width: 200px; height: 45px; background-color: #181c22; color: #FFD600; border: 1px solid #FFD600; border-radius: 4px;">
+        {% if shipment_to_edit %}Update Shipment{% else %}Create Shipment{% endif %}
+      </button>
+      <a href="{{ url_for('operations.view_shipments') }}" class="btn btn-secondary"
+         style="width: 200px; height: 45px; background-color: #181c22; color: #6c757d; border: 1px solid #6c757d; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Add shipment page loaded');
+  
+  // Add any shipment-specific JavaScript functionality here
+  // For example: weight/volume calculations, route validation, etc.
+  
+  const form = document.getElementById('shipment-form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      // Add any client-side validation here
+      console.log('Shipment form submitted');
+    });
+  }
+});
+</script>
+{% endblock %}

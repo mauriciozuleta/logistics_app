@@ -54,7 +54,13 @@
               <li><a href="{{ url_for('operations.view_routes') }}">Available Routes</a></li>
             </ul>
           </li>
-          <li><a href="#">Shipments</a></li>
+          <li class="dropdown-sub">
+            <a href="#">Shipments</a>
+            <ul class="dropdown-submenu">
+              <li><a href="{{ url_for('operations.add_shipment') }}">Add Shipment</a></li>
+              <li><a href="{{ url_for('operations.view_shipments') }}">View / Edit Shipments</a></li>
+            </ul>
+          </li>
           <li><a href="#">Operations Programming</a></li>
           <li><a href="#">Operations Schedule</a></li>
         </ul>
