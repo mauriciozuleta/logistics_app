@@ -14,23 +14,59 @@ def add_trader():
     country_choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
     edit_id = request.args.get('edit_id') or request.form.get('edit_id')
     trader = Trader.query.get(edit_id) if edit_id else None
+    
     if request.method == 'POST':
-        form = TraderForm(request.form)
+        form = TraderForm()  # Let FlaskForm handle request.form automatically
         form.country_id.choices = country_choices
         if form.validate_on_submit():
+            print(f"DEBUG: edit_id = {edit_id}")
+            print(f"DEBUG: existing trader = {trader}")
+            print(f"DEBUG: form.trader_code.data = {form.trader_code.data}")
+            
             if trader:
+                # Update existing trader
                 form.populate_obj(trader)
+                
+                # Generate trader code if the existing trader doesn't have one
+                if not trader.trader_code or trader.trader_code.strip() == '':
+                    last_trader = Trader.query.filter(Trader.trader_code.like('TR%')).order_by(Trader.trader_code.desc()).first()
+                    if last_trader and last_trader.trader_code[2:].isdigit():
+                        next_num = int(last_trader.trader_code[2:]) + 1
+                    else:
+                        next_num = 1
+                    trader.trader_code = f"TR{next_num:03d}"
+                
+                print(f"DEBUG: Updated trader {trader.id} (code: {trader.trader_code}) with name '{trader.name}'")
             else:
+                # Create new trader with custom trader_code
                 trader = Trader()
                 form.populate_obj(trader)
+                
+                # Generate custom trader code like TR001, TR002, etc.
+                if not trader.trader_code or trader.trader_code.strip() == '':
+                    last_trader = Trader.query.filter(Trader.trader_code.like('TR%')).order_by(Trader.trader_code.desc()).first()
+                    if last_trader and last_trader.trader_code[2:].isdigit():
+                        next_num = int(last_trader.trader_code[2:]) + 1
+                    else:
+                        next_num = 1
+                    trader.trader_code = f"TR{next_num:03d}"
+                
                 db.session.add(trader)
+                print(f"DEBUG: Created new trader {trader.trader_code} with name '{trader.name}'")
             db.session.commit()
             return redirect(url_for('coredata.view_edit_traders'))
     else:
         if trader:
             form = TraderForm(obj=trader)
         else:
-            form = TraderForm()
+            # Pre-generate trader_code for new trader
+            last_trader = Trader.query.filter(Trader.trader_code.like('TR%')).order_by(Trader.trader_code.desc()).first()
+            if last_trader and last_trader.trader_code[2:].isdigit():
+                next_num = int(last_trader.trader_code[2:]) + 1
+            else:
+                next_num = 1
+            new_trader_code = f"TR{next_num:03d}"
+            form = TraderForm(trader_code=new_trader_code)
         form.country_id.choices = country_choices
     return render_template('coredata/add_trader.html', form=form, edit_id=edit_id)
 
@@ -39,6 +75,12 @@ def add_trader():
 def view_edit_traders():
     trader_list = Trader.query.all()
     return render_template('coredata/view_edit_traders.html', trader_list=trader_list)
+
+# Debug Traders
+@coredata_bp.route('/debug-traders')
+def debug_traders():
+    trader_list = Trader.query.all()
+    return render_template('coredata/debug_traders.html', trader_list=trader_list)
 
 # Delete Trader
 @coredata_bp.route('/delete-trader/<int:trader_id>')
@@ -65,6 +107,14 @@ def delete_multiple_airports():
     Airport.query.filter(Airport.id.in_(ids)).delete(synchronize_session=False)
     db.session.commit()
     return jsonify({'success': True})
+
+# Delete single airport
+@coredata_bp.route('/delete-airport/<int:airport_id>')
+def delete_airport(airport_id):
+    airport = Airport.query.get_or_404(airport_id)
+    db.session.delete(airport)
+    db.session.commit()
+    return redirect(url_for('coredata.view_edit_airport'))
 
 # Add Airport
 @coredata_bp.route('/add-airport', methods=['GET', 'POST'])
@@ -210,7 +260,7 @@ def add_product():
         product_type = request.form.get('product_type')
         name = request.form.get('name')
         country_id = request.form.get('country_id')
-        trade_unit = parse_int_or_none(request.form.get('trade_unit'))
+        trade_unit = request.form.get('trade_unit')  # Keep as string, don't parse as int
         fca_cost_per_wu = parse_float_or_none(request.form.get('fca_cost_per_wu'))
         packaging = request.form.get('packaging')
         packaging_weight = parse_float_or_none(request.form.get('packaging_weight'))
@@ -218,6 +268,11 @@ def add_product():
         units_per_pack = parse_int_or_none(request.form.get('units_per_pack'))
         currency = request.form.get('currency')
         other_info = request.form.get('other_info')
+
+        # Debug logging
+        print(f"DEBUG: edit_id = {edit_id}")
+        print(f"DEBUG: existing_product = {existing_product}")
+        print(f"DEBUG: Product name being saved = {name}")
 
         if existing_product:
             # Update product
@@ -232,6 +287,7 @@ def add_product():
             existing_product.units_per_pack = units_per_pack
             existing_product.currency = currency
             existing_product.other_info = other_info
+            print(f"DEBUG: Updated product {existing_product.id} with name '{existing_product.name}'")
 
         else:
             # Check for duplicate (only for new records)
@@ -264,6 +320,7 @@ def add_product():
             db.session.add(product)
 
         db.session.commit()
+        print(f"DEBUG: Database commit completed")
         return redirect(url_for('coredata.view_edit_product'))
 
     return render_template(
@@ -274,7 +331,7 @@ def add_product():
         edit_id=edit_id  # Pass to form for hidden field
     )
 
-# Delete single product
+# Delete multiple products
 @coredata_bp.route('/delete-multiple-products', methods=['POST'])
 def delete_multiple_products():
     data = request.get_json()
@@ -291,8 +348,16 @@ def delete_multiple_products():
     db.session.commit()
     return jsonify({"message": "Products deleted successfully"}), 200
 
+# Delete single product
+@coredata_bp.route('/delete-product/<int:product_id>')
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    return redirect(url_for('coredata.view_edit_product'))
+
 # View/edit product list page
 @coredata_bp.route('/view-edit-product')
 def view_edit_product():
-    products = Product.query.order_by(Product.name.asc()).all()
-    return render_template('coredata/view_edit_product.html', products=products)
+    product_list = Product.query.order_by(Product.name.asc()).all()
+    return render_template('coredata/view_edit_product.html', product_list=product_list)
