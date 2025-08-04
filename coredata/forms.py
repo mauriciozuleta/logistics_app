@@ -4,23 +4,27 @@ from flask_wtf import FlaskForm
 from wtforms import FormField
 
 class TraderForm(FlaskForm):
+    # Section 0: Trader Code
+    trader_code = StringField('Trader Code', validators=[Optional()])
+    
+    # Section 1: Trader Information
     country_id = SelectField('Country', coerce=str, validators=[DataRequired()])
-    name = StringField('Name', validators=[DataRequired()])
+    city = StringField('City', validators=[DataRequired()])
+    name = StringField('Trader Name', validators=[DataRequired()])
+    revenue_taxes = FloatField('Revenue Taxes (%)', validators=[Optional()])
+    operational_cost_year = FloatField('Operational Cost/Year (USD)', validators=[Optional()])
 
-    # Export Information
-    export_year_operating_costs = FloatField('Year Operating Costs (Export)', validators=[Optional()])
-    export_operating_expenses_pct = FloatField('% for Operating Expenses (Export)', validators=[Optional()])
-    export_profit_pct = FloatField('% Profit (Export)', validators=[Optional()])
-    export_sales_tax = FloatField('Sales Tax (Export)', validators=[Optional()])
-    export_other_taxes = FloatField('Other Taxes (Export)', validators=[Optional()])
+    # Section 2: Export Costs
+    export_profit_pct = FloatField('Export Profit (%)', validators=[Optional()])
+    export_sales_tax = FloatField('Sales Tax (%)', validators=[Optional()])
+    export_other_taxes = FloatField('Other Taxes (%)', validators=[Optional()])
+    export_other_cost = FloatField('Other Cost (USD)', validators=[Optional()])
 
-    # Import Information
-    import_year_operating_costs = FloatField('Year Operating Costs (Import)', validators=[Optional()])
-    import_operating_expenses_pct = FloatField('% for Operating Expenses (Import)', validators=[Optional()])
-    import_profit_pct = FloatField('% Profit (Import)', validators=[Optional()])
-    import_import_taxes = FloatField('Import Taxes (Import)', validators=[Optional()])
-    import_sales_tax = FloatField('Sales Tax (Import)', validators=[Optional()])
-    import_other_taxes = FloatField('Other Taxes (Import)', validators=[Optional()])
+    # Section 3: Import Costs
+    import_profit_pct = FloatField('Import Profit (%)', validators=[Optional()])
+    import_taxes = FloatField('Import Taxes (%)', validators=[Optional()])
+    import_other_taxes = FloatField('Other Taxes (%)', validators=[Optional()])
+    import_other_cost = FloatField('Other Cost (USD)', validators=[Optional()])
 
     submit = SubmitField('Add Trader')
 

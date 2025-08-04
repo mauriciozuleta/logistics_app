@@ -83,28 +83,31 @@ class Trader(BaseModel):
     __tablename__ = 'traders'
 
     id = db.Column(db.Integer, primary_key=True)
+    trader_code = db.Column(db.String(10), unique=True, nullable=True)  # Custom ID like TR001
     country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(128), nullable=False)
+    
+    # Section 1: Trader Information
+    revenue_taxes = db.Column(db.Float)  # Revenue Taxes (%)
+    operational_cost_year = db.Column(db.Float)  # Operational Cost/Year (USD)
 
-    # Export info
-    export_year_operating_costs = db.Column(db.Float)
-    export_operating_expenses_pct = db.Column(db.Float)
-    export_profit_pct = db.Column(db.Float)
-    export_sales_tax = db.Column(db.Float)
-    export_other_taxes = db.Column(db.Float)
+    # Section 2: Export Costs
+    export_profit_pct = db.Column(db.Float)  # Export Profit (%)
+    export_sales_tax = db.Column(db.Float)  # Sales Tax (%)
+    export_other_taxes = db.Column(db.Float)  # Other Taxes (%)
+    export_other_cost = db.Column(db.Float)  # Other Cost (USD)
 
-    # Import info
-    import_year_operating_costs = db.Column(db.Float)
-    import_operating_expenses_pct = db.Column(db.Float)
-    import_profit_pct = db.Column(db.Float)
-    import_import_taxes = db.Column(db.Float)
-    import_sales_tax = db.Column(db.Float)
-    import_other_taxes = db.Column(db.Float)
+    # Section 3: Import Costs
+    import_profit_pct = db.Column(db.Float)  # Import Profit (%)
+    import_taxes = db.Column(db.Float)  # Import Taxes (%)
+    import_other_taxes = db.Column(db.Float)  # Other Taxes (%)
+    import_other_cost = db.Column(db.Float)  # Other Cost (USD)
 
     country = db.relationship('Country', backref='traders')
 
     def __repr__(self):
-        return f"<Trader {self.name} ({self.country_id})>"
+        return f"<Trader {self.name} ({self.city}, {self.country_id})>"
 
 
 class Airport(BaseModel):
