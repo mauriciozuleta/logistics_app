@@ -2,11 +2,6 @@
 
 {% block content %}
 <div class="content-section">
-  <script>
-    // Inject trader and route data from Flask
-    const traderData = {{ trader_data|tojson|safe }};
-    const routeData = {{ route_data|tojson|safe }};
-  </script>
 <style>
   .shipment-form-row {
     display: flex;
@@ -109,7 +104,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="first_leg_route">Select Route (Departure from Shipper City) *</label>
+          <label for="first_leg_route">Select Route (Shipper's City) *</label>
           <select id="first_leg_route" name="first_leg_route" required style="width: 100%;">
             <option value="">Select Route...</option>
           </select>
@@ -120,12 +115,20 @@
             <option value="">Select Route...</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="min-width:120px;">
           <label for="return_type">Type of Return</label>
           <select id="return_type" name="return_type" style="width: 100%;">
             <option value="compensated">Compensated</option>
             <option value="full">Full</option>
           </select>
+        </div>
+        <div class="form-group" style="min-width:120px;">
+          <label for="outbound_percent">Outbound %</label>
+          <input type="number" id="outbound_percent" name="outbound_percent" min="0" max="100" step="0.01" value="100" style="width:100%;" disabled>
+        </div>
+        <div class="form-group" style="min-width:120px;">
+          <label for="return_percent">Return %</label>
+          <input type="number" id="return_percent" name="return_percent" min="0" max="100" step="0.01" value="0" style="width:100%;" readonly>
         </div>
       </div>
     </div>
@@ -195,15 +198,71 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Inject trader and route data from Flask
+  const traderData = {{ trader_data|tojson|safe }};
+  const routeData = {{ route_data|tojson|safe }};
+  
+  console.log('Trader data loaded:', traderData);
+  console.log('Route data loaded:', routeData);
+
+  // Outbound/Return % logic
+  const returnTypeSelect = document.getElementById('return_type');
+  const outboundPercentInput = document.getElementById('outbound_percent');
+  const returnPercentInput = document.getElementById('return_percent');
+
+  function updatePercentFields() {
+    if (returnTypeSelect && outboundPercentInput && returnPercentInput) {
+      if (returnTypeSelect.value === 'compensated') {
+        outboundPercentInput.disabled = false;
+        outboundPercentInput.value = outboundPercentInput.value || 100;
+      } else {
+        outboundPercentInput.disabled = true;
+        outboundPercentInput.value = 100;
+      }
+      // Always update return percent
+      let outboundVal = parseFloat(outboundPercentInput.value);
+      if (isNaN(outboundVal)) outboundVal = 100;
+      let returnVal = 100 - outboundVal;
+      if (returnVal < 0) returnVal = 0;
+      returnPercentInput.value = returnVal.toFixed(2);
+    }
+  }
+
+  if (returnTypeSelect && outboundPercentInput) {
+    returnTypeSelect.addEventListener('change', updatePercentFields);
+    outboundPercentInput.addEventListener('input', updatePercentFields);
+    // Initialize on load
+    updatePercentFields();
+  }
+
   const shipperSelect = document.getElementById('shipper');
   const consigneeSelect = document.getElementById('consignee');
   const firstLegRouteSelect = document.getElementById('first_leg_route');
   const secondLegRouteSelect = document.getElementById('second_leg_route');
-  const shipperCityField = document.getElementById('shipper_city');
-  const consigneeCityField = document.getElementById('consignee_city');
-  // Load button removed; logic will be triggered by consignee selection
   const routeInfoSection = document.getElementById('route-info-section');
   const availableAircraftSelect = document.getElementById('available_aircraft');
+
+  // Helper functions
+  function updateCityField(selectElement, cityField) {
+    // This function is called but cityField elements don't exist in HTML
+    // Keeping for compatibility but making it safe
+    if (cityField && selectElement.value && traderData[selectElement.value]) {
+      cityField.value = traderData[selectElement.value].city;
+    }
+  }
+
+  function generateShipmentReference() {
+    const shipperId = shipperSelect.value;
+    const consigneeId = consigneeSelect.value;
+    const shipmentRefField = document.getElementById('shipment_reference');
+    
+    if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId] && shipmentRefField) {
+      const shipperCode = traderData[shipperId].code;
+      const consigneeCode = traderData[consigneeId].code;
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      shipmentRefField.value = `${shipperCode}-${consigneeCode}-${timestamp}`;
+    }
+  }
 
   // Preload aircraft list with all unique aircraft from the aircraft column in routeData
   function preloadAllAircraftFromRoutes() {
@@ -269,41 +328,46 @@ document.addEventListener('DOMContentLoaded', function() {
         availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
         showRouteNotFound(false);
         routeInfoSection.style.display = 'none';
-        shipperCityField.value = '';
-        consigneeCityField.value = '';
       };
     }
   }
 
   // Always update city fields on selection
   shipperSelect.addEventListener('change', function() {
-    updateCityField(this, shipperCityField);
     generateShipmentReference();
+    loadRoutesLogic();
   });
   consigneeSelect.addEventListener('change', function() {
-    updateCityField(this, consigneeCityField);
     generateShipmentReference();
+    loadRoutesLogic();
   });
 
   // Load button logic
   function loadRoutesLogic() {
+    console.log('loadRoutesLogic called');
     firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
     secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
     showRouteNotFound(false);
 
     const shipperId = shipperSelect.value;
     const consigneeId = consigneeSelect.value;
+    console.log('Shipper ID:', shipperId, 'Consignee ID:', consigneeId);
+    
     if (!shipperId || !consigneeId) {
+      console.log('Missing shipper or consignee');
       routeInfoSection.style.display = 'none';
       return;
     }
     if (!traderData[shipperId] || !traderData[consigneeId]) {
+      console.log('Trader data not found');
       routeInfoSection.style.display = 'none';
       return;
     }
 
     const shipperCity = traderData[shipperId].city;
     const consigneeCity = traderData[consigneeId].city;
+    console.log('Shipper city:', shipperCity, 'Consignee city:', consigneeCity);
+    console.log('Available route data:', routeData);
 
     let found = false;
     let firstLegRoutes = [];
@@ -342,55 +406,32 @@ document.addEventListener('DOMContentLoaded', function() {
       option.textContent = opt.text;
       secondLegRouteSelect.appendChild(option);
     });
-    // Repopulate aircraft list after loading routes (don't clear it)
-    preloadAllAircraftFromRoutes();
-    routeInfoSection.style.display = 'block';
+    // Aircraft dropdown: only show aircraft for selected first leg route
+    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
+    if (firstLegRoutes.length > 0) {
+      let aircraftList = [];
+      if (Array.isArray(firstLegRoutes[0].aircraft)) {
+        aircraftList = firstLegRoutes[0].aircraft;
+      } else if (typeof firstLegRoutes[0].aircraft === 'string') {
+        aircraftList = firstLegRoutes[0].aircraft.split(',').map(ac => ac.trim()).filter(ac => ac);
+      }
+      aircraftList.forEach(ac => {
+        const acOption = document.createElement('option');
+        acOption.value = ac;
+        acOption.textContent = ac;
+        availableAircraftSelect.appendChild(acOption);
+      });
+    }
     if (!found) {
+      routeInfoSection.style.display = 'none';
       showRouteNotFound(true);
+    } else {
+      routeInfoSection.style.display = 'block';
+      showRouteNotFound(false);
     }
   }
 
   consigneeSelect.addEventListener('change', loadRoutesLogic);
-
-  // Build route list only when both shipper and consignee are selected
-  function updateRouteLists() {
-    firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
-    secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
-    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
-    showRouteNotFound(false);
-
-    const shipperId = shipperSelect.value;
-    const consigneeId = consigneeSelect.value;
-    if (!shipperId || !consigneeId) return;
-    if (!traderData[shipperId] || !traderData[consigneeId]) return;
-
-    const shipperCity = traderData[shipperId].city;
-    const consigneeCity = traderData[consigneeId].city;
-
-    let found = false;
-    let aircraftSet = new Set();
-    Object.entries(routeData).forEach(([routeId, route]) => {
-      if (route.fromCity.toLowerCase() === shipperCity.toLowerCase() && route.toCity.toLowerCase() === consigneeCity.toLowerCase()) {
-        const option = document.createElement('option');
-        option.value = routeId;
-        option.textContent = `${route.fromAirport} → ${route.toAirport} (${route.summary})`;
-        firstLegRouteSelect.appendChild(option);
-        if (route.aircraft && Array.isArray(route.aircraft)) {
-          route.aircraft.forEach(ac => aircraftSet.add(ac));
-        }
-        found = true;
-      }
-    });
-    aircraftSet.forEach(ac => {
-      const acOption = document.createElement('option');
-      acOption.value = ac;
-      acOption.textContent = ac;
-      availableAircraftSelect.appendChild(acOption);
-    });
-    if (!found) {
-      showRouteNotFound(true);
-    }
-  }
 
   // Form submission handling
   const form = document.getElementById('shipment-form');

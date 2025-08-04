@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+<style>
+  .airport-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .airport-title {
+    color: #FF5C00;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+  .airport-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .airport-search {
+    background-color: #23272e;
+    border: 1px solid #2196f3;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    min-width: 250px;
+  }
+  .airport-search:focus {
+    outline: none;
+    border-color: #FF5C00;
+    box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.2);
+  }
+  .airport-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+  }
+  .airport-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .airport-btn-primary {
+    background-color: #2196f3;
+    color: #fff;
+  }
+  .airport-btn-primary:hover:not(:disabled) {
+    background-color: #1976d2;
+  }
+  .airport-btn-warning {
+    background-color: #ff9800;
+    color: #fff;
+  }
+  .airport-btn-warning:hover:not(:disabled) {
+    background-color: #f57c00;
+  }
+  .airport-btn-danger {
+    background-color: #f44336;
+    color: #fff;
+  }
+  .airport-btn-danger:hover:not(:disabled) {
+    background-color: #d32f2f;
+  }
+  .airport-btn-success {
+    background-color: #4caf50;
+    color: #fff;
+  }
+  .airport-btn-success:hover:not(:disabled) {
+    background-color: #388e3c;
+  }
+  .airport-table-wrapper {
+    background-color: #181c22;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  .airport-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+  }
+  .airport-table thead {
+    background-color: #23272e;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .airport-table th {
+    color: #FF5C00;
+    font-weight: bold;
+    padding: 1rem 0.75rem;
+    text-align: center;
+    border-bottom: 2px solid #FF5C00;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  .airport-table td {
+    background-color: #181c22;
+    color: #fff;
+    padding: 0.75rem;
+    text-align: center;
+    border-bottom: 1px solid #2196f3;
+    font-size: 0.85rem;
+  }
+  .airport-table tbody tr:hover {
+    background-color: #23272e;
+  }
+  .airport-table .checkbox-col {
+    width: 40px;
+    min-width: 40px;
+  }
+  .airport-table .name-col {
+    min-width: 200px;
+    text-align: left;
+    font-weight: bold;
+  }
+  .airport-table .iata-col {
+    width: 60px;
+    min-width: 60px;
+    font-weight: bold;
+    color: #2196f3;
+  }
+  .airport-table .city-col {
+    min-width: 120px;
+    text-align: left;
+  }
+  .airport-table .country-col {
+    min-width: 120px;
+    text-align: left;
+  }
+  .airport-table .cost-col {
+    width: 100px;
+    min-width: 100px;
+    color: #4caf50;
+    font-family: monospace;
+  }
+  .airport-table .coord-col {
+    width: 80px;
+    min-width: 80px;
+    color: #ff9800;
+    font-family: monospace;
+    font-size: 0.8rem;
+  }
+  .airport-table .altitude-col {
+    width: 90px;
+    min-width: 90px;
+    color: #9c27b0;
+    font-family: monospace;
+    font-size: 0.8rem;
+  }
+  .airport-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #FF5C00;
+  }
+  .selected-count {
+    color: #FF5C00;
+    font-weight: bold;
+    margin-left: 1rem;
+    font-size: 0.9rem;
+  }
+  .no-airports {
+    text-align: center;
+    color: #888;
+    padding: 2rem;
+    font-style: italic;
+  }
+</style>
+
+<div class="airport-header">
+  <h1 class="airport-title">Airport Management</h1>
+  <div class="airport-actions">
+    <input type="text" id="searchInput" class="airport-search" placeholder="Search airports...">
+    <button class="airport-btn airport-btn-success" onclick="window.location.href='/coredata/add-airport'">
+      Add Airport
+    </button>
+  </div>
+</div>
+
+<div class="airport-actions" style="margin-bottom: 1rem;">
+  <div>
+    <button class="airport-btn airport-btn-warning edit-btn" disabled>Edit Selected</button>
+    <button class="airport-btn airport-btn-danger delete-btn" disabled>Delete Selected</button>
+    <span class="selected-count" id="selectedCount">0 selected</span>
+  </div>
+</div>
+
+<div class="airport-table-wrapper">
+  <table class="airport-table">
+    <thead>
+      <tr>
+        <th class="checkbox-col">
+          <input type="checkbox" id="select-all" class="airport-checkbox">
+        </th>
+        <th class="name-col">Airport Name</th>
+        <th class="iata-col">IATA</th>
+        <th class="city-col">City</th>
+        <th class="country-col">Country</th>
+        <th class="cost-col">Fuel Cost</th>
+        <th class="cost-col">Cargo Cost</th>
+        <th class="cost-col">Airport Fee</th>
+        <th class="cost-col">Turnaround</th>
+        <th class="cost-col">Other Cost</th>
+        <th class="altitude-col">Apt. Altitude (Ft.)</th>
+        <th class="coord-col">Lat</th>
+        <th class="coord-col">Lon</th>
+      </tr>
+    </thead>
+    <tbody id="airportTableBody">
+      {% if airport_list %}
+        {% for airport in airport_list %}
+        <tr data-airport-id="{{ airport.id }}" class="airport-row">
+          <td class="checkbox-col">
+            <input type="checkbox" class="airport-checkbox" value="{{ airport.id }}">
+          </td>
+          <td class="name-col" title="{{ airport.name }}">{{ airport.name }}</td>
+          <td class="iata-col">{{ airport.iata_code }}</td>
+          <td class="city-col" title="{{ airport.city }}">{{ airport.city }}</td>
+          <td class="country-col" title="{{ airport.country.country_name if airport.country else 'N/A' }}">
+            {{ airport.country.country_name if airport.country else 'N/A' }}
+          </td>
+          <td class="cost-col">
+            {% if airport.fuel_cost_gl %}${{ "%.2f"|format(airport.fuel_cost_gl) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if airport.cargo_handling_cost_kg %}${{ "%.2f"|format(airport.cargo_handling_cost_kg) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if airport.airport_fee %}${{ "%.2f"|format(airport.airport_fee) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if airport.turnaround_cost %}${{ "%.2f"|format(airport.turnaround_cost) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
+            {% if airport.other_cost %}${{ "%.2f"|format(airport.other_cost) }}{% else %}-{% endif %}
+          </td>
+          <td class="altitude-col">
+            {% if airport.altitude_ft %}{{ "%.0f"|format(airport.altitude_ft) }}{% else %}-{% endif %}
+          </td>
+          <td class="coord-col">
+            {% if airport.latitude %}{{ "%.3f"|format(airport.latitude) }}{% else %}-{% endif %}
+          </td>
+          <td class="coord-col">
+            {% if airport.longitude %}{{ "%.3f"|format(airport.longitude) }}{% else %}-{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="13" class="no-airports">No airports found. <a href="/coredata/add-airport" style="color: #2196f3;">Add your first airport</a></td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const checkboxes = document.querySelectorAll('.airport-checkbox:not(#select-all)');
+  const editBtn = document.querySelector('.edit-btn');
+  const deleteBtn = document.querySelector('.delete-btn');
+  const selectAll = document.getElementById('select-all');
+  const tableBody = document.getElementById('airportTableBody');
+  const searchInput = document.getElementById('searchInput');
+  const selectedCount = document.getElementById('selectedCount');
+
+  function updateButtons() {
+    const selected = Array.from(document.querySelectorAll('.airport-checkbox:not(#select-all)')).filter(cb => cb.checked);
+    editBtn.disabled = selected.length !== 1;
+    deleteBtn.disabled = selected.length === 0;
+    
+    selectedCount.textContent = `${selected.length} selected`;
+    
+    // Update select-all checkbox state
+    const visibleCheckboxes = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none').map(row => row.querySelector('.airport-checkbox:not(#select-all)'));
+    const visibleChecked = visibleCheckboxes.filter(cb => cb && cb.checked);
+    
+    if (visibleCheckboxes.length === 0) {
+      selectAll.indeterminate = false;
+      selectAll.checked = false;
+    } else if (visibleChecked.length === visibleCheckboxes.length) {
+      selectAll.indeterminate = false;
+      selectAll.checked = true;
+    } else if (visibleChecked.length > 0) {
+      selectAll.indeterminate = true;
+      selectAll.checked = false;
+    } else {
+      selectAll.indeterminate = false;
+      selectAll.checked = false;
+    }
+  }
+
+  // Select all functionality
+  if (selectAll) {
+    selectAll.addEventListener('change', function() {
+      const visibleCheckboxes = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none').map(row => row.querySelector('.airport-checkbox:not(#select-all)'));
+      visibleCheckboxes.forEach(cb => { 
+        if (cb) cb.checked = selectAll.checked; 
+      });
+      updateButtons();
+    });
+  }
+
+  // Individual checkbox change
+  checkboxes.forEach(cb => cb.addEventListener('change', updateButtons));
+
+  // Search functionality
+  searchInput.addEventListener('input', function() {
+    const filter = this.value.toLowerCase();
+    const rows = tableBody.querySelectorAll('tr.airport-row');
+    
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      if (text.includes(filter)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+        // Uncheck hidden rows
+        const checkbox = row.querySelector('.airport-checkbox');
+        if (checkbox) checkbox.checked = false;
+      }
+    });
+    
+    updateButtons();
+  });
+
+  // Edit button
+  editBtn.addEventListener('click', () => {
+    const selected = Array.from(document.querySelectorAll('.airport-checkbox:not(#select-all)')).filter(cb => cb.checked);
+    if (selected.length === 1) {
+      const airportId = selected[0].value;
+      window.location.href = `/coredata/add-airport?edit_id=${airportId}`;
+    } else {
+      alert("Please select exactly one airport to edit.");
+    }
+  });
+
+  // Delete button
+  deleteBtn.addEventListener('click', () => {
+    const selected = Array.from(document.querySelectorAll('.airport-checkbox:not(#select-all)')).filter(cb => cb.checked);
+    if (selected.length === 0) return;
+
+    const count = selected.length;
+    const message = count === 1 ? 'Delete the selected airport?' : `Delete ${count} selected airports?`;
+    
+    if (confirm(message)) {
+      const ids = selected.map(cb => cb.value);
+      
+      // Show loading state
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting...';
+      
+      fetch('/coredata/delete-multiple-airports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      })
+      .then(res => {
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          throw new Error('Delete failed');
+        }
+      })
+      .catch(error => {
+        alert('Error deleting airports. Please try again.');
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete Selected';
+      });
+    }
+  });
+
+  // Double-click to edit
+  tableBody.addEventListener('dblclick', function(e) {
+    const row = e.target.closest('tr.airport-row');
+    if (row) {
+      const airportId = row.dataset.airportId;
+      window.location.href = `/coredata/add-airport?edit_id=${airportId}`;
+    }
+  });
+
+  // Initialize
+  updateButtons();
+});
+</script>
+</div>
+{% endblock %}

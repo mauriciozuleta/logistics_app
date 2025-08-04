@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
+        <div class="card-body" style="color: #fff;">
+          <h2 style="color: #2196f3; text-align: center;">DEBUG: Trader Data Test</h2>
+          
+          <h3>Raw trader data ({{ trader_list|length }} records):</h3>
+          {% for trader in trader_list %}
+            <div style="border: 1px solid #2196f3; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+              <strong>ID:</strong> {{ trader.id }}<br>
+              <strong>Name:</strong> {{ trader.name }}<br>
+              <strong>City:</strong> {{ trader.city }}<br>
+              <strong>Country ID:</strong> {{ trader.country_id }}<br>
+              <strong>Country Name:</strong> {{ trader.country.country_name if trader.country else 'N/A' }}<br>
+              <strong>Revenue Taxes:</strong> {{ trader.revenue_taxes }}<br>
+              <strong>Operational Cost/Year:</strong> {{ trader.operational_cost_year }}<br>
+            </div>
+          {% else %}
+            <p style="color: #f44336;">NO TRADERS FOUND!</p>
+          {% endfor %}
+          
+          <hr style="border-color: #2196f3; margin: 2rem 0;">
+          
+          <a href="{{ url_for('coredata.view_edit_traders') }}" class="btn btn-primary" style="background-color: #2196f3; border: 1px solid #2196f3; color: #fff;">
+            Go to Normal Trader View
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

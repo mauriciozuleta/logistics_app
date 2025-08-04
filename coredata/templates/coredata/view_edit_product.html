@@ -1,410 +1,73 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<div class="content-section">
-<style>
-  .product-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  .product-title {
-    color: #FF5C00;
-    font-weight: bold;
-    letter-spacing: 1px;
-    margin: 0;
-  }
-  .product-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  .product-filter {
-    background-color: #23272e;
-    border: 1px solid #2196f3;
-    color: #fff;
-    padding: 0.5rem;
-    border-radius: 4px;
-    min-width: 180px;
-  }
-  .product-filter:focus {
-    outline: none;
-    border-color: #FF5C00;
-    box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.2);
-  }
-  .product-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-  }
-  .product-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .product-btn-primary {
-    background-color: #2196f3;
-    color: #fff;
-  }
-  .product-btn-primary:hover:not(:disabled) {
-    background-color: #1976d2;
-  }
-  .product-btn-warning {
-    background-color: #ff9800;
-    color: #fff;
-  }
-  .product-btn-warning:hover:not(:disabled) {
-    background-color: #f57c00;
-  }
-  .product-btn-danger {
-    background-color: #f44336;
-    color: #fff;
-  }
-  .product-btn-danger:hover:not(:disabled) {
-    background-color: #d32f2f;
-  }
-  .product-btn-success {
-    background-color: #4caf50;
-    color: #fff;
-  }
-  .product-btn-success:hover:not(:disabled) {
-    background-color: #388e3c;
-  }
-  .product-table-wrapper {
-    background-color: #181c22;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    max-height: 600px;
-    overflow-y: auto;
-  }
-  .product-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 0;
-  }
-  .product-table thead {
-    background-color: #23272e;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  .product-table th {
-    color: #FF5C00;
-    font-weight: bold;
-    padding: 1rem 0.75rem;
-    text-align: center;
-    border-bottom: 2px solid #FF5C00;
-    font-size: 0.9rem;
-    white-space: nowrap;
-  }
-  .product-table td {
-    background-color: #181c22;
-    color: #fff;
-    padding: 0.75rem;
-    text-align: center;
-    border-bottom: 1px solid #2196f3;
-    font-size: 0.85rem;
-  }
-  .product-table tbody tr:hover {
-    background-color: #23272e;
-  }
-  .product-table .checkbox-col {
-    width: 40px;
-    min-width: 40px;
-  }
-  .product-table .type-col {
-    min-width: 120px;
-    color: #ff9800;
-    font-weight: bold;
-  }
-  .product-table .name-col {
-    min-width: 200px;
-    text-align: left;
-    font-weight: bold;
-    color: #2196f3;
-  }
-  .product-table .country-col {
-    min-width: 100px;
-  }
-  .product-table .packaging-col {
-    min-width: 120px;
-    text-align: left;
-  }
-  .product-table .weight-col {
-    width: 100px;
-    min-width: 100px;
-    color: #4caf50;
-    font-family: monospace;
-  }
-  .product-table .units-col {
-    width: 80px;
-    min-width: 80px;
-    color: #4caf50;
-    font-family: monospace;
-  }
-  .product-table .info-col {
-    min-width: 150px;
-    text-align: left;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .product-table .currency-col {
-    width: 80px;
-    min-width: 80px;
-    color: #ff9800;
-    font-weight: bold;
-  }
-  .product-table .cost-col {
-    width: 100px;
-    min-width: 100px;
-    color: #4caf50;
-    font-family: monospace;
-  }
-  .product-checkbox {
-    width: 16px;
-    height: 16px;
-    accent-color: #FF5C00;
-  }
-  .selected-count {
-    color: #FF5C00;
-    font-weight: bold;
-    margin-left: 1rem;
-    font-size: 0.9rem;
-  }
-  .no-products {
-    text-align: center;
-    color: #888;
-    padding: 2rem;
-    font-style: italic;
-  }
-  .filter-label {
-    color: #fff;
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
-</style>
+<div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
+        <div class="card-body" style="color: #fff;">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 style="color: #2196f3; margin: 0;">📦 View / Edit Products</h2>
+            <a href="{{ url_for('coredata.add_product') }}" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff;">
+              ➕ Add New Product
+            </a>
+          </div>
 
-<div class="product-header">
-  <h1 class="product-title">Product Management</h1>
-  <div class="product-actions">
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <label for="productTypeFilter" class="filter-label">Filter by Type:</label>
-      <select id="productTypeFilter" class="product-filter">
-        <option value="">All Types</option>
-        <option value="Produce">Produce</option>
-        <option value="Meats">Meats</option>
-        <option value="Other Perishable">Other Perishable</option>
-        <option value="Dry Goods">Dry Goods</option>
-        <option value="Technology">Technology</option>
-        <option value="Other">Other</option>
-      </select>
+          {% if product_list %}
+            <div class="table-responsive">
+              <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden;">
+                <thead style="background-color: #23272e;">
+                  <tr>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Type</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Name</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Country</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Trade Unit</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">FCA Cost/WU</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Packaging</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Units/Pack</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Pack Cost</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Currency</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for product in product_list %}
+                    <tr style="background-color: #181c22;">
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.product_type or '-' }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px; font-weight: bold;">{{ product.name }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.country.country_name if product.country else '-' }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.trade_unit or '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(product.fca_cost_per_wu) if product.fca_cost_per_wu else '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ product.packaging or '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ product.units_per_pack or '-' }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(product.packaging_cost) if product.packaging_cost else '-' }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ product.currency or '-' }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                          <a href="{{ url_for('coredata.add_product', edit_id=product.id) }}" class="btn btn-sm" style="background-color: #ff9800; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none;">
+                            ✏️ Edit
+                          </a>
+                          <a href="{{ url_for('coredata.delete_product', product_id=product.id) }}" class="btn btn-sm" onclick="return confirm('Delete this product?');" style="background-color: #f44336; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none;">
+                            🗑️ Delete
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div style="text-align: center; padding: 4rem; color: #bbb;">
+              <h4>No products available</h4>
+              <p>Click "Add New Product" to create your first product</p>
+              <a href="{{ url_for('coredata.add_product') }}" class="btn btn-primary" style="background-color: #2196f3; border: 1px solid #2196f3; color: #fff; margin-top: 1rem;">
+                ➕ Create First Product
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
-    <button class="product-btn product-btn-success" onclick="window.location.href='/coredata/add-product'">
-      Add Product
-    </button>
   </div>
-</div>
-
-<div class="product-actions" style="margin-bottom: 1rem;">
-  <div>
-    <button class="product-btn product-btn-warning edit-btn" disabled>Edit Selected</button>
-    <button class="product-btn product-btn-danger delete-btn" disabled>Delete Selected</button>
-    <span class="selected-count" id="selectedCount">0 selected</span>
-  </div>
-</div>
-
-<div class="product-table-wrapper">
-  <table class="product-table">
-    <thead>
-      <tr>
-        <th class="checkbox-col">
-          <input type="checkbox" id="select-all" class="product-checkbox">
-        </th>
-        <th class="type-col">Type</th>
-        <th class="name-col">Product Name</th>
-        <th class="country-col">Country</th>
-        <th class="packaging-col">Packaging</th>
-        <th class="weight-col">Weight (kg)</th>
-        <th class="units-col">Units/Pack</th>
-        <th class="info-col">Other Info</th>
-        <th class="currency-col">Currency</th>
-        <th class="cost-col">FCA Cost/WU</th>
-      </tr>
-    </thead>
-    <tbody id="productTableBody">
-      {% if products %}
-        {% for product in products %}
-        <tr data-type="{{ product.product_type }}" data-product-id="{{ product.id }}" class="product-row">
-          <td class="checkbox-col">
-            <input type="checkbox" class="product-checkbox" value="{{ product.id }}">
-          </td>
-          <td class="type-col">{{ product.product_type }}</td>
-          <td class="name-col" title="{{ product.name }}">{{ product.name }}</td>
-          <td class="country-col">{{ product.country_id }}</td>
-          <td class="packaging-col" title="{{ product.packaging if product.packaging else 'N/A' }}">
-            {{ product.packaging if product.packaging else 'N/A' }}
-          </td>
-          <td class="weight-col">
-            {% if product.packaging_weight %}{{ "%.2f"|format(product.packaging_weight) }}{% else %}-{% endif %}
-          </td>
-          <td class="units-col">{{ product.units_per_pack if product.units_per_pack else '-' }}</td>
-          <td class="info-col" title="{{ product.other_info if product.other_info else 'N/A' }}">
-            {{ product.other_info if product.other_info else 'N/A' }}
-          </td>
-          <td class="currency-col">{{ product.currency if product.currency else '-' }}</td>
-          <td class="cost-col">
-            {% if product.fca_cost_per_wu is not none %}${{ "{:,.2f}".format(product.fca_cost_per_wu) }}{% else %}-{% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      {% else %}
-        <tr>
-          <td colspan="10" class="no-products">No products found. <a href="/coredata/add-product" style="color: #2196f3;">Add your first product</a></td>
-        </tr>
-      {% endif %}
-    </tbody>
-  </table>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const checkboxes = document.querySelectorAll('.product-checkbox:not(#select-all)');
-  const editBtn = document.querySelector('.edit-btn');
-  const deleteBtn = document.querySelector('.delete-btn');
-  const selectAll = document.getElementById('select-all');
-  const productTypeFilter = document.getElementById('productTypeFilter');
-  const tableBody = document.getElementById('productTableBody');
-  const selectedCount = document.getElementById('selectedCount');
-
-  function updateButtons() {
-    const selected = Array.from(document.querySelectorAll('.product-checkbox:not(#select-all)')).filter(cb => cb.checked);
-    editBtn.disabled = selected.length !== 1;
-    deleteBtn.disabled = selected.length === 0;
-    
-    selectedCount.textContent = `${selected.length} selected`;
-    
-    // Update select-all checkbox state
-    const visibleCheckboxes = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none').map(row => row.querySelector('.product-checkbox:not(#select-all)'));
-    const visibleChecked = visibleCheckboxes.filter(cb => cb && cb.checked);
-    
-    if (visibleCheckboxes.length === 0) {
-      selectAll.indeterminate = false;
-      selectAll.checked = false;
-    } else if (visibleChecked.length === visibleCheckboxes.length) {
-      selectAll.indeterminate = false;
-      selectAll.checked = true;
-    } else if (visibleChecked.length > 0) {
-      selectAll.indeterminate = true;
-      selectAll.checked = false;
-    } else {
-      selectAll.indeterminate = false;
-      selectAll.checked = false;
-    }
-  }
-
-  // Select all functionality
-  if (selectAll) {
-    selectAll.addEventListener('change', function() {
-      const visibleCheckboxes = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none').map(row => row.querySelector('.product-checkbox:not(#select-all)'));
-      visibleCheckboxes.forEach(cb => { 
-        if (cb) cb.checked = selectAll.checked; 
-      });
-      updateButtons();
-    });
-  }
-
-  // Individual checkbox change
-  checkboxes.forEach(cb => cb.addEventListener('change', updateButtons));
-
-  // Edit button
-  editBtn.addEventListener('click', () => {
-    const selected = Array.from(document.querySelectorAll('.product-checkbox:not(#select-all)')).filter(cb => cb.checked);
-    if (selected.length === 1) {
-      const productId = selected[0].value;
-      window.location.href = `/coredata/add-product?edit_id=${productId}`;
-    } else {
-      alert("Please select exactly one product to edit.");
-    }
-  });
-
-  // Delete button
-  deleteBtn.addEventListener('click', () => {
-    const selected = Array.from(document.querySelectorAll('.product-checkbox:not(#select-all)')).filter(cb => cb.checked);
-    if (selected.length === 0) return;
-
-    const count = selected.length;
-    const message = count === 1 ? 'Delete the selected product?' : `Delete ${count} selected products?`;
-    
-    if (confirm(message)) {
-      const ids = selected.map(cb => cb.value);
-      
-      // Show loading state
-      deleteBtn.disabled = true;
-      deleteBtn.textContent = 'Deleting...';
-      
-      fetch('/coredata/delete-multiple-products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids }),
-      })
-      .then(res => {
-        if (res.ok) {
-          window.location.reload();
-        } else {
-          throw new Error('Delete failed');
-        }
-      })
-      .catch(error => {
-        alert('Error deleting products. Please try again.');
-        deleteBtn.disabled = false;
-        deleteBtn.textContent = 'Delete Selected';
-      });
-    }
-  });
-
-  // Filter functionality
-  productTypeFilter.addEventListener('change', function() {
-    const selectedType = this.value;
-    let visibleCount = 0;
-    Array.from(tableBody.querySelectorAll('tr.product-row')).forEach(row => {
-      const type = row.getAttribute('data-type');
-      if (!selectedType || type === selectedType) {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
-        // Uncheck hidden rows
-        const checkbox = row.querySelector('.product-checkbox');
-        if (checkbox) checkbox.checked = false;
-      }
-    });
-    
-    updateButtons();
-  });
-
-  // Double-click to edit
-  tableBody.addEventListener('dblclick', function(e) {
-    const row = e.target.closest('tr.product-row');
-    if (row) {
-      const productId = row.dataset.productId;
-      window.location.href = `/coredata/add-product?edit_id=${productId}`;
-    }
-  });
-
-  // Initialize
-  updateButtons();
-});
-</script>
 </div>
 {% endblock %}

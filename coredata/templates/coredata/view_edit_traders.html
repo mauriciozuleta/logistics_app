@@ -17,38 +17,40 @@
               <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden;">
                 <thead style="background-color: #23272e;">
                   <tr>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Code</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Name</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">City</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Country</th>
-                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Year Op. Costs</th>
-                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Op. %</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.8rem;">Revenue Taxes %</th>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.8rem;">Op. Cost/Year</th>
                     <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Profit %</th>
-                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Sales Tax</th>
-                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Other Taxes</th>
-                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Year Op. Costs</th>
-                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Op. %</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Sales Tax %</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Other Taxes %</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Export Other Cost</th>
                     <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Profit %</th>
-                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Taxes</th>
-                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Sales Tax</th>
-                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Other Taxes</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Taxes %</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Other Taxes %</th>
+                    <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Import Other Cost</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for trader in trader_list %}
                     <tr style="background-color: #181c22;">
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px; font-weight: bold;">{{ trader.trader_code or 'N/A' }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px; font-weight: bold;">{{ trader.name }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ trader.city }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ trader.country.country_name if trader.country else '' }}</td>
-                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_year_operating_costs }}</td>
-                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_operating_expenses_pct }}</td>
-                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_profit_pct }}</td>
-                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_sales_tax }}</td>
-                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_other_taxes }}</td>
-                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_year_operating_costs }}</td>
-                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_operating_expenses_pct }}</td>
-                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_profit_pct }}</td>
-                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_import_taxes }}</td>
-                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_sales_tax }}</td>
-                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_other_taxes }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ trader.revenue_taxes or '-' }}</td>
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(trader.operational_cost_year) if trader.operational_cost_year else '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_profit_pct or '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_sales_tax or '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ trader.export_other_taxes or '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(trader.export_other_cost) if trader.export_other_cost else '-' }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_profit_pct or '-' }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_taxes or '-' }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ trader.import_other_taxes or '-' }}</td>
+                      <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(trader.import_other_cost) if trader.import_other_cost else '-' }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
                         <div style="display: flex; gap: 8px; justify-content: center;">
                           <a href="{{ url_for('coredata.add_trader', edit_id=trader.id) }}" class="btn btn-sm" style="background-color: #ff9800; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none;">

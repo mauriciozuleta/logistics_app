@@ -28,6 +28,8 @@ option {
   padding: 10px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 999999;
 }
 
 /* Internal layout wrapper */
@@ -44,6 +46,8 @@ option {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 
               0 1px 0 rgba(255, 255, 255, 0.1) inset;
   backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 999999;
 }
 
 /* Main nav and auth links aligned in a row */
@@ -55,6 +59,8 @@ option {
   margin: 0;
   padding: 0;
   align-items: center;
+  position: relative;
+  z-index: 999999;
 }
 
 /* Links styling */
@@ -66,6 +72,20 @@ option {
   transition: all 0.3s ease;
   padding: 8px 12px;
   border-radius: 4px;
+}
+
+/* Dropdown indicators */
+.dropdown > a::after {
+  content: " ▾";
+  opacity: 0.7;
+  font-size: 0.8em;
+  margin-left: 4px;
+  transition: all 0.2s ease;
+}
+
+.dropdown.active > a::after {
+  transform: rotate(180deg);
+  opacity: 1;
 }
 
 /* Hover effects */
@@ -127,18 +147,25 @@ body {
   backdrop-filter: blur(10px);
   padding: 8px 0;
   border-radius: 8px;
-  top: 100%;
+  top: calc(100% + 2px);
   left: 0;
-  z-index: 1000;
+  z-index: 9999999;
   min-width: 220px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
   list-style: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.2s ease-out;
+  pointer-events: none;
 }
 
-.nav-menu .dropdown:hover .dropdown-menu {
+/* Click-based dropdown - smooth show transition */
+.nav-menu .dropdown-menu.show {
   display: block;
-  animation: fadeInDown 0.2s ease-out;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 @keyframes fadeInDown {
@@ -175,7 +202,7 @@ body {
 .dropdown-submenu {
   display: none;
   position: absolute;
-  left: 100%;
+  left: calc(100% + 2px);
   top: 0;
   background-color: rgba(30, 30, 30, 0.95);
   backdrop-filter: blur(10px);
@@ -185,18 +212,29 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
   list-style: none;
-  z-index: 1001;
+  z-index: 99999999;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.2s ease-out;
+  pointer-events: none;
 }
 
-/* Smart positioning for submenus */
-.dropdown-sub:hover .dropdown-submenu {
+/* Click-based submenu - smooth show transition */
+.dropdown-submenu.show {
   display: block;
-  animation: fadeInRight 0.2s ease-out;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
 }
 
 /* Position submenu to the left if it's one of the last items */
 .dropdown-sub:nth-last-child(-n+2) .dropdown-submenu {
-  left: -100%;
+  left: calc(-100% - 2px);
+  transform: translateX(8px);
+}
+
+.dropdown-sub:nth-last-child(-n+2) .dropdown-submenu.show {
+  transform: translateX(0);
 }
 
 /* Ensure submenu doesn't go off-screen at bottom */
@@ -223,9 +261,42 @@ body {
   transition: all 0.2s ease;
 }
 
-.dropdown-sub:hover > a::after {
+.dropdown-sub:hover > a::after,
+.dropdown-sub.active > a::after {
   opacity: 1;
   transform: translateX(2px);
+}
+
+/* Active state styling for better click feedback */
+.dropdown.active > a,
+.dropdown-sub.active > a {
+  background-color: rgba(0, 191, 255, 0.1);
+  color: #00bfff;
+}
+
+/* Better hover tolerance with invisible padding zones */
+.dropdown {
+  position: relative;
+}
+
+.dropdown::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Improved click targets */
+.dropdown > a,
+.dropdown-sub > a {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* Submenu items styling */
@@ -630,4 +701,44 @@ select,
 option {
   color: black !important;
   background-color: white !important;
+}
+
+/* Ensure navbar dropdowns are above all form elements */
+.card,
+.card-body,
+.form-control,
+.form-group,
+fieldset,
+.container-fluid {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure navbar and dropdowns stay on top */
+.navbar,
+.nav-container,
+.nav-menu,
+.dropdown-menu,
+.dropdown-submenu {
+  z-index: 999999 !important;
+}
+
+/* Fix table text visibility - Bootstrap override */
+.table,
+.table tbody,
+.table tbody tr,
+.table tbody td,
+.table thead,
+.table thead tr,
+.table thead th {
+  color: #fff !important;
+  background-color: transparent !important;
+}
+
+.table tbody tr {
+  background-color: #181c22 !important;
+}
+
+.table thead {
+  background-color: #23272e !important;
 }

@@ -172,6 +172,7 @@
 
 <div class="product-form-container">
   <form id="productForm" method="POST" action="{{ url_for('coredata.add_product') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <input type="hidden" name="edit_id" value="{{ edit_id }}">
     
     <!-- Basic Information Section -->
