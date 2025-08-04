@@ -46,7 +46,7 @@
       <li class="dropdown">
         <a href="#">Operations</a>
         <ul class="dropdown-menu">
-          <li><a href="{{ url_for('operations.dashboard') }}"><strong>Dashboard</strong></a></li>
+          <li><a href="{{ url_for('operations.dashboard') }}">Dashboard</a></li>
           <li class="dropdown-sub">
             <a href="#">Routes and Freight Analysis</a>
             <ul class="dropdown-submenu">
@@ -75,7 +75,7 @@
 </div>
 
 <script>
-// --- Dropdown submenu hover fix ---
+// --- Enhanced dropdown submenu positioning and hover handling ---
 document.addEventListener('DOMContentLoaded', function () {
   // For each .dropdown-sub
   document.querySelectorAll('.dropdown-sub').forEach(function(sub) {
@@ -83,19 +83,73 @@ document.addEventListener('DOMContentLoaded', function () {
     const submenu = sub.querySelector('.dropdown-submenu');
     if (!submenu) return;
 
+    // Smart positioning function
+    function positionSubmenu() {
+      const rect = sub.getBoundingClientRect();
+      const submenuRect = submenu.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Reset positioning
+      submenu.style.left = '100%';
+      submenu.style.right = 'auto';
+      submenu.style.top = '0';
+      submenu.style.bottom = 'auto';
+      
+      // Check if submenu would go off right edge
+      if (rect.right + submenuRect.width > viewportWidth - 20) {
+        submenu.style.left = 'auto';
+        submenu.style.right = '100%';
+      }
+      
+      // Check if submenu would go off bottom edge
+      if (rect.top + submenuRect.height > viewportHeight - 20) {
+        submenu.style.top = 'auto';
+        submenu.style.bottom = '0';
+      }
+    }
+
     sub.addEventListener('mouseenter', function() {
       clearTimeout(timeout);
       submenu.style.display = 'block';
+      // Small delay to ensure submenu is rendered before positioning
+      setTimeout(positionSubmenu, 10);
     });
+    
     sub.addEventListener('mouseleave', function() {
-      timeout = setTimeout(() => submenu.style.display = 'none', 150);
+      timeout = setTimeout(() => submenu.style.display = 'none', 200);
     });
+    
     submenu.addEventListener('mouseenter', function() {
       clearTimeout(timeout);
-      submenu.style.display = 'block';
     });
+    
     submenu.addEventListener('mouseleave', function() {
-      timeout = setTimeout(() => submenu.style.display = 'none', 150);
+      timeout = setTimeout(() => submenu.style.display = 'none', 200);
+    });
+  });
+
+  // Main dropdown hover handling
+  document.querySelectorAll('.dropdown').forEach(function(dropdown) {
+    let timeout;
+    const menu = dropdown.querySelector('.dropdown-menu');
+    if (!menu) return;
+
+    dropdown.addEventListener('mouseenter', function() {
+      clearTimeout(timeout);
+      menu.style.display = 'block';
+    });
+    
+    dropdown.addEventListener('mouseleave', function() {
+      timeout = setTimeout(() => menu.style.display = 'none', 200);
+    });
+    
+    menu.addEventListener('mouseenter', function() {
+      clearTimeout(timeout);
+    });
+    
+    menu.addEventListener('mouseleave', function() {
+      timeout = setTimeout(() => menu.style.display = 'none', 200);
     });
   });
 });
