@@ -634,6 +634,97 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Function to check if route already exists based on current selections
+  async function checkRouteExists() {
+    // Only check if all required fields are selected
+    if (!aircraftSelect.value || !fromSelect.value || !toSelect.value) {
+      return; // Not enough data to check
+    }
+    
+    // For multiple route type, finish airport is also required
+    if (routeType.value === 'multiple' && !finishSelect.value) {
+      return; // Not enough data to check
+    }
+    
+    try {
+      const routeCheckData = {
+        aircraft_id: aircraftSelect.value,
+        route_type: routeType.value,
+        from_airport_id: fromSelect.value,
+        to_airport_id: toSelect.value,
+        finish_airport_id: routeType.value === 'multiple' ? finishSelect.value : null
+      };
+      
+      const response = await fetch('/api/check-route-exists', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(routeCheckData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (result.exists && result.routes.length > 0) {
+          // Show warning message near the Load button
+          showRouteExistsWarning(result.routes);
+        } else {
+          // Hide warning if no duplicates found
+          hideRouteExistsWarning();
+        }
+      }
+    } catch (error) {
+      console.log('Route existence check failed:', error);
+      // Silently fail - don't interfere with user experience
+    }
+  }
+
+  // Function to show route exists warning
+  function showRouteExistsWarning(existingRoutes) {
+    // Remove existing warning if any
+    hideRouteExistsWarning();
+    
+    // Create warning element
+    const warningDiv = document.createElement('div');
+    warningDiv.id = 'route-exists-warning';
+    warningDiv.style.cssText = `
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+      padding: 8px 12px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+    `;
+    
+    warningDiv.innerHTML = `
+      <strong>⚠️ Route already exists</strong>
+    `;
+    
+    // Insert warning before the Load button
+    const loadBtn = document.getElementById('load_finish_btn');
+    if (loadBtn && loadBtn.parentNode) {
+      loadBtn.parentNode.insertBefore(warningDiv, loadBtn);
+    }
+  }
+
+  // Function to hide route exists warning
+  function hideRouteExistsWarning() {
+    const existingWarning = document.getElementById('route-exists-warning');
+    if (existingWarning) {
+      existingWarning.remove();
+    }
+  }
+
+  // Add event listeners to form fields to check for route existence
+  if (aircraftSelect && routeType && fromSelect && toSelect && finishSelect) {
+    aircraftSelect.addEventListener('change', checkRouteExists);
+    routeType.addEventListener('change', checkRouteExists);
+    fromSelect.addEventListener('change', checkRouteExists);
+    toSelect.addEventListener('change', checkRouteExists);
+    finishSelect.addEventListener('change', checkRouteExists);
+  }
+
   // Load button event listener
   if (loadBtn) {
     loadBtn.addEventListener('click', async function() {
