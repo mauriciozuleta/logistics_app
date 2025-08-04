@@ -2,6 +2,11 @@
 
 {% block content %}
 <div class="content-section">
+  <script>
+    // Inject trader and route data from Flask
+    const traderData = {{ trader_data|tojson|safe }};
+    const routeData = {{ route_data|tojson|safe }};
+  </script>
 <style>
   .shipment-form-row {
     display: flex;
@@ -58,78 +63,78 @@
   <form method="post" id="shipment-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
     
-    <!-- Basic Shipment Information -->
+    <!-- Section 1: Shipment Information -->
     <div class="shipment-section">
-      <div class="section-title">Basic Information</div>
-      
+      <div class="section-title">Shipment Information</div>
       <div class="shipment-form-row">
-        <div class="form-group">
-          <label for="shipment_reference">Shipment Reference</label>
+        <div class="form-group" style="flex:1;">
+          <label for="shipment_reference">Shipment Reference *</label>
           <input type="text" id="shipment_reference" name="shipment_reference" 
-                 placeholder="e.g., SH-2025-001" 
-                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+                 placeholder="Will be auto-generated from trader codes"
+                 readonly
+                 style="width: 100%; background-color: #2a2e35; color: #e0e0e0; border: 1.5px solid #2196f3;">
         </div>
-        <div class="form-group">
-          <label for="shipper">Shipper</label>
-          <select id="shipper" name="shipper" style="width: 100%;">
+        <div class="form-group" style="flex:1;">
+          <label for="shipper">Shipper *</label>
+          <select id="shipper" name="shipper" required style="width: 100%;">
             <option value="">Select Shipper...</option>
-            {% for trader_id, trader_name in trader_choices %}
-              <option value="{{ trader_id }}">{{ trader_name }}</option>
+            {% for trader_id, trader_display in trader_choices %}
+              <option value="{{ trader_id }}">{{ trader_display }}</option>
             {% endfor %}
           </select>
         </div>
-        <div class="form-group">
-          <label for="consignee">Consignee</label>
-          <select id="consignee" name="consignee" style="width: 100%;">
+        <div class="form-group" style="flex:1;">
+          <label for="consignee">Consignee *</label>
+          <select id="consignee" name="consignee" required style="width: 100%;">
             <option value="">Select Consignee...</option>
-            {% for trader_id, trader_name in trader_choices %}
-              <option value="{{ trader_id }}">{{ trader_name }}</option>
+            {% for trader_id, trader_display in trader_choices %}
+              <option value="{{ trader_id }}">{{ trader_display }}</option>
             {% endfor %}
           </select>
         </div>
-        <div class="form-group">
-          <label for="shipment_date">Shipment Date</label>
-          <input type="date" id="shipment_date" name="shipment_date" 
-                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        <div class="form-group" style="flex:1; align-items: flex-end; justify-content: flex-end;">
+          <label style="visibility:hidden;">Load</label>
+          <button type="button" id="load-routes-btn" class="btn btn-info" style="width:100%; background-color:#2196f3; color:#fff; border-radius:4px;">Load</button>
         </div>
       </div>
     </div>
 
-    <!-- Route and Transportation -->
-    <div class="shipment-section">
-      <div class="section-title">Route & Transportation</div>
-      
+    <!-- Section 2: Route Information -->
+    <div class="shipment-section" id="route-info-section">
+      <div class="section-title">Route Information</div>
       <div class="shipment-form-row">
         <div class="form-group">
-          <label for="route">Route</label>
-          <select id="route" name="route" style="width: 100%;">
+          <label for="available_aircraft">Available Aircraft</label>
+          <select id="available_aircraft" name="available_aircraft" style="width: 100%;">
+            <option value="">Select Aircraft...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="first_leg_route">Select Route (Departure from Shipper City) *</label>
+          <select id="first_leg_route" name="first_leg_route" required style="width: 100%;">
             <option value="">Select Route...</option>
-            {% for route_id, route_summary in route_choices %}
-              <option value="{{ route_id }}">{{ route_summary }}</option>
-            {% endfor %}
           </select>
         </div>
         <div class="form-group">
-          <label for="priority">Priority</label>
-          <select id="priority" name="priority" style="width: 100%;">
-            <option value="standard">Standard</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
+          <label for="second_leg_route">Select Return/Connecting Route</label>
+          <select id="second_leg_route" name="second_leg_route" style="width: 100%;">
+            <option value="">Select Route...</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="service_type">Service Type</label>
-          <select id="service_type" name="service_type" style="width: 100%;">
-            <option value="door-to-door">Door to Door</option>
-            <option value="airport-to-airport">Airport to Airport</option>
-            <option value="door-to-airport">Door to Airport</option>
-            <option value="airport-to-door">Airport to Door</option>
+          <label for="return_type">Type of Return</label>
+          <select id="return_type" name="return_type" style="width: 100%;">
+            <option value="compensated">Compensated</option>
+            <option value="full">Full</option>
           </select>
         </div>
       </div>
     </div>
 
-    <!-- Cargo Information -->
+    <!-- Section 3: Route & Transportation -->
+    <!-- Priority and Service Type fields removed as requested -->
+
+    <!-- Section 3: Cargo Information -->
     <div class="shipment-section">
       <div class="section-title">Cargo Information</div>
       
@@ -162,11 +167,6 @@
                  style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
         </div>
       </div>
-    </div>
-
-    <!-- Special Requirements -->
-    <div class="shipment-section">
-      <div class="section-title">Special Requirements</div>
       
       <div class="shipment-form-row">
         <div class="form-group" style="flex: 2;">
@@ -190,26 +190,237 @@
               style="width: 200px; height: 45px; background-color: #181c22; color: #FFD600; border: 1px solid #FFD600; border-radius: 4px;">
         {% if shipment_to_edit %}Update Shipment{% else %}Create Shipment{% endif %}
       </button>
-      <a href="{{ url_for('operations.view_shipments') }}" class="btn btn-secondary"
-         style="width: 200px; height: 45px; background-color: #181c22; color: #6c757d; border: 1px solid #6c757d; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
-        Cancel
-      </a>
     </div>
   </form>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Add shipment page loaded');
-  
-  // Add any shipment-specific JavaScript functionality here
-  // For example: weight/volume calculations, route validation, etc.
-  
+  const shipperSelect = document.getElementById('shipper');
+  const consigneeSelect = document.getElementById('consignee');
+  const firstLegRouteSelect = document.getElementById('first_leg_route');
+  const secondLegRouteSelect = document.getElementById('second_leg_route');
+  const shipperCityField = document.getElementById('shipper_city');
+  const consigneeCityField = document.getElementById('consignee_city');
+  const loadRoutesBtn = document.getElementById('load-routes-btn');
+  const routeInfoSection = document.getElementById('route-info-section');
+  const availableAircraftSelect = document.getElementById('available_aircraft');
+
+  // Preload aircraft list with all unique aircraft from the aircraft column in routeData
+  function preloadAllAircraftFromRoutes() {
+    const aircraftSet = new Set();
+    Object.values(routeData).forEach(route => {
+      // route.aircraft can be a string or array, normalize to array
+      if (route.aircraft) {
+        if (Array.isArray(route.aircraft)) {
+          route.aircraft.forEach(ac => {
+            if (ac && typeof ac === 'string' && ac.trim() !== '') {
+              aircraftSet.add(ac.trim());
+            }
+          });
+        } else if (typeof route.aircraft === 'string' && route.aircraft.trim() !== '') {
+          // If aircraft is a comma-separated string
+          route.aircraft.split(',').forEach(ac => {
+            if (ac && ac.trim() !== '') {
+              aircraftSet.add(ac.trim());
+            }
+          });
+        }
+      }
+    });
+    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
+    Array.from(aircraftSet).sort().forEach(ac => {
+      const acOption = document.createElement('option');
+      acOption.value = ac;
+      acOption.textContent = ac;
+      availableAircraftSelect.appendChild(acOption);
+    });
+  }
+  preloadAllAircraftFromRoutes();
+  // Helper to show/hide route not found message
+  function showRouteNotFound(show) {
+    let msg = document.getElementById('route-not-found-msg');
+    const shipmentSection = document.querySelector('.shipment-section');
+    if (!msg) {
+      msg = document.createElement('div');
+      msg.id = 'route-not-found-msg';
+      msg.className = 'coming-soon-notice';
+      msg.innerHTML = '<strong>No route found between selected shipper and consignee cities.</strong><br>' +
+        '<button id="add-route-btn" style="margin:10px;">Add Route</button>' +
+        '<button id="cancel-route-btn" style="margin:10px;">Cancel & Clear</button>';
+      // Insert below the first shipment-section (Shipment Information)
+      if (shipmentSection) {
+        shipmentSection.parentNode.insertBefore(msg, shipmentSection.nextSibling);
+      }
+    }
+    msg.style.display = show ? 'block' : 'none';
+    // Always re-attach event listeners (in case DOM was recreated)
+    const addRouteBtn = document.getElementById('add-route-btn');
+    const cancelRouteBtn = document.getElementById('cancel-route-btn');
+    if (addRouteBtn) {
+      addRouteBtn.onclick = function() {
+        window.location.href = '/operations/add-route';
+      };
+    }
+    if (cancelRouteBtn) {
+      cancelRouteBtn.onclick = function() {
+        document.getElementById('shipment-form').reset();
+        firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+        secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+        availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
+        showRouteNotFound(false);
+        routeInfoSection.style.display = 'none';
+        shipperCityField.value = '';
+        consigneeCityField.value = '';
+      };
+    }
+  }
+
+  // Always update city fields on selection
+  shipperSelect.addEventListener('change', function() {
+    updateCityField(this, shipperCityField);
+    generateShipmentReference();
+  });
+  consigneeSelect.addEventListener('change', function() {
+    updateCityField(this, consigneeCityField);
+    generateShipmentReference();
+  });
+
+  // Load button logic
+  loadRoutesBtn.addEventListener('click', function() {
+    // Clear route selects before populating
+    firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+    secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+    showRouteNotFound(false);
+
+    const shipperId = shipperSelect.value;
+    const consigneeId = consigneeSelect.value;
+    if (!shipperId || !consigneeId) {
+      alert('Please select both shipper and consignee before loading routes.');
+      routeInfoSection.style.display = 'none';
+      return;
+    }
+    if (!traderData[shipperId] || !traderData[consigneeId]) {
+      routeInfoSection.style.display = 'none';
+      return;
+    }
+
+    const shipperCity = traderData[shipperId].city;
+    const consigneeCity = traderData[consigneeId].city;
+
+    let found = false;
+    let firstLegRoutes = [];
+    let returnLegRoutes = [];
+    // Find first leg routes (from shipper to consignee)
+    Object.entries(routeData).forEach(([routeId, route]) => {
+      if (route.fromCity.toLowerCase() === shipperCity.toLowerCase() && route.toCity.toLowerCase() === consigneeCity.toLowerCase()) {
+        firstLegRoutes.push({
+          value: routeId,
+          text: `${route.fromAirport} - ${route.toAirport}`,
+          aircraft: route.aircraft || []
+        });
+        found = true;
+      }
+    });
+    // Find return leg routes (from consignee to anywhere)
+    Object.entries(routeData).forEach(([routeId, route]) => {
+      if (route.fromCity.toLowerCase() === consigneeCity.toLowerCase()) {
+        returnLegRoutes.push({
+          value: routeId,
+          text: `${route.fromAirport} - ${route.toAirport}`
+        });
+      }
+    });
+    // Populate first leg route select
+    firstLegRoutes.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.text;
+      firstLegRouteSelect.appendChild(option);
+    });
+    // Populate return leg route select
+    returnLegRoutes.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.text;
+      secondLegRouteSelect.appendChild(option);
+    });
+    // Repopulate aircraft list after loading routes (don't clear it)
+    preloadAllAircraftFromRoutes();
+    routeInfoSection.style.display = 'block';
+    if (!found) {
+      showRouteNotFound(true);
+    }
+  });
+
+  // Build route list only when both shipper and consignee are selected
+  function updateRouteLists() {
+    firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+    secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
+    showRouteNotFound(false);
+
+    const shipperId = shipperSelect.value;
+    const consigneeId = consigneeSelect.value;
+    if (!shipperId || !consigneeId) return;
+    if (!traderData[shipperId] || !traderData[consigneeId]) return;
+
+    const shipperCity = traderData[shipperId].city;
+    const consigneeCity = traderData[consigneeId].city;
+
+    let found = false;
+    let aircraftSet = new Set();
+    Object.entries(routeData).forEach(([routeId, route]) => {
+      if (route.fromCity.toLowerCase() === shipperCity.toLowerCase() && route.toCity.toLowerCase() === consigneeCity.toLowerCase()) {
+        const option = document.createElement('option');
+        option.value = routeId;
+        option.textContent = `${route.fromAirport} → ${route.toAirport} (${route.summary})`;
+        firstLegRouteSelect.appendChild(option);
+        if (route.aircraft && Array.isArray(route.aircraft)) {
+          route.aircraft.forEach(ac => aircraftSet.add(ac));
+        }
+        found = true;
+      }
+    });
+    aircraftSet.forEach(ac => {
+      const acOption = document.createElement('option');
+      acOption.value = ac;
+      acOption.textContent = ac;
+      availableAircraftSelect.appendChild(acOption);
+    });
+    if (!found) {
+      showRouteNotFound(true);
+    }
+  }
+
+  // Form submission handling
   const form = document.getElementById('shipment-form');
   if (form) {
     form.addEventListener('submit', function(e) {
-      // Add any client-side validation here
-      console.log('Shipment form submitted');
+      const shipper = shipperSelect.value;
+      const consignee = consigneeSelect.value;
+      const firstLegRoute = firstLegRouteSelect.value;
+      if (!shipper) {
+        alert('Please select a shipper.');
+        e.preventDefault();
+        return false;
+      }
+      if (!consignee) {
+        alert('Please select a consignee.');
+        e.preventDefault();
+        return false;
+      }
+      if (shipper === consignee) {
+        alert('Shipper and consignee cannot be the same.');
+        e.preventDefault();
+        return false;
+      }
+      if (!firstLegRoute) {
+        alert('Please select a route for the first leg.');
+        e.preventDefault();
+        return false;
+      }
+      // ...existing code...
     });
   }
 });

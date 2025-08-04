@@ -615,6 +615,8 @@ def leg_distances():
 @operations.route('/add-shipment/<int:shipment_id>', methods=['GET', 'POST'])
 def add_shipment(shipment_id=None):
     """Add or edit a shipment"""
+    from models import Trader, Product, Route
+    
     # Check if we're editing an existing shipment
     shipment_to_edit = None
     if shipment_id:
@@ -631,17 +633,55 @@ def add_shipment(shipment_id=None):
             flash(f'Error processing shipment: {str(e)}', 'error')
             return redirect(url_for('operations.add_shipment'))
     
-    # TODO: Get choices for form dropdowns (traders, products, routes, etc.)
-    # For now, using placeholder data
-    trader_choices = []  # TODO: Get from Trader model
-    product_choices = []  # TODO: Get from Product model
-    route_choices = []   # TODO: Get from Route model
+    # Get choices for form dropdowns
+    # Get traders with their codes, names, and cities
+    traders = Trader.query.order_by(Trader.trader_code).all()
+    trader_choices = [(t.id, f"{t.trader_code} - {t.name} ({t.city})") for t in traders]
     
+    # Get products
+    products = Product.query.order_by(Product.name).all()
+    product_choices = [(p.id, p.name) for p in products]
+    
+    # Get routes with airport and city information
+    from models import Airport
+    routes = Route.query.order_by(Route.route_name).all()
+    route_choices = [(r.id, r.route_summary or r.route_name) for r in routes]
+    
+    # Get all airports for city-airport mapping
+    airports = Airport.query.all()
+    
+    # Build trader_data for JS
+    trader_data = {str(t.id): {
+        'code': t.trader_code,
+        'name': t.name,
+        'city': t.city,
+        'country': t.country_id
+    } for t in traders}
+
+    # Build route_data for JS
+    route_data = {}
+    for r in routes:
+        from_airport = Airport.query.get(r.from_airport_id)
+        to_airport = Airport.query.get(r.to_airport_id)
+        route_data[str(r.id)] = {
+            'fromCity': from_airport.city if from_airport else '',
+            'toCity': to_airport.city if to_airport else '',
+            'fromAirport': from_airport.iata_code if from_airport else '',
+            'toAirport': to_airport.iata_code if to_airport else '',
+            'summary': r.route_summary or r.route_name,
+            'aircraft': [r.aircraft.short_name] if r.aircraft and r.aircraft.short_name else []
+        }
+
     return render_template('operations/add_shipment.html',
                          shipment_to_edit=shipment_to_edit,
                          trader_choices=trader_choices,
                          product_choices=product_choices,
-                         route_choices=route_choices)
+                         route_choices=route_choices,
+                         traders=traders,
+                         routes=routes,
+                         airports=airports,
+                         trader_data=trader_data,
+                         route_data=route_data)
 
 
 @operations.route('/view-shipments')
