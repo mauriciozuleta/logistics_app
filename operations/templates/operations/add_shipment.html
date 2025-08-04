@@ -93,8 +93,7 @@
           </select>
         </div>
         <div class="form-group" style="flex:1; align-items: flex-end; justify-content: flex-end;">
-          <label style="visibility:hidden;">Load</label>
-          <button type="button" id="load-routes-btn" class="btn btn-info" style="width:100%; background-color:#2196f3; color:#fff; border-radius:4px;">Load</button>
+          <!-- Load button removed; logic will be triggered by consignee selection -->
         </div>
       </div>
     </div>
@@ -202,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const secondLegRouteSelect = document.getElementById('second_leg_route');
   const shipperCityField = document.getElementById('shipper_city');
   const consigneeCityField = document.getElementById('consignee_city');
-  const loadRoutesBtn = document.getElementById('load-routes-btn');
+  // Load button removed; logic will be triggered by consignee selection
   const routeInfoSection = document.getElementById('route-info-section');
   const availableAircraftSelect = document.getElementById('available_aircraft');
 
@@ -287,8 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Load button logic
-  loadRoutesBtn.addEventListener('click', function() {
-    // Clear route selects before populating
+  function loadRoutesLogic() {
     firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
     secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
     showRouteNotFound(false);
@@ -296,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const shipperId = shipperSelect.value;
     const consigneeId = consigneeSelect.value;
     if (!shipperId || !consigneeId) {
-      alert('Please select both shipper and consignee before loading routes.');
       routeInfoSection.style.display = 'none';
       return;
     }
@@ -351,7 +348,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!found) {
       showRouteNotFound(true);
     }
-  });
+  }
+
+  consigneeSelect.addEventListener('change', loadRoutesLogic);
 
   // Build route list only when both shipper and consignee are selected
   function updateRouteLists() {
