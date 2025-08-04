@@ -99,7 +99,7 @@
       <div class="shipment-form-row">
         <div class="form-group">
           <label for="available_aircraft">Available Aircraft</label>
-          <select id="available_aircraft" name="available_aircraft" style="width: 100%;">
+          <select id="available_aircraft" name="available_aircraft" style="width: 100%;" disabled>
             <option value="">Select Aircraft...</option>
           </select>
         </div>
@@ -130,6 +130,7 @@
         <div class="form-group" style="min-width:120px;">
           <label for="return_type">Type of Return</label>
           <select id="return_type" name="return_type" style="width: 100%;">
+            <option value="">Select Type...</option>
             <option value="compensated">Compensated</option>
             <option value="full">Full</option>
           </select>
@@ -246,6 +247,18 @@ document.addEventListener('DOMContentLoaded', function() {
       let returnVal = 100 - outboundVal;
       if (returnVal < 0) returnVal = 0;
       returnPercentInput.value = returnVal.toFixed(2);
+      
+      // Recalculate costs when percentages change - but only if aircraft is selected
+      // Use try-catch to prevent crashes
+      try {
+        if (availableAircraftSelect && availableAircraftSelect.value) {
+          calculateTotalFlightCostSafely();
+          calculateKgCostsSafely();
+        }
+      } catch (error) {
+        console.error('Error updating costs from percentage change:', error);
+        // Don't let this crash the app
+      }
     }
   }
 
@@ -316,6 +329,374 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   preloadAllAircraftFromRoutes();
+
+  // Aircraft selection control logic
+  function updateAircraftAvailability() {
+    const firstLegRouteValue = firstLegRouteSelect.value;
+    const secondLegRouteValue = secondLegRouteSelect.value;
+    
+    // Aircraft is only available when BOTH routes are selected
+    if (firstLegRouteValue && secondLegRouteValue) {
+      // Enable aircraft selection when both routes are selected
+      availableAircraftSelect.disabled = false;
+    } else {
+      // Disable aircraft selection when either route is missing
+      availableAircraftSelect.disabled = true;
+      availableAircraftSelect.value = ''; // Clear selection
+      // Clear route information when aircraft becomes unavailable
+      clearRouteInformationSafely();
+    }
+  }
+
+  // Add event listener to show message when trying to select disabled aircraft
+  availableAircraftSelect.addEventListener('click', function(e) {
+    if (this.disabled) {
+      const firstLegSelected = firstLegRouteSelect.value;
+      const secondLegSelected = secondLegRouteSelect.value;
+      
+      if (!firstLegSelected && !secondLegSelected) {
+        alert('Please select both First Leg Route and Return/Connecting Route before choosing an aircraft.');
+      } else if (!firstLegSelected) {
+        alert('Please select a First Leg Route before choosing an aircraft.');
+      } else if (!secondLegSelected) {
+        alert('Please select a Return/Connecting Route before choosing an aircraft.');
+      }
+      
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Aircraft Selection Logic - Enhanced Debugging
+  // Add event listener to aircraft selection to populate route information
+  availableAircraftSelect.addEventListener('change', function() {
+    console.log('=== AIRCRAFT SELECTION TRIGGERED ===');
+    console.log('Selected aircraft:', this.value);
+    console.log('First leg route selected:', firstLegRouteSelect.value);
+    console.log('Second leg route selected:', secondLegRouteSelect.value);
+    console.log('Route data available:', Object.keys(routeData).length, 'routes');
+    
+    try {
+      populateRouteInformationSafely();
+    } catch (error) {
+      console.error('Error in aircraft selection:', error);
+      alert('Error populating route information: ' + error.message);
+    }
+  });
+
+  // Enhanced route information population with detailed debugging
+  function populateRouteInformationSafely() {
+    console.log('=== POPULATE ROUTE INFORMATION CALLED ===');
+    
+    const selectedAircraft = availableAircraftSelect.value;
+    console.log('Selected aircraft:', selectedAircraft);
+    
+    if (!selectedAircraft) {
+      console.log('No aircraft selected, clearing fields');
+      clearRouteInformationSafely();
+      return;
+    }
+
+    // Check if we have required data
+    console.log('Route data exists:', !!routeData);
+    console.log('First leg select exists:', !!firstLegRouteSelect);
+    console.log('Second leg select exists:', !!secondLegRouteSelect);
+
+    if (routeData && firstLegRouteSelect && secondLegRouteSelect) {
+      const firstLegRouteId = firstLegRouteSelect.value;
+      const secondLegRouteId = secondLegRouteSelect.value;
+      
+      console.log('First leg route ID:', firstLegRouteId);
+      console.log('Second leg route ID:', secondLegRouteId);
+      
+      // Ensure both routes are selected
+      if (!firstLegRouteId || !secondLegRouteId) {
+        console.log('Missing route selections - clearing fields');
+        clearRouteInformationSafely();
+        return;
+      }
+      
+      // Check if route data exists for selected routes
+      console.log('First leg route exists in data:', !!routeData[firstLegRouteId]);
+      console.log('Second leg route exists in data:', !!routeData[secondLegRouteId]);
+      
+      // Populate first leg route information
+      if (routeData[firstLegRouteId]) {
+        const firstLegRoute = routeData[firstLegRouteId];
+        console.log('First leg route data:', firstLegRoute);
+        
+        console.log('Updating first leg fields...');
+        safelyUpdateElement('first_leg_distance', firstLegRoute.distance);
+        safelyUpdateElement('first_leg_flight_time', firstLegRoute.flight_time);
+        safelyUpdateElement('first_leg_route_cost', firstLegRoute.cost ? `$${firstLegRoute.cost}` : 'No Cost');
+        safelyUpdateElement('first_leg_payload', firstLegRoute.payload);
+        console.log('First leg fields updated');
+      } else {
+        console.warn('First leg route data not found for ID:', firstLegRouteId);
+      }
+
+      // Populate second leg route information
+      if (routeData[secondLegRouteId]) {
+        const secondLegRoute = routeData[secondLegRouteId];
+        console.log('Second leg route data:', secondLegRoute);
+        
+        console.log('Updating second leg fields...');
+        safelyUpdateElement('second_leg_distance', secondLegRoute.distance);
+        safelyUpdateElement('second_leg_flight_time', secondLegRoute.flight_time);
+        safelyUpdateElement('second_leg_route_cost', secondLegRoute.cost ? `$${secondLegRoute.cost}` : 'No Cost');
+        safelyUpdateElement('second_leg_payload', secondLegRoute.payload);
+        console.log('Second leg fields updated');
+      } else {
+        console.warn('Second leg route data not found for ID:', secondLegRouteId);
+      }
+
+      // Calculate total flight cost
+      console.log('Calculating total flight cost...');
+      calculateTotalFlightCostFromRoutes();
+      
+      // Calculate kg costs
+      console.log('Calculating kg costs...');
+      calculateKgCostsSafely();
+      
+      console.log('=== ROUTE POPULATION COMPLETE ===');
+    } else {
+      console.error('Missing required elements or data');
+      console.log('routeData:', !!routeData);
+      console.log('firstLegRouteSelect:', !!firstLegRouteSelect);
+      console.log('secondLegRouteSelect:', !!secondLegRouteSelect);
+    }
+  }
+
+  // Calculate total flight cost as sum of both route costs
+  function calculateTotalFlightCostFromRoutes() {
+    try {
+      const firstLegRouteId = firstLegRouteSelect.value;
+      const secondLegRouteId = secondLegRouteSelect.value;
+      
+      if (!firstLegRouteId || !secondLegRouteId) {
+        safelyUpdateElement('total_flight_cost', 'N/A');
+        return;
+      }
+
+      let totalCost = 0;
+      
+      // Add first leg cost
+      if (routeData[firstLegRouteId] && routeData[firstLegRouteId].cost) {
+        const firstLegCost = parseFloat(routeData[firstLegRouteId].cost) || 0;
+        totalCost += firstLegCost;
+        console.log('First leg cost:', firstLegCost);
+      }
+      
+      // Add second leg cost (full cost - sum of both routes)
+      if (routeData[secondLegRouteId] && routeData[secondLegRouteId].cost) {
+        const secondLegCost = parseFloat(routeData[secondLegRouteId].cost) || 0;
+        totalCost += secondLegCost;
+        console.log('Second leg cost:', secondLegCost);
+      }
+      
+      console.log('Total flight cost calculated:', totalCost);
+      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost.toFixed(2)}` : 'N/A');
+      
+    } catch (error) {
+      console.error('Error calculating total flight cost from routes:', error);
+      safelyUpdateElement('total_flight_cost', 'Error');
+    }
+  }
+
+  // Enhanced helper function to safely update DOM elements with debugging
+  function safelyUpdateElement(elementId, value) {
+    try {
+      console.log(`Updating element ${elementId} with value:`, value);
+      const element = document.getElementById(elementId);
+      
+      if (element) {
+        const displayValue = value || 'N/A';
+        element.textContent = displayValue;
+        console.log(`✓ Successfully updated ${elementId} to: ${displayValue}`);
+      } else {
+        console.error(`✗ Element not found: ${elementId}`);
+      }
+    } catch (error) {
+      console.error(`Error updating element ${elementId}:`, error);
+    }
+  }
+
+  // Safely clear all route information fields
+  function clearRouteInformationSafely() {
+    const fieldsToReset = [
+      'first_leg_distance', 'first_leg_flight_time', 'first_leg_route_cost', 'first_leg_payload',
+      'second_leg_distance', 'second_leg_flight_time', 'second_leg_route_cost', 'second_leg_payload',
+      'total_flight_cost', 'outbound_kg_cost', 'return_kg_cost'
+    ];
+    
+    fieldsToReset.forEach(fieldId => {
+      safelyUpdateElement(fieldId, 'N/A');
+    });
+  }
+
+  // Safely calculate total flight cost
+  function calculateTotalFlightCostSafely() {
+    try {
+      if (!firstLegRouteSelect || !secondLegRouteSelect || !returnTypeSelect || !returnPercentInput) {
+        return;
+      }
+
+      const firstLegRouteId = firstLegRouteSelect.value;
+      const secondLegRouteId = secondLegRouteSelect.value;
+      const returnType = returnTypeSelect.value;
+      
+      let totalCost = 0;
+      
+      // Add first leg cost
+      if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].cost) {
+        totalCost += parseFloat(routeData[firstLegRouteId].cost) || 0;
+      }
+      
+      // Add second leg cost based on return type
+      if (secondLegRouteId && routeData[secondLegRouteId] && routeData[secondLegRouteId].cost) {
+        const secondLegCost = parseFloat(routeData[secondLegRouteId].cost) || 0;
+        if (returnType === 'compensated') {
+          const returnPercent = parseFloat(returnPercentInput.value) || 0;
+          totalCost += secondLegCost * (returnPercent / 100);
+        } else if (returnType === 'full') {
+          totalCost += secondLegCost;
+        }
+      }
+      
+      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost.toFixed(2)}` : 'N/A');
+    } catch (error) {
+      console.error('Error calculating total flight cost:', error);
+      safelyUpdateElement('total_flight_cost', 'Error');
+    }
+  }
+
+  // Safely calculate kg costs
+  function calculateKgCostsSafely() {
+    try {
+      if (!outboundPercentInput || !returnPercentInput) {
+        return;
+      }
+
+      const totalFlightCostElement = document.getElementById('total_flight_cost');
+      if (!totalFlightCostElement) return;
+      
+      const totalFlightCostText = totalFlightCostElement.textContent;
+      const outboundPercent = parseFloat(outboundPercentInput.value) || 0;
+      const returnPercent = parseFloat(returnPercentInput.value) || 0;
+      
+      if (totalFlightCostText && totalFlightCostText !== 'N/A' && !totalFlightCostText.includes('Error')) {
+        const totalCost = parseFloat(totalFlightCostText.replace('$', '')) || 0;
+        
+        // Get payload capacity safely
+        let payloadCapacity = 1000; // Default fallback
+        const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
+        
+        if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].payload) {
+          const payloadText = routeData[firstLegRouteId].payload;
+          const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+          if (payloadMatch) {
+            payloadCapacity = parseFloat(payloadMatch[1]) || 1000;
+          }
+        }
+        
+        // Calculate costs per kg
+        const outboundCost = (totalCost * (outboundPercent / 100)) / payloadCapacity;
+        const returnCost = (totalCost * (returnPercent / 100)) / payloadCapacity;
+        
+        safelyUpdateElement('outbound_kg_cost', outboundCost > 0 ? `$${outboundCost.toFixed(3)}/kg` : 'N/A');
+        safelyUpdateElement('return_kg_cost', returnCost > 0 ? `$${returnCost.toFixed(3)}/kg` : 'N/A');
+      } else {
+        safelyUpdateElement('outbound_kg_cost', 'N/A');
+        safelyUpdateElement('return_kg_cost', 'N/A');
+      }
+    } catch (error) {
+      console.error('Error calculating kg costs:', error);
+      safelyUpdateElement('outbound_kg_cost', 'Error');
+      safelyUpdateElement('return_kg_cost', 'Error');
+    }
+  }
+
+  // Route Selection Event Listeners - Isolated and Safe
+  // Add event listener to first leg route to update aircraft availability and recalculate
+  firstLegRouteSelect.addEventListener('change', function() {
+    try {
+      // Update aircraft availability when first leg route changes
+      updateAircraftAvailability();
+      
+      // Only recalculate if aircraft is selected and we won't interfere with main logic
+      if (availableAircraftSelect && availableAircraftSelect.value) {
+        setTimeout(() => {
+          try {
+            populateRouteInformationSafely();
+          } catch (error) {
+            console.error('Error in delayed route calculation:', error);
+          }
+        }, 100); // Small delay to avoid interfering with main route logic
+      }
+    } catch (error) {
+      console.error('Error in first leg route change:', error);
+    }
+  });
+
+  // Add event listener to second leg route to enable/disable aircraft
+  secondLegRouteSelect.addEventListener('change', function() {
+    try {
+      updateAircraftAvailability();
+      // Only recalculate if aircraft is selected and we won't interfere with main logic
+      if (availableAircraftSelect && availableAircraftSelect.value) {
+        setTimeout(() => {
+          try {
+            populateRouteInformationSafely();
+          } catch (error) {
+            console.error('Error in delayed route calculation:', error);
+          }
+        }, 100); // Small delay to avoid interfering with main route logic
+      }
+    } catch (error) {
+      console.error('Error in second leg route change:', error);
+    }
+  });
+
+  // Add event listener to return type to recalculate costs
+  returnTypeSelect.addEventListener('change', function() {
+    try {
+      updatePercentFields();
+      // Only recalculate if aircraft is selected
+      if (availableAircraftSelect && availableAircraftSelect.value) {
+        setTimeout(() => {
+          try {
+            populateRouteInformationSafely();
+          } catch (error) {
+            console.error('Error in delayed cost calculation:', error);
+          }
+        }, 100); // Small delay to prevent interference
+      }
+    } catch (error) {
+      console.error('Error in return type change:', error);
+    }
+  });
+
+  // Initialize aircraft availability on page load
+  updateAircraftAvailability();
+
+  // Test function to verify all elements exist
+  function testElementsExist() {
+    console.log('=== TESTING ELEMENT EXISTENCE ===');
+    const elementsToTest = [
+      'first_leg_distance', 'first_leg_flight_time', 'first_leg_route_cost', 'first_leg_payload',
+      'second_leg_distance', 'second_leg_flight_time', 'second_leg_route_cost', 'second_leg_payload',
+      'total_flight_cost', 'outbound_kg_cost', 'return_kg_cost'
+    ];
+    
+    elementsToTest.forEach(elementId => {
+      const element = document.getElementById(elementId);
+      console.log(`${elementId}: ${element ? '✓ EXISTS' : '✗ MISSING'}`);
+    });
+    console.log('=== ELEMENT TEST COMPLETE ===');
+  }
+  
+  // Run the test
+  testElementsExist();
   // Helper to show/hide route not found message
   function showRouteNotFound(show) {
     let msg = document.getElementById('route-not-found-msg');
@@ -430,6 +811,10 @@ document.addEventListener('DOMContentLoaded', function() {
       option.textContent = opt.text;
       secondLegRouteSelect.appendChild(option);
     });
+
+    // Update aircraft availability after populating return routes
+    updateAircraftAvailability();
+
     // Aircraft dropdown: only show aircraft for selected first leg route
     availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
     if (firstLegRoutes.length > 0) {

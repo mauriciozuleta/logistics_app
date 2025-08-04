@@ -663,13 +663,31 @@ def add_shipment(shipment_id=None):
     for r in routes:
         from_airport = Airport.query.get(r.from_airport_id)
         to_airport = Airport.query.get(r.to_airport_id)
+        
+        # Format distance with units
+        distance_display = f"{r.total_distance_nm:.1f} NM" if r.total_distance_nm else "N/A"
+        
+        # Format flight time with units
+        flight_time_display = f"{r.total_flight_time_hours:.2f} hrs" if r.total_flight_time_hours else "N/A"
+        
+        # Get payload from aircraft if available
+        payload_display = "N/A"
+        if r.aircraft and hasattr(r.aircraft, 'max_payload_kg'):
+            payload_display = f"{r.aircraft.max_payload_kg} kg"
+        elif r.aircraft and hasattr(r.aircraft, 'payload_capacity'):
+            payload_display = f"{r.aircraft.payload_capacity} kg"
+        
         route_data[str(r.id)] = {
             'fromCity': from_airport.city if from_airport else '',
             'toCity': to_airport.city if to_airport else '',
             'fromAirport': from_airport.iata_code if from_airport else '',
             'toAirport': to_airport.iata_code if to_airport else '',
             'summary': r.route_summary or r.route_name,
-            'aircraft': [r.aircraft.short_name] if r.aircraft and r.aircraft.short_name else []
+            'aircraft': [r.aircraft.short_name] if r.aircraft and r.aircraft.short_name else [],
+            'distance': distance_display,
+            'flight_time': flight_time_display,
+            'cost': r.total_cost,
+            'payload': payload_display
         }
 
     return render_template('operations/add_shipment.html',
