@@ -30,9 +30,11 @@
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Trade Unit</th>
                     <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">FCA Cost/WU</th>
                     <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Packaging</th>
+                    <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Pack Weight</th>
                     <th style="border: 1px solid #FF5C00; color: #FF5C00; text-align: center; padding: 12px; font-size: 0.8rem;">Units/Pack</th>
                     <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Pack Cost</th>
                     <th style="border: 1px solid #176c3a; color: #176c3a; text-align: center; padding: 12px; font-size: 0.8rem;">Currency</th>
+                    <th style="border: 1px solid #9c27b0; color: #9c27b0; text-align: center; padding: 12px; font-size: 0.8rem;">Other Info</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Actions</th>
                   </tr>
                 </thead>
@@ -45,9 +47,11 @@
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.trade_unit or '-' }}</td>
                       <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(product.fca_cost_per_wu) if product.fca_cost_per_wu else '-' }}</td>
                       <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ product.packaging or '-' }}</td>
+                      <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ '{:,.2f} kg'.format(product.packaging_weight) if product.packaging_weight else '-' }}</td>
                       <td style="border: 1px solid #FF5C00; color: #fff; text-align: center; padding: 12px;">{{ product.units_per_pack or '-' }}</td>
                       <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(product.packaging_cost) if product.packaging_cost else '-' }}</td>
                       <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ product.currency or '-' }}</td>
+                      <td style="border: 1px solid #9c27b0; color: #fff; text-align: center; padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ product.other_info or '' }}">{{ (product.other_info[:50] + '...') if product.other_info and product.other_info|length > 50 else (product.other_info or '-') }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
                         <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
                           {% if route_info %}
