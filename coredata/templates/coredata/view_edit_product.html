@@ -1,5 +1,39 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+  /* Custom scrollbar styling for the table container */
+  .table-container {
+    scrollbar-width: thin;
+    scrollbar-color: #2196f3 #181c22;
+  }
+  
+  .table-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .table-container::-webkit-scrollbar-track {
+    background: #181c22;
+    border-radius: 4px;
+  }
+  
+  .table-container::-webkit-scrollbar-thumb {
+    background: #2196f3;
+    border-radius: 4px;
+  }
+  
+  .table-container::-webkit-scrollbar-thumb:hover {
+    background: #1976d2;
+  }
+  
+  /* Ensure sticky header stays visible */
+  .table-container thead th {
+    position: sticky;
+    top: 0;
+    background-color: #23272e !important;
+    z-index: 10;
+  }
+</style>
+
 <div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
   <div class="row justify-content-center">
     <div class="col-12">
@@ -20,9 +54,9 @@
           {% endif %}
 
           {% if product_list %}
-            <div class="table-responsive">
-              <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden;">
-                <thead style="background-color: #23272e;">
+            <div class="table-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 20px;">
+              <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 0;">
+                <thead style="background-color: #23272e; position: sticky; top: 0; z-index: 10;">
                   <tr>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Type</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Name</th>
@@ -72,6 +106,47 @@
                 </tbody>
               </table>
             </div>
+            
+            <!-- Pagination Controls -->
+            {% if products.pages > 1 %}
+              <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+                <div style="color: #bbb; font-size: 0.9rem;">
+                  Showing {{ products.per_page * (products.page - 1) + 1 }} to {{ products.per_page * (products.page - 1) + products.items|length }} of {{ products.total }} products
+                </div>
+                <div style="display: flex; gap: 5px;">
+                  {% if products.has_prev %}
+                    <a href="{{ url_for('coredata.view_edit_product', page=products.prev_num, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
+                       style="background-color: #2196f3; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                      ← Previous
+                    </a>
+                  {% endif %}
+                  
+                  {% for page_num in products.iter_pages() %}
+                    {% if page_num %}
+                      {% if page_num != products.page %}
+                        <a href="{{ url_for('coredata.view_edit_product', page=page_num, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
+                           style="background-color: #181c22; color: #2196f3; border: 1px solid #2196f3; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                          {{ page_num }}
+                        </a>
+                      {% else %}
+                        <span style="background-color: #2196f3; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 0.9rem; font-weight: bold;">
+                          {{ page_num }}
+                        </span>
+                      {% endif %}
+                    {% else %}
+                      <span style="color: #bbb; padding: 8px 4px;">…</span>
+                    {% endif %}
+                  {% endfor %}
+                  
+                  {% if products.has_next %}
+                    <a href="{{ url_for('coredata.view_edit_product', page=products.next_num, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
+                       style="background-color: #2196f3; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                      Next →
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
           {% else %}
             <div style="text-align: center; padding: 4rem; color: #bbb;">
               <h4>No products available</h4>

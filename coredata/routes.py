@@ -359,7 +359,9 @@ def delete_product(product_id):
 # View/edit product list page
 @coredata_bp.route('/view-edit-product')
 def view_edit_product():
-    product_list = Product.query.order_by(Product.name.asc()).all()
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 8  # Display 8 products per page
     
     # Get route information from query parameters for adding cargo to specific routes
     route_type = request.args.get('route_type', '')
@@ -367,8 +369,14 @@ def view_edit_product():
     from_airport = request.args.get('from_airport', '')
     to_airport = request.args.get('to_airport', '')
     
+    # Paginate products
+    products = Product.query.order_by(Product.name.asc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
     return render_template('coredata/view_edit_product.html', 
-                         product_list=product_list,
+                         products=products,
+                         product_list=products.items,  # Keep backward compatibility
                          route_type=route_type,
                          route_info=route_info,
                          from_airport=from_airport,
