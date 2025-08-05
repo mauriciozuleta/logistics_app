@@ -670,9 +670,13 @@ def add_shipment(shipment_id=None):
         # Format flight time with units
         flight_time_display = f"{r.total_flight_time_hours:.2f} hrs" if r.total_flight_time_hours else "N/A"
         
-        # Get payload from aircraft if available
+        # Get payload from route calculation if available, otherwise fallback to aircraft max
         payload_display = "N/A"
-        if r.aircraft and hasattr(r.aircraft, 'max_payload_kg'):
+        if r.leg1_max_payload_lbs:
+            # Convert lbs to kg for display (1 lb = 0.453592 kg)
+            payload_kg = r.leg1_max_payload_lbs * 0.453592
+            payload_display = f"{payload_kg:.0f} kg"
+        elif r.aircraft and hasattr(r.aircraft, 'max_payload_kg'):
             payload_display = f"{r.aircraft.max_payload_kg} kg"
         elif r.aircraft and hasattr(r.aircraft, 'payload_capacity'):
             payload_display = f"{r.aircraft.payload_capacity} kg"
