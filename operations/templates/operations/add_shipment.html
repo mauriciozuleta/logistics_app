@@ -654,14 +654,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Update first leg button
       if (firstLegComplete) {
-        firstLegBtn.textContent = 'Load';
+        firstLegBtn.textContent = 'Add Cargo';
         firstLegBtn.style.backgroundColor = '#181c22';
         firstLegBtn.style.color = '#00ff00';
         firstLegBtn.style.border = '1px solid #00ff00';
         firstLegBtn.style.cursor = 'pointer';
         firstLegBtn.disabled = false;
         firstLegBtn.onclick = function() {
-          showCargoManagementSection();
+          redirectToProductPage('first_leg');
         };
       } else {
         firstLegBtn.textContent = '';
@@ -675,14 +675,14 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Update second leg button
       if (secondLegComplete) {
-        secondLegBtn.textContent = 'Load';
+        secondLegBtn.textContent = 'Add Cargo';
         secondLegBtn.style.backgroundColor = '#181c22';
         secondLegBtn.style.color = '#ff6600';
         secondLegBtn.style.border = '1px solid #ff6600';
         secondLegBtn.style.cursor = 'pointer';
         secondLegBtn.disabled = false;
         secondLegBtn.onclick = function() {
-          showCargoManagementSection();
+          redirectToProductPage('second_leg');
         };
       } else {
         secondLegBtn.textContent = '';
@@ -699,6 +699,52 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (error) {
       console.error('Error updating summary buttons:', error);
+    }
+  }
+
+  // Function to redirect to product page with route information
+  function redirectToProductPage(legType) {
+    try {
+      let routeInfo = '';
+      let fromAirport = '';
+      let toAirport = '';
+      
+      if (legType === 'first_leg') {
+        const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
+        if (firstLegRouteId && routeData[firstLegRouteId]) {
+          const route = routeData[firstLegRouteId];
+          fromAirport = route.fromAirport || '';
+          toAirport = route.toAirport || '';
+          routeInfo = `${fromAirport} - ${toAirport}`;
+        }
+      } else if (legType === 'second_leg') {
+        const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
+        if (secondLegRouteId && routeData[secondLegRouteId]) {
+          const route = routeData[secondLegRouteId];
+          fromAirport = route.fromAirport || '';
+          toAirport = route.toAirport || '';
+          routeInfo = `${fromAirport} - ${toAirport}`;
+        }
+      }
+      
+      // Construct URL with route information as query parameters
+      const baseUrl = '/coredata/view-edit-product';
+      const params = new URLSearchParams({
+        'route_type': legType,
+        'route_info': routeInfo,
+        'from_airport': fromAirport,
+        'to_airport': toAirport
+      });
+      
+      const fullUrl = `${baseUrl}?${params.toString()}`;
+      console.log('Redirecting to:', fullUrl);
+      
+      // Redirect to the product page
+      window.location.href = fullUrl;
+      
+    } catch (error) {
+      console.error('Error redirecting to product page:', error);
+      alert('Error redirecting to product page: ' + error.message);
     }
   }
 

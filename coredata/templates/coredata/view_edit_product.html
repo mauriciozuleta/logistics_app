@@ -12,6 +12,13 @@
             </a>
           </div>
 
+          {% if route_info %}
+            <div style="background-color: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); color: #4caf50; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-size: 1rem;">
+              <strong>🚢 Adding Cargo to Route:</strong> {{ route_info }}
+              <br><small style="color: #bbb;">Click "Add to {{ from_airport }} - {{ to_airport }}" to assign products to this {{ 'first leg' if route_type == 'first_leg' else 'return leg' }} route</small>
+            </div>
+          {% endif %}
+
           {% if product_list %}
             <div class="table-responsive">
               <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden;">
@@ -42,7 +49,12 @@
                       <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ '${:,.2f}'.format(product.packaging_cost) if product.packaging_cost else '-' }}</td>
                       <td style="border: 1px solid #176c3a; color: #fff; text-align: center; padding: 12px;">{{ product.currency or '-' }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
-                        <div style="display: flex; gap: 8px; justify-content: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                          {% if route_info %}
+                            <button onclick="addToRoute('{{ product.id }}', '{{ route_info }}', '{{ route_type }}')" class="btn btn-sm" style="background-color: #4caf50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none; cursor: pointer; font-size: 0.8rem;">
+                              ➕ Add to {{ from_airport }} - {{ to_airport }}
+                            </button>
+                          {% endif %}
                           <a href="{{ url_for('coredata.add_product', edit_id=product.id) }}" class="btn btn-sm" style="background-color: #ff9800; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none;">
                             ✏️ Edit
                           </a>
@@ -70,4 +82,28 @@
     </div>
   </div>
 </div>
+
+<script>
+function addToRoute(productId, routeInfo, routeType) {
+  // For now, show a confirmation message with the route information
+  const message = `Adding product to ${routeType === 'first_leg' ? 'First Leg' : 'Return Leg'} route: ${routeInfo}\n\nProduct ID: ${productId}\n\nThis functionality will be implemented to add the product to the shipment cargo.`;
+  
+  if (confirm(message + '\n\nWould you like to proceed?')) {
+    // TODO: Implement the actual cargo assignment logic
+    // This could redirect back to the shipment form with the product selected
+    // or open a modal to specify quantity, etc.
+    
+    // For now, we'll show a success message and redirect back to shipment
+    alert('Product assignment functionality will be implemented here.\n\nReturning to shipment form...');
+    
+    // Option 1: Go back to previous page (shipment form)
+    if (document.referrer && document.referrer.includes('add_shipment')) {
+      window.location.href = document.referrer;
+    } else {
+      // Option 2: Go to operations dashboard or shipment list
+      window.location.href = '/operations/';
+    }
+  }
+}
+</script>
 {% endblock %}

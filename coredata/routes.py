@@ -360,4 +360,16 @@ def delete_product(product_id):
 @coredata_bp.route('/view-edit-product')
 def view_edit_product():
     product_list = Product.query.order_by(Product.name.asc()).all()
-    return render_template('coredata/view_edit_product.html', product_list=product_list)
+    
+    # Get route information from query parameters for adding cargo to specific routes
+    route_type = request.args.get('route_type', '')
+    route_info = request.args.get('route_info', '')
+    from_airport = request.args.get('from_airport', '')
+    to_airport = request.args.get('to_airport', '')
+    
+    return render_template('coredata/view_edit_product.html', 
+                         product_list=product_list,
+                         route_type=route_type,
+                         route_info=route_info,
+                         from_airport=from_airport,
+                         to_airport=to_airport)
