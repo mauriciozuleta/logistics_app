@@ -139,15 +139,29 @@
           </div>
         </div>
         <div class="form-group" style="min-width:120px;">
-          <label for="outbound_percent">Outbound %</label>
+          <label for="outbound_percent" id="outbound_percent_label">Outbound %</label>
           <input type="number" id="outbound_percent" name="outbound_percent" min="0" max="100" step="0.01" value="100" style="width:100%;" disabled>
+          <!-- Restore cargo spread % above Outbound Kg. Cost -->
+          <label for="outbound_extra" style="margin-top:0.5rem;">cargo spread %</label>
+          <input type="text" id="outbound_extra" name="outbound_extra" style="width:100%;">
+          <!-- Target Cargo Load (conditionally shown) -->
+          <div id="outbound_target_cargo_load_container" style="display:none; margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
+            <div><strong>Target Cargo Load:</strong> <span id="outbound_target_cargo_load">N/A</span></div>
+          </div>
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
             <div><strong>Outbound Kg. Cost:</strong> <span id="outbound_kg_cost">N/A</span></div>
           </div>
         </div>
         <div class="form-group" style="min-width:120px;">
-          <label for="return_percent">Return %</label>
+          <label for="return_percent" id="return_percent_label">Return %</label>
           <input type="number" id="return_percent" name="return_percent" min="0" max="100" step="0.01" value="0" style="width:100%;" readonly>
+          <!-- Restore cargo spread % above Return Kg. Cost -->
+          <label for="return_extra" style="margin-top:0.5rem;">cargo spread %</label>
+          <input type="text" id="return_extra" name="return_extra" style="width:100%;">
+          <!-- Target Cargo Load (conditionally shown) -->
+          <div id="return_target_cargo_load_container" style="display:none; margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
+            <div><strong>Target Cargo Load:</strong> <span id="return_target_cargo_load">N/A</span></div>
+          </div>
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
             <div><strong>Return Kg. Cost:</strong> <span id="return_kg_cost">N/A</span></div>
           </div>
@@ -221,35 +235,102 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Inject trader and route data from Flask
-  const traderData = {{ trader_data|tojson|safe }};
-  const routeData = {{ route_data|tojson|safe }};
+  const traderData = JSON.parse('{{ trader_data|tojson|safe }}');
+  const routeData = JSON.parse('{{ route_data|tojson|safe }}');
   
   console.log('Trader data loaded:', traderData);
   console.log('Route data loaded:', routeData);
+
+  // Helper function to format payload with thousand separators
+  function formatPayloadWithSeparators(payloadText) {
+    if (!payloadText) return 'N/A';
+    // Extract numeric value from payload string
+    const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+    if (payloadMatch) {
+      const payloadValue = parseFloat(payloadMatch[1]);
+      const formattedValue = payloadValue >= 1000 ? 
+        payloadValue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2}) : 
+        payloadValue.toString();
+      return payloadText.replace(payloadMatch[1], formattedValue);
+    }
+    return payloadText;
+  }
 
   // Outbound/Return % logic
   const returnTypeSelect = document.getElementById('return_type');
   const outboundPercentInput = document.getElementById('outbound_percent');
   const returnPercentInput = document.getElementById('return_percent');
+  // Cargo spread and target cargo load fields
+  const outboundExtraInput = document.getElementById('outbound_extra');
+  const returnExtraInput = document.getElementById('return_extra');
+  const outboundTargetCargoLoadContainer = document.getElementById('outbound_target_cargo_load_container');
+  const returnTargetCargoLoadContainer = document.getElementById('return_target_cargo_load_container');
 
   function updatePercentFields() {
     if (returnTypeSelect && outboundPercentInput && returnPercentInput) {
+      // Update Outbound % label with cost multiplication
+      const outboundLabel = document.getElementById('outbound_percent_label');
+      let outboundVal = parseFloat(outboundPercentInput.value);
+      if (isNaN(outboundVal)) outboundVal = 100;
+      let totalFlightCost = 0;
+      const totalFlightCostElement = document.getElementById('total_flight_cost');
+      if (totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error')) {
+        // Remove $ and commas, then parse
+        totalFlightCost = parseFloat(totalFlightCostElement.textContent.replace(/[$,]/g, '')) || 0;
+      }
+      let outboundCost = totalFlightCost * (outboundVal / 100);
+      let outboundCostStr = totalFlightCost > 0 ? ` (<span style="color: #00ff00;">${outboundCost >= 1000 ? outboundCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : outboundCost.toFixed(2)}</span>)` : '';
+      if (outboundLabel) outboundLabel.innerHTML = `Outbound %${outboundCostStr}`;
+      // Enable/disable cargo spread fields and show/hide target cargo load
       if (returnTypeSelect.value === 'compensated') {
         outboundPercentInput.disabled = false;
         outboundPercentInput.value = outboundPercentInput.value || 100;
+        if (outboundExtraInput) outboundExtraInput.disabled = false;
+        if (returnExtraInput) returnExtraInput.disabled = false;
+        if (outboundTargetCargoLoadContainer) outboundTargetCargoLoadContainer.style.display = 'block';
+        if (returnTargetCargoLoadContainer) returnTargetCargoLoadContainer.style.display = 'block';
       } else {
         outboundPercentInput.disabled = true;
         outboundPercentInput.value = 100;
+        if (outboundExtraInput) outboundExtraInput.disabled = true;
+        if (returnExtraInput) returnExtraInput.disabled = true;
+        if (outboundTargetCargoLoadContainer) outboundTargetCargoLoadContainer.style.display = 'none';
+        if (returnTargetCargoLoadContainer) returnTargetCargoLoadContainer.style.display = 'none';
       }
       // Always update return percent
-      let outboundVal = parseFloat(outboundPercentInput.value);
-      if (isNaN(outboundVal)) outboundVal = 100;
       let returnVal = 100 - outboundVal;
       if (returnVal < 0) returnVal = 0;
       returnPercentInput.value = returnVal.toFixed(2);
-      
+
+      // Update Return % label with cost multiplication
+      const returnLabel = document.getElementById('return_percent_label');
+      let returnCost = totalFlightCost * (returnVal / 100);
+      let returnCostStr = totalFlightCost > 0 ? ` (<span style="color: #00ff00;">${returnCost >= 1000 ? returnCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : returnCost.toFixed(2)}</span>)` : '';
+      if (returnLabel) returnLabel.innerHTML = `Return %${returnCostStr}`;
+
+      // Calculate and update outbound target cargo load
+      if (returnTypeSelect.value === 'compensated' && outboundTargetCargoLoadContainer) {
+        let payload = 0;
+        const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
+        if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].payload) {
+          // Try to extract numeric value from payload string
+          const payloadText = routeData[firstLegRouteId].payload;
+          const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+          if (payloadMatch) {
+            payload = parseFloat(payloadMatch[1]) || 0;
+          }
+        }
+        const percent = isNaN(outboundVal) ? 100 : outboundVal;
+        const targetCargo = payload * (percent / 100);
+        const targetCargoStr = payload > 0 ? `${targetCargo >= 1000 ? targetCargo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : targetCargo.toFixed(2)} kg` : 'N/A';
+        const outboundTargetCargoLoad = document.getElementById('outbound_target_cargo_load');
+        if (outboundTargetCargoLoad) outboundTargetCargoLoad.textContent = targetCargoStr;
+      } else {
+        const outboundTargetCargoLoad = document.getElementById('outbound_target_cargo_load');
+        if (outboundTargetCargoLoad) outboundTargetCargoLoad.textContent = 'N/A';
+      }
+
       // Recalculate costs when percentages change - but only if aircraft is selected
-      // Use try-catch to prevent crashes
       try {
         if (availableAircraftSelect && availableAircraftSelect.value) {
           calculateTotalFlightCostSafely();
@@ -257,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       } catch (error) {
         console.error('Error updating costs from percentage change:', error);
-        // Don't let this crash the app
       }
     }
   }
@@ -428,8 +508,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Updating first leg fields...');
         safelyUpdateElement('first_leg_distance', firstLegRoute.distance);
         safelyUpdateElement('first_leg_flight_time', firstLegRoute.flight_time);
-        safelyUpdateElement('first_leg_route_cost', firstLegRoute.cost ? `$${firstLegRoute.cost}` : 'No Cost');
-        safelyUpdateElement('first_leg_payload', firstLegRoute.payload);
+        safelyUpdateElement('first_leg_route_cost', firstLegRoute.cost ? `$${parseFloat(firstLegRoute.cost) >= 1000 ? parseFloat(firstLegRoute.cost).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : parseFloat(firstLegRoute.cost).toFixed(2)}` : 'No Cost');
+        safelyUpdateElement('first_leg_payload', firstLegRoute.payload ? formatPayloadWithSeparators(firstLegRoute.payload) : 'N/A');
         console.log('First leg fields updated');
       } else {
         console.warn('First leg route data not found for ID:', firstLegRouteId);
@@ -443,8 +523,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Updating second leg fields...');
         safelyUpdateElement('second_leg_distance', secondLegRoute.distance);
         safelyUpdateElement('second_leg_flight_time', secondLegRoute.flight_time);
-        safelyUpdateElement('second_leg_route_cost', secondLegRoute.cost ? `$${secondLegRoute.cost}` : 'No Cost');
-        safelyUpdateElement('second_leg_payload', secondLegRoute.payload);
+        safelyUpdateElement('second_leg_route_cost', secondLegRoute.cost ? `$${parseFloat(secondLegRoute.cost) >= 1000 ? parseFloat(secondLegRoute.cost).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : parseFloat(secondLegRoute.cost).toFixed(2)}` : 'No Cost');
+        safelyUpdateElement('second_leg_payload', secondLegRoute.payload ? formatPayloadWithSeparators(secondLegRoute.payload) : 'N/A');
         console.log('Second leg fields updated');
       } else {
         console.warn('Second leg route data not found for ID:', secondLegRouteId);
@@ -495,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       console.log('Total flight cost calculated:', totalCost);
-      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost.toFixed(2)}` : 'N/A');
+      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost >= 1000 ? totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : totalCost.toFixed(2)}` : 'N/A');
       
     } catch (error) {
       console.error('Error calculating total flight cost from routes:', error);
@@ -537,33 +617,24 @@ document.addEventListener('DOMContentLoaded', function() {
   // Safely calculate total flight cost
   function calculateTotalFlightCostSafely() {
     try {
-      if (!firstLegRouteSelect || !secondLegRouteSelect || !returnTypeSelect || !returnPercentInput) {
+      if (!firstLegRouteSelect || !secondLegRouteSelect) {
         return;
       }
 
       const firstLegRouteId = firstLegRouteSelect.value;
       const secondLegRouteId = secondLegRouteSelect.value;
-      const returnType = returnTypeSelect.value;
-      
+
       let totalCost = 0;
-      
-      // Add first leg cost
+
+      // Always add both route costs, regardless of return type or percentages
       if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].cost) {
         totalCost += parseFloat(routeData[firstLegRouteId].cost) || 0;
       }
-      
-      // Add second leg cost based on return type
       if (secondLegRouteId && routeData[secondLegRouteId] && routeData[secondLegRouteId].cost) {
-        const secondLegCost = parseFloat(routeData[secondLegRouteId].cost) || 0;
-        if (returnType === 'compensated') {
-          const returnPercent = parseFloat(returnPercentInput.value) || 0;
-          totalCost += secondLegCost * (returnPercent / 100);
-        } else if (returnType === 'full') {
-          totalCost += secondLegCost;
-        }
+        totalCost += parseFloat(routeData[secondLegRouteId].cost) || 0;
       }
-      
-      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost.toFixed(2)}` : 'N/A');
+
+      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost >= 1000 ? totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : totalCost.toFixed(2)}` : 'N/A');
     } catch (error) {
       console.error('Error calculating total flight cost:', error);
       safelyUpdateElement('total_flight_cost', 'Error');
@@ -585,7 +656,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const returnPercent = parseFloat(returnPercentInput.value) || 0;
       
       if (totalFlightCostText && totalFlightCostText !== 'N/A' && !totalFlightCostText.includes('Error')) {
-        const totalCost = parseFloat(totalFlightCostText.replace('$', '')) || 0;
+        // Remove $ and commas, then parse
+        const totalCost = parseFloat(totalFlightCostText.replace(/[$,]/g, '')) || 0;
         
         // Get payload capacity safely
         let payloadCapacity = 1000; // Default fallback
@@ -603,8 +675,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const outboundCost = (totalCost * (outboundPercent / 100)) / payloadCapacity;
         const returnCost = (totalCost * (returnPercent / 100)) / payloadCapacity;
         
-        safelyUpdateElement('outbound_kg_cost', outboundCost > 0 ? `$${outboundCost.toFixed(3)}/kg` : 'N/A');
-        safelyUpdateElement('return_kg_cost', returnCost > 0 ? `$${returnCost.toFixed(3)}/kg` : 'N/A');
+        safelyUpdateElement('outbound_kg_cost', outboundCost > 0 ? `$${outboundCost >= 1 ? outboundCost.toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3}) : outboundCost.toFixed(3)}/kg` : 'N/A');
+        safelyUpdateElement('return_kg_cost', returnCost > 0 ? `$${returnCost >= 1 ? returnCost.toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3}) : returnCost.toFixed(3)}/kg` : 'N/A');
       } else {
         safelyUpdateElement('outbound_kg_cost', 'N/A');
         safelyUpdateElement('return_kg_cost', 'N/A');
