@@ -142,12 +142,8 @@
           <label for="outbound_percent" id="outbound_percent_label">Outbound %</label>
           <input type="number" id="outbound_percent" name="outbound_percent" min="0" max="100" step="0.01" value="100" style="width:100%;" disabled>
           <!-- Restore cargo spread % above Outbound Kg. Cost -->
-          <label for="outbound_extra" style="margin-top:0.5rem;">cargo spread %</label>
+          <label for="outbound_extra" id="outbound_extra_label" style="margin-top:0.5rem;">target cargo load (%)</label>
           <input type="text" id="outbound_extra" name="outbound_extra" style="width:100%;">
-          <!-- Target Cargo Load (conditionally shown) -->
-          <div id="outbound_target_cargo_load_container" style="display:none; margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
-            <div><strong>Target Cargo Load:</strong> <span id="outbound_target_cargo_load">N/A</span></div>
-          </div>
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
             <div><strong>Outbound Kg. Cost:</strong> <span id="outbound_kg_cost">N/A</span></div>
           </div>
@@ -156,12 +152,8 @@
           <label for="return_percent" id="return_percent_label">Return %</label>
           <input type="number" id="return_percent" name="return_percent" min="0" max="100" step="0.01" value="0" style="width:100%;" readonly>
           <!-- Restore cargo spread % above Return Kg. Cost -->
-          <label for="return_extra" style="margin-top:0.5rem;">cargo spread %</label>
+          <label for="return_extra" id="return_extra_label" style="margin-top:0.5rem;">target cargo load (%)</label>
           <input type="text" id="return_extra" name="return_extra" style="width:100%;">
-          <!-- Target Cargo Load (conditionally shown) -->
-          <div id="return_target_cargo_load_container" style="display:none; margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
-            <div><strong>Target Cargo Load:</strong> <span id="return_target_cargo_load">N/A</span></div>
-          </div>
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
             <div><strong>Return Kg. Cost:</strong> <span id="return_kg_cost">N/A</span></div>
           </div>
@@ -263,8 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Cargo spread and target cargo load fields
   const outboundExtraInput = document.getElementById('outbound_extra');
   const returnExtraInput = document.getElementById('return_extra');
-  const outboundTargetCargoLoadContainer = document.getElementById('outbound_target_cargo_load_container');
-  const returnTargetCargoLoadContainer = document.getElementById('return_target_cargo_load_container');
 
   function updatePercentFields() {
     if (returnTypeSelect && outboundPercentInput && returnPercentInput) {
@@ -287,15 +277,11 @@ document.addEventListener('DOMContentLoaded', function() {
         outboundPercentInput.value = outboundPercentInput.value || 100;
         if (outboundExtraInput) outboundExtraInput.disabled = false;
         if (returnExtraInput) returnExtraInput.disabled = false;
-        if (outboundTargetCargoLoadContainer) outboundTargetCargoLoadContainer.style.display = 'block';
-        if (returnTargetCargoLoadContainer) returnTargetCargoLoadContainer.style.display = 'block';
       } else {
         outboundPercentInput.disabled = true;
         outboundPercentInput.value = 100;
         if (outboundExtraInput) outboundExtraInput.disabled = true;
         if (returnExtraInput) returnExtraInput.disabled = true;
-        if (outboundTargetCargoLoadContainer) outboundTargetCargoLoadContainer.style.display = 'none';
-        if (returnTargetCargoLoadContainer) returnTargetCargoLoadContainer.style.display = 'none';
       }
       // Always update return percent
       let returnVal = 100 - outboundVal;
@@ -309,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (returnLabel) returnLabel.innerHTML = `Return %${returnCostStr}`;
 
       // Calculate and update outbound target cargo load
-      if (returnTypeSelect.value === 'compensated' && outboundTargetCargoLoadContainer) {
+      if (returnTypeSelect.value === 'compensated') {
         let payload = 0;
         const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
         if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].payload) {
@@ -320,14 +306,48 @@ document.addEventListener('DOMContentLoaded', function() {
             payload = parseFloat(payloadMatch[1]) || 0;
           }
         }
-        const percent = isNaN(outboundVal) ? 100 : outboundVal;
-        const targetCargo = payload * (percent / 100);
-        const targetCargoStr = payload > 0 ? `${targetCargo >= 1000 ? targetCargo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : targetCargo.toFixed(2)} kg` : 'N/A';
-        const outboundTargetCargoLoad = document.getElementById('outbound_target_cargo_load');
-        if (outboundTargetCargoLoad) outboundTargetCargoLoad.textContent = targetCargoStr;
+        // Use target cargo load percentage from input instead of outbound percentage
+        const targetCargoPercent = parseFloat(outboundExtraInput ? outboundExtraInput.value : 0) || 0;
+        const targetCargo = payload * (targetCargoPercent / 100);
+        const targetCargoStr = payload > 0 && targetCargoPercent > 0 ? `${targetCargo >= 1000 ? targetCargo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : targetCargo.toFixed(2)} kg` : '';
+        
+        // Update outbound target cargo load label
+        const outboundExtraLabel = document.getElementById('outbound_extra_label');
+        if (outboundExtraLabel) {
+          const labelStr = targetCargoStr ? ` (<span style="color: #00ff00;">${targetCargoStr}</span>)` : '';
+          outboundExtraLabel.innerHTML = `target cargo load (%)${labelStr}`;
+        }
       } else {
-        const outboundTargetCargoLoad = document.getElementById('outbound_target_cargo_load');
-        if (outboundTargetCargoLoad) outboundTargetCargoLoad.textContent = 'N/A';
+        const outboundExtraLabel = document.getElementById('outbound_extra_label');
+        if (outboundExtraLabel) outboundExtraLabel.innerHTML = 'target cargo load (%)';
+      }
+
+      // Calculate and update return target cargo load
+      if (returnTypeSelect.value === 'compensated') {
+        let payload = 0;
+        const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
+        if (secondLegRouteId && routeData[secondLegRouteId] && routeData[secondLegRouteId].payload) {
+          // Try to extract numeric value from payload string
+          const payloadText = routeData[secondLegRouteId].payload;
+          const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+          if (payloadMatch) {
+            payload = parseFloat(payloadMatch[1]) || 0;
+          }
+        }
+        // Use target cargo load percentage from input
+        const targetCargoPercent = parseFloat(returnExtraInput ? returnExtraInput.value : 0) || 0;
+        const targetCargo = payload * (targetCargoPercent / 100);
+        const targetCargoStr = payload > 0 && targetCargoPercent > 0 ? `${targetCargo >= 1000 ? targetCargo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : targetCargo.toFixed(2)} kg` : '';
+        
+        // Update return target cargo load label
+        const returnExtraLabel = document.getElementById('return_extra_label');
+        if (returnExtraLabel) {
+          const labelStr = targetCargoStr ? ` (<span style="color: #00ff00;">${targetCargoStr}</span>)` : '';
+          returnExtraLabel.innerHTML = `target cargo load (%)${labelStr}`;
+        }
+      } else {
+        const returnExtraLabel = document.getElementById('return_extra_label');
+        if (returnExtraLabel) returnExtraLabel.innerHTML = 'target cargo load (%)';
       }
 
       // Recalculate costs when percentages change - but only if aircraft is selected
@@ -345,6 +365,27 @@ document.addEventListener('DOMContentLoaded', function() {
   if (returnTypeSelect && outboundPercentInput) {
     returnTypeSelect.addEventListener('change', updatePercentFields);
     outboundPercentInput.addEventListener('input', updatePercentFields);
+    // Add event listeners for target cargo load percentage inputs
+    if (outboundExtraInput) {
+      outboundExtraInput.addEventListener('input', updatePercentFields);
+      // Prevent Enter key from submitting form in target cargo load inputs
+      outboundExtraInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          updatePercentFields(); // Update calculations instead
+        }
+      });
+    }
+    if (returnExtraInput) {
+      returnExtraInput.addEventListener('input', updatePercentFields);
+      // Prevent Enter key from submitting form in target cargo load inputs
+      returnExtraInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          updatePercentFields(); // Update calculations instead
+        }
+      });
+    }
     // Initialize on load
     updatePercentFields();
   }
