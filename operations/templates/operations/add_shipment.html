@@ -48,12 +48,6 @@
 </style>
 
   <h2>{% if shipment_to_edit %}Edit Shipment{% else %}Add New Shipment{% endif %}</h2>
-  
-  <div class="coming-soon-notice">
-    <strong>🚧 Under Development</strong><br>
-    Shipment management functionality is currently being developed.<br>
-    This is a placeholder interface for future implementation.
-  </div>
 
   <form method="post" id="shipment-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
@@ -114,6 +108,9 @@
             <div><strong>Route Cost:</strong> <span id="first_leg_route_cost">N/A</span></div>
             <div><strong>Available Payload:</strong> <span id="first_leg_payload">N/A</span></div>
           </div>
+          <button type="button" id="first_leg_summary_btn" disabled
+                  style="width: 100%; height: 35px; background-color: #181c22; color: #666; border: 1px solid #666; border-radius: 4px; font-size: 0.9rem; cursor: not-allowed; margin-top: 0.5rem;">
+          </button>
         </div>
         <div class="form-group" style="flex: 0.85; min-width: 120px;">
           <label for="second_leg_route">Select Return</label>
@@ -126,6 +123,9 @@
             <div><strong>Route Cost:</strong> <span id="second_leg_route_cost">N/A</span></div>
             <div><strong>Available Payload:</strong> <span id="second_leg_payload">N/A</span></div>
           </div>
+          <button type="button" id="second_leg_summary_btn" disabled
+                  style="width: 100%; height: 35px; background-color: #181c22; color: #666; border: 1px solid #666; border-radius: 4px; font-size: 0.9rem; cursor: not-allowed; margin-top: 0.5rem;">
+          </button>
         </div>
         <div class="form-group" style="flex: 0.8; min-width: 100px;">
           <label for="return_type">Type of Return</label>
@@ -164,53 +164,30 @@
     <!-- Section 3: Route & Transportation -->
     <!-- Priority and Service Type fields removed as requested -->
 
-    <!-- Section 3: Cargo Information -->
+    <!-- Section 3: Shipment Summary -->
     <div class="shipment-section">
-      <div class="section-title">Cargo Information</div>
-      
+      <div class="section-title">Shipment Summary</div>
       <div class="shipment-form-row">
-        <div class="form-group">
-          <label for="product">Product Type</label>
-          <select id="product" name="product" style="width: 100%;">
-            <option value="">Select Product...</option>
-            {% for product_id, product_name in product_choices %}
-              <option value="{{ product_id }}">{{ product_name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="weight_kg">Weight (kg)</label>
-          <input type="number" id="weight_kg" name="weight_kg" step="0.01" 
-                 placeholder="0.00"
-                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
-        </div>
-        <div class="form-group">
-          <label for="volume_m3">Volume (m³)</label>
-          <input type="number" id="volume_m3" name="volume_m3" step="0.001" 
-                 placeholder="0.000"
-                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
-        </div>
-        <div class="form-group">
-          <label for="pieces">Number of Pieces</label>
-          <input type="number" id="pieces" name="pieces" min="1" 
-                 placeholder="1"
-                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+          <label style="margin-bottom: 0.5rem; color: #e0e0e0; font-weight: normal;">Selected Routes:</label>
+          <div id="shipment_summary_display" style="padding: 1rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.9rem; line-height: 1.6;">
+            <div><strong>First Leg:</strong> <span id="summary_first_leg">Not Selected</span></div>
+            <div><strong>Return:</strong> <span id="summary_return_leg">Not Selected</span></div>
+            <div><strong>Aircraft:</strong> <span id="summary_aircraft">Not Selected</span></div>
+            <div><strong>Return Type:</strong> <span id="summary_return_type">Not Selected</span></div>
+          </div>
         </div>
       </div>
-      
-      <div class="shipment-form-row">
-        <div class="form-group" style="flex: 2;">
-          <label for="special_instructions">Special Instructions</label>
-          <textarea id="special_instructions" name="special_instructions" rows="3"
-                    placeholder="Any special handling instructions, dangerous goods declarations, etc."
-                    style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3; resize: vertical;"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="declared_value">Declared Value (USD)</label>
-          <input type="number" id="declared_value" name="declared_value" step="0.01" 
-                 placeholder="0.00"
-                 style="width: 100%; background-color: #181c22; color: #e0e0e0; border: 1.5px solid #2196f3;">
-        </div>
+    </div>
+
+    <!-- Section 4: Product / Cargo Management -->
+    <div class="shipment-section" id="cargo-management-section" style="display: none;">
+      <div class="section-title">Product / Cargo Management</div>
+      <div style="display: flex; justify-content: center; margin-top: 20px;">
+        <button type="button" id="add_product_cargo_btn"
+                style="width: 200px; height: 45px; background-color: #181c22; color: #2196f3; border: 1px solid #2196f3; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">
+          Add Product / Cargo
+        </button>
       </div>
     </div>
 
@@ -360,6 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (availableAircraftSelect && availableAircraftSelect.value) {
           calculateTotalFlightCostSafely();
           calculateKgCostsSafely();
+          updateSummaryButtons(); // Update summary buttons when percentages change
         }
       } catch (error) {
         console.error('Error updating costs from percentage change:', error);
@@ -472,6 +450,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Clear route information when aircraft becomes unavailable
       clearRouteInformationSafely();
     }
+    
+    // Update summary buttons whenever aircraft availability changes
+    updateSummaryButtons();
   }
 
   // Add event listener to show message when trying to select disabled aircraft
@@ -584,6 +565,9 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('Calculating kg costs...');
       calculateKgCostsSafely();
       
+      // Update summary buttons
+      updateSummaryButtons();
+      
       console.log('=== ROUTE POPULATION COMPLETE ===');
     } else {
       console.error('Missing required elements or data');
@@ -647,6 +631,150 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Update summary buttons based on route completion
+  function updateSummaryButtons() {
+    try {
+      const firstLegBtn = document.getElementById('first_leg_summary_btn');
+      const secondLegBtn = document.getElementById('second_leg_summary_btn');
+      
+      if (!firstLegBtn || !secondLegBtn) return;
+      
+      const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
+      const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
+      const selectedAircraft = availableAircraftSelect ? availableAircraftSelect.value : null;
+      const returnType = returnTypeSelect ? returnTypeSelect.value : null;
+      const totalFlightCostElement = document.getElementById('total_flight_cost');
+      const totalFlightCostValid = totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error');
+      
+      // Check if first leg route information is complete
+      const firstLegComplete = firstLegRouteId && selectedAircraft && returnType && totalFlightCostValid;
+      
+      // Check if second leg route information is complete
+      const secondLegComplete = secondLegRouteId && selectedAircraft && returnType && totalFlightCostValid;
+      
+      // Update first leg button
+      if (firstLegComplete) {
+        firstLegBtn.textContent = 'Load';
+        firstLegBtn.style.backgroundColor = '#181c22';
+        firstLegBtn.style.color = '#00ff00';
+        firstLegBtn.style.border = '1px solid #00ff00';
+        firstLegBtn.style.cursor = 'pointer';
+        firstLegBtn.disabled = false;
+        firstLegBtn.onclick = function() {
+          showCargoManagementSection();
+        };
+      } else {
+        firstLegBtn.textContent = '';
+        firstLegBtn.style.backgroundColor = '#181c22';
+        firstLegBtn.style.color = '#666';
+        firstLegBtn.style.border = '1px solid #666';
+        firstLegBtn.style.cursor = 'not-allowed';
+        firstLegBtn.disabled = true;
+        firstLegBtn.onclick = null;
+      }
+      
+      // Update second leg button
+      if (secondLegComplete) {
+        secondLegBtn.textContent = 'Load';
+        secondLegBtn.style.backgroundColor = '#181c22';
+        secondLegBtn.style.color = '#ff6600';
+        secondLegBtn.style.border = '1px solid #ff6600';
+        secondLegBtn.style.cursor = 'pointer';
+        secondLegBtn.disabled = false;
+        secondLegBtn.onclick = function() {
+          showCargoManagementSection();
+        };
+      } else {
+        secondLegBtn.textContent = '';
+        secondLegBtn.style.backgroundColor = '#181c22';
+        secondLegBtn.style.color = '#666';
+        secondLegBtn.style.border = '1px solid #666';
+        secondLegBtn.style.cursor = 'not-allowed';
+        secondLegBtn.disabled = true;
+        secondLegBtn.onclick = null;
+      }
+      
+      // Update shipment summary display
+      updateShipmentSummaryDisplay();
+      
+    } catch (error) {
+      console.error('Error updating summary buttons:', error);
+    }
+  }
+
+  // Function to update the shipment summary display
+  function updateShipmentSummaryDisplay() {
+    try {
+      const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
+      const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
+      const selectedAircraft = availableAircraftSelect ? availableAircraftSelect.value : null;
+      const returnType = returnTypeSelect ? returnTypeSelect.value : null;
+      
+      // Update first leg display
+      const summaryFirstLeg = document.getElementById('summary_first_leg');
+      if (summaryFirstLeg) {
+        if (firstLegRouteId && routeData[firstLegRouteId]) {
+          const route = routeData[firstLegRouteId];
+          summaryFirstLeg.textContent = `${route.fromAirport} → ${route.toAirport}`;
+          summaryFirstLeg.style.color = '#00ff00';
+        } else {
+          summaryFirstLeg.textContent = 'Not Selected';
+          summaryFirstLeg.style.color = '#bbb';
+        }
+      }
+      
+      // Update return leg display
+      const summaryReturnLeg = document.getElementById('summary_return_leg');
+      if (summaryReturnLeg) {
+        if (secondLegRouteId && routeData[secondLegRouteId]) {
+          const route = routeData[secondLegRouteId];
+          summaryReturnLeg.textContent = `${route.fromAirport} → ${route.toAirport}`;
+          summaryReturnLeg.style.color = '#ff6600';
+        } else {
+          summaryReturnLeg.textContent = 'Not Selected';
+          summaryReturnLeg.style.color = '#bbb';
+        }
+      }
+      
+      // Update aircraft display
+      const summaryAircraft = document.getElementById('summary_aircraft');
+      if (summaryAircraft) {
+        if (selectedAircraft) {
+          summaryAircraft.textContent = selectedAircraft;
+          summaryAircraft.style.color = '#2196f3';
+        } else {
+          summaryAircraft.textContent = 'Not Selected';
+          summaryAircraft.style.color = '#bbb';
+        }
+      }
+      
+      // Update return type display
+      const summaryReturnType = document.getElementById('summary_return_type');
+      if (summaryReturnType) {
+        if (returnType) {
+          summaryReturnType.textContent = returnType.charAt(0).toUpperCase() + returnType.slice(1);
+          summaryReturnType.style.color = '#FFD600';
+        } else {
+          summaryReturnType.textContent = 'Not Selected';
+          summaryReturnType.style.color = '#bbb';
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error updating shipment summary display:', error);
+    }
+  }
+
+  // Function to show the cargo management section
+  function showCargoManagementSection() {
+    const cargoSection = document.getElementById('cargo-management-section');
+    if (cargoSection) {
+      cargoSection.style.display = 'block';
+      // Scroll to the cargo section
+      cargoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   // Safely clear all route information fields
   function clearRouteInformationSafely() {
     const fieldsToReset = [
@@ -658,6 +786,9 @@ document.addEventListener('DOMContentLoaded', function() {
     fieldsToReset.forEach(fieldId => {
       safelyUpdateElement(fieldId, 'N/A');
     });
+    
+    // Reset summary buttons
+    updateSummaryButtons();
   }
 
   // Safely calculate total flight cost
@@ -822,6 +953,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initialize aircraft availability on page load
   updateAircraftAvailability();
+
+  // Add event listener for Add Product / Cargo button
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'add_product_cargo_btn') {
+      // Placeholder for add product/cargo functionality
+      alert('Add Product / Cargo functionality will be implemented here.');
+    }
+  });
 
   // Test function to verify all elements exist
   function testElementsExist() {
