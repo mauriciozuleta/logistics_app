@@ -32,6 +32,23 @@
     background-color: #23272e !important;
     z-index: 10;
   }
+  
+  /* Styles for selected products */
+  .product-selected {
+    background-color: rgba(76, 175, 80, 0.2) !important;
+    border-left: 4px solid #4caf50 !important;
+  }
+  
+  .product-selected td {
+    background-color: rgba(76, 175, 80, 0.2) !important;
+    color: #e8f5e8 !important;
+  }
+  
+  .add-button-selected {
+    background-color: #4caf50 !important;
+    color: #fff !important;
+    cursor: not-allowed !important;
+  }
 </style>
 
 <div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
@@ -41,15 +58,33 @@
         <div class="card-body" style="color: #fff;">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 style="color: #2196f3; margin: 0;">📦 View / Edit Products</h2>
-            <a href="{{ url_for('coredata.add_product') }}" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff;">
-              ➕ Add New Product
-            </a>
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <!-- Product Type Filter -->
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="product_type_filter" style="color: #bbb; font-size: 0.9rem; white-space: nowrap;">Filter by Type:</label>
+                <select id="product_type_filter" onchange="applyFilter()" style="background-color: #181c22; color: #fff; border: 1px solid #2196f3; border-radius: 4px; padding: 6px 10px; font-size: 0.9rem; min-width: 120px;">
+                  <option value="">All Types</option>
+                  {% for ptype in product_types %}
+                    <option value="{{ ptype }}" {% if ptype == current_filter %}selected{% endif %}>{{ ptype }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- Add New Product Button -->
+              <a href="{{ url_for('coredata.add_product') }}" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff; white-space: nowrap;">
+                ➕ Add New Product
+              </a>
+            </div>
           </div>
 
           {% if route_info %}
-            <div style="background-color: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); color: #4caf50; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-size: 1rem;">
-              <strong>🚢 Adding Cargo to Route:</strong> {{ route_info }}
-              <br><small style="color: #bbb;">Click "Add to {{ from_airport }} - {{ to_airport }}" to assign products to this {{ 'first leg' if route_type == 'first_leg' else 'return leg' }} route</small>
+            <div style="background-color: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); color: #4caf50; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-size: 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>🚢 Adding Cargo to Route:</strong> {{ route_info }}
+                <br><small style="color: #bbb;">Click "Add to {{ from_airport }} - {{ to_airport }}" to assign products to this {{ 'first leg' if route_type == 'first_leg' else 'return leg' }} route</small>
+              </div>
+              <button onclick="sendToShipment()" class="btn" style="background-color: #ff9800; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; margin-left: 20px;">
+                📦 Send to Shipment
+              </button>
             </div>
           {% endif %}
 
@@ -74,7 +109,7 @@
                 </thead>
                 <tbody>
                   {% for product in product_list %}
-                    <tr style="background-color: #181c22;">
+                    <tr data-product-id="{{ product.id }}" style="background-color: #181c22;">
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.product_type or '-' }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px; font-weight: bold;">{{ product.name }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.country.country_name if product.country else '-' }}</td>
@@ -112,10 +147,13 @@
               <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
                 <div style="color: #bbb; font-size: 0.9rem;">
                   Showing {{ products.per_page * (products.page - 1) + 1 }} to {{ products.per_page * (products.page - 1) + products.items|length }} of {{ products.total }} products
+                  {% if current_filter %}
+                    <span style="color: #2196f3;">(filtered by: {{ current_filter }})</span>
+                  {% endif %}
                 </div>
                 <div style="display: flex; gap: 5px;">
                   {% if products.has_prev %}
-                    <a href="{{ url_for('coredata.view_edit_product', page=products.prev_num, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
+                    <a href="{{ url_for('coredata.view_edit_product', page=products.prev_num, product_type=current_filter, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
                        style="background-color: #2196f3; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
                       ← Previous
                     </a>
@@ -124,7 +162,7 @@
                   {% for page_num in products.iter_pages() %}
                     {% if page_num %}
                       {% if page_num != products.page %}
-                        <a href="{{ url_for('coredata.view_edit_product', page=page_num, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
+                        <a href="{{ url_for('coredata.view_edit_product', page=page_num, product_type=current_filter, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
                            style="background-color: #181c22; color: #2196f3; border: 1px solid #2196f3; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
                           {{ page_num }}
                         </a>
@@ -139,7 +177,7 @@
                   {% endfor %}
                   
                   {% if products.has_next %}
-                    <a href="{{ url_for('coredata.view_edit_product', page=products.next_num, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
+                    <a href="{{ url_for('coredata.view_edit_product', page=products.next_num, product_type=current_filter, route_type=route_type, route_info=route_info, from_airport=from_airport, to_airport=to_airport) }}" 
                        style="background-color: #2196f3; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
                       Next →
                     </a>
@@ -163,26 +201,129 @@
 </div>
 
 <script>
-function addToRoute(productId, routeInfo, routeType) {
-  // For now, show a confirmation message with the route information
-  const message = `Adding product to ${routeType === 'first_leg' ? 'First Leg' : 'Return Leg'} route: ${routeInfo}\n\nProduct ID: ${productId}\n\nThis functionality will be implemented to add the product to the shipment cargo.`;
+// Array to store selected products
+let selectedProducts = [];
+
+function applyFilter() {
+  const filterSelect = document.getElementById('product_type_filter');
+  const selectedType = filterSelect.value;
   
-  if (confirm(message + '\n\nWould you like to proceed?')) {
-    // TODO: Implement the actual cargo assignment logic
-    // This could redirect back to the shipment form with the product selected
-    // or open a modal to specify quantity, etc.
-    
-    // For now, we'll show a success message and redirect back to shipment
-    alert('Product assignment functionality will be implemented here.\n\nReturning to shipment form...');
-    
-    // Option 1: Go back to previous page (shipment form)
-    if (document.referrer && document.referrer.includes('add_shipment')) {
-      window.location.href = document.referrer;
+  // Build URL with current parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  if (selectedType) {
+    urlParams.set('product_type', selectedType);
+  } else {
+    urlParams.delete('product_type');
+  }
+  
+  // Reset to first page when filtering
+  urlParams.delete('page');
+  
+  // Preserve route information for cargo assignment
+  const routeType = urlParams.get('route_type') || '';
+  const routeInfo = urlParams.get('route_info') || '';
+  const fromAirport = urlParams.get('from_airport') || '';
+  const toAirport = urlParams.get('to_airport') || '';
+  
+  // Construct new URL
+  let newUrl = window.location.pathname;
+  if (urlParams.toString()) {
+    newUrl += '?' + urlParams.toString();
+  }
+  
+  // Redirect to filtered page
+  window.location.href = newUrl;
+}
+
+function addToRoute(productId, routeInfo, routeType) {
+  // Check if product is already selected
+  if (selectedProducts.includes(productId)) {
+    alert('This product has already been selected for the current route.');
+    return;
+  }
+  
+  // Add visual feedback
+  const productRow = document.querySelector(`tr[data-product-id="${productId}"]`);
+  const addButton = document.querySelector(`button[onclick="addToRoute('${productId}', '${routeInfo}', '${routeType}')"]`);
+  
+  if (productRow) {
+    productRow.classList.add('product-selected');
+  }
+  
+  if (addButton) {
+    addButton.classList.add('add-button-selected');
+    addButton.textContent = '✓ Added';
+    addButton.disabled = true;
+    addButton.onclick = null; // Remove click handler
+  }
+  
+  // Add to selected products array
+  selectedProducts.push(productId);
+  
+  // Update selected count if route info is shown
+  updateSelectedCount();
+  
+  console.log(`Product ${productId} added to ${routeType === 'first_leg' ? 'First Leg' : 'Return Leg'} route: ${routeInfo}`);
+}
+
+function updateSelectedCount() {
+  // Update the route info banner to show selected count
+  const routeInfoDiv = document.querySelector('div[style*="Adding Cargo to Route"]');
+  if (routeInfoDiv && selectedProducts.length > 0) {
+    const countElement = routeInfoDiv.querySelector('.selected-count');
+    if (countElement) {
+      countElement.textContent = `(${selectedProducts.length} products selected)`;
     } else {
-      // Option 2: Go to operations dashboard or shipment list
-      window.location.href = '/operations/';
+      // Add count element if it doesn't exist
+      const smallElement = routeInfoDiv.querySelector('small');
+      if (smallElement) {
+        const countSpan = document.createElement('span');
+        countSpan.className = 'selected-count';
+        countSpan.style.color = '#4caf50';
+        countSpan.style.fontWeight = 'bold';
+        countSpan.textContent = ` (${selectedProducts.length} products selected)`;
+        smallElement.appendChild(countSpan);
+      }
     }
   }
 }
+
+function sendToShipment() {
+  if (selectedProducts.length === 0) {
+    alert('Please select at least one product before sending to shipment.');
+    return;
+  }
+  
+  // For now, show confirmation with selected products
+  const message = `Sending ${selectedProducts.length} selected products to shipment:\n\nProduct IDs: ${selectedProducts.join(', ')}\n\nThis functionality will redirect back to the shipment form with the selected products.`;
+  
+  if (confirm(message + '\n\nWould you like to proceed?')) {
+    // TODO: Implement the actual shipment integration logic
+    // This should redirect back to the shipment form with selected products
+    
+    // For now, we'll show a success message and redirect back to shipment
+    alert('Products will be sent to shipment.\n\nReturning to shipment form...');
+    
+    // Option 1: Go back to previous page (shipment form)
+    if (document.referrer && document.referrer.includes('add_shipment')) {
+      // Add selected products as URL parameters
+      const urlParams = new URLSearchParams();
+      selectedProducts.forEach((productId, index) => {
+        urlParams.append(`selected_product_${index}`, productId);
+      });
+      window.location.href = document.referrer + (document.referrer.includes('?') ? '&' : '?') + urlParams.toString();
+    } else {
+      // Option 2: Go to operations dashboard or shipment list
+      window.location.href = '/operations/add_shipment';
+    }
+  }
+}
+
+// Initialize selected products from any existing visual state
+document.addEventListener('DOMContentLoaded', function() {
+  // You could load previously selected products from localStorage or other storage here
+  console.log('Product selection system initialized');
+});
 </script>
 {% endblock %}

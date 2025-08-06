@@ -363,20 +363,35 @@ def view_edit_product():
     page = request.args.get('page', 1, type=int)
     per_page = 8  # Display 8 products per page
     
+    # Get filter parameters
+    product_type_filter = request.args.get('product_type', '')
+    
     # Get route information from query parameters for adding cargo to specific routes
     route_type = request.args.get('route_type', '')
     route_info = request.args.get('route_info', '')
     from_airport = request.args.get('from_airport', '')
     to_airport = request.args.get('to_airport', '')
     
+    # Build query with optional filtering
+    query = Product.query
+    if product_type_filter:
+        query = query.filter(Product.product_type == product_type_filter)
+    
     # Paginate products
-    products = Product.query.order_by(Product.name.asc()).paginate(
+    products = query.order_by(Product.name.asc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
+    
+    # Get available product types for filter dropdown
+    available_types = db.session.query(Product.product_type).distinct().filter(Product.product_type.isnot(None)).all()
+    product_types = [t[0] for t in available_types if t[0]]  # Extract values and filter out None
+    product_types.sort()  # Sort alphabetically
     
     return render_template('coredata/view_edit_product.html', 
                          products=products,
                          product_list=products.items,  # Keep backward compatibility
+                         product_types=product_types,
+                         current_filter=product_type_filter,
                          route_type=route_type,
                          route_info=route_info,
                          from_airport=from_airport,
