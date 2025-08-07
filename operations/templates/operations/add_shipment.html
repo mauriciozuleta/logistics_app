@@ -92,9 +92,9 @@
       <div class="section-title">Route Information</div>
       <div class="shipment-form-row">
         <div class="form-group" style="flex: 0.85; min-width: 120px;">
-          <label for="first_leg_route">Select Route (Shipper's City) *</label>
+          <label for="first_leg_route">Departure Route *</label>
           <select id="first_leg_route" name="first_leg_route" required style="width: 100%;">
-            <option value="">Select Route...</option>
+            <option value="">Departure Route...</option>
           </select>
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
             <div><strong>Distance:</strong> <span id="first_leg_distance">N/A</span></div>
@@ -107,9 +107,9 @@
           </button>
         </div>
         <div class="form-group" style="flex: 0.85; min-width: 120px;">
-          <label for="second_leg_route">Select Return</label>
+          <label for="second_leg_route">Return Route</label>
           <select id="second_leg_route" name="second_leg_route" style="width: 100%;">
-            <option value="">Select Route...</option>
+            <option value="">Return Route...</option>
           </select>
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
             <div><strong>Distance:</strong> <span id="second_leg_distance">N/A</span></div>
@@ -297,8 +297,8 @@
     <div class="shipment-section" id="cargo-management-section" style="display: none;">
       <div class="section-title">Product / Cargo Management</div>
       <div style="display: flex; justify-content: center; margin-top: 20px;">
-        <button type="button" id="add_product_cargo_btn"
-                style="width: 200px; height: 45px; background-color: #181c22; color: #2196f3; border: 1px solid #2196f3; border-radius: 4px; font-size: 0.9rem; cursor: pointer;">
+        <button type="button" id="add_product_cargo_btn" disabled
+                style="width: 200px; height: 45px; background-color: #181c22; color: #2196f3; border: 1px solid #2196f3; border-radius: 4px; font-size: 0.9rem; cursor: not-allowed; opacity: 0.6;">
           Add Product / Cargo
         </button>
       </div>
@@ -808,24 +808,34 @@ document.addEventListener('DOMContentLoaded', function() {
   // Update summary buttons based on route completion
   function updateSummaryButtons() {
     try {
+
       const firstLegBtn = document.getElementById('first_leg_summary_btn');
       const secondLegBtn = document.getElementById('second_leg_summary_btn');
-      
       if (!firstLegBtn || !secondLegBtn) return;
-      
+
+      // Get all required field values
       const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
       const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
       const selectedAircraft = availableAircraftSelect ? availableAircraftSelect.value : null;
       const returnType = returnTypeSelect ? returnTypeSelect.value : null;
       const totalFlightCostElement = document.getElementById('total_flight_cost');
       const totalFlightCostValid = totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error');
-      
+      const outboundPercent = outboundPercentInput && outboundPercentInput.value && !isNaN(outboundPercentInput.value) && Number(outboundPercentInput.value) > 0;
+      const outboundExtra = outboundExtraInput && outboundExtraInput.value && !isNaN(outboundExtraInput.value) && Number(outboundExtraInput.value) > 0;
+      const returnPercent = returnPercentInput && returnPercentInput.value && !isNaN(returnPercentInput.value);
+      const returnExtra = returnExtraInput && returnExtraInput.value && !isNaN(returnExtraInput.value) && Number(returnExtraInput.value) > 0;
+
+      // For full return, returnPercent must be a number (can be 0 or more)
+      const fullReturnValid = returnType === 'full' && returnPercent;
+      // For compensated, returnPercent and returnExtra must be > 0
+      const compensatedReturnValid = returnType === 'compensated' && returnPercent && Number(returnPercentInput.value) > 0 && returnExtra;
+
       // Check if first leg route information is complete
-      const firstLegComplete = firstLegRouteId && selectedAircraft && returnType && totalFlightCostValid;
-      
+      const firstLegComplete = firstLegRouteId && selectedAircraft && returnType && totalFlightCostValid && outboundPercent && outboundExtra && (fullReturnValid || compensatedReturnValid);
+
       // Check if second leg route information is complete
-      const secondLegComplete = secondLegRouteId && selectedAircraft && returnType && totalFlightCostValid;
-      
+      const secondLegComplete = secondLegRouteId && selectedAircraft && returnType && totalFlightCostValid && outboundPercent && outboundExtra && (fullReturnValid || compensatedReturnValid);
+
       // Update first leg button
       if (firstLegComplete) {
         firstLegBtn.textContent = 'Add Cargo';
@@ -846,7 +856,7 @@ document.addEventListener('DOMContentLoaded', function() {
         firstLegBtn.disabled = true;
         firstLegBtn.onclick = null;
       }
-      
+
       // Update second leg button
       if (secondLegComplete) {
         secondLegBtn.textContent = 'Add Cargo';
@@ -867,7 +877,7 @@ document.addEventListener('DOMContentLoaded', function() {
         secondLegBtn.disabled = true;
         secondLegBtn.onclick = null;
       }
-      
+
       // Update shipment summary display
       updateShipmentSummaryDisplay();
       
@@ -1174,7 +1184,48 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize aircraft availability on page load
   updateAircraftAvailability();
 
-  // Add event listener for Add Product / Cargo button
+
+  // --- Robust Validation for Add Product / Cargo Button ---
+  const addCargoBtn = document.getElementById('add_product_cargo_btn');
+
+
+  // --- COMMENTED OUT: Previous Add Product / Cargo button logic ---
+  /*
+  function isFilled(val) {
+    return val !== undefined && val !== null && val !== '' && val !== false && val !== '0';
+  }
+  function validateAddCargoButton() {
+    // ...previous logic...
+  }
+  [firstLegRouteSelect, secondLegRouteSelect, availableAircraftSelect, returnTypeSelect,
+   outboundPercentInput, outboundExtraInput, returnPercentInput, returnExtraInput].forEach(function(el) {
+    if (el) {
+      el.addEventListener('change', validateAddCargoButton);
+      el.addEventListener('input', validateAddCargoButton);
+    }
+  });
+  validateAddCargoButton();
+  */
+
+  // --- COMMENTED OUT: New Add Product / Cargo button logic from scratch ---
+  /*
+  function allRequiredFieldsValid() {
+    // ...new logic...
+  }
+  function updateAddCargoBtnState() {
+    // ...new logic...
+  }
+  [firstLegRouteSelect, secondLegRouteSelect, availableAircraftSelect, returnTypeSelect,
+   outboundPercentInput, outboundExtraInput, returnPercentInput, returnExtraInput].forEach(function(el) {
+    if (el) {
+      el.addEventListener('change', updateAddCargoBtnState);
+      el.addEventListener('input', updateAddCargoBtnState);
+    }
+  });
+  updateAddCargoBtnState();
+  */
+
+  // Add event listener for Add Product / Cargo button (unchanged, but after validation)
   document.addEventListener('click', function(e) {
     if (e.target && e.target.id === 'add_product_cargo_btn') {
       // Placeholder for add product/cargo functionality
@@ -1228,8 +1279,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (cancelRouteBtn) {
       cancelRouteBtn.onclick = function() {
         document.getElementById('shipment-form').reset();
-        firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
-        secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+        firstLegRouteSelect.innerHTML = '<option value="">Departure Route...</option>';
+        secondLegRouteSelect.innerHTML = '<option value="">Return Route...</option>';
         availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
         showRouteNotFound(false);
         routeInfoSection.style.display = 'none';
@@ -1253,8 +1304,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load button logic
   function loadRoutesLogic() {
     console.log('loadRoutesLogic called');
-    firstLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
-    secondLegRouteSelect.innerHTML = '<option value="">Select Route...</option>';
+    firstLegRouteSelect.innerHTML = '<option value="">Departure Route...</option>';
+    secondLegRouteSelect.innerHTML = '<option value="">Return Route...</option>';
     showRouteNotFound(false);
 
     const shipperId = shipperSelect.value;
