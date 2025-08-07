@@ -174,25 +174,35 @@
             <thead>
               <tr>
                 <th style="text-align: left; font-weight: bold; padding: 8px 12px; width: 120px; background: #23272f;">Item</th>
-                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Value</th>
+                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Route</th>
+                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Distance</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td style="text-align: left; font-weight: normal; padding: 8px 12px; width: 120px;">First Leg</td>
                 <td style="padding: 8px 12px;"><span id="summary_first_leg">Not Selected</span></td>
+                <td style="padding: 8px 12px;"><span id="summary_first_leg_distance">-</span></td>
               </tr>
               <tr>
                 <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return</td>
                 <td style="padding: 8px 12px;"><span id="summary_return_leg">Not Selected</span></td>
+                <td style="padding: 8px 12px;"><span id="summary_return_leg_distance">-</span></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: bold; padding: 8px 12px;">Totals</td>
+                <td style="padding: 8px 12px;"><span id="summary_totals">-</span></td>
+                <td style="padding: 8px 12px;"><span id="summary_totals_distance">-</span></td>
               </tr>
               <tr>
                 <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Aircraft</td>
                 <td style="padding: 8px 12px;"><span id="summary_aircraft">Not Selected</span></td>
+                <td></td>
               </tr>
               <tr>
                 <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return Type</td>
                 <td style="padding: 8px 12px;"><span id="summary_return_type">Not Selected</span></td>
+                <td></td>
               </tr>
             </tbody>
           </table>
@@ -848,17 +858,17 @@ document.addEventListener('DOMContentLoaded', function() {
       //   }
       // }
       
-      // Update return type display
-      const summaryReturnType = document.getElementById('summary_return_type');
-      if (summaryReturnType) {
-        if (returnType) {
-          summaryReturnType.textContent = returnType.charAt(0).toUpperCase() + returnType.slice(1);
-          summaryReturnType.style.color = '#FFD600';
-        } else {
-          summaryReturnType.textContent = 'Not Selected';
-          summaryReturnType.style.color = '#bbb';
-        }
-      }
+      // Update return type display (intentionally skipped as per user request)
+      // const summaryReturnType = document.getElementById('summary_return_type');
+      // if (summaryReturnType) {
+      //   if (returnType) {
+      //     summaryReturnType.textContent = returnType.charAt(0).toUpperCase() + returnType.slice(1);
+      //     summaryReturnType.style.color = '#FFD600';
+      //   } else {
+      //     summaryReturnType.textContent = 'Not Selected';
+      //     summaryReturnType.style.color = '#bbb';
+      //   }
+      // }
       
     } catch (error) {
       console.error('Error updating shipment summary display:', error);
