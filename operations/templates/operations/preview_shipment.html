@@ -5,6 +5,44 @@
   <div id="shipment-draft-preview" style="background:#23272f;color:#FFD600;padding:20px;border-radius:8px;font-size:1.1rem;white-space:pre-wrap;"></div>
   <button onclick="refreshPreview()" style="margin-top:20px;">Refresh Preview</button>
 </div>
+
+<div class="content-section" style="margin-top:40px;">
+  <h3>Shipment Table (DB Fields as Rows)</h3>
+  <table class="table table-bordered table-sm" style="font-size:0.95em;">
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Staging 1</th>
+        <th>Staging 2</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>id</td><td></td><td></td></tr>
+      <tr><td>shipment_reference</td><td></td><td></td></tr>
+      <tr><td>shipper</td><td></td><td></td></tr>
+      <tr><td>consignee</td><td></td><td></td></tr>
+      <tr><td>first_leg_route</td><td></td><td></td></tr>
+      <tr><td>first_leg_distance</td><td></td><td></td></tr>
+      <tr><td>first_leg_ft</td><td></td><td></td></tr>
+      <tr><td>first_leg_cost</td><td></td><td></td></tr>
+      <tr><td>first_leg_payload</td><td></td><td></td></tr>
+      <tr><td>second_leg_route</td><td></td><td></td></tr>
+      <tr><td>second_leg_distance</td><td></td><td></td></tr>
+      <tr><td>second_leg_ft</td><td></td><td></td></tr>
+      <tr><td>second_leg_cost</td><td></td><td></td></tr>
+      <tr><td>second_leg_payload</td><td></td><td></td></tr>
+      <tr><td>selected_aircraft</td><td></td><td></td></tr>
+      <tr><td>return_type</td><td></td><td></td></tr>
+      <tr><td>outbound_cost_weight</td><td></td><td></td></tr>
+      <tr><td>outbound_tcl</td><td></td><td></td></tr>
+      <tr><td>outbound_kg_cost</td><td></td><td></td></tr>
+      <tr><td>return_cost_weight</td><td></td><td></td></tr>
+      <tr><td>return_tcl</td><td></td><td></td></tr>
+      <tr><td>return_kg_cost</td><td></td><td></td></tr>
+    </tbody>
+  </table>
+</div>
+
 <script>
 function refreshPreview() {
   const data = localStorage.getItem('shipmentDraft');

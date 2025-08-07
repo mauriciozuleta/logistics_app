@@ -1,4 +1,3 @@
-
 # ...existing code...
 
 # Place this after the 'operations' Blueprint is defined
@@ -16,7 +15,7 @@
 import json
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_wtf.csrf import generate_csrf
-from models import Airport, Aircraft, Route
+from models import Airport, Aircraft, Route, Shipment
 from operations.flight_distances_db import calculate_distance_db
 from extensions import db
 
@@ -25,11 +24,40 @@ operations = Blueprint("operations", __name__, template_folder="templates")
 operations_api = Blueprint("operations_api", __name__)
 
 # Add the preview_shipment route after Blueprint definition
-@operations.route('/preview_shipment')
+@operations.route('/preview_shipment', methods=['GET', 'POST'])
 def preview_shipment():
-    """Debug page to preview the current shipment draft (localStorage)"""
-    # This page is static and only displays localStorage data via JS
-    return render_template('operations/preview_shipment.html')
+    """Debug page to preview the current shipment draft (localStorage) and DB Shipments, and add new test shipments."""
+    if request.method == 'POST':
+        # Collect form data and create a new Shipment
+        shipment = Shipment(
+            shipment_reference=request.form.get('shipment_reference'),
+            shipper=request.form.get('shipper'),
+            consignee=request.form.get('consignee'),
+            first_leg_route=request.form.get('first_leg_route'),
+            first_leg_distance=request.form.get('first_leg_distance') or None,
+            first_leg_ft=request.form.get('first_leg_ft') or None,
+            first_leg_cost=request.form.get('first_leg_cost') or None,
+            first_leg_payload=request.form.get('first_leg_payload') or None,
+            second_leg_route=request.form.get('second_leg_route'),
+            second_leg_distance=request.form.get('second_leg_distance') or None,
+            second_leg_ft=request.form.get('second_leg_ft') or None,
+            second_leg_cost=request.form.get('second_leg_cost') or None,
+            second_leg_payload=request.form.get('second_leg_payload') or None,
+            selected_aircraft=request.form.get('selected_aircraft'),
+            return_type=request.form.get('return_type'),
+            outbound_cost_weight=request.form.get('outbound_cost_weight') or None,
+            outbound_tcl=request.form.get('outbound_tcl') or None,
+            outbound_kg_cost=request.form.get('outbound_kg_cost') or None,
+            return_cost_weight=request.form.get('return_cost_weight') or None,
+            return_tcl=request.form.get('return_tcl') or None,
+            return_kg_cost=request.form.get('return_kg_cost') or None,
+        )
+        db.session.add(shipment)
+        db.session.commit()
+        flash('Test shipment added!', 'success')
+        return redirect(url_for('operations.preview_shipment'))
+    shipments = Shipment.query.all()
+    return render_template('operations/preview_shipment.html', shipments=shipments)
 
 
 @operations.route('/dashboard')
