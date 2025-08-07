@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="content-section">
+  <h2>Shipment Draft Preview (Debug)</h2>
+  <div id="shipment-draft-preview" style="background:#23272f;color:#FFD600;padding:20px;border-radius:8px;font-size:1.1rem;white-space:pre-wrap;"></div>
+  <button onclick="refreshPreview()" style="margin-top:20px;">Refresh Preview</button>
+</div>
+<script>
+function refreshPreview() {
+  const data = localStorage.getItem('shipmentDraft');
+  document.getElementById('shipment-draft-preview').textContent = data ? JSON.stringify(JSON.parse(data), null, 2) : 'No draft data.';
+}
+document.addEventListener('DOMContentLoaded', refreshPreview);
+</script>
+{% endblock %}

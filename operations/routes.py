@@ -1,4 +1,17 @@
 
+# ...existing code...
+
+# Place this after the 'operations' Blueprint is defined
+
+# ...existing code...
+
+# Place this after the 'operations' Blueprint is defined
+
+# ...existing code...
+
+# Add the preview_shipment route after Blueprint definition
+
+
 
 import json
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
@@ -7,8 +20,16 @@ from models import Airport, Aircraft, Route
 from operations.flight_distances_db import calculate_distance_db
 from extensions import db
 
+
 operations = Blueprint("operations", __name__, template_folder="templates")
 operations_api = Blueprint("operations_api", __name__)
+
+# Add the preview_shipment route after Blueprint definition
+@operations.route('/preview_shipment')
+def preview_shipment():
+    """Debug page to preview the current shipment draft (localStorage)"""
+    # This page is static and only displays localStorage data via JS
+    return render_template('operations/preview_shipment.html')
 
 
 @operations.route('/dashboard')

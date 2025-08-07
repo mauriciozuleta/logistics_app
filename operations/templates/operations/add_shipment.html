@@ -91,12 +91,6 @@
     <div class="shipment-section" id="route-info-section" style="display: block;">
       <div class="section-title">Route Information</div>
       <div class="shipment-form-row">
-        <div class="form-group" style="flex: 0.7; min-width: 100px;">
-          <label for="available_aircraft">Available Aircraft</label>
-          <select id="available_aircraft" name="available_aircraft" style="width: 100%;" disabled>
-            <option value="">Select Aircraft...</option>
-          </select>
-        </div>
         <div class="form-group" style="flex: 0.85; min-width: 120px;">
           <label for="first_leg_route">Select Route (Shipper's City) *</label>
           <select id="first_leg_route" name="first_leg_route" required style="width: 100%;">
@@ -126,6 +120,13 @@
           <button type="button" id="second_leg_summary_btn" disabled
                   style="width: 100%; height: 35px; background-color: #181c22; color: #666; border: 1px solid #666; border-radius: 4px; font-size: 0.9rem; cursor: not-allowed; margin-top: 0.5rem;">
           </button>
+        </div>
+
+        <div class="form-group" style="flex: 0.7; min-width: 100px;">
+          <label for="available_aircraft">Available Aircraft</label>
+          <select id="available_aircraft" name="available_aircraft" style="width: 100%;" disabled>
+            <option value="">Select Aircraft...</option>
+          </select>
         </div>
         <div class="form-group" style="flex: 0.8; min-width: 100px;">
           <label for="return_type">Type of Return</label>
@@ -216,6 +217,44 @@
               </tr>
             </tbody>
           </table>
+          <!-- Existing Selected Routes table below -->
+          <label style="margin-bottom: 0.5rem; color: #e0e0e0; font-weight: normal;">Selected Routes:</label>
+          <table id="shipment_summary_display" style="width: 100%; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.95rem; line-height: 1.6; border-collapse: collapse; border-spacing: 0;">
+            <thead>
+              <tr>
+                <th style="text-align: left; font-weight: bold; padding: 8px 12px; width: 120px; background: #23272f;">Item</th>
+                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Route</th>
+                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Distance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px; width: 120px;">First Leg</td>
+                <td style="padding: 8px 12px;"><span id="summary_first_leg">Not Selected</span></td>
+                <td style="padding: 8px 12px;"><span id="summary_first_leg_distance">-</span></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return</td>
+                <td style="padding: 8px 12px;"><span id="summary_return_leg">Not Selected</span></td>
+                <td style="padding: 8px 12px;"><span id="summary_return_leg_distance">-</span></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: bold; padding: 8px 12px;">Totals</td>
+                <td style="padding: 8px 12px;"><span id="summary_totals">-</span></td>
+                <td style="padding: 8px 12px;"><span id="summary_totals_distance">-</span></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Aircraft</td>
+                <td style="padding: 8px 12px;"><span id="summary_aircraft">Not Selected</span></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return Type</td>
+                <td style="padding: 8px 12px;"><span id="summary_return_type">Not Selected</span></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -276,13 +315,74 @@
 </div>
 
 <script>
+// --- Shipment Draft Dictionary Logic ---
+const SHIPMENT_DRAFT_KEY = 'shipmentDraft';
+
+// Clear the draft on browser reload (fresh page load)
+window.addEventListener('load', function() {
+  localStorage.removeItem(SHIPMENT_DRAFT_KEY);
+});
+
+// Helper to get the current draft object
+function getShipmentDraft() {
+  const data = localStorage.getItem(SHIPMENT_DRAFT_KEY);
+  return data ? JSON.parse(data) : {};
+}
+
+// Helper to save the draft object
+function saveShipmentDraft(draft) {
+  localStorage.setItem(SHIPMENT_DRAFT_KEY, JSON.stringify(draft));
+}
+
+// Collect current form data and update the draft
+function updateShipmentDraftFromForm() {
+  const draft = getShipmentDraft();
+  // Shipment Information
+  draft.shipment_reference = document.getElementById('shipment_reference')?.value || '';
+  draft.shipper = document.getElementById('shipper')?.value || '';
+  draft.consignee = document.getElementById('consignee')?.value || '';
+  // Route Information
+  draft.first_leg_route = document.getElementById('first_leg_route')?.value || '';
+  draft.second_leg_route = document.getElementById('second_leg_route')?.value || '';
+  draft.available_aircraft = document.getElementById('available_aircraft')?.value || '';
+  draft.return_type = document.getElementById('return_type')?.value || '';
+  draft.outbound_percent = document.getElementById('outbound_percent')?.value || '';
+  draft.return_percent = document.getElementById('return_percent')?.value || '';
+  draft.outbound_extra = document.getElementById('outbound_extra')?.value || '';
+  draft.return_extra = document.getElementById('return_extra')?.value || '';
+  // Add more fields as needed
+  saveShipmentDraft(draft);
+}
+
+// Attach update logic to relevant form fields
 document.addEventListener('DOMContentLoaded', function() {
+  // Update draft on any change in form fields
+  [
+    'shipment_reference','shipper','consignee','first_leg_route','second_leg_route',
+    'available_aircraft','return_type','outbound_percent','return_percent','outbound_extra','return_extra'
+  ].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', updateShipmentDraftFromForm);
+      el.addEventListener('input', updateShipmentDraftFromForm);
+    }
+  });
+  // Initial save
+  updateShipmentDraftFromForm();
+
+  // ...existing code...
   // Inject trader and route data from Flask
   const traderData = JSON.parse('{{ trader_data|tojson|safe }}');
   const routeData = JSON.parse('{{ route_data|tojson|safe }}');
   
   console.log('Trader data loaded:', traderData);
   console.log('Route data loaded:', routeData);
+  // For debug: log the shipment draft on every update
+  window.addEventListener('storage', function(e) {
+    if (e.key === SHIPMENT_DRAFT_KEY) {
+      console.log('Shipment draft updated:', getShipmentDraft());
+    }
+  });
 
   // Helper function to format payload with thousand separators
   function formatPayloadWithSeparators(payloadText) {

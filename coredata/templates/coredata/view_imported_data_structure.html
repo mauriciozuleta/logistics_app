@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Imported Product Data Structure - Testing{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-white">
+                    <i class="fas fa-database text-warning"></i>
+                    Imported Product Data Structure
+                    <small class="text-muted">(Testing Only)</small>
+                </h2>
+                <div>
+                    <span class="badge bg-info">Total Records: {{ total_records }}</span>
+                </div>
+            </div>
+
+            <!-- Warning Banner -->
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Development/Testing View:</strong> 
+                This page shows the internal database structure for imported product data used in invoicing, accounting, and financial analysis. This is not accessible to end users.
+            </div>
+
+            <!-- Success Banner (shown when products are sent to shipment) -->
+            <div id="shipment-success-banner" class="alert alert-success" role="alert" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <strong>Products Successfully Sent to Shipment!</strong> 
+                The selected products have been populated in the ImportedProductData table and are ready for invoicing and financial analysis.
+            </div>
+
+            <!-- Table Structure -->
+            <div class="card bg-dark border-primary mb-4">
+                <div class="card-header bg-primary">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table"></i>
+                        Database Schema - imported_product_data
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-hover">
+                            <thead class="bg-secondary">
+                                <tr>
+                                    <th>Column Name</th>
+                                    <th>Data Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for column in table_columns %}
+                                <tr>
+                                    <td>
+                                        <code class="text-warning">{{ column.name }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ column.type }}</span>
+                                    </td>
+                                    <td class="text-light">{{ column.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Data (if any) -->
+            {% if sample_data %}
+            <div class="card bg-dark border-success mb-4">
+                <div class="card-header bg-success">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i>
+                        Sample Data ({{ sample_data|length }} records shown)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-sm">
+                            <thead class="bg-secondary">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Country</th>
+                                    <th>Pack Type</th>
+                                    <th>Units/Pack</th>
+                                    <th>Pack Weight</th>
+                                    <th>Pack Cost</th>
+                                    <th>Unit Cost</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in sample_data %}
+                                <tr>
+                                    <td>{{ record.id }}</td>
+                                    <td>{{ record.name }}</td>
+                                    <td>{{ record.country_id }}</td>
+                                    <td>{{ record.pack_type or '-' }}</td>
+                                    <td>{{ record.units_pack or '-' }}</td>
+                                    <td>{{ '{:.2f} kg'.format(record.pack_weight) if record.pack_weight else '-' }}</td>
+                                    <td>{{ '${:,.2f}'.format(record.pack_cost) if record.pack_cost else '-' }}</td>
+                                    <td>{{ '${:,.2f}'.format(record.unit_cost) if record.unit_cost else '-' }}</td>
+                                    <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') if record.created_at else '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card bg-dark border-info">
+                <div class="card-body text-center">
+                    <i class="fas fa-info-circle text-info fa-3x mb-3"></i>
+                    <h5 class="text-info">No Data Available</h5>
+                    <p class="text-muted">
+                        The imported_product_data table is currently empty. 
+                        Data will be populated when products are processed through the shipment workflow.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 mt-4">
+                <a href="{{ url_for('coredata.dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <button class="btn btn-outline-warning" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+                <button class="btn btn-success" onclick="populateImportedData()">
+                    <i class="fas fa-database"></i> Populate from Products
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function populateImportedData() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Populating...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('{{ url_for("coredata.populate_imported_data") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            alert(`✅ Success!\n${result.message}`);
+            // Refresh the page to show new data
+            location.reload();
+        } else {
+            // Show error message
+            alert(`❌ Error!\n${result.error}`);
+        }
+    } catch (error) {
+        alert(`❌ Network Error!\n${error.message}`);
+    } finally {
+        // Restore button
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+</script>
+
+<style>
+    .table code {
+        background-color: #495057;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .alert {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .alert-success {
+        border-left: 4px solid #28a745;
+    }
+</style>
+
+<script>
+// Check if we came from a product shipment action
+document.addEventListener('DOMContentLoaded', function() {
+    // Show success banner if URL indicates we came from shipment action
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('from_shipment') === 'true') {
+        document.getElementById('shipment-success-banner').style.display = 'block';
+        
+        // Auto-hide the banner after 10 seconds
+        setTimeout(() => {
+            const banner = document.getElementById('shipment-success-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+        }, 10000);
+        
+        // Clean up URL by removing the parameter
+        urlParams.delete('from_shipment');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.replaceState({}, '', newUrl);
+    }
+});
+</script>
+{% endblock %}
