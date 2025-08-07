@@ -168,14 +168,34 @@
     <div class="shipment-section">
       <div class="section-title">Shipment Summary</div>
       <div class="shipment-form-row">
-        <div class="form-group" style="flex: 1; min-width: 200px;">
+        <div class="form-group" style="flex: 1; min-width: 320px; max-width: 420px;">
           <label style="margin-bottom: 0.5rem; color: #e0e0e0; font-weight: normal;">Selected Routes:</label>
-          <div id="shipment_summary_display" style="padding: 1rem; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.9rem; line-height: 1.6;">
-            <div><strong>First Leg:</strong> <span id="summary_first_leg">Not Selected</span></div>
-            <div><strong>Return:</strong> <span id="summary_return_leg">Not Selected</span></div>
-            <div><strong>Aircraft:</strong> <span id="summary_aircraft">Not Selected</span></div>
-            <div><strong>Return Type:</strong> <span id="summary_return_type">Not Selected</span></div>
-          </div>
+          <table id="shipment_summary_display" style="width: 100%; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.95rem; line-height: 1.6; border-collapse: collapse; border-spacing: 0;">
+            <thead>
+              <tr>
+                <th style="text-align: left; font-weight: bold; padding: 8px 12px; width: 120px; background: #23272f;">Item</th>
+                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px; width: 120px;">First Leg</td>
+                <td style="padding: 8px 12px;"><span id="summary_first_leg">Not Selected</span></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return</td>
+                <td style="padding: 8px 12px;"><span id="summary_return_leg">Not Selected</span></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Aircraft</td>
+                <td style="padding: 8px 12px;"><span id="summary_aircraft">Not Selected</span></td>
+              </tr>
+              <tr>
+                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return Type</td>
+                <td style="padding: 8px 12px;"><span id="summary_return_type">Not Selected</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -816,17 +836,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      // Update aircraft display
-      const summaryAircraft = document.getElementById('summary_aircraft');
-      if (summaryAircraft) {
-        if (selectedAircraft) {
-          summaryAircraft.textContent = selectedAircraft;
-          summaryAircraft.style.color = '#2196f3';
-        } else {
-          summaryAircraft.textContent = 'Not Selected';
-          summaryAircraft.style.color = '#bbb';
-        }
-      }
+      // Update aircraft display (intentionally skipped as per user request)
+      // const summaryAircraft = document.getElementById('summary_aircraft');
+      // if (summaryAircraft) {
+      //   if (selectedAircraft) {
+      //     summaryAircraft.textContent = selectedAircraft;
+      //     summaryAircraft.style.color = '#2196f3';
+      //   } else {
+      //     summaryAircraft.textContent = 'Not Selected';
+      //     summaryAircraft.style.color = '#bbb';
+      //   }
+      // }
       
       // Update return type display
       const summaryReturnType = document.getElementById('summary_return_type');
