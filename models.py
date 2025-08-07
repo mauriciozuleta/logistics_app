@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from extensions import db
 # Then define your models like normal
@@ -222,3 +221,33 @@ class Route(BaseModel):
     
     def __repr__(self):
         return f"<Route {self.route_name or f'{self.leg1_route}'} ({self.route_type})>"
+
+
+class Shipment(db.Model):
+    __tablename__ = 'shipments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    shipment_reference = db.Column(db.String(64), unique=True, nullable=False)
+    shipper = db.Column(db.String(64), nullable=False)
+    consignee = db.Column(db.String(64), nullable=False)
+    first_leg_route = db.Column(db.String(64), nullable=False)
+    first_leg_distance = db.Column(db.Float)
+    first_leg_ft = db.Column(db.Float)
+    first_leg_cost = db.Column(db.Float)
+    first_leg_payload = db.Column(db.Float)
+    second_leg_route = db.Column(db.String(64))
+    second_leg_distance = db.Column(db.Float)
+    second_leg_ft = db.Column(db.Float)
+    second_leg_cost = db.Column(db.Float)
+    second_leg_payload = db.Column(db.Float)
+    selected_aircraft = db.Column(db.String(64))
+    return_type = db.Column(db.String(32))
+    outbound_cost_weight = db.Column(db.Float)
+    outbound_tcl = db.Column(db.Float)
+    outbound_kg_cost = db.Column(db.Float)
+    return_cost_weight = db.Column(db.Float)
+    return_tcl = db.Column(db.Float)
+    return_kg_cost = db.Column(db.Float)
+
+    def __repr__(self):
+        return f'<Shipment {self.shipment_reference}>'
