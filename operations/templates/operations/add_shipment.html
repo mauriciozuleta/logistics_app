@@ -168,7 +168,63 @@
     <div class="shipment-section">
       <div class="section-title">Shipment Summary</div>
       <div class="shipment-form-row">
-        <div class="form-group" style="flex: 1; min-width: 320px; max-width: 420px;">
+        <div class="form-group" style="flex: 1; min-width: 320px; max-width: 100%;">
+          <!-- New 10x4 summary table -->
+          <table id="shipment_summary_table" style="width: 100%; background-color: #23272f; border-radius: 4px; color: #bbb; font-size: 0.95rem; line-height: 1.6; border-collapse: collapse; border-spacing: 0; margin-bottom: 18px;">
+            <thead>
+              <tr>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 1</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 2</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 3</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 4</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 5</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 6</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 7</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 8</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 9</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal;">Col 10</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;"></td>
+              </tr>
+              <tr>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;"></td>
+              </tr>
+              <tr>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;"></td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- Existing Selected Routes table below -->
           <label style="margin-bottom: 0.5rem; color: #e0e0e0; font-weight: normal;">Selected Routes:</label>
           <table id="shipment_summary_display" style="width: 100%; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.95rem; line-height: 1.6; border-collapse: collapse; border-spacing: 0;">
             <thead>
