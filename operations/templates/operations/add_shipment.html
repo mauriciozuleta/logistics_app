@@ -312,6 +312,22 @@
       </button>
     </div>
   </form>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmation-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6);">
+    <div style="background-color: #1e2228; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 60%; max-width: 700px; border-radius: 8px; color: #e0e0e0; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+      <h3 style="color: #FF5C00; border-bottom: 1px solid rgba(255, 92, 0, 0.5); padding-bottom: 10px; margin-top: 0;">Confirm Shipment Details</h3>
+      <p>Please confirm the following details before adding cargo. This information will be used to create the cargo entry.</p>
+      <div id="modal-data-content" style="max-height: 400px; overflow-y: auto; background: #2a2e35; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #444;">
+        <!-- Data will be injected here by JavaScript -->
+      </div>
+      <div style="text-align: right;">
+        <button id="modal-cancel-btn" style="background-color: #5a5a5a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: bold;">Cancel</button>
+        <button id="modal-confirm-btn" style="background-color: #008CBA; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Confirm & Add Cargo</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -844,9 +860,7 @@ document.addEventListener('DOMContentLoaded', function() {
         firstLegBtn.style.border = '1px solid #00ff00';
         firstLegBtn.style.cursor = 'pointer';
         firstLegBtn.disabled = false;
-        firstLegBtn.onclick = function() {
-          redirectToProductPage('first_leg');
-        };
+        firstLegBtn.onclick = () => showConfirmationAndRedirect('first_leg');
       } else {
         firstLegBtn.textContent = '';
         firstLegBtn.style.backgroundColor = '#181c22';
@@ -865,9 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
         secondLegBtn.style.border = '1px solid #ff6600';
         secondLegBtn.style.cursor = 'pointer';
         secondLegBtn.disabled = false;
-        secondLegBtn.onclick = function() {
-          redirectToProductPage('second_leg');
-        };
+        secondLegBtn.onclick = () => showConfirmationAndRedirect('second_leg');
       } else {
         secondLegBtn.textContent = '';
         secondLegBtn.style.backgroundColor = '#181c22';
@@ -884,6 +896,86 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
       console.error('Error updating summary buttons:', error);
     }
+  }
+
+
+  // Function to show the confirmation modal and handle redirection
+  function showConfirmationAndRedirect(legType) {
+    const modal = document.getElementById('confirmation-modal');
+    const modalContent = document.getElementById('modal-data-content');
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+    const cancelBtn = document.getElementById('modal-cancel-btn');
+
+    if (!modal || !modalContent || !confirmBtn || !cancelBtn) {
+      console.error('Modal elements not found!');
+      // Fallback to direct redirect if modal is broken
+      redirectToProductPage(legType);
+      return;
+    }
+
+    // 1. Collect Data
+    const data = collectDataForModal(legType);
+
+    // 2. Populate Modal
+    modalContent.innerHTML = formatDataForModal(data);
+
+    // 3. Show Modal
+    modal.style.display = 'block';
+
+    // 4. Handle Actions
+    confirmBtn.onclick = () => {
+      modal.style.display = 'none';
+      redirectToProductPage(legType);
+    };
+
+    cancelBtn.onclick = () => {
+      modal.style.display = 'none';
+    };
+  }
+
+  // Helper function to collect all relevant data
+  function collectDataForModal(legType) {
+    const draft = getShipmentDraft();
+    const data = {
+      'Adding Cargo To': legType === 'first_leg' ? '<span style="color: #00ff00; font-weight: bold;">Departure Route</span>' : '<span style="color: #ff6600; font-weight: bold;">Return Route</span>',
+      'Shipment Reference': draft.shipment_reference,
+      'Shipper': document.getElementById('shipper').options[document.getElementById('shipper').selectedIndex]?.text,
+      'Consignee': document.getElementById('consignee').options[document.getElementById('consignee').selectedIndex]?.text,
+      'Aircraft': draft.available_aircraft,
+      'Return Type': draft.return_type,
+      'Total Flight Cost': document.getElementById('total_flight_cost')?.textContent,
+      '': '', // separator
+      'Outbound Cost Allocation': `${draft.outbound_percent}%`,
+      'Outbound Target Load': `${draft.outbound_extra}%`,
+      'Calculated Outbound Cost/Kg': document.getElementById('outbound_kg_cost')?.textContent,
+    };
+
+    if (draft.return_type === 'compensated') {
+        data['Return Cost Allocation'] = `${draft.return_percent}%`;
+        data['Return Target Load'] = `${draft.return_extra}%`;
+        data['Calculated Return Cost/Kg'] = document.getElementById('return_kg_cost')?.textContent;
+    }
+
+    return data;
+  }
+
+  // Helper function to format the data object into HTML for the modal
+  function formatDataForModal(data) {
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    for (const [key, value] of Object.entries(data)) {
+        if (key === '') { // separator
+            html += `<tr><td colspan="2" style="padding: 6px 0; border-bottom: 1px solid #444;"></td></tr>`;
+        } else {
+            html += `
+                <tr style="border-bottom: 1px solid #3a3e45;">
+                    <td style="padding: 8px; font-weight: bold; color: #aaa; width: 40%;">${key}</td>
+                    <td style="padding: 8px; color: #fff;">${value || 'N/A'}</td>
+                </tr>
+            `;
+        }
+    }
+    html += '</table>';
+    return html;
   }
 
   // Function to redirect to product page with route information
