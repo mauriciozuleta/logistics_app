@@ -259,34 +259,19 @@
       </div>
 
   <!-- Product/Cost Details Section -->
-  <div class="shipment-section" id="product-cost-section" style="margin-top: 30px;">
+  <div class="shipment-section" id="product-cost-section" style="margin-top: 30px; display: none;">
     <div class="section-title">Product / Cost Details</div>
-    <div class="vertical-label-table-container" style="margin-top: 10px; max-width: 420px;">
-      <table class="vertical-label-table" style="width: 100%; background: #181c22; border-radius: 8px; border-collapse: separate; border-spacing: 0; color: #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.12); text-align: left;">
-        <tbody style="display: block; max-height: 408px; overflow-y: auto; width: 100%;">
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px; width: 180px;">Product ID</th><td style="padding: 10px 16px;"><span id="prod_id">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px; width: 180px;">Name</th><td style="padding: 10px 16px;"><span id="prod_name">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Country</th><td style="padding: 10px 16px;"><span id="prod_country">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Pack type</th><td style="padding: 10px 16px;"><span id="prod_pack_type">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Pack Weight</th><td style="padding: 10px 16px;"><span id="prod_pack_weight">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Pack Cost</th><td style="padding: 10px 16px;"><span id="prod_pack_cost">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Profit</th><td style="padding: 10px 16px;"><span id="prod_profit">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Final Pack cost (Local)</th><td style="padding: 10px 16px;"><span id="prod_final_local">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Final pack Cost (USD)</th><td style="padding: 10px 16px;"><span id="prod_final_usd">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Quantity</th><td style="padding: 10px 16px;"><span id="prod_quantity">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Total Order</th><td style="padding: 10px 16px;"><span id="prod_total_order">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Sales Tax</th><td style="padding: 10px 16px;"><span id="prod_sales_tax">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">FCA Cost</th><td style="padding: 10px 16px;"><span id="prod_fca_cost">-</span></td></tr>
-          <!-- New scrollable labels -->
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Cargo Load Cost</th><td style="padding: 10px 16px;"><span id="prod_cargo_load_cost">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Freight Cost</th><td style="padding: 10px 16px;"><span id="prod_freight_cost">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Cargo Unload Cost</th><td style="padding: 10px 16px;"><span id="prod_cargo_unload_cost">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">CIP Cost</th><td style="padding: 10px 16px;"><span id="prod_cip_cost">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Profit</th><td style="padding: 10px 16px;"><span id="prod_profit2">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Import Taxes</th><td style="padding: 10px 16px;"><span id="prod_import_taxes">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">Sales Tax</th><td style="padding: 10px 16px;"><span id="prod_sales_tax2">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">DAT Cost (W/U)</th><td style="padding: 10px 16px;"><span id="prod_dat_cost_wu">-</span></td></tr>
-          <tr style="display: table; width: 100%; table-layout: fixed;"><th style="text-align:left; padding: 10px 16px;">DAT Cost (Unit)</th><td style="padding: 10px 16px;"><span id="prod_dat_cost_unit">-</span></td></tr>
+    <div style="overflow-x: auto; margin-top: 10px;">
+      <table id="product-details-table" style="width: 100%; min-width: 600px; background: #181c22; border-radius: 8px; border-collapse: collapse; color: #e0e0e0; text-align: left;">
+        <thead>
+          <tr style="background-color: #23272f;">
+            <th style="padding: 10px 16px;">Product ID</th>
+            <th style="padding: 10px 16px;">Name</th>
+            <th style="padding: 10px 16px;">Pack Weight</th>
+          </tr>
+        </thead>
+        <tbody id="product-details-tbody">
+          <!-- Product rows will be injected here by JavaScript -->
         </tbody>
       </table>
     </div>
@@ -334,11 +319,6 @@
 // --- Shipment Draft Dictionary Logic ---
 const SHIPMENT_DRAFT_KEY = 'shipmentDraft';
 
-// Clear the draft on browser reload (fresh page load)
-window.addEventListener('load', function() {
-  localStorage.removeItem(SHIPMENT_DRAFT_KEY);
-});
-
 // Helper to get the current draft object
 function getShipmentDraft() {
   const data = localStorage.getItem(SHIPMENT_DRAFT_KEY);
@@ -372,7 +352,10 @@ function updateShipmentDraftFromForm() {
 
 // Attach update logic to relevant form fields
 document.addEventListener('DOMContentLoaded', function() {
-  // Update draft on any change in form fields
+  // On page load, try to restore the form from a saved draft.
+  restoreFormFromDraft();
+
+  // Attach listeners to update the draft on any user changes.
   [
     'shipment_reference','shipper','consignee','first_leg_route','second_leg_route',
     'available_aircraft','return_type','outbound_percent','return_percent','outbound_extra','return_extra'
@@ -383,8 +366,6 @@ document.addEventListener('DOMContentLoaded', function() {
       el.addEventListener('input', updateShipmentDraftFromForm);
     }
   });
-  // Initial save
-  updateShipmentDraftFromForm();
 
   // ...existing code...
   // Inject trader and route data from Flask
@@ -1106,6 +1087,103 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  /**
+   * Populates the aircraft dropdown with options available for a specific route.
+   * @param {string} selectedRouteId - The ID of the currently selected departure route.
+   */
+  function updateAircraftOptions(selectedRouteId) {
+    const availableAircraftSelect = document.getElementById('available_aircraft');
+    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>'; // Clear existing options
+
+    if (selectedRouteId && routeData[selectedRouteId]) {
+        const route = routeData[selectedRouteId];
+        const aircraftList = Array.isArray(route.aircraft) ? route.aircraft : (route.aircraft || '').split(',').map(ac => ac.trim()).filter(ac => ac);
+        
+        aircraftList.forEach(ac => {
+            const acOption = document.createElement('option');
+            acOption.value = ac;
+            acOption.textContent = ac;
+            availableAircraftSelect.appendChild(acOption);
+        });
+    }
+  }
+
+  /**
+   * Restores the entire form state from the shipment draft in localStorage.
+   * This is called once when the page loads to repopulate the form.
+   */
+  function restoreFormFromDraft() {
+    const draft = getShipmentDraft();
+    if (!draft || Object.keys(draft).length === 0 || !draft.shipper) {
+      console.log("No valid draft found to restore.");
+      return;
+    }
+
+    console.log("Restoring form from draft:", draft);
+
+    // 1. Restore simple fields first
+    document.getElementById('shipper').value = draft.shipper || '';
+    document.getElementById('consignee').value = draft.consignee || '';
+    document.getElementById('return_type').value = draft.return_type || '';
+    document.getElementById('outbound_percent').value = draft.outbound_percent || '100';
+    document.getElementById('outbound_extra').value = draft.outbound_extra || '';
+    document.getElementById('return_extra').value = draft.return_extra || '';
+
+    // 2. Trigger the logic that loads route options based on shipper/consignee
+    loadRoutesLogic();
+
+    // 3. Use a small delay to allow the route dropdowns to be populated by the above function
+    setTimeout(() => {
+      const firstLegRouteSelect = document.getElementById('first_leg_route');
+      const secondLegRouteSelect = document.getElementById('second_leg_route');
+      
+      // Now that options exist, set the selected route from the draft
+      firstLegRouteSelect.value = draft.first_leg_route || '';
+      secondLegRouteSelect.value = draft.second_leg_route || '';
+      
+      // Update aircraft options and availability based on the restored routes
+      updateAircraftOptions(firstLegRouteSelect.value);
+      updateAircraftAvailability();
+
+      const availableAircraftSelect = document.getElementById('available_aircraft');
+      if (!availableAircraftSelect.disabled) {
+        availableAircraftSelect.value = draft.available_aircraft || '';
+        // If an aircraft was successfully restored, trigger all the final calculations
+        if (availableAircraftSelect.value) {
+          populateRouteInformationSafely();
+        }
+      }
+      
+      // 4. Populate the product details table with any selected products
+      populateProductDetailsTable(draft);
+
+      // 5. Regenerate the shipment reference number
+      generateShipmentReference();
+
+    }, 150); // A 150ms delay is usually sufficient for the DOM to update.
+  }
+
+  /**
+   * Populates the product details table from the draft.
+   */
+  function populateProductDetailsTable(draft) {
+    const productTableBody = document.getElementById('product-details-tbody');
+    const productSection = document.getElementById('product-cost-section');
+
+    if (Array.isArray(draft.selected_products) && draft.selected_products.length > 0) {
+      productTableBody.innerHTML = ''; // Clear existing rows
+      draft.selected_products.forEach(product => {
+        const row = productTableBody.insertRow();
+        row.innerHTML = `
+          <td style="padding: 10px 16px;">${product.prod_id || '-'}</td>
+          <td style="padding: 10px 16px;">${product.prod_name || '-'}</td>
+          <td style="padding: 10px 16px;">${product.prod_pack_weight || '-'}</td>
+        `;
+      });
+      productSection.style.display = 'block';
+    }
+  }
+
   // Safely clear all route information fields
   function clearRouteInformationSafely() {
     const fieldsToReset = [
@@ -1226,6 +1304,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Add event listener to first leg route to update aircraft availability and recalculate
   firstLegRouteSelect.addEventListener('change', function() {
     try {
+      // Update the available aircraft options based on the newly selected route
+      updateAircraftOptions(this.value);
+
       // Update aircraft availability when first leg route changes
       updateAircraftAvailability();
       
@@ -1470,22 +1551,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update aircraft availability after populating return routes
     updateAircraftAvailability();
 
-    // Aircraft dropdown: only show aircraft for selected first leg route
-    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
-    if (firstLegRoutes.length > 0) {
-      let aircraftList = [];
-      if (Array.isArray(firstLegRoutes[0].aircraft)) {
-        aircraftList = firstLegRoutes[0].aircraft;
-      } else if (typeof firstLegRoutes[0].aircraft === 'string') {
-        aircraftList = firstLegRoutes[0].aircraft.split(',').map(ac => ac.trim()).filter(ac => ac);
-      }
-      aircraftList.forEach(ac => {
-        const acOption = document.createElement('option');
-        acOption.value = ac;
-        acOption.textContent = ac;
-        availableAircraftSelect.appendChild(acOption);
-      });
-    }
     if (!found) {
       routeInfoSection.style.display = 'none';
       showRouteNotFound(true);

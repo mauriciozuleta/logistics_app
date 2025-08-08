@@ -83,17 +83,18 @@
                 <strong>🚢 Adding Cargo to Route:</strong> {{ route_info }}
                 <br><small style="color: #bbb;">Click "Add to {{ from_airport }} - {{ to_airport }}" to assign products to this {{ 'first leg' if route_type == 'first_leg' else 'return leg' }} route</small>
               </div>
-              <button onclick="sendToShipment()" class="btn" style="background-color: #ff9800; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; margin-left: 20px;">
+              <button id="send-to-shipment-btn" class="btn" style="background-color: #ff9800; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; margin-left: 20px;">
                 📦 Send to Shipment
               </button>
             </div>
           {% endif %}
 
           {% if product_list %}
-            <div class="table-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 20px;">
-              <table class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 0;">
+            <div id="product-table-container" class="table-container" style="max-height: 500px; overflow-y: auto; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 20px;">
+              <table id="product-table" class="table table-bordered" style="background-color: #181c22; color: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 0;">
                 <thead style="background-color: #23272e; position: sticky; top: 0; z-index: 10;">
                   <tr>
+                    <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem; width: 50px;">Select</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Type</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Name</th>
                     <th style="border: 1px solid #2196f3; color: #2196f3; text-align: center; padding: 12px; font-size: 0.9rem;">Country</th>
@@ -110,7 +111,13 @@
                 </thead>
                 <tbody>
                   {% for product in product_list %}
-                    <tr data-product-id="{{ product.id }}" style="background-color: #181c22;">
+                    <tr data-product-id="{{ product.id }}" 
+                        data-product-name="{{ product.name }}"
+                        data-product-pack-weight="{{ '{:,.2f} kg'.format(product.packaging_weight) if product.packaging_weight else '-' }}"
+                        style="background-color: #181c22;">
+                      <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
+                        <input type="checkbox" class="product-select-checkbox" value="{{ product.id }}" style="width: 18px; height: 18px;">
+                      </td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.product_type or '-' }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px; font-weight: bold;">{{ product.name }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">{{ product.country.country_name if product.country else '-' }}</td>
@@ -124,11 +131,6 @@
                       <td style="border: 1px solid #9c27b0; color: #fff; text-align: center; padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ product.other_info or '' }}">{{ (product.other_info[:50] + '...') if product.other_info and product.other_info|length > 50 else (product.other_info or '-') }}</td>
                       <td style="border: 1px solid #2196f3; color: #fff; text-align: center; padding: 12px;">
                         <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                          {% if route_info %}
-                            <button onclick="addToRoute('{{ product.id }}', '{{ route_info }}', '{{ route_type }}')" class="btn btn-sm" style="background-color: #4caf50; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none; cursor: pointer; font-size: 0.8rem;">
-                              ➕ Add to {{ from_airport }} - {{ to_airport }}
-                            </button>
-                          {% endif %}
                           <a href="{{ url_for('coredata.add_product', edit_id=product.id) }}" class="btn btn-sm" style="background-color: #ff9800; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; text-decoration: none;">
                             ✏️ Edit
                           </a>
@@ -201,160 +203,179 @@
   </div>
 </div>
 
+
+<!-- Product Confirmation Modal -->
+<div id="product-confirmation-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6);">
+  <div style="background-color: #1e2228; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 60%; max-width: 700px; border-radius: 8px; color: #e0e0e0; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+    <h3 style="color: #FF5C00; border-bottom: 1px solid rgba(255, 92, 0, 0.5); padding-bottom: 10px; margin-top: 0;">Confirm Products for Shipment</h3>
+    <p>Please review the products below. Clicking "Confirm" will add them to your shipment and return you to the shipment form.</p>
+    <div id="product-modal-data-content" style="max-height: 400px; overflow-y: auto; background: #2a2e35; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #444;">
+      <!-- Data will be injected here by JavaScript -->
+    </div>
+    <div style="text-align: right;">
+      <button id="product-modal-cancel-btn" style="background-color: #5a5a5a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: bold;">Cancel</button>
+      <button id="product-modal-confirm-btn" style="background-color: #008CBA; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Confirm & Send to Shipment</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// Array to store selected products
-let selectedProducts = [];
-
-function applyFilter() {
-  const filterSelect = document.getElementById('product_type_filter');
-  const selectedType = filterSelect.value;
-  
-  // Build URL with current parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  
-  if (selectedType) {
-    urlParams.set('product_type', selectedType);
-  } else {
-    urlParams.delete('product_type');
-  }
-  
-  // Reset to first page when filtering
-  urlParams.delete('page');
-  
-  // Preserve route information for cargo assignment
-  const routeType = urlParams.get('route_type') || '';
-  const routeInfo = urlParams.get('route_info') || '';
-  const fromAirport = urlParams.get('from_airport') || '';
-  const toAirport = urlParams.get('to_airport') || '';
-  
-  // Construct new URL
-  let newUrl = window.location.pathname;
-  if (urlParams.toString()) {
-    newUrl += '?' + urlParams.toString();
-  }
-  
-  // Redirect to filtered page
-  window.location.href = newUrl;
-}
-
-function addToRoute(productId, routeInfo, routeType) {
-  // Check if product is already selected
-  if (selectedProducts.includes(productId)) {
-    alert('This product has already been selected for the current route.');
-    return;
-  }
-  
-  // Add visual feedback
-  const productRow = document.querySelector(`tr[data-product-id="${productId}"]`);
-  const addButton = document.querySelector(`button[onclick="addToRoute('${productId}', '${routeInfo}', '${routeType}')"]`);
-  
-  if (productRow) {
-    productRow.classList.add('product-selected');
-  }
-  
-  if (addButton) {
-    addButton.classList.add('add-button-selected');
-    addButton.textContent = '✓ Added';
-    addButton.disabled = true;
-    addButton.onclick = null; // Remove click handler
-  }
-  
-  // Add to selected products array
-  selectedProducts.push(productId);
-  
-  // Update selected count if route info is shown
-  updateSelectedCount();
-  
-  console.log(`Product ${productId} added to ${routeType === 'first_leg' ? 'First Leg' : 'Return Leg'} route: ${routeInfo}`);
-}
-
-function updateSelectedCount() {
-  // Update the route info banner to show selected count
-  const routeInfoDiv = document.querySelector('div[style*="Adding Cargo to Route"]');
-  if (routeInfoDiv && selectedProducts.length > 0) {
-    const countElement = routeInfoDiv.querySelector('.selected-count');
-    if (countElement) {
-      countElement.textContent = `(${selectedProducts.length} products selected)`;
-    } else {
-      // Add count element if it doesn't exist
-      const smallElement = routeInfoDiv.querySelector('small');
-      if (smallElement) {
-        const countSpan = document.createElement('span');
-        countSpan.className = 'selected-count';
-        countSpan.style.color = '#4caf50';
-        countSpan.style.fontWeight = 'bold';
-        countSpan.textContent = ` (${selectedProducts.length} products selected)`;
-        smallElement.appendChild(countSpan);
-      }
-    }
-  }
-}
-
-function sendToShipment() {
-  if (selectedProducts.length === 0) {
-    alert('Please select at least one product before sending to shipment.');
-    return;
-  }
-  
-  // Get product details for the selected products
-  const selectedProductDetails = [];
-  selectedProducts.forEach(productId => {
-    const productRow = document.querySelector(`tr[data-product-id="${productId}"]`);
-    if (productRow) {
-      const cells = productRow.querySelectorAll('td');
-      const productDetail = {
-        id: productId,
-        type: cells[0]?.textContent?.trim() || '',
-        name: cells[1]?.textContent?.trim() || '',
-        country: cells[2]?.textContent?.trim() || '',
-        trade_unit: cells[3]?.textContent?.trim() || '',
-        fca_cost_per_wu: cells[4]?.textContent?.trim() || '',
-        packaging: cells[5]?.textContent?.trim() || '',
-        pack_weight: cells[6]?.textContent?.trim() || '',
-        units_per_pack: cells[7]?.textContent?.trim() || '',
-        pack_cost: cells[8]?.textContent?.trim() || '',
-        currency: cells[9]?.textContent?.trim() || '',
-        other_info: cells[10]?.textContent?.trim() || ''
-      };
-      selectedProductDetails.push(productDetail);
-    }
-  });
-  
-  // Show confirmation with selected products
-  const message = `Sending ${selectedProducts.length} selected products to shipment:\n\nProduct IDs: ${selectedProducts.join(', ')}\n\nThis will populate the Products/Costs details table in the shipment form.`;
-  
-  if (confirm(message + '\n\nWould you like to proceed?')) {
-    // Store product details in localStorage for the shipment form to access
-    localStorage.setItem('selectedProductDetailsForShipment', JSON.stringify(selectedProductDetails));
-    localStorage.setItem('selectedProductsForShipment', JSON.stringify(selectedProducts));
-    
-    // Store route information to preserve it when returning to add_shipment
-    const routeInfo = {
-      timestamp: new Date().getTime(),
-      referrer: document.referrer
-    };
-    localStorage.setItem('shipmentRouteInfo', JSON.stringify(routeInfo));
-    
-    // Show success message
-    alert(`Successfully loaded ${selectedProducts.length} products into the shipment!\n\nRedirecting to shipment form...`);
-    
-    // Redirect to the shipment form
-    if (document.referrer && document.referrer.includes('add-shipment')) {
-      // Go back to the shipment form
-      window.location.href = document.referrer;
-    } else {
-      // Go to the add shipment page
-      window.location.href = '/operations/add-shipment';
-    }
-  }
-}
-
-
-
-// Initialize selected products from any existing visual state
+// --- Consolidated Product Selection Logic ---
 document.addEventListener('DOMContentLoaded', function() {
-  // You could load previously selected products from localStorage or other storage here
-  console.log('Product selection system initialized');
+    const SHIPMENT_DRAFT_KEY = 'shipmentDraft';    
+
+    function getShipmentDraft() {
+        const data = localStorage.getItem(SHIPMENT_DRAFT_KEY);
+        return data ? JSON.parse(data) : {};
+    }
+
+    // Helper to save the draft object to localStorage
+    function saveShipmentDraft(draft) {
+        localStorage.setItem(SHIPMENT_DRAFT_KEY, JSON.stringify(draft));
+    }
+
+    /**
+     * Gathers selected products, shows the confirmation modal, and handles the result.
+     */
+    function showConfirmationAndSend() {
+        // 1. Collect data from all selected products in the table.
+        const selectedProducts = collectSelectedProductData();
+
+        if (selectedProducts.length === 0) {
+            alert('Please select at least one product to add to the shipment.');
+            return;
+        }
+
+        // 2. Create a temporary draft object for display in the modal.
+        const draft = getShipmentDraft();
+        const tempDraft = JSON.parse(JSON.stringify(draft)); // Deep copy
+        tempDraft.newly_selected_products = selectedProducts;
+
+        // 3. Get modal elements
+        const modal = document.getElementById('product-confirmation-modal');
+        const modalContent = document.getElementById('product-modal-data-content');
+        const confirmBtn = document.getElementById('product-modal-confirm-btn');
+        const cancelBtn = document.getElementById('product-modal-cancel-btn');
+
+        if (!modal || !modalContent || !confirmBtn || !cancelBtn) {
+            console.error('Product confirmation modal elements not found!');
+            // Fallback for safety if modal is broken
+            if (!draft.selected_products) draft.selected_products = [];
+            draft.selected_products.push(...selectedProducts);
+            saveShipmentDraft(draft);
+            window.location.href = '/operations/add-shipment';
+            return;
+        }
+
+        // 4. Populate Modal
+        modalContent.innerHTML = formatDataForProductModal(tempDraft);
+
+        // 5. Show Modal
+        modal.style.display = 'block';
+
+        // 6. Handle Actions
+        confirmBtn.onclick = () => {
+            modal.style.display = 'none';
+            // On confirm, save the selected products to the main shipment draft and redirect.
+            if (!draft.selected_products) draft.selected_products = [];
+            draft.selected_products.push(...selectedProducts);
+            saveShipmentDraft(draft);
+            console.log('Products confirmed and added to draft. Redirecting...');
+            window.location.href = '/operations/add-shipment'; // Adjust URL if necessary
+        };
+
+        cancelBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
+
+    /**
+     * Formats the draft and selected product data into HTML for the modal.
+     * @param {object} draft - The shipment draft object with product data.
+     */
+    function formatDataForProductModal(draft) {
+        let html = '<table style="width: 100%; border-collapse: collapse;">';
+        
+        // Display core shipment info
+        html += `
+            <tr style="border-bottom: 1px solid #3a3e45;">
+                <td style="padding: 8px; font-weight: bold; color: #aaa; width: 40%;">Shipment Reference</td>
+                <td style="padding: 8px; color: #fff;">${draft.shipment_reference || 'N/A'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #3a3e45;">
+                <td style="padding: 8px; font-weight: bold; color: #aaa; width: 40%;">Aircraft</td>
+                <td style="padding: 8px; color: #fff;">${draft.available_aircraft || 'N/A'}</td>
+            </tr>
+        `;
+
+        // Separator
+        html += `<tr><td colspan="2" style="padding: 15px 0 5px 0; font-weight: bold; color: #FF5C00; font-size: 1.1em;">Products to be Added:</td></tr>`;
+
+        // Display newly selected products
+        if (draft.newly_selected_products && draft.newly_selected_products.length > 0) {
+            html += '<tr><td colspan="2" style="padding: 8px;">';
+            html += '<table style="width: 100%; border-collapse: collapse; background: #1e2228;">';
+            html += '<thead><tr style="color: #ccc; font-size: 0.9em; text-align: left;"><th style="padding: 5px;">ID</th><th style="padding: 5px;">Name</th><th style="padding: 5px;">Pack Weight</th></tr></thead>';
+            html += '<tbody>';
+            draft.newly_selected_products.forEach(p => {
+                html += `<tr style="border-top: 1px solid #3a3e45;">
+                            <td style="padding: 5px;">${p.prod_id || '-'}</td>
+                            <td style="padding: 5px;">${p.prod_name || '-'}</td>
+                            <td style="padding: 5px;">${p.prod_pack_weight || '-'}</td>
+                         </tr>`;
+            });
+            html += '</tbody></table>';
+            html += '</td></tr>';
+        }
+
+        html += '</table>';
+        return html;
+    }
+
+    /**
+     * Collects data from the product table for all rows with a checked checkbox.
+     *
+     * IMPORTANT: You must adapt this function to match your product table's HTML structure.
+     * This example assumes:
+     * 1. Your table has an id: <table id="product-table">
+     * 2. Each row you want to select has a checkbox: <input type="checkbox">
+     * 3. The data is in the table cells (<td>) in a specific order.
+     *
+     * @returns {Array} An array of product objects.
+     */
+    function collectSelectedProductData() {
+        const products = [];
+        // Find all checkboxes that are checked within the product table body.
+        const selectedCheckboxes = document.querySelectorAll('.product-select-checkbox:checked');
+
+        selectedCheckboxes.forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            if (!row) return;
+
+            // Using data-* attributes from the row is robust and reliable.
+            try {
+                const productData = {
+                    prod_id: row.dataset.productId,
+                    prod_name: row.dataset.productName,
+                    prod_pack_weight: row.dataset.productPackWeight,
+                };
+                products.push(productData);
+            } catch (e) {
+                console.error("Could not read product data from a table row. Please check your table structure and cell indices.", row, e);
+            }
+        });
+
+        console.log(`Collected ${products.length} products.`);
+        return products;
+    }
+
+    // Attach the main function to your button's click event.
+    const sendButton = document.getElementById('send-to-shipment-btn');
+    if (sendButton) {
+        sendButton.addEventListener('click', showConfirmationAndSend);
+    }
 });
 </script>
+
+
 {% endblock %}
