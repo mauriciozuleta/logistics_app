@@ -101,10 +101,7 @@
             <div><strong>Flight Time:</strong> <span id="first_leg_flight_time">N/A</span></div>
             <div><strong>Route Cost:</strong> <span id="first_leg_route_cost">N/A</span></div>
             <div><strong>Available Payload:</strong> <span id="first_leg_payload">N/A</span></div>
-          </div>
-          <button type="button" id="first_leg_summary_btn" disabled
-                  style="width: 100%; height: 35px; background-color: #181c22; color: #666; border: 1px solid #666; border-radius: 4px; font-size: 0.9rem; cursor: not-allowed; margin-top: 0.5rem;">
-          </button>
+        </div>
         </div>
         <div class="form-group" style="flex: 0.85; min-width: 120px;">
           <label for="second_leg_route">Return Route</label>
@@ -116,10 +113,7 @@
             <div><strong>Flight Time:</strong> <span id="second_leg_flight_time">N/A</span></div>
             <div><strong>Route Cost:</strong> <span id="second_leg_route_cost">N/A</span></div>
             <div><strong>Available Payload:</strong> <span id="second_leg_payload">N/A</span></div>
-          </div>
-          <button type="button" id="second_leg_summary_btn" disabled
-                  style="width: 100%; height: 35px; background-color: #181c22; color: #666; border: 1px solid #666; border-radius: 4px; font-size: 0.9rem; cursor: not-allowed; margin-top: 0.5rem;">
-          </button>
+        </div>
         </div>
 
         <div class="form-group" style="flex: 0.7; min-width: 100px;">
@@ -175,11 +169,11 @@
             <thead>
               <tr>
                 <th style="border: 1.5px solid #2196f3; height: 32px; min-width: 160px; width: 1%; color: #FF5C00; font-weight: normal; text-align: center;"></th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 4</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 5</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 6</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 7</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 8</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Route</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Avg. Kg / P-L</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Remaining Payload</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Acum. Shpmt. Cost</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Acum. Revenue</th>
                 <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 9</th>
                 <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 10</th>
               </tr>
@@ -312,21 +306,6 @@
       </button>
     </div>
   </form>
-
-  <!-- Confirmation Modal -->
-  <div id="confirmation-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6);">
-    <div style="background-color: #1e2228; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 60%; max-width: 700px; border-radius: 8px; color: #e0e0e0; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-      <h3 style="color: #FF5C00; border-bottom: 1px solid rgba(255, 92, 0, 0.5); padding-bottom: 10px; margin-top: 0;">Confirm Shipment Details</h3>
-      <p>Please confirm the following details before adding cargo. This information will be used to create the cargo entry.</p>
-      <div id="modal-data-content" style="max-height: 400px; overflow-y: auto; background: #2a2e35; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #444;">
-        <!-- Data will be injected here by JavaScript -->
-      </div>
-      <div style="text-align: right;">
-        <button id="modal-cancel-btn" style="background-color: #5a5a5a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: bold;">Cancel</button>
-        <button id="modal-confirm-btn" style="background-color: #008CBA; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Confirm & Add Cargo</button>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -527,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (availableAircraftSelect && availableAircraftSelect.value) {
           calculateTotalFlightCostSafely();
           calculateKgCostsSafely();
-          updateSummaryButtons(); // Update summary buttons when percentages change
         }
       } catch (error) {
         console.error('Error updating costs from percentage change:', error);
@@ -640,9 +618,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Clear route information when aircraft becomes unavailable
       clearRouteInformationSafely();
     }
-    
-    // Update summary buttons whenever aircraft availability changes
-    updateSummaryButtons();
   }
 
   // Add event listener to show message when trying to select disabled aircraft
@@ -755,9 +730,6 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('Calculating kg costs...');
       calculateKgCostsSafely();
       
-      // Update summary buttons
-      updateSummaryButtons();
-      
       console.log('=== ROUTE POPULATION COMPLETE ===');
     } else {
       console.error('Missing required elements or data');
@@ -818,209 +790,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } catch (error) {
       console.error(`Error updating element ${elementId}:`, error);
-    }
-  }
-
-  // Update summary buttons based on route completion
-  function updateSummaryButtons() {
-    try {
-
-      const firstLegBtn = document.getElementById('first_leg_summary_btn');
-      const secondLegBtn = document.getElementById('second_leg_summary_btn');
-      if (!firstLegBtn || !secondLegBtn) return;
-
-      // Get all required field values
-      const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
-      const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
-      const selectedAircraft = availableAircraftSelect ? availableAircraftSelect.value : null;
-      const returnType = returnTypeSelect ? returnTypeSelect.value : null;
-      const totalFlightCostElement = document.getElementById('total_flight_cost');
-      const totalFlightCostValid = totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error');
-      const outboundPercent = outboundPercentInput && outboundPercentInput.value && !isNaN(outboundPercentInput.value) && Number(outboundPercentInput.value) > 0;
-      const outboundExtra = outboundExtraInput && outboundExtraInput.value && !isNaN(outboundExtraInput.value) && Number(outboundExtraInput.value) > 0;
-      const returnPercent = returnPercentInput && returnPercentInput.value && !isNaN(returnPercentInput.value);
-      const returnExtra = returnExtraInput && returnExtraInput.value && !isNaN(returnExtraInput.value) && Number(returnExtraInput.value) > 0;
-
-      // For full return, returnPercent must be a number (can be 0 or more)
-      const fullReturnValid = returnType === 'full' && returnPercent;
-      // For compensated, returnPercent and returnExtra must be > 0
-      const compensatedReturnValid = returnType === 'compensated' && returnPercent && Number(returnPercentInput.value) > 0 && returnExtra;
-
-      // Check if first leg route information is complete
-      const firstLegComplete = firstLegRouteId && selectedAircraft && returnType && totalFlightCostValid && outboundPercent && outboundExtra && (fullReturnValid || compensatedReturnValid);
-
-      // Check if second leg route information is complete
-      const secondLegComplete = secondLegRouteId && selectedAircraft && returnType && totalFlightCostValid && outboundPercent && outboundExtra && (fullReturnValid || compensatedReturnValid);
-
-      // Update first leg button
-      if (firstLegComplete) {
-        firstLegBtn.textContent = 'Add Cargo';
-        firstLegBtn.style.backgroundColor = '#181c22';
-        firstLegBtn.style.color = '#00ff00';
-        firstLegBtn.style.border = '1px solid #00ff00';
-        firstLegBtn.style.cursor = 'pointer';
-        firstLegBtn.disabled = false;
-        firstLegBtn.onclick = () => showConfirmationAndRedirect('first_leg');
-      } else {
-        firstLegBtn.textContent = '';
-        firstLegBtn.style.backgroundColor = '#181c22';
-        firstLegBtn.style.color = '#666';
-        firstLegBtn.style.border = '1px solid #666';
-        firstLegBtn.style.cursor = 'not-allowed';
-        firstLegBtn.disabled = true;
-        firstLegBtn.onclick = null;
-      }
-
-      // Update second leg button
-      if (secondLegComplete) {
-        secondLegBtn.textContent = 'Add Cargo';
-        secondLegBtn.style.backgroundColor = '#181c22';
-        secondLegBtn.style.color = '#ff6600';
-        secondLegBtn.style.border = '1px solid #ff6600';
-        secondLegBtn.style.cursor = 'pointer';
-        secondLegBtn.disabled = false;
-        secondLegBtn.onclick = () => showConfirmationAndRedirect('second_leg');
-      } else {
-        secondLegBtn.textContent = '';
-        secondLegBtn.style.backgroundColor = '#181c22';
-        secondLegBtn.style.color = '#666';
-        secondLegBtn.style.border = '1px solid #666';
-        secondLegBtn.style.cursor = 'not-allowed';
-        secondLegBtn.disabled = true;
-        secondLegBtn.onclick = null;
-      }
-
-      // Update shipment summary display
-      updateShipmentSummaryDisplay();
-      
-    } catch (error) {
-      console.error('Error updating summary buttons:', error);
-    }
-  }
-
-
-  // Function to show the confirmation modal and handle redirection
-  function showConfirmationAndRedirect(legType) {
-    const modal = document.getElementById('confirmation-modal');
-    const modalContent = document.getElementById('modal-data-content');
-    const confirmBtn = document.getElementById('modal-confirm-btn');
-    const cancelBtn = document.getElementById('modal-cancel-btn');
-
-    if (!modal || !modalContent || !confirmBtn || !cancelBtn) {
-      console.error('Modal elements not found!');
-      // Fallback to direct redirect if modal is broken
-      redirectToProductPage(legType);
-      return;
-    }
-
-    // 1. Collect Data
-    const data = collectDataForModal(legType);
-
-    // 2. Populate Modal
-    modalContent.innerHTML = formatDataForModal(data);
-
-    // 3. Show Modal
-    modal.style.display = 'block';
-
-    // 4. Handle Actions
-    confirmBtn.onclick = () => {
-      modal.style.display = 'none';
-      redirectToProductPage(legType);
-    };
-
-    cancelBtn.onclick = () => {
-      modal.style.display = 'none';
-    };
-  }
-
-  // Helper function to collect all relevant data
-  function collectDataForModal(legType) {
-    const draft = getShipmentDraft();
-    const data = {
-      'Adding Cargo To': legType === 'first_leg' ? '<span style="color: #00ff00; font-weight: bold;">Departure Route</span>' : '<span style="color: #ff6600; font-weight: bold;">Return Route</span>',
-      'Shipment Reference': draft.shipment_reference,
-      'Shipper': document.getElementById('shipper').options[document.getElementById('shipper').selectedIndex]?.text,
-      'Consignee': document.getElementById('consignee').options[document.getElementById('consignee').selectedIndex]?.text,
-      'Aircraft': draft.available_aircraft,
-      'Return Type': draft.return_type,
-      'Total Flight Cost': document.getElementById('total_flight_cost')?.textContent,
-      '': '', // separator
-      'Outbound Cost Allocation': `${draft.outbound_percent}%`,
-      'Outbound Target Load': `${draft.outbound_extra}%`,
-      'Calculated Outbound Cost/Kg': document.getElementById('outbound_kg_cost')?.textContent,
-    };
-
-    if (draft.return_type === 'compensated') {
-        data['Return Cost Allocation'] = `${draft.return_percent}%`;
-        data['Return Target Load'] = `${draft.return_extra}%`;
-        data['Calculated Return Cost/Kg'] = document.getElementById('return_kg_cost')?.textContent;
-    }
-
-    return data;
-  }
-
-  // Helper function to format the data object into HTML for the modal
-  function formatDataForModal(data) {
-    let html = '<table style="width: 100%; border-collapse: collapse;">';
-    for (const [key, value] of Object.entries(data)) {
-        if (key === '') { // separator
-            html += `<tr><td colspan="2" style="padding: 6px 0; border-bottom: 1px solid #444;"></td></tr>`;
-        } else {
-            html += `
-                <tr style="border-bottom: 1px solid #3a3e45;">
-                    <td style="padding: 8px; font-weight: bold; color: #aaa; width: 40%;">${key}</td>
-                    <td style="padding: 8px; color: #fff;">${value || 'N/A'}</td>
-                </tr>
-            `;
-        }
-    }
-    html += '</table>';
-    return html;
-  }
-
-  // Function to redirect to product page with route information
-  function redirectToProductPage(legType) {
-    try {
-      let routeInfo = '';
-      let fromAirport = '';
-      let toAirport = '';
-      
-      if (legType === 'first_leg') {
-        const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
-        if (firstLegRouteId && routeData[firstLegRouteId]) {
-          const route = routeData[firstLegRouteId];
-          fromAirport = route.fromAirport || '';
-          toAirport = route.toAirport || '';
-          routeInfo = `${fromAirport} - ${toAirport}`;
-        }
-      } else if (legType === 'second_leg') {
-        const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
-        if (secondLegRouteId && routeData[secondLegRouteId]) {
-          const route = routeData[secondLegRouteId];
-          fromAirport = route.fromAirport || '';
-          toAirport = route.toAirport || '';
-          routeInfo = `${fromAirport} - ${toAirport}`;
-        }
-      }
-      
-      // Construct URL with route information as query parameters
-      const baseUrl = '/coredata/view-edit-product';
-      const params = new URLSearchParams({
-        'route_type': legType,
-        'route_info': routeInfo,
-        'from_airport': fromAirport,
-        'to_airport': toAirport
-      });
-      
-      const fullUrl = `${baseUrl}?${params.toString()}`;
-      console.log('Redirecting to:', fullUrl);
-      
-      // Redirect to the product page
-      window.location.href = fullUrl;
-      
-    } catch (error) {
-      console.error('Error redirecting to product page:', error);
-      alert('Error redirecting to product page: ' + error.message);
     }
   }
 
@@ -1108,9 +877,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fieldsToReset.forEach(fieldId => {
       safelyUpdateElement(fieldId, 'N/A');
     });
-    
-    // Reset summary buttons
-    updateSummaryButtons();
   }
 
   // Safely calculate total flight cost
