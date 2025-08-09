@@ -211,44 +211,6 @@
               </tr>
             </tbody>
           </table>
-          <!-- Existing Selected Routes table below -->
-          <label style="margin-bottom: 0.5rem; color: #e0e0e0; font-weight: normal;">Selected Routes:</label>
-          <table id="shipment_summary_display" style="width: 100%; background-color: #1e2228; border-radius: 4px; color: #bbb; font-size: 0.95rem; line-height: 1.6; border-collapse: collapse; border-spacing: 0;">
-            <thead>
-              <tr>
-                <th style="text-align: left; font-weight: bold; padding: 8px 12px; width: 120px; background: #23272f;">Item</th>
-                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Route</th>
-                <th style="text-align: left; font-weight: bold; padding: 8px 12px; background: #23272f;">Distance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="text-align: left; font-weight: normal; padding: 8px 12px; width: 120px;">First Leg</td>
-                <td style="padding: 8px 12px;"><span id="summary_first_leg">Not Selected</span></td>
-                <td style="padding: 8px 12px;"><span id="summary_first_leg_distance">-</span></td>
-              </tr>
-              <tr>
-                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return</td>
-                <td style="padding: 8px 12px;"><span id="summary_return_leg">Not Selected</span></td>
-                <td style="padding: 8px 12px;"><span id="summary_return_leg_distance">-</span></td>
-              </tr>
-              <tr>
-                <td style="text-align: left; font-weight: bold; padding: 8px 12px;">Totals</td>
-                <td style="padding: 8px 12px;"><span id="summary_totals">-</span></td>
-                <td style="padding: 8px 12px;"><span id="summary_totals_distance">-</span></td>
-              </tr>
-              <tr>
-                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Aircraft</td>
-                <td style="padding: 8px 12px;"><span id="summary_aircraft">Not Selected</span></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td style="text-align: left; font-weight: normal; padding: 8px 12px;">Return Type</td>
-                <td style="padding: 8px 12px;"><span id="summary_return_type">Not Selected</span></td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -329,34 +291,52 @@ function saveShipmentDraft(draft) {
   localStorage.setItem(SHIPMENT_DRAFT_KEY, JSON.stringify(draft));
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+  // --- DOM Element Cache ---
+  const shipperSelect = document.getElementById('shipper');
+  const consigneeSelect = document.getElementById('consignee');
+  const shipmentRefField = document.getElementById('shipment_reference');
+  const firstLegRouteSelect = document.getElementById('first_leg_route');
+  const secondLegRouteSelect = document.getElementById('second_leg_route');
+  const availableAircraftSelect = document.getElementById('available_aircraft');
+  const returnTypeSelect = document.getElementById('return_type');
+  const outboundPercentInput = document.getElementById('outbound_percent');
+  const returnPercentInput = document.getElementById('return_percent');
+  const outboundExtraInput = document.getElementById('outbound_extra');
+  const returnExtraInput = document.getElementById('return_extra');
+  const routeInfoSection = document.getElementById('route-info-section');
+  const form = document.getElementById('shipment-form');
+  const addCargoBtn = document.getElementById('add_product_cargo_btn');
+
+  // Labels and spans that are frequently updated
+  const outboundPercentLabel = document.getElementById('outbound_percent_label');
+  const returnPercentLabel = document.getElementById('return_percent_label');
+  const outboundExtraLabel = document.getElementById('outbound_extra_label');
+  const returnExtraLabel = document.getElementById('return_extra_label');
+  const totalFlightCostElement = document.getElementById('total_flight_cost');
+
 // Collect current form data and update the draft
 function updateShipmentDraftFromForm() {
   const draft = getShipmentDraft();
-  // Shipment Information
-  draft.shipment_reference = document.getElementById('shipment_reference')?.value || '';
-  draft.shipper = document.getElementById('shipper')?.value || '';
-  draft.consignee = document.getElementById('consignee')?.value || '';
-  // Route Information
-  draft.first_leg_route = document.getElementById('first_leg_route')?.value || '';
-  draft.second_leg_route = document.getElementById('second_leg_route')?.value || '';
-  draft.available_aircraft = document.getElementById('available_aircraft')?.value || '';
-  draft.return_type = document.getElementById('return_type')?.value || '';
-  draft.outbound_percent = document.getElementById('outbound_percent')?.value || '';
-  draft.return_percent = document.getElementById('return_percent')?.value || '';
-  draft.outbound_extra = document.getElementById('outbound_extra')?.value || '';
-  draft.return_extra = document.getElementById('return_extra')?.value || '';
+  draft.shipment_reference = shipmentRefField?.value || '';
+  draft.shipper = shipperSelect?.value || '';
+  draft.consignee = consigneeSelect?.value || '';
+  draft.first_leg_route = firstLegRouteSelect?.value || '';
+  draft.second_leg_route = secondLegRouteSelect?.value || '';
+  draft.available_aircraft = availableAircraftSelect?.value || '';
+  draft.return_type = returnTypeSelect?.value || '';
+  draft.outbound_percent = outboundPercentInput?.value || '';
+  draft.return_percent = returnPercentInput?.value || '';
+  draft.outbound_extra = outboundExtraInput?.value || '';
+  draft.return_extra = returnExtraInput?.value || '';
   // Add more fields as needed
   saveShipmentDraft(draft);
 }
 
 // Attach update logic to relevant form fields
-document.addEventListener('DOMContentLoaded', function() {
-  // Update draft on any change in form fields
-  [
-    'shipment_reference','shipper','consignee','first_leg_route','second_leg_route',
-    'available_aircraft','return_type','outbound_percent','return_percent','outbound_extra','return_extra'
-  ].forEach(function(id) {
-    const el = document.getElementById(id);
+  [ shipmentRefField, shipperSelect, consigneeSelect, firstLegRouteSelect, secondLegRouteSelect,
+    availableAircraftSelect, returnTypeSelect, outboundPercentInput, returnPercentInput, outboundExtraInput, returnExtraInput
+  ].forEach(function(el) {
     if (el) {
       el.addEventListener('change', updateShipmentDraftFromForm);
       el.addEventListener('input', updateShipmentDraftFromForm);
@@ -365,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initial save
   updateShipmentDraftFromForm();
 
-  // ...existing code...
   // Inject trader and route data from Flask
   const traderData = JSON.parse('{{ trader_data|tojson|safe }}');
   const routeData = JSON.parse('{{ route_data|tojson|safe }}');
@@ -394,112 +373,65 @@ document.addEventListener('DOMContentLoaded', function() {
     return payloadText;
   }
 
-  // Outbound/Return % logic
-  const returnTypeSelect = document.getElementById('return_type');
-  const outboundPercentInput = document.getElementById('outbound_percent');
-  const returnPercentInput = document.getElementById('return_percent');
-  // Cargo spread and target cargo load fields
-  const outboundExtraInput = document.getElementById('outbound_extra');
-  const returnExtraInput = document.getElementById('return_extra');
+  function formatCostForLabel(cost) {
+    if (!cost || cost <= 0) return '';
+    const formattedCost = cost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    return ` (<span style="color: #00ff00;">${formattedCost}</span>)`;
+  }
+
+  function formatLoadForLabel(loadInKg) {
+    if (!loadInKg || loadInKg <= 0) return '';
+    const formattedLoad = loadInKg.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    return ` (<span style="color: #00ff00;">${formattedLoad} kg</span>)`;
+  }
+
+  function updateCostAllocationUI() {
+    const returnType = returnTypeSelect.value;
+    if (returnType === 'compensated') {
+      outboundPercentInput.disabled = false;
+      outboundPercentInput.value = outboundPercentInput.value || 100;
+      if (outboundExtraInput) outboundExtraInput.disabled = false;
+      if (returnExtraInput) returnExtraInput.disabled = false;
+    } else if (returnType === 'full') {
+      outboundPercentInput.disabled = true;
+      outboundPercentInput.value = 100;
+      if (outboundExtraInput) outboundExtraInput.disabled = false; // Enable outbound target cargo load for full return
+      if (returnExtraInput) returnExtraInput.disabled = true; // Keep return target cargo load disabled for full return
+    } else {
+      outboundPercentInput.disabled = true;
+      outboundPercentInput.value = 100;
+      if (outboundExtraInput) outboundExtraInput.disabled = true;
+      if (returnExtraInput) returnExtraInput.disabled = true;
+    }
+  }
 
   function updatePercentFields() {
-    if (returnTypeSelect && outboundPercentInput && returnPercentInput) {
-      // Update Outbound % label with cost multiplication
-      const outboundLabel = document.getElementById('outbound_percent_label');
-      let outboundVal = parseFloat(outboundPercentInput.value);
-      if (isNaN(outboundVal)) outboundVal = 100;
-      let totalFlightCost = 0;
-      const totalFlightCostElement = document.getElementById('total_flight_cost');
-      if (totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error')) {
-        // Remove $ and commas, then parse
-        totalFlightCost = parseFloat(totalFlightCostElement.textContent.replace(/[$,]/g, '')) || 0;
-      }
-      let outboundCost = totalFlightCost * (outboundVal / 100);
-      let outboundCostStr = totalFlightCost > 0 ? ` (<span style="color: #00ff00;">${outboundCost >= 1000 ? outboundCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : outboundCost.toFixed(2)}</span>)` : '';
-      if (outboundLabel) outboundLabel.innerHTML = `Outbound %${outboundCostStr}`;
-      // Enable/disable cargo spread fields and show/hide target cargo load
-      if (returnTypeSelect.value === 'compensated') {
-        outboundPercentInput.disabled = false;
-        outboundPercentInput.value = outboundPercentInput.value || 100;
-        if (outboundExtraInput) outboundExtraInput.disabled = false;
-        if (returnExtraInput) returnExtraInput.disabled = false;
-      } else if (returnTypeSelect.value === 'full') {
-        outboundPercentInput.disabled = true;
-        outboundPercentInput.value = 100;
-        if (outboundExtraInput) outboundExtraInput.disabled = false; // Enable outbound target cargo load for full return
-        if (returnExtraInput) returnExtraInput.disabled = true; // Keep return target cargo load disabled for full return
-      } else {
-        outboundPercentInput.disabled = true;
-        outboundPercentInput.value = 100;
-        if (outboundExtraInput) outboundExtraInput.disabled = true;
-        if (returnExtraInput) returnExtraInput.disabled = true;
-      }
-      // Always update return percent
-      let returnVal = 100 - outboundVal;
-      if (returnVal < 0) returnVal = 0;
-      returnPercentInput.value = returnVal.toFixed(2);
+    if (!returnTypeSelect || !outboundPercentInput || !returnPercentInput) return;
 
-      // Update Return % label with cost multiplication
-      const returnLabel = document.getElementById('return_percent_label');
-      let returnCost = totalFlightCost * (returnVal / 100);
-      let returnCostStr = totalFlightCost > 0 ? ` (<span style="color: #00ff00;">${returnCost >= 1000 ? returnCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : returnCost.toFixed(2)}</span>)` : '';
-      if (returnLabel) returnLabel.innerHTML = `Return %${returnCostStr}`;
+    // 1. Update the UI state (enable/disable/set values) based on return type
+    updateCostAllocationUI();
 
-      // Calculate and update outbound target cargo load
-      if (returnTypeSelect.value === 'compensated' || returnTypeSelect.value === 'full') {
-        let payload = 0;
-        const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
-        if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].payload) {
-          // Try to extract numeric value from payload string
-          const payloadText = routeData[firstLegRouteId].payload;
-          const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
-          if (payloadMatch) {
-            payload = parseFloat(payloadMatch[1]) || 0;
-          }
-        }
-        // Use target cargo load percentage from input instead of outbound percentage
-        const targetCargoPercent = parseFloat(outboundExtraInput ? outboundExtraInput.value : 0) || 0;
-        const targetCargo = payload * (targetCargoPercent / 100);
-        const targetCargoStr = payload > 0 && targetCargoPercent > 0 ? `${targetCargo >= 1000 ? targetCargo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : targetCargo.toFixed(2)} kg` : '';
-        
-        // Update outbound target cargo load label
-        const outboundExtraLabel = document.getElementById('outbound_extra_label');
-        if (outboundExtraLabel) {
-          const labelStr = targetCargoStr ? ` (<span style="color: #00ff00;">${targetCargoStr}</span>)` : '';
-          outboundExtraLabel.innerHTML = `target cargo load (%)${labelStr}`;
-        }
-      } else {
-        const outboundExtraLabel = document.getElementById('outbound_extra_label');
-        if (outboundExtraLabel) outboundExtraLabel.innerHTML = 'target cargo load (%)';
-      }
+    // 2. Read values from the form AFTER UI has been updated
+    const outboundVal = parseFloat(outboundPercentInput.value) || 100;
+    const returnVal = 100 - outboundVal < 0 ? 0 : 100 - outboundVal;
+    returnPercentInput.value = returnVal.toFixed(2);
 
-      // Calculate and update return target cargo load
-      if (returnTypeSelect.value === 'compensated') {
-        let payload = 0;
-        const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
-        if (secondLegRouteId && routeData[secondLegRouteId] && routeData[secondLegRouteId].payload) {
-          // Try to extract numeric value from payload string
-          const payloadText = routeData[secondLegRouteId].payload;
-          const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
-          if (payloadMatch) {
-            payload = parseFloat(payloadMatch[1]) || 0;
-          }
-        }
-        // Use target cargo load percentage from input
-        const targetCargoPercent = parseFloat(returnExtraInput ? returnExtraInput.value : 0) || 0;
-        const targetCargo = payload * (targetCargoPercent / 100);
-        const targetCargoStr = payload > 0 && targetCargoPercent > 0 ? `${targetCargo >= 1000 ? targetCargo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : targetCargo.toFixed(2)} kg` : '';
-        
-        // Update return target cargo load label
-        const returnExtraLabel = document.getElementById('return_extra_label');
-        if (returnExtraLabel) {
-          const labelStr = targetCargoStr ? ` (<span style="color: #00ff00;">${targetCargoStr}</span>)` : '';
-          returnExtraLabel.innerHTML = `target cargo load (%)${labelStr}`;
-        }
-      } else {
-        const returnExtraLabel = document.getElementById('return_extra_label');
-        if (returnExtraLabel) returnExtraLabel.innerHTML = 'target cargo load (%)';
-      }
+    // 3. Perform calculations based on the new values
+    let totalFlightCost = 0;
+    if (totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error')) {
+      totalFlightCost = parseFloat(totalFlightCostElement.textContent.replace(/[$,]/g, '')) || 0;
+    }
+
+    // 4. Update UI labels with calculated results
+    const outboundCost = totalFlightCost * (outboundVal / 100);
+    if (outboundPercentLabel) outboundPercentLabel.innerHTML = `Outbound %${formatCostForLabel(outboundCost)}`;
+
+    const returnCost = totalFlightCost * (returnVal / 100);
+    if (returnPercentLabel) returnPercentLabel.innerHTML = `Return %${formatCostForLabel(returnCost)}`;
+
+    // 5. Update target cargo load labels
+    calculateAndDisplayTargetLoad(firstLegRouteSelect, outboundExtraInput, outboundExtraLabel, (returnTypeSelect.value === 'compensated' || returnTypeSelect.value === 'full'));
+    calculateAndDisplayTargetLoad(secondLegRouteSelect, returnExtraInput, returnExtraLabel, (returnTypeSelect.value === 'compensated'));
 
       // Recalculate costs when percentages change - but only if aircraft is selected
       try {
@@ -513,40 +445,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function calculateAndDisplayTargetLoad(routeSelect, percentInput, targetLabel, isEnabled) {
+    if (!targetLabel) return;
+
+    if (!isEnabled) {
+      targetLabel.innerHTML = 'target cargo load (%)';
+      return;
+    }
+
+    let payload = 0;
+    const routeId = routeSelect ? routeSelect.value : null;
+    if (routeId && routeData[routeId] && routeData[routeId].payload) {
+      const payloadText = routeData[routeId].payload;
+      const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+      if (payloadMatch) payload = parseFloat(payloadMatch[1]) || 0;
+    }
+    const targetCargoPercent = parseFloat(percentInput ? percentInput.value : 0) || 0;
+    const targetCargo = payload * (targetCargoPercent / 100);
+    targetLabel.innerHTML = `target cargo load (%)${formatLoadForLabel(targetCargo)}`;
+  }
+
+  function preventEnterSubmit(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      updatePercentFields(); // Update calculations instead
+    }
+  }
+
+  function preventEnterSubmit(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      updatePercentFields(); // Update calculations instead
+    }
+  }
+
   if (returnTypeSelect && outboundPercentInput) {
     returnTypeSelect.addEventListener('change', updatePercentFields);
     outboundPercentInput.addEventListener('input', updatePercentFields);
-    // Add event listeners for target cargo load percentage inputs
+        // Add event listeners for target cargo load percentage inputs
     if (outboundExtraInput) {
       outboundExtraInput.addEventListener('input', updatePercentFields);
-      // Prevent Enter key from submitting form in target cargo load inputs
-      outboundExtraInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          updatePercentFields(); // Update calculations instead
-        }
-      });
+      outboundExtraInput.addEventListener('keydown', preventEnterSubmit);
     }
     if (returnExtraInput) {
       returnExtraInput.addEventListener('input', updatePercentFields);
-      // Prevent Enter key from submitting form in target cargo load inputs
-      returnExtraInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          updatePercentFields(); // Update calculations instead
-        }
-      });
+      returnExtraInput.addEventListener('keydown', preventEnterSubmit);
     }
-    // Initialize on load
-    updatePercentFields();
-  }
 
-  const shipperSelect = document.getElementById('shipper');
-  const consigneeSelect = document.getElementById('consignee');
-  const firstLegRouteSelect = document.getElementById('first_leg_route');
-  const secondLegRouteSelect = document.getElementById('second_leg_route');
-  const routeInfoSection = document.getElementById('route-info-section');
-  const availableAircraftSelect = document.getElementById('available_aircraft');
 
   // Helper functions
   function updateCityField(selectElement, cityField) {
@@ -560,7 +505,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function generateShipmentReference() {
     const shipperId = shipperSelect.value;
     const consigneeId = consigneeSelect.value;
-    const shipmentRefField = document.getElementById('shipment_reference');
     
     if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId] && shipmentRefField) {
       const shipperCode = traderData[shipperId].code;
@@ -794,67 +738,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Function to update the shipment summary display
-  function updateShipmentSummaryDisplay() {
-    try {
-      const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
-      const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
-      const selectedAircraft = availableAircraftSelect ? availableAircraftSelect.value : null;
-      const returnType = returnTypeSelect ? returnTypeSelect.value : null;
-      
-      // Update first leg display
-      const summaryFirstLeg = document.getElementById('summary_first_leg');
-      if (summaryFirstLeg) {
-        if (firstLegRouteId && routeData[firstLegRouteId]) {
-          const route = routeData[firstLegRouteId];
-          summaryFirstLeg.textContent = `${route.fromAirport} → ${route.toAirport}`;
-          summaryFirstLeg.style.color = '#00ff00';
-        } else {
-          summaryFirstLeg.textContent = 'Not Selected';
-          summaryFirstLeg.style.color = '#bbb';
-        }
-      }
-      
-      // Update return leg display
-      const summaryReturnLeg = document.getElementById('summary_return_leg');
-      if (summaryReturnLeg) {
-        if (secondLegRouteId && routeData[secondLegRouteId]) {
-          const route = routeData[secondLegRouteId];
-          summaryReturnLeg.textContent = `${route.fromAirport} → ${route.toAirport}`;
-          summaryReturnLeg.style.color = '#ff6600';
-        } else {
-          summaryReturnLeg.textContent = 'Not Selected';
-          summaryReturnLeg.style.color = '#bbb';
-        }
-      }
-      
-      // Update aircraft display (intentionally skipped as per user request)
-      // const summaryAircraft = document.getElementById('summary_aircraft');
-      // if (summaryAircraft) {
-      //   if (selectedAircraft) {
-      //     summaryAircraft.textContent = selectedAircraft;
-      //     summaryAircraft.style.color = '#2196f3';
-      //   } else {
-      //     summaryAircraft.textContent = 'Not Selected';
-      //     summaryAircraft.style.color = '#bbb';
-      //   }
-      // }
-      
-      // Update return type display (intentionally skipped as per user request)
-      // const summaryReturnType = document.getElementById('summary_return_type');
-      // if (summaryReturnType) {
-      //   if (returnType) {
-      //     summaryReturnType.textContent = returnType.charAt(0).toUpperCase() + returnType.slice(1);
-      //     summaryReturnType.style.color = '#FFD600';
-      //   } else {
-      //     summaryReturnType.textContent = 'Not Selected';
-      //     summaryReturnType.style.color = '#bbb';
-      //   }
-      // }
-      
-    } catch (error) {
-      console.error('Error updating shipment summary display:', error);
-    }
-  }
+  
 
   // Function to show the cargo management section
   function showCargoManagementSection() {
@@ -906,14 +790,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function getPayloadForRoute(routeId) {
+    if (routeId && routeData[routeId] && routeData[routeId].payload) {
+      const payloadText = routeData[routeId].payload;
+      const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+      if (payloadMatch) {
+        return parseFloat(payloadMatch[1]) || 0;
+      }
+    }
+    return 0;
+  }
+
   // Safely calculate kg costs
   function calculateKgCostsSafely() {
     try {
       if (!outboundPercentInput || !returnPercentInput) {
         return;
       }
-
-      const totalFlightCostElement = document.getElementById('total_flight_cost');
       if (!totalFlightCostElement) return;
       
       const totalFlightCostText = totalFlightCostElement.textContent;
@@ -929,16 +822,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let outboundKgCost = 0;
         if (outboundTargetCargoPercent > 0) {
           const outboundCost = totalCost * (outboundPercent / 100);
-          // Get payload and calculate actual target cargo in kg
-          let payload = 0;
-          const firstLegRouteId = firstLegRouteSelect ? firstLegRouteSelect.value : null;
-          if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].payload) {
-            const payloadText = routeData[firstLegRouteId].payload;
-            const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
-            if (payloadMatch) {
-              payload = parseFloat(payloadMatch[1]) || 0;
-            }
-          }
+          const payload = getPayloadForRoute(firstLegRouteSelect.value);
           const targetCargoKg = payload * (outboundTargetCargoPercent / 100);
           if (targetCargoKg > 0) {
             outboundKgCost = outboundCost / targetCargoKg;
@@ -950,16 +834,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let returnKgCost = 0;
         if (returnTargetCargoPercent > 0) {
           const returnCost = totalCost * (returnPercent / 100);
-          // Get payload and calculate actual target cargo in kg
-          let payload = 0;
-          const secondLegRouteId = secondLegRouteSelect ? secondLegRouteSelect.value : null;
-          if (secondLegRouteId && routeData[secondLegRouteId] && routeData[secondLegRouteId].payload) {
-            const payloadText = routeData[secondLegRouteId].payload;
-            const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
-            if (payloadMatch) {
-              payload = parseFloat(payloadMatch[1]) || 0;
-            }
-          }
+          const payload = getPayloadForRoute(secondLegRouteSelect.value);
           const targetCargoKg = payload * (returnTargetCargoPercent / 100);
           if (targetCargoKg > 0) {
             returnKgCost = returnCost / targetCargoKg;
@@ -1042,9 +917,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize aircraft availability on page load
   updateAircraftAvailability();
 
-
-  // --- Robust Validation for Add Product / Cargo Button ---
-  const addCargoBtn = document.getElementById('add_product_cargo_btn');
 
 
   // --- COMMENTED OUT: Previous Add Product / Cargo button logic ---
@@ -1146,6 +1018,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+    function filterRoutes(allRoutes, shipperCity, consigneeCity) {
+    const firstLegRoutes = [];
+    const returnLegRoutes = [];
+
+    Object.entries(allRoutes).forEach(([routeId, route]) => {
+      // Add checks to prevent errors if city data is missing
+      if (!route.fromCity || !route.toCity) {
+        return; // Skip this route if data is incomplete
+      }
+      const fromCityLower = route.fromCity.toLowerCase();
+      const toCityLower = route.toCity.toLowerCase();
+
+      // Find first leg routes (from shipper to consignee)
+      if (fromCityLower === shipperCity.toLowerCase() && toCityLower === consigneeCity.toLowerCase()) {
+        firstLegRoutes.push({
+          value: routeId,
+          text: `${route.fromAirport} - ${route.toAirport}`,
+          aircraft: route.aircraft || []
+        });
+      }
+
+      // Find return leg routes (from consignee to anywhere)
+      if (fromCityLower === consigneeCity.toLowerCase()) {
+        returnLegRoutes.push({
+          value: routeId,
+          text: `${route.fromAirport} - ${route.toAirport}`
+        });
+      }
+    });
+    return { firstLegRoutes, returnLegRoutes };
+  }
+
+
   // Always update city fields on selection
   shipperSelect.addEventListener('change', function() {
     generateShipmentReference();
@@ -1160,6 +1065,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Load button logic
+    // Load button logic
   function loadRoutesLogic() {
     console.log('loadRoutesLogic called');
     firstLegRouteSelect.innerHTML = '<option value="">Departure Route...</option>';
@@ -1184,31 +1090,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const shipperCity = traderData[shipperId].city;
     const consigneeCity = traderData[consigneeId].city;
     console.log('Shipper city:', shipperCity, 'Consignee city:', consigneeCity);
-    console.log('Available route data:', routeData);
 
-    let found = false;
-    let firstLegRoutes = [];
-    let returnLegRoutes = [];
-    // Find first leg routes (from shipper to consignee)
-    Object.entries(routeData).forEach(([routeId, route]) => {
-      if (route.fromCity.toLowerCase() === shipperCity.toLowerCase() && route.toCity.toLowerCase() === consigneeCity.toLowerCase()) {
-        firstLegRoutes.push({
-          value: routeId,
-          text: `${route.fromAirport} - ${route.toAirport}`,
-          aircraft: route.aircraft || []
-        });
-        found = true;
-      }
-    });
-    // Find return leg routes (from consignee to anywhere)
-    Object.entries(routeData).forEach(([routeId, route]) => {
-      if (route.fromCity.toLowerCase() === consigneeCity.toLowerCase()) {
-        returnLegRoutes.push({
-          value: routeId,
-          text: `${route.fromAirport} - ${route.toAirport}`
-        });
-      }
-    });
+    const { firstLegRoutes, returnLegRoutes } = filterRoutes(routeData, shipperCity, consigneeCity);
+    const found = firstLegRoutes.length > 0;
+
     // Populate first leg route select
     firstLegRoutes.forEach(opt => {
       const option = document.createElement('option');
@@ -1252,11 +1137,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+
   consigneeSelect.addEventListener('change', loadRoutesLogic);
 
   // Form submission handling
-  const form = document.getElementById('shipment-form');
-  if (form) {
+    if (form) {
     form.addEventListener('submit', function(e) {
       const shipper = shipperSelect.value;
       const consignee = consigneeSelect.value;
