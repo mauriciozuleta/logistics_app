@@ -23,6 +23,7 @@ class Product(BaseModel):
     __tablename__ = 'products'
 
     id = db.Column(db.Integer, primary_key=True)
+    product_code = db.Column(db.String(16), unique=True, nullable=False)
     product_type = db.Column(db.String(64), nullable=False)  # 👈 New field
     name = db.Column(db.String(128), nullable=False)
     country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'))

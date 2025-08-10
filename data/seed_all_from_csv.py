@@ -1,6 +1,8 @@
 import csv
 import os
 import sys
+from datetime import datetime
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import app
 from extensions import db
@@ -19,10 +21,24 @@ def seed_table_from_csv(model, csv_file, field_map=None, skip_duplicates_field=N
                     skipped.append((i, f'Duplicate {skip_duplicates_field} "{val}"'))
                     continue
                 seen.add(val)
-            data = {field_map.get(k, k): v for k, v in row.items()} if field_map else dict(row)
+            # Only use fields that are mapped (for field_map) or that exist in the model
+            if field_map:
+                data = {field_map[k]: v for k, v in row.items() if k in field_map}
+            else:
+                data = dict(row)
             for k, v in data.items():
                 if v == '':
                     data[k] = None
+                # Convert to datetime if the model has this attribute and it's not None
+                elif (
+                    k in getattr(model, '__table__').columns and
+                    str(getattr(model, '__table__').columns[k].type).upper().startswith('DATETIME') and
+                    v is not None
+                ):
+                    try:
+                        data[k] = datetime.fromisoformat(v)
+                    except Exception:
+                        data[k] = None  # or handle as needed
             records.append(model(**data))
         db.session.query(model).delete()
         db.session.bulk_save_objects(records)
@@ -34,14 +50,23 @@ def seed_table_from_csv(model, csv_file, field_map=None, skip_duplicates_field=N
                 print(f"  - Line {line}: {reason}")
 
 def seed_all():
+    base_dir = os.path.dirname(__file__)
     with app.app_context():
-        seed_table_from_csv(Country, 'country-code-to-currency-code-mapping.csv',
-            field_map={'CountryCode': 'country_code', 'Country': 'country_name', 'Code': 'currency_code'},
-            skip_duplicates_field='CountryCode')
-        seed_table_from_csv(Aircraft, 'aircraft_export.csv')
-        seed_table_from_csv(Trader, 'traders_export.csv')
-        seed_table_from_csv(Route, 'routes_export.csv')
-        seed_table_from_csv(Product, 'products_export.csv')
+        seed_table_from_csv(
+            Country,
+            os.path.join(base_dir, 'country-code-to-currency-code-mapping.csv'),
+            field_map={
+                'CountryCode': 'country_code',
+                'Country': 'country_name',
+                # 'Currency': not mapped, since not in model
+                'Code': 'currency_code'
+            },
+            skip_duplicates_field='CountryCode'
+        )
+        seed_table_from_csv(Aircraft, os.path.join(base_dir, 'aircraft_export.csv'))
+        seed_table_from_csv(Trader, os.path.join(base_dir, 'traders_export.csv'))
+        seed_table_from_csv(Route, os.path.join(base_dir, 'routes_export.csv'))
+        seed_table_from_csv(Product, os.path.join(base_dir, 'products_export.csv'))
 
 if __name__ == '__main__':
     seed_all()

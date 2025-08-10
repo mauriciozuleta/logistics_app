@@ -197,6 +197,14 @@
         
         <div class="form-group">
           <div class="product-form-group">
+            <label for="productCode">Product Code</label>
+            <input type="text" class="product-form-control" name="product_code" id="productCode"
+                  value="{{ product.product_code if product else '' }}" readonly>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div class="product-form-group">
             <label for="productName">Product Name</label>
             <input type="text" class="product-form-control" name="name" id="productName" required
                    value="{{ product.name if product else '' }}" placeholder="Enter product name">

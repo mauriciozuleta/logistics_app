@@ -1,17 +1,3 @@
-# ...existing code...
-
-# Place this after the 'operations' Blueprint is defined
-
-# ...existing code...
-
-# Place this after the 'operations' Blueprint is defined
-
-# ...existing code...
-
-# Add the preview_shipment route after Blueprint definition
-
-
-
 import json
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_wtf.csrf import generate_csrf
@@ -19,9 +5,16 @@ from models import Airport, Aircraft, Route, Shipment
 from operations.flight_distances_db import calculate_distance_db
 from extensions import db
 
+def generate_product_code(product_type):
+    prefix = product_type[:2].upper()
+    # Count existing products of this type
+    from models import Product
+    count = Product.query.filter(Product.product_type == product_type).count() + 1
+    return f"{prefix}{str(count).zfill(3)}"
 
 operations = Blueprint("operations", __name__, template_folder="templates")
 operations_api = Blueprint("operations_api", __name__)
+
 
 # Add the preview_shipment route after Blueprint definition
 @operations.route('/preview_shipment', methods=['GET', 'POST'])
@@ -665,41 +658,53 @@ def leg_distances():
 def add_shipment(shipment_id=None):
     """Add or edit a shipment"""
     from models import Trader, Product, Route
-    
+
     # Check if we're editing an existing shipment
     shipment_to_edit = None
     if shipment_id:
         # TODO: Implement shipment model and query
         # shipment_to_edit = Shipment.query.get_or_404(shipment_id)
         pass
-    
+
     if request.method == 'POST':
         try:
-            # TODO: Implement shipment creation/update logic
-            flash('Shipment functionality coming soon!', 'info')
+            # --- Collect selected product data ---
+            selected_products = request.form.getlist('selected_products')
+            products_data = []
+            for product_id in selected_products:
+                product_data = {
+                    'product_id': product_id,
+                    'product_name': request.form.get(f'product_name_{product_id}'),
+                    'country_id': request.form.get(f'country_id_{product_id}'),
+                    'trade_unit': request.form.get(f'trade_unit_{product_id}'),
+                    'packaging': request.form.get(f'packaging_{product_id}'),
+                    'pack_weight': request.form.get(f'pack_weight_{product_id}'),
+                    'pack_cost': request.form.get(f'pack_cost_{product_id}'),
+                    'currency': request.form.get(f'currency_{product_id}')
+                }
+                products_data.append(product_data)
+            # --- End product data collection ---
+
+            # TODO: Implement shipment creation/update logic using products_data
+            flash(f'Shipment received with {len(products_data)} products.', 'success')
             return redirect(url_for('operations.view_shipments'))
         except Exception as e:
             flash(f'Error processing shipment: {str(e)}', 'error')
             return redirect(url_for('operations.add_shipment'))
-    
+
     # Get choices for form dropdowns
-    # Get traders with their codes, names, and cities
+    from models import Airport
     traders = Trader.query.order_by(Trader.trader_code).all()
     trader_choices = [(t.id, f"{t.trader_code} - {t.name} ({t.city})") for t in traders]
-    
-    # Get products
+
     products = Product.query.order_by(Product.name).all()
     product_choices = [(p.id, p.name) for p in products]
-    
-    # Get routes with airport and city information
-    from models import Airport
+
     routes = Route.query.order_by(Route.route_name).all()
     route_choices = [(r.id, r.route_summary or r.route_name) for r in routes]
-    
-    # Get all airports for city-airport mapping
+
     airports = Airport.query.all()
-    
-    # Build trader_data for JS
+
     trader_data = {str(t.id): {
         'code': t.trader_code,
         'name': t.name,
@@ -707,29 +712,23 @@ def add_shipment(shipment_id=None):
         'country': t.country_id
     } for t in traders}
 
-    # Build route_data for JS
     route_data = {}
     for r in routes:
         from_airport = Airport.query.get(r.from_airport_id)
         to_airport = Airport.query.get(r.to_airport_id)
-        
-        # Format distance with units
+
         distance_display = f"{r.total_distance_nm:.1f} NM" if r.total_distance_nm else "N/A"
-        
-        # Format flight time with units
         flight_time_display = f"{r.total_flight_time_hours:.2f} hrs" if r.total_flight_time_hours else "N/A"
-        
-        # Get payload from route calculation if available, otherwise fallback to aircraft max
+
         payload_display = "N/A"
         if r.leg1_max_payload_lbs:
-            # Convert lbs to kg for display (1 lb = 0.453592 kg)
             payload_kg = r.leg1_max_payload_lbs * 0.453592
             payload_display = f"{payload_kg:.0f} kg"
         elif r.aircraft and hasattr(r.aircraft, 'max_payload_kg'):
             payload_display = f"{r.aircraft.max_payload_kg} kg"
         elif r.aircraft and hasattr(r.aircraft, 'payload_capacity'):
             payload_display = f"{r.aircraft.payload_capacity} kg"
-        
+
         route_data[str(r.id)] = {
             'fromCity': from_airport.city if from_airport else '',
             'toCity': to_airport.city if to_airport else '',
@@ -743,17 +742,19 @@ def add_shipment(shipment_id=None):
             'payload': payload_display
         }
 
-    return render_template('operations/add_shipment.html',
-                         shipment_to_edit=shipment_to_edit,
-                         trader_choices=trader_choices,
-                         product_choices=product_choices,
-                         route_choices=route_choices,
-                         traders=traders,
-                         routes=routes,
-                         airports=airports,
-                         trader_data=trader_data,
-                         route_data=route_data)
-
+    return render_template(
+        'operations/add_shipment.html',
+        shipment_to_edit=shipment_to_edit,
+        trader_choices=trader_choices,
+        product_choices=product_choices,
+        route_choices=route_choices,
+        traders=traders,
+        routes=routes,
+        airports=airports,
+        trader_data=trader_data,
+        route_data=route_data,
+        products=products
+    )
 
 @operations.route('/view-shipments')
 def view_shipments():

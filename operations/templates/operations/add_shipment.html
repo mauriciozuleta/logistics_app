@@ -233,43 +233,59 @@
       </div>
     </div>
 
-    <!-- Section: Product / Cost Details -->
+    <!-- Product / Cost Details Section -->
     <div class="shipment-section" id="product-cost-section">
       <div class="section-title">Product / Cost Details</div>
-      <div class="products-table-wrapper">
-        <table class="shipments-table" style="width: 100%;">
-          <thead>
-            <tr>
-              <th>Product Name</th>
-              <th>Pack Type</th>
-              <th>Pack Weight (kg)</th>
-              <th>Pack Cost (USD)</th>
-              <th style="width: 100px;">Quantity</th>
-              <th style="width: 120px;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {# Assuming a 'products' variable is passed from the backend #}
+      <div class="product-cost-columns" style="display: flex; gap: 1.5rem;">
+        <div class="product-cost-col" style="flex: 1; min-width: 220px;">
+          <!-- Column 1: Product List -->
+          <div style="font-weight: bold; color: #FF5C00;">Products</div>
+          <div style="max-height: 350px; overflow-y: auto;">
+            <!-- Headers row -->
+            <div style="display: flex; font-weight: bold; border-bottom: 2px solid #2196f3; background: #23272f;">
+              <div style="flex: 2; padding: 6px;">Name</div>
+              <div style="flex: 1; padding: 6px;">Country ID</div>
+              <div style="flex: 1; padding: 6px;">Trade Unit</div>
+              <div style="flex: 1; padding: 6px;">Packaging</div>
+              <div style="flex: 1; padding: 6px;">Pack Weight</div>
+              <div style="flex: 1; padding: 6px;">Pack Cost</div>
+              <div style="flex: 1; padding: 6px;">Currency</div>
+            </div>
+            <!-- Product rows -->
             {% for product in products %}
-            <tr data-product-id="{{ product.id }}">
-              <td>{{ product.name }}</td>
-              <td>{{ product.pack_type }}</td>
-              <td>{{ product.pack_weight_kg }}</td>
-              <td>{{ product.pack_cost_usd }}</td>
-              <td>
-                <input type="number" class="product-quantity-input" min="1" value="1">
-              </td>
-              <td>
-                <button type="button" class="btn-sm add-product-btn" style="background-color: #181c22; color: #4caf50; border: 1px solid #4caf50;">Add</button>
-              </td>
-            </tr>
+              <div style="display: flex; border-bottom: 1px solid #333; align-items: center;">
+                <div style="flex: 0 0 32px; padding: 6px;">
+                  <input type="checkbox" name="selected_products" value="{{ product.id }}">
+                  <!-- Hidden fields for all product data -->
+                  <input type="hidden" name="product_name_{{ product.id }}" value="{{ product.name }}">
+                  <input type="hidden" name="country_id_{{ product.id }}" value="{{ product.country_id }}">
+                  <input type="hidden" name="trade_unit_{{ product.id }}" value="{{ product.trade_unit }}">
+                  <input type="hidden" name="packaging_{{ product.id }}" value="{{ product.packaging }}">
+                  <input type="hidden" name="pack_weight_{{ product.id }}" value="{{ product.pack_weight }}">
+                  <input type="hidden" name="pack_cost_{{ product.id }}" value="{{ product.pack_cost }}">
+                  <input type="hidden" name="currency_{{ product.id }}" value="{{ product.currency }}">
+                </div>
+                <div style="flex: 0 0 48px; padding: 6px; color: #2196f3;">{{ product.product_code }}</div>
+                <div style="flex: 2; padding: 6px;">{{ product.name }}</div>
+                <div style="flex: 1; padding: 6px;">{{ product.country_id }}</div>
+                <div style="flex: 1; padding: 6px;">{{ product.trade_unit }}</div>
+                <div style="flex: 1; padding: 6px;">{{ product.packaging }}</div>
+                <div style="flex: 1; padding: 6px;">{{ product.pack_weight }}</div>
+                <div style="flex: 1; padding: 6px;">{{ product.pack_cost }}</div>
+                <div style="flex: 1; padding: 6px;">{{ product.currency }}</div>
+              </div>
             {% else %}
-            <tr>
-              <td colspan="6" style="text-align: center; padding: 20px;">No products available.</td>
-            </tr>
+              <div style="padding: 10px 0; color: #888;">No products available.</div>
             {% endfor %}
-          </tbody>
-        </table>
+          </div>
+        </div>
+        <div class="product-cost-col" style="flex: 1; min-width: 220px;">
+          <!-- Column 2: Cost List -->
+          <div style="font-weight: bold; color: #FF5C00;">Costs</div>
+          <ul id="cost-list">
+            <!-- Cost items will go here -->
+          </ul>
+        </div>
       </div>
     </div>
 
