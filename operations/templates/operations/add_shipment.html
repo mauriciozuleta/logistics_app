@@ -261,8 +261,8 @@
                   <input type="hidden" name="country_id_{{ product.id }}" value="{{ product.country_id }}">
                   <input type="hidden" name="trade_unit_{{ product.id }}" value="{{ product.trade_unit }}">
                   <input type="hidden" name="packaging_{{ product.id }}" value="{{ product.packaging }}">
-                  <input type="hidden" name="pack_weight_{{ product.id }}" value="{{ product.pack_weight }}">
-                  <input type="hidden" name="pack_cost_{{ product.id }}" value="{{ product.pack_cost }}">
+                  <input type="hidden" name="pack_weight_{{ product.id }}" value="{{ product.packaging_weight }}">
+                  <input type="hidden" name="pack_cost_{{ product.id }}" value="{{ product.packaging_cost }}">
                   <input type="hidden" name="currency_{{ product.id }}" value="{{ product.currency }}">
                 </div>
                 <div style="flex: 0 0 48px; padding: 6px; color: #2196f3;">{{ product.product_code }}</div>
@@ -270,8 +270,12 @@
                 <div style="flex: 1; padding: 6px;">{{ product.country_id }}</div>
                 <div style="flex: 1; padding: 6px;">{{ product.trade_unit }}</div>
                 <div style="flex: 1; padding: 6px;">{{ product.packaging }}</div>
-                <div style="flex: 1; padding: 6px;">{{ product.pack_weight }}</div>
-                <div style="flex: 1; padding: 6px;">{{ product.pack_cost }}</div>
+                <div style="flex: 1; padding: 6px;">
+                  {{ '{:,.2f} kg'.format(product.packaging_weight) if product.packaging_weight else '-' }}
+                </div>
+                <div style="flex: 1; padding: 6px;">
+                  {{ '${:,.2f}'.format(product.packaging_cost) if product.packaging_cost else '-' }}
+                </div>
                 <div style="flex: 1; padding: 6px;">{{ product.currency }}</div>
               </div>
             {% else %}
