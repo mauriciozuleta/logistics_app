@@ -241,8 +241,22 @@
           <!-- Column 1: Product List -->
           <div style="font-weight: bold; color: #FF5C00;">Products</div>
           <div style="max-height: 350px; overflow-y: auto;">
+            <!-- product filter -->
+            <div style="margin-bottom: 10px;">
+              <label for="product_type_filter" style="color:#FF5C00; font-weight:bold;">Filter by Product Type:</label>
+              <select id="product_type_filter" style="margin-left:8px; padding:4px; width: 50%;">
+                <option value="">All Types</option>
+                {% for product in products|groupby('product_type') %}
+                  {% if product.grouper %}
+                    <option value="{{ product.grouper }}">{{ product.grouper }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </div>
             <!-- Headers row -->
-            <div style="display: flex; font-weight: bold; border-bottom: 2px solid #2196f3; background: #23272f;">
+            <div style="display: flex; font-weight: normal; border-bottom: 2px solid #2196f3; background: #23272f;">
+              <div style="flex: 0 0 32px; padding: 6px;"></div> <!-- Checkbox column (empty header) -->
+              <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;">Code</div> <!-- Product code column -->
               <div style="flex: 2; padding: 6px;">Name</div>
               <div style="flex: 1; padding: 6px;">Country ID</div>
               <div style="flex: 1; padding: 6px;">Trade Unit</div>
@@ -250,13 +264,28 @@
               <div style="flex: 1; padding: 6px;">Pack Weight</div>
               <div style="flex: 1; padding: 6px;">Pack Cost</div>
               <div style="flex: 1; padding: 6px;">Currency</div>
+              <div style="flex: 1; padding: 6px;">Amount</div>
+              <div style="flex: 1; padding: 6px;">Total Product Weight</div>
+              <div style="flex: 1; padding: 6px;">Total Product Cost</div>
+              <div style="flex: 1; padding: 6px;">Taxes</div>
+              <div style="flex: 1; padding: 6px;">Profit</div>
+              <div style="flex: 1; padding: 6px;">FCA Cost</div>
+              <div style="flex: 1; padding: 6px;">Cargo Load Cost</div>
+              <div style="flex: 1; padding: 6px;">Freight Cost</div>
+              <div style="flex: 1; padding: 6px;">Cargo Unload Cost</div>
+              <div style="flex: 1; padding: 6px;">CIP Cost</div>
+              <div style="flex: 1; padding: 6px;">Import Taxes</div>
+              <div style="flex: 1; padding: 6px;">Import Profit</div>
+              <div style="flex: 1; padding: 6px;">DAT Cost</div>
             </div>
+
             <!-- Product rows -->
             {% for product in products %}
-              <div style="display: flex; border-bottom: 1px solid #333; align-items: center;">
+              <div style="display: flex; border-bottom: 1px solid #333; align-items: center;"
+                  data-product-type="{{ product.product_type }}">
+                <!-- Checkbox and hidden fields -->
                 <div style="flex: 0 0 32px; padding: 6px;">
                   <input type="checkbox" name="selected_products" value="{{ product.id }}">
-                  <!-- Hidden fields for all product data -->
                   <input type="hidden" name="product_name_{{ product.id }}" value="{{ product.name }}">
                   <input type="hidden" name="country_id_{{ product.id }}" value="{{ product.country_id }}">
                   <input type="hidden" name="trade_unit_{{ product.id }}" value="{{ product.trade_unit }}">
@@ -265,7 +294,7 @@
                   <input type="hidden" name="pack_cost_{{ product.id }}" value="{{ product.packaging_cost }}">
                   <input type="hidden" name="currency_{{ product.id }}" value="{{ product.currency }}">
                 </div>
-                <div style="flex: 0 0 48px; padding: 6px; color: #2196f3;">{{ product.product_code }}</div>
+                <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px; color: #2196f3;">{{ product.product_code }}</div>
                 <div style="flex: 2; padding: 6px;">{{ product.name }}</div>
                 <div style="flex: 1; padding: 6px;">{{ product.country_id }}</div>
                 <div style="flex: 1; padding: 6px;">{{ product.trade_unit }}</div>
@@ -277,18 +306,32 @@
                   {{ '${:,.2f}'.format(product.packaging_cost) if product.packaging_cost else '-' }}
                 </div>
                 <div style="flex: 1; padding: 6px;">{{ product.currency }}</div>
+                <div style="flex: 1; padding: 6px;">
+                  <input type="number"
+                        name="amount_{{ product.id }}"
+                        min="0"
+                        step="1"
+                        value="0"
+                        style="width: 70px; text-align: right; background-color: #23272f; color: #fff; border: 1px solid #2196f3; border-radius: 4px;">
+                </div>
+                <!-- New columns for calculations (placeholders for now) -->
+                <div style="flex: 1; padding: 6px;" id="total_weight_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="total_cost_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="taxes_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="profit_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="fca_cost_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="cargo_load_cost_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="freight_cost_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="cargo_unload_cost_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="cip_cost_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="import_taxes_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="import_profit_{{ product.id }}">-</div>
+                <div style="flex: 1; padding: 6px;" id="dat_cost_{{ product.id }}">-</div>
               </div>
             {% else %}
               <div style="padding: 10px 0; color: #888;">No products available.</div>
             {% endfor %}
           </div>
-        </div>
-        <div class="product-cost-col" style="flex: 1; min-width: 220px;">
-          <!-- Column 2: Cost List -->
-          <div style="font-weight: bold; color: #FF5C00;">Costs</div>
-          <ul id="cost-list">
-            <!-- Cost items will go here -->
-          </ul>
         </div>
       </div>
     </div>
@@ -1227,6 +1270,26 @@ function updateShipmentSummaryRoutes() {
         return false;
       }
       // ...existing code...
+    });
+  }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const productTypeFilter = document.getElementById('product_type_filter');
+  const productRows = document.querySelectorAll('#product-cost-section .product-cost-col > div[style*="display: flex"][data-product-type]');
+
+  if (productTypeFilter) {
+    productTypeFilter.addEventListener('change', function() {
+      const selectedType = this.value;
+      productRows.forEach(row => {
+        if (!selectedType || row.getAttribute('data-product-type') === selectedType) {
+          row.style.display = 'flex';
+        } else {
+          row.style.display = 'none';
+        }
+      });
     });
   }
 });
