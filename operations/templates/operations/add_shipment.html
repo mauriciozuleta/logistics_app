@@ -198,7 +198,14 @@
             </thead>
             <tbody>
               <tr>
-                <td style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">Departure Route</td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; text-align: center;">
+                  <button type="button"
+                    id="add_cargo_departure_btn"
+                    disabled
+                    style="background: none; border: none; color: #00bcd4; font-weight: normal; cursor: pointer; font-size: 1em; padding: 0;">
+                    Add Cargo to
+                  </button>
+                </td>
                 <td id="summary_dep_route" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
                 <td id="summary_dep_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
                 <td id="summary_dep_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
@@ -208,7 +215,14 @@
                 <td id="summary_dep_col10" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
               </tr>
               <tr>
-                <td style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">Return route</td>
+                <td style="border: 1.5px solid #2196f3; height: 32px; text-align: center;">
+                  <button type="button"
+                    id="add_cargo_return_btn"
+                    disabled
+                    style="background: none; border: none; color: #4caf50; font-weight: normal; cursor: pointer; font-size: 1em; padding: 0;">
+                    Add Cargo to
+                  </button>
+                </td>
                 <td id="summary_ret_route" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
                 <td id="summary_ret_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
                 <td id="summary_ret_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
@@ -254,7 +268,7 @@
               </select>
             </div>
             <!-- Headers row -->
-            <div style="display: flex; font-weight: normal; border-bottom: 2px solid #2196f3; background: #23272f;">
+            <div id="product-list-header" style="display: flex; font-weight: normal; border-bottom: 2px solid #2196f3; background: #23272f;">
               <div style="flex: 0 0 32px; padding: 6px;"></div> <!-- Checkbox column (empty header) -->
               <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;">Code</div> <!-- Product code column -->
               <div style="flex: 2; padding: 6px;">Name</div>
@@ -282,7 +296,9 @@
             <!-- Product rows -->
             {% for product in products %}
               <div style="display: flex; border-bottom: 1px solid #333; align-items: center;"
-                  data-product-type="{{ product.product_type }}">
+                  data-product-type="{{ product.product_type }}"
+                  data-pack-weight="{{ product.packaging_weight or 0 }}"
+                  data-pack-cost="{{ product.packaging_cost or 0 }}">
                 <!-- Checkbox and hidden fields -->
                 <div style="flex: 0 0 32px; padding: 6px;">
                   <input type="checkbox" name="selected_products" value="{{ product.id }}">
@@ -308,11 +324,12 @@
                 <div style="flex: 1; padding: 6px;">{{ product.currency }}</div>
                 <div style="flex: 1; padding: 6px;">
                   <input type="number"
-                        name="amount_{{ product.id }}"
-                        min="0"
-                        step="1"
-                        value="0"
-                        style="width: 70px; text-align: right; background-color: #23272f; color: #fff; border: 1px solid #2196f3; border-radius: 4px;">
+                    name="amount_{{ product.id }}"
+                    id="amount_{{ product.id }}"
+                    min="0"
+                    step="1"
+                    value="0"
+                    style="width: 70px; text-align: right; background-color: #23272f; color: #fff; border: 1px solid #2196f3; border-radius: 4px;">
                 </div>
                 <!-- New columns for calculations (placeholders for now) -->
                 <div style="flex: 1; padding: 6px;" id="total_weight_{{ product.id }}">-</div>
@@ -1292,6 +1309,153 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const header = document.getElementById('product-list-header');
+  const depBtn = document.getElementById('add_cargo_departure_btn');
+  const retBtn = document.getElementById('add_cargo_return_btn');
+
+  if (depBtn && header) {
+    depBtn.addEventListener('click', function() {
+      header.style.background = '#00bcd4';
+      header.style.color = '#fff';
+    });
+  }
+  if (retBtn && header) {
+    retBtn.addEventListener('click', function() {
+      header.style.background = '#4caf50';
+      header.style.color = '#fff';
+    });
+  }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const depBtn = document.getElementById('add_cargo_departure_btn');
+  const retBtn = document.getElementById('add_cargo_return_btn');
+  const amountInputs = document.querySelectorAll('input[type="number"][name^="amount_"]');
+
+  // Disable all amount fields by default
+  amountInputs.forEach(input => {
+    input.disabled = true;
+
+    // Show warning on mouse down (works even if input is disabled)
+    input.addEventListener('mousedown', function(e) {
+      if (input.disabled) {
+        alert('Please select "Add Cargo to" for Departure or Return before entering an amount.');
+        e.preventDefault();
+      }
+    });
+
+    // Fallback for keyboard navigation
+    input.addEventListener('focus', function(e) {
+      if (input.disabled) {
+        alert('Please select "Add Cargo to" for Departure or Return before entering an amount.');
+        input.blur();
+      }
+    });
+    input.addEventListener('keydown', function(e) {
+      if (input.disabled) {
+        alert('Please select "Add Cargo to" for Departure or Return before entering an amount.');
+        e.preventDefault();
+      }
+    });
+  });
+
+  function enableAmountInputs() {
+    amountInputs.forEach(input => input.disabled = false);
+  }
+
+  if (depBtn) depBtn.addEventListener('click', enableAmountInputs);
+  if (retBtn) retBtn.addEventListener('click', enableAmountInputs);
+});
+</script>
+
+<script> // FCA calculations
+document.addEventListener('DOMContentLoaded', function() {
+  const shipperSelect = document.getElementById('shipper');
+  // traderData is injected from Flask
+  const traderData = typeof window.traderData !== "undefined" ? window.traderData : JSON.parse('{{ trader_data|tojson|safe }}');
+
+  // For each amount input, update total weight, total cost, taxes, profit, and fca cost on change
+  document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
+    input.addEventListener('input', function() {
+      const row = input.closest('div[data-product-type]');
+      if (!row) return;
+      const packWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
+      const packCost = parseFloat(row.getAttribute('data-pack-cost')) || 0;
+      const amount = parseFloat(input.value) || 0;
+
+      // Calculate totals
+      const totalWeight = amount * packWeight;
+      const totalCost = amount * packCost;
+
+      // Get shipper's export tax and profit %
+      let taxPct = 0, profitPct = 0;
+      const shipperId = shipperSelect ? shipperSelect.value : null;
+      if (shipperId && traderData[shipperId]) {
+        taxPct = parseFloat(traderData[shipperId].export_sales_tax) || 0;
+        profitPct = parseFloat(traderData[shipperId].export_profit_pct) || 0;
+        console.log('taxPct:', taxPct, 'profitPct:', profitPct, 'traderData:', traderData[shipperId]);
+      }
+
+      // Calculate taxes and profit
+      const taxes = totalCost * (taxPct / 100);
+      const profit = totalCost * (profitPct / 100);
+
+      // FCA Cost = totalCost + taxes + profit
+      const fcaCost = totalCost + taxes + profit;
+
+      // Update the corresponding columns
+      const weightCell = row.querySelector('[id^="total_weight_"]');
+      const costCell = row.querySelector('[id^="total_cost_"]');
+      const taxesCell = row.querySelector('[id^="taxes_"]');
+      const profitCell = row.querySelector('[id^="profit_"]');
+      const fcaCostCell = row.querySelector('[id^="fca_cost_"]');
+      if (weightCell) weightCell.textContent = totalWeight ? totalWeight.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg' : '-';
+      if (costCell) costCell.textContent = totalCost ? '$' + totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (taxesCell) taxesCell.textContent = taxes ? '$' + taxes.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (profitCell) profitCell.textContent = profit ? '$' + profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (fcaCostCell) fcaCostCell.textContent = fcaCost ? '$' + fcaCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+    });
+  });
+
+  // Recalculate all rows when shipper changes
+  if (shipperSelect) {
+    shipperSelect.addEventListener('change', function() {
+      document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
+        const row = input.closest('div[data-product-type]');
+        if (!row) return;
+        // Trigger input event to recalculate
+        input.dispatchEvent(new Event('input'));
+      });
+    });
+  }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const depBtn = document.getElementById('add_cargo_departure_btn');
+  const retBtn = document.getElementById('add_cargo_return_btn');
+  const shipperSelect = document.getElementById('shipper');
+  const consigneeSelect = document.getElementById('consignee');
+
+  function updateAddCargoButtons() {
+    const enabled = !!shipperSelect.value && !!consigneeSelect.value;
+    if (depBtn) depBtn.disabled = !enabled;
+    if (retBtn) retBtn.disabled = !enabled;
+  }
+
+  if (shipperSelect) shipperSelect.addEventListener('change', updateAddCargoButtons);
+  if (consigneeSelect) consigneeSelect.addEventListener('change', updateAddCargoButtons);
+
+  // Initial state
+  updateAddCargoButtons();
 });
 </script>
 {% endblock %}
