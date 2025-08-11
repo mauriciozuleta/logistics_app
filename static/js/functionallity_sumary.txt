@@ -1,0 +1,33 @@
+shipment_form.js
+- Handles all main shipment form logic, including:
+  • Saving and restoring shipment drafts (localStorage)
+  • Caching and restoring form field values
+  • Managing route and aircraft selection
+  • Populating route information and summary tables
+  • Calculating costs, payloads, and related shipment metrics
+  • Handling UI helpers, validation, and user feedback
+  • Triggering recalculations and updates when form data changes
+  • Integrating with other scripts for
+
+shipment_form.js
+- Handles all main shipment form logic, including:
+  • Saving and restoring shipment drafts (localStorage)
+  • Caching and restoring form field values
+  • Managing route and aircraft selection
+  • Populating route information and summary tables
+  • Calculating costs, payloads, and related shipment metrics
+  • Handling UI helpers, validation, and user feedback
+  • Enabling/disabling "Add Cargo to" buttons based on shipper/consignee selection
+  • Triggering recalculations and updates when form data changes
+  • Integrating with other scripts for dynamic updates
+
+product_table.js
+- Handles all product table logic, including:
+  • Filtering products by type
+  • Changing product table header color based on selected route
+  • Disabling/enabling product amount fields and showing warnings until a route is selected
+  • Managing context-aware productInputs for departure/return (amounts and exchange rate)
+  • Restoring input values on context/filter switch
+  • Calculating and updating Cargo Load Cost for all product rows
+  • Calculating and updating Avg. Kg / P-L and related summary values
+  • Triggering recalculations for product and summary tables

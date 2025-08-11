@@ -698,6 +698,26 @@ def add_shipment(shipment_id=None):
     trader_choices = [(t.id, f"{t.trader_code} - {t.name} ({t.city})") for t in traders]
 
     products = Product.query.order_by(Product.name).all()
+
+# Convert products to a list of dicts for JSON serialization
+    products_dicts = [
+        {
+            'id': p.id,
+            'product_code': p.product_code,
+            'name': p.name,
+            'country_id': p.country_id,
+            'trade_unit': p.trade_unit,
+            'packaging': p.packaging,
+            'packaging_weight': p.packaging_weight,
+            'packaging_cost': p.packaging_cost,
+            'currency': p.currency,
+            'product_type': p.product_type
+            # Add any other fields you need in JS
+        }
+        for p in products
+    ]
+
+
     product_choices = [(p.id, p.name) for p in products]
 
     routes = Route.query.order_by(Route.route_name).all()
@@ -705,11 +725,32 @@ def add_shipment(shipment_id=None):
 
     airports = Airport.query.all()
 
+    airport_data = {str(a.id): {
+            'city': a.city,
+            'iata_code': a.iata_code,
+            'name': a.name,
+            'country': a.country_id,
+            'fuel_cost_gl': a.fuel_cost_gl,
+            'altitude_ft': a.altitude_ft,
+            'cargo_handling_cost_kg': a.cargo_handling_cost_kg,
+            'airport_fee': a.airport_fee,
+            'turnaround_cost': a.turnaround_cost
+        } for a in airports}
+
     trader_data = {str(t.id): {
         'code': t.trader_code,
         'name': t.name,
         'city': t.city,
-        'country': t.country_id
+        'country': t.country_id,
+        'export_sales_tax': t.export_sales_tax,
+        'export_profit_pct': t.export_profit_pct,
+        'export_other_taxes': t.export_other_taxes,
+        'import_profit_pct': t.import_profit_pct,
+        'import_other_taxes': t.import_other_taxes,
+        'import_taxes': t.import_taxes,
+        'import_other_cost': t.import_other_cost
+
+
     } for t in traders}
 
     route_data = {}
@@ -751,9 +792,10 @@ def add_shipment(shipment_id=None):
         traders=traders,
         routes=routes,
         airports=airports,
+        airport_data=airport_data, 
         trader_data=trader_data,
         route_data=route_data,
-        products=products
+        products=products_dicts  # <-- NOW PASS THE DICTS
     )
 
 @operations.route('/view-shipments')

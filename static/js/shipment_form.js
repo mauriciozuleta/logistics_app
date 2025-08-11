@@ -1,0 +1,992 @@
+
+// --- Shipment Draft Dictionary Logic ---
+const SHIPMENT_DRAFT_KEY = 'shipmentDraft';
+
+// Clear the draft on browser reload (fresh page load)
+window.addEventListener('load', function() {
+  localStorage.removeItem(SHIPMENT_DRAFT_KEY);
+});
+
+// Helper to get the current draft object
+function getShipmentDraft() {
+  const data = localStorage.getItem(SHIPMENT_DRAFT_KEY);
+  return data ? JSON.parse(data) : {};
+}
+
+// Helper to save the draft object
+function saveShipmentDraft(draft) {
+  localStorage.setItem(SHIPMENT_DRAFT_KEY, JSON.stringify(draft));
+  // Dispatch a custom event so other scripts on the page can react
+  window.dispatchEvent(new CustomEvent('shipmentDraftUpdated', {
+    detail: { draft }
+  }));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // --- DOM Element Cache ---
+  const shipperSelect = document.getElementById('shipper');
+  const consigneeSelect = document.getElementById('consignee');
+  const shipmentRefField = document.getElementById('shipment_reference');
+  const firstLegRouteSelect = document.getElementById('first_leg_route');
+  const secondLegRouteSelect = document.getElementById('second_leg_route');
+  const availableAircraftSelect = document.getElementById('available_aircraft');
+  const returnTypeSelect = document.getElementById('return_type');
+  const outboundPercentInput = document.getElementById('outbound_percent');
+  const returnPercentInput = document.getElementById('return_percent');
+  const outboundExtraInput = document.getElementById('outbound_extra');
+  const returnExtraInput = document.getElementById('return_extra');
+  const routeInfoSection = document.getElementById('route-info-section');
+  const form = document.getElementById('shipment-form');
+  const addCargoBtn = document.getElementById('add_product_cargo_btn');
+
+  // Labels and spans that are frequently updated
+  const outboundPercentLabel = document.getElementById('outbound_percent_label');
+  const returnPercentLabel = document.getElementById('return_percent_label');
+  const outboundExtraLabel = document.getElementById('outbound_extra_label');
+  const returnExtraLabel = document.getElementById('return_extra_label');
+  const totalFlightCostElement = document.getElementById('total_flight_cost');
+
+// Collect current form data and update the draft
+const updateShipmentDraftFromForm = function() {
+  const draft = getShipmentDraft();
+  draft.shipment_reference = shipmentRefField?.value || '';
+  draft.shipper = shipperSelect?.value || '';
+  draft.consignee = consigneeSelect?.value || '';
+  draft.first_leg_route = firstLegRouteSelect?.value || '';
+  draft.first_leg_route_text = firstLegRouteSelect.selectedIndex > 0 ? firstLegRouteSelect.options[firstLegRouteSelect.selectedIndex].text : '';
+  draft.second_leg_route = secondLegRouteSelect?.value || '';
+  draft.second_leg_route_text = secondLegRouteSelect.selectedIndex > 0 ? secondLegRouteSelect.options[secondLegRouteSelect.selectedIndex].text : '';
+  draft.available_aircraft = availableAircraftSelect?.value || '';
+  draft.return_type = returnTypeSelect?.value || '';
+  draft.outbound_percent = outboundPercentInput?.value || '';
+  draft.return_percent = returnPercentInput?.value || '';
+  draft.outbound_extra = outboundExtraInput?.value || '';
+  draft.return_extra = returnExtraInput?.value || '';
+  // Add more fields as needed
+  saveShipmentDraft(draft);
+};
+
+// Attach update logic to relevant form fields
+  [ shipmentRefField, shipperSelect, consigneeSelect, firstLegRouteSelect, secondLegRouteSelect,
+    availableAircraftSelect, returnTypeSelect, outboundPercentInput, returnPercentInput, outboundExtraInput, returnExtraInput
+  ].forEach(function(el) {
+    if (el) {
+      el.addEventListener('change', updateShipmentDraftFromForm);
+      el.addEventListener('input', updateShipmentDraftFromForm);
+    }
+  });
+  // Initial save
+  updateShipmentDraftFromForm();
+
+  
+  console.log('Trader data loaded:', traderData);
+  console.log('Route data loaded:', routeData);
+  // For debug: log the shipment draft on every update
+  window.addEventListener('storage', function(e) {
+    if (e.key === SHIPMENT_DRAFT_KEY) {
+      console.log('Shipment draft updated:', getShipmentDraft());
+    }
+  });
+
+  // Helper function to format payload with thousand separators
+  function formatPayloadWithSeparators(payloadText) {
+    if (!payloadText) return 'N/A';
+    // Extract numeric value from payload string
+    const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+    if (payloadMatch) {
+      const payloadValue = parseFloat(payloadMatch[1]);
+      const formattedValue = payloadValue >= 1000 ? 
+        payloadValue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2}) : 
+        payloadValue.toString();
+      return payloadText.replace(payloadMatch[1], formattedValue);
+    }
+    return payloadText;
+  }
+
+  function formatCostForLabel(cost) {
+    if (!cost || cost <= 0) return '';
+    const formattedCost = cost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    return ` (<span style="color: #00ff00;">${formattedCost}</span>)`;
+  }
+
+  function formatLoadForLabel(loadInKg) {
+    if (!loadInKg || loadInKg <= 0) return '';
+    const formattedLoad = loadInKg.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    return ` (<span style="color: #00ff00;">${formattedLoad} kg</span>)`;
+  }
+
+  function updateCostAllocationUI() {
+    const returnType = returnTypeSelect.value;
+    if (returnType === 'compensated') {
+      outboundPercentInput.disabled = false;
+      outboundPercentInput.value = outboundPercentInput.value || 100;
+      if (outboundExtraInput) outboundExtraInput.disabled = false;
+      if (returnExtraInput) returnExtraInput.disabled = false;
+    } else if (returnType === 'full') {
+      outboundPercentInput.disabled = true;
+      outboundPercentInput.value = 100;
+      if (outboundExtraInput) outboundExtraInput.disabled = false; // Enable outbound target cargo load for full return
+      if (returnExtraInput) returnExtraInput.disabled = true; // Keep return target cargo load disabled for full return
+    } else {
+      outboundPercentInput.disabled = true;
+      outboundPercentInput.value = 100;
+      if (outboundExtraInput) outboundExtraInput.disabled = true;
+      if (returnExtraInput) returnExtraInput.disabled = true;
+    }
+  }
+
+  function updatePercentFields() {
+    if (!returnTypeSelect || !outboundPercentInput || !returnPercentInput) return;
+
+    // 1. Update the UI state (enable/disable/set values) based on return type
+    updateCostAllocationUI();
+
+    // 2. Read values from the form AFTER UI has been updated
+    const outboundVal = parseFloat(outboundPercentInput.value) || 100;
+    const returnVal = 100 - outboundVal < 0 ? 0 : 100 - outboundVal;
+    returnPercentInput.value = returnVal.toFixed(2);
+
+    // 3. Perform calculations based on the new values
+    let totalFlightCost = 0;
+    if (totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error')) {
+      totalFlightCost = parseFloat(totalFlightCostElement.textContent.replace(/[$,]/g, '')) || 0;
+    }
+
+    // 4. Update UI labels with calculated results
+    const outboundCost = totalFlightCost * (outboundVal / 100);
+    if (outboundPercentLabel) outboundPercentLabel.innerHTML = `Outbound %${formatCostForLabel(outboundCost)}`;
+
+    const returnCost = totalFlightCost * (returnVal / 100);
+    if (returnPercentLabel) returnPercentLabel.innerHTML = `Return %${formatCostForLabel(returnCost)}`;
+
+    // 5. Update target cargo load labels
+    calculateAndDisplayTargetLoad(firstLegRouteSelect, outboundExtraInput, outboundExtraLabel, (returnTypeSelect.value === 'compensated' || returnTypeSelect.value === 'full'));
+    calculateAndDisplayTargetLoad(secondLegRouteSelect, returnExtraInput, returnExtraLabel, (returnTypeSelect.value === 'compensated'));
+
+      // Recalculate costs when percentages change - but only if aircraft is selected
+      try {
+        if (availableAircraftSelect && availableAircraftSelect.value) {
+          calculateTotalFlightCostSafely();
+          calculateKgCostsSafely();
+        }
+      } catch (error) {
+        console.error('Error updating costs from percentage change:', error);
+      }
+    }
+
+  function calculateAndDisplayTargetLoad(routeSelect, percentInput, targetLabel, isEnabled) {
+    if (!targetLabel) return;
+
+    if (!isEnabled) {
+      targetLabel.innerHTML = 'target cargo load (%)';
+      return;
+    }
+
+    let payload = 0;
+    const routeId = routeSelect ? routeSelect.value : null;
+    if (routeId && routeData[routeId] && routeData[routeId].payload) {
+      const payloadText = routeData[routeId].payload;
+      const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+      if (payloadMatch) payload = parseFloat(payloadMatch[1]) || 0;
+    }
+    const targetCargoPercent = parseFloat(percentInput ? percentInput.value : 0) || 0;
+    const targetCargo = payload * (targetCargoPercent / 100);
+    targetLabel.innerHTML = `target cargo load (%)${formatLoadForLabel(targetCargo)}`;
+  }
+
+  function preventEnterSubmit(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      updatePercentFields(); // Update calculations instead
+    }
+  }
+
+  if (returnTypeSelect && outboundPercentInput) {
+    returnTypeSelect.addEventListener('change', updatePercentFields);
+    outboundPercentInput.addEventListener('input', updatePercentFields);
+        // Add event listeners for target cargo load percentage inputs
+    if (outboundExtraInput) {
+      outboundExtraInput.addEventListener('input', updatePercentFields);
+      outboundExtraInput.addEventListener('keydown', preventEnterSubmit);
+    }
+    if (returnExtraInput) {
+      returnExtraInput.addEventListener('input', updatePercentFields);
+      returnExtraInput.addEventListener('keydown', preventEnterSubmit);
+    }
+    // Initialize on load
+    updatePercentFields();
+  }
+
+
+  // Helper functions
+  function updateCityField(selectElement, cityField) {
+    // This function is called but cityField elements don't exist in HTML
+    // Keeping for compatibility but making it safe
+    if (cityField && selectElement.value && traderData[selectElement.value]) {
+      cityField.value = traderData[selectElement.value].city;
+    }
+  }
+
+  function generateShipmentReference() {
+    const shipperId = shipperSelect.value;
+    const consigneeId = consigneeSelect.value;
+    
+    if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId] && shipmentRefField) {
+      const shipperCode = traderData[shipperId].code;
+      const consigneeCode = traderData[consigneeId].code;
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      shipmentRefField.value = `${shipperCode}-${consigneeCode}-${timestamp}`;
+    }
+  }
+
+  // Preload aircraft list with all unique aircraft from the aircraft column in routeData
+  function preloadAllAircraftFromRoutes() {
+    const aircraftSet = new Set();
+    Object.values(routeData).forEach(route => {
+      // route.aircraft can be a string or array, normalize to array
+      if (route.aircraft) {
+        if (Array.isArray(route.aircraft)) {
+          route.aircraft.forEach(ac => {
+            if (ac && typeof ac === 'string' && ac.trim() !== '') {
+              aircraftSet.add(ac.trim());
+            }
+          });
+        } else if (typeof route.aircraft === 'string' && route.aircraft.trim() !== '') {
+          // If aircraft is a comma-separated string
+          route.aircraft.split(',').forEach(ac => {
+            if (ac && ac.trim() !== '') {
+              aircraftSet.add(ac.trim());
+            }
+          });
+        }
+      }
+    });
+    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
+    Array.from(aircraftSet).sort().forEach(ac => {
+      const acOption = document.createElement('option');
+      acOption.value = ac;
+      acOption.textContent = ac;
+      availableAircraftSelect.appendChild(acOption);
+    });
+  }
+  preloadAllAircraftFromRoutes();
+
+  // Aircraft selection control logic
+  function updateAircraftAvailability() {
+    const firstLegRouteValue = firstLegRouteSelect.value;
+    const secondLegRouteValue = secondLegRouteSelect.value;
+    
+    // Aircraft is only available when BOTH routes are selected
+    if (firstLegRouteValue && secondLegRouteValue) {
+      // Enable aircraft selection when both routes are selected
+      availableAircraftSelect.disabled = false;
+    } else {
+      // Disable aircraft selection when either route is missing
+      availableAircraftSelect.disabled = true;
+      availableAircraftSelect.value = ''; // Clear selection
+      // Clear route information when aircraft becomes unavailable
+      clearRouteInformationSafely();
+    }
+  }
+
+  // Add event listener to show message when trying to select disabled aircraft
+  availableAircraftSelect.addEventListener('click', function(e) {
+    if (this.disabled) {
+      const firstLegSelected = firstLegRouteSelect.value;
+      const secondLegSelected = secondLegRouteSelect.value;
+      
+      if (!firstLegSelected && !secondLegSelected) {
+        alert('Please select both First Leg Route and Return/Connecting Route before choosing an aircraft.');
+      } else if (!firstLegSelected) {
+        alert('Please select a First Leg Route before choosing an aircraft.');
+      } else if (!secondLegSelected) {
+        alert('Please select a Return/Connecting Route before choosing an aircraft.');
+      }
+      
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Aircraft Selection Logic - Enhanced Debugging
+  // Add event listener to aircraft selection to populate route information
+  availableAircraftSelect.addEventListener('change', function() {
+    console.log('=== AIRCRAFT SELECTION TRIGGERED ===');
+    console.log('Selected aircraft:', this.value);
+    console.log('First leg route selected:', firstLegRouteSelect.value);
+    console.log('Second leg route selected:', secondLegRouteSelect.value);
+    console.log('Route data available:', Object.keys(routeData).length, 'routes');
+    
+    try {
+      populateRouteInformationSafely();
+      updateShipmentSummaryRoutes();
+    } catch (error) {
+      console.error('Error in aircraft selection:', error);
+      alert('Error populating route information: ' + error.message);
+    }
+  });
+
+  // Enhanced route information population with detailed debugging
+  function populateRouteInformationSafely() {
+    console.log('=== POPULATE ROUTE INFORMATION CALLED ===');
+    
+    const selectedAircraft = availableAircraftSelect.value;
+    console.log('Selected aircraft:', selectedAircraft);
+    
+    if (!selectedAircraft) {
+      console.log('No aircraft selected, clearing fields');
+      clearRouteInformationSafely();
+      return;
+    }
+
+    // Check if we have required data
+    console.log('Route data exists:', !!routeData);
+    console.log('First leg select exists:', !!firstLegRouteSelect);
+    console.log('Second leg select exists:', !!secondLegRouteSelect);
+
+    if (routeData && firstLegRouteSelect && secondLegRouteSelect) {
+      const firstLegRouteId = firstLegRouteSelect.value;
+      const secondLegRouteId = secondLegRouteSelect.value;
+      
+      console.log('First leg route ID:', firstLegRouteId);
+      console.log('Second leg route ID:', secondLegRouteId);
+      
+      // Ensure both routes are selected
+      if (!firstLegRouteId || !secondLegRouteId) {
+        console.log('Missing route selections - clearing fields');
+        clearRouteInformationSafely();
+        return;
+      }
+      
+      // Check if route data exists for selected routes
+      console.log('First leg route exists in data:', !!routeData[firstLegRouteId]);
+      console.log('Second leg route exists in data:', !!routeData[secondLegRouteId]);
+      
+      // Populate first leg route information
+      if (routeData[firstLegRouteId]) {
+        const firstLegRoute = routeData[firstLegRouteId];
+        console.log('First leg route data:', firstLegRoute);
+        
+        console.log('Updating first leg fields...');
+        safelyUpdateElement('first_leg_distance', firstLegRoute.distance);
+        safelyUpdateElement('first_leg_flight_time', firstLegRoute.flight_time);
+        safelyUpdateElement('first_leg_route_cost', firstLegRoute.cost ? `$${parseFloat(firstLegRoute.cost) >= 1000 ? parseFloat(firstLegRoute.cost).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : parseFloat(firstLegRoute.cost).toFixed(2)}` : 'No Cost');
+        safelyUpdateElement('first_leg_payload', firstLegRoute.payload ? formatPayloadWithSeparators(firstLegRoute.payload) : 'N/A');
+        console.log('First leg fields updated');
+      } else {
+        console.warn('First leg route data not found for ID:', firstLegRouteId);
+      }
+
+      // Populate second leg route information
+      if (routeData[secondLegRouteId]) {
+        const secondLegRoute = routeData[secondLegRouteId];
+        console.log('Second leg route data:', secondLegRoute);
+        
+        console.log('Updating second leg fields...');
+        safelyUpdateElement('second_leg_distance', secondLegRoute.distance);
+        safelyUpdateElement('second_leg_flight_time', secondLegRoute.flight_time);
+        safelyUpdateElement('second_leg_route_cost', secondLegRoute.cost ? `$${parseFloat(secondLegRoute.cost) >= 1000 ? parseFloat(secondLegRoute.cost).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : parseFloat(secondLegRoute.cost).toFixed(2)}` : 'No Cost');
+        safelyUpdateElement('second_leg_payload', secondLegRoute.payload ? formatPayloadWithSeparators(secondLegRoute.payload) : 'N/A');
+        console.log('Second leg fields updated');
+      } else {
+        console.warn('Second leg route data not found for ID:', secondLegRouteId);
+      }
+
+      // Calculate total flight cost
+      console.log('Calculating total flight cost...');
+      calculateTotalFlightCostFromRoutes();
+      
+      // Calculate kg costs
+      console.log('Calculating kg costs...');
+      calculateKgCostsSafely();
+
+      // Manually trigger a draft update to ensure the summary table refreshes
+      updateShipmentDraftFromForm();
+      
+      console.log('=== ROUTE POPULATION COMPLETE ===');
+    } else {
+      console.error('Missing required elements or data');
+      console.log('routeData:', !!routeData);
+      console.log('firstLegRouteSelect:', !!firstLegRouteSelect);
+      console.log('secondLegRouteSelect:', !!secondLegRouteSelect);
+    }
+  }
+
+  // Calculate total flight cost as sum of both route costs
+  function calculateTotalFlightCostFromRoutes() {
+    try {
+      const firstLegRouteId = firstLegRouteSelect.value;
+      const secondLegRouteId = secondLegRouteSelect.value;
+      
+      if (!firstLegRouteId || !secondLegRouteId) {
+        safelyUpdateElement('total_flight_cost', 'N/A');
+        return;
+      }
+
+      let totalCost = 0;
+      
+      // Add first leg cost
+      if (routeData[firstLegRouteId] && routeData[firstLegRouteId].cost) {
+        const firstLegCost = parseFloat(routeData[firstLegRouteId].cost) || 0;
+        totalCost += firstLegCost;
+        console.log('First leg cost:', firstLegCost);
+      }
+      
+      // Add second leg cost (full cost - sum of both routes)
+      if (routeData[secondLegRouteId] && routeData[secondLegRouteId].cost) {
+        const secondLegCost = parseFloat(routeData[secondLegRouteId].cost) || 0;
+        totalCost += secondLegCost;
+        console.log('Second leg cost:', secondLegCost);
+      }
+      
+      console.log('Total flight cost calculated:', totalCost);
+      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost >= 1000 ? totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : totalCost.toFixed(2)}` : 'N/A');
+      
+    } catch (error) {
+      console.error('Error calculating total flight cost from routes:', error);
+      safelyUpdateElement('total_flight_cost', 'Error');
+    }
+  }
+
+  // Enhanced helper function to safely update DOM elements with debugging
+  function safelyUpdateElement(elementId, value) {
+    try {
+      console.log(`Updating element ${elementId} with value:`, value);
+      const element = document.getElementById(elementId);
+      
+      if (element) {
+        const displayValue = value || 'N/A';
+        element.textContent = displayValue;
+        console.log(`✓ Successfully updated ${elementId} to: ${displayValue}`);
+      } else {
+        console.error(`✗ Element not found: ${elementId}`);
+      }
+    } catch (error) {
+      console.error(`Error updating element ${elementId}:`, error);
+    }
+  }
+
+// Update the shipment summary table Route columns
+function updateShipmentSummaryRoutes() {
+  // Departure Route
+  const depRouteCell = document.getElementById('summary_dep_route');
+  if (depRouteCell && firstLegRouteSelect.selectedIndex > 0) {
+    depRouteCell.textContent = firstLegRouteSelect.options[firstLegRouteSelect.selectedIndex].text;
+  } else if (depRouteCell) {
+    depRouteCell.textContent = '-';
+  }
+  // Return Route
+  const retRouteCell = document.getElementById('summary_ret_route');
+  if (retRouteCell && secondLegRouteSelect.selectedIndex > 0) {
+    retRouteCell.textContent = secondLegRouteSelect.options[secondLegRouteSelect.selectedIndex].text;
+  } else if (retRouteCell) {
+    retRouteCell.textContent = '-';
+  }
+}
+  // Function to update the shipment summary display
+  
+
+  // Function to show the cargo management section
+  function showCargoManagementSection() {
+    const cargoSection = document.getElementById('cargo-management-section');
+    if (cargoSection) {
+      cargoSection.style.display = 'block';
+      // Scroll to the cargo section
+      cargoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // Safely clear all route information fields
+  function clearRouteInformationSafely() {
+    const fieldsToReset = [
+      'first_leg_distance', 'first_leg_flight_time', 'first_leg_route_cost', 'first_leg_payload',
+      'second_leg_distance', 'second_leg_flight_time', 'second_leg_route_cost', 'second_leg_payload',
+      'total_flight_cost', 'outbound_kg_cost', 'return_kg_cost'
+    ];
+    
+    fieldsToReset.forEach(fieldId => {
+      safelyUpdateElement(fieldId, 'N/A');
+    });
+  }
+
+  // Safely calculate total flight cost
+  function calculateTotalFlightCostSafely() {
+    try {
+      if (!firstLegRouteSelect || !secondLegRouteSelect) {
+        return;
+      }
+
+      const firstLegRouteId = firstLegRouteSelect.value;
+      const secondLegRouteId = secondLegRouteSelect.value;
+
+      let totalCost = 0;
+
+      // Always add both route costs, regardless of return type or percentages
+      if (firstLegRouteId && routeData[firstLegRouteId] && routeData[firstLegRouteId].cost) {
+        totalCost += parseFloat(routeData[firstLegRouteId].cost) || 0;
+      }
+      if (secondLegRouteId && routeData[secondLegRouteId] && routeData[secondLegRouteId].cost) {
+        totalCost += parseFloat(routeData[secondLegRouteId].cost) || 0;
+      }
+
+      safelyUpdateElement('total_flight_cost', totalCost > 0 ? `$${totalCost >= 1000 ? totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : totalCost.toFixed(2)}` : 'N/A');
+    } catch (error) {
+      console.error('Error calculating total flight cost:', error);
+      safelyUpdateElement('total_flight_cost', 'Error');
+    }
+  }
+
+  function getPayloadForRoute(routeId) {
+    if (routeId && routeData[routeId] && routeData[routeId].payload) {
+      const payloadText = routeData[routeId].payload;
+      const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
+      if (payloadMatch) {
+        return parseFloat(payloadMatch[1]) || 0;
+      }
+    }
+    return 0;
+  }
+
+  // Safely calculate kg costs
+  function calculateKgCostsSafely() {
+    try {
+      if (!outboundPercentInput || !returnPercentInput) {
+        return;
+      }
+      if (!totalFlightCostElement) return;
+      
+      const totalFlightCostText = totalFlightCostElement.textContent;
+      const outboundPercent = parseFloat(outboundPercentInput.value) || 0;
+      const returnPercent = parseFloat(returnPercentInput.value) || 0;
+      
+      if (totalFlightCostText && totalFlightCostText !== 'N/A' && !totalFlightCostText.includes('Error')) {
+        // Remove $ and commas, then parse
+        const totalCost = parseFloat(totalFlightCostText.replace(/[$,]/g, '')) || 0;
+        
+        // Calculate outbound kg cost: outbound % cost divided by target cargo load (in kg)
+        const outboundTargetCargoPercent = parseFloat(outboundExtraInput ? outboundExtraInput.value : 0) || 0;
+        let outboundKgCost = 0;
+        if (outboundTargetCargoPercent > 0) {
+          const outboundCost = totalCost * (outboundPercent / 100);
+          const payload = getPayloadForRoute(firstLegRouteSelect.value);
+          const targetCargoKg = payload * (outboundTargetCargoPercent / 100);
+          if (targetCargoKg > 0) {
+            outboundKgCost = outboundCost / targetCargoKg;
+          }
+        }
+        
+        // Calculate return kg cost: return % cost divided by target cargo load (in kg)
+        const returnTargetCargoPercent = parseFloat(returnExtraInput ? returnExtraInput.value : 0) || 0;
+        let returnKgCost = 0;
+        if (returnTargetCargoPercent > 0) {
+          const returnCost = totalCost * (returnPercent / 100);
+          const payload = getPayloadForRoute(secondLegRouteSelect.value);
+          const targetCargoKg = payload * (returnTargetCargoPercent / 100);
+          if (targetCargoKg > 0) {
+            returnKgCost = returnCost / targetCargoKg;
+          }
+        }
+        
+        safelyUpdateElement('outbound_kg_cost', outboundKgCost > 0 ? `$${outboundKgCost >= 1 ? outboundKgCost.toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3}) : outboundKgCost.toFixed(3)}/kg` : 'N/A');
+        safelyUpdateElement('return_kg_cost', returnKgCost > 0 ? `$${returnKgCost >= 1 ? returnKgCost.toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3}) : returnKgCost.toFixed(3)}/kg` : 'N/A');
+      } else {
+        safelyUpdateElement('outbound_kg_cost', 'N/A');
+        safelyUpdateElement('return_kg_cost', 'N/A');
+      }
+    } catch (error) {
+      console.error('Error calculating kg costs:', error);
+      safelyUpdateElement('outbound_kg_cost', 'Error');
+      safelyUpdateElement('return_kg_cost', 'Error');
+    }
+  }
+
+  // Route Selection Event Listeners - Isolated and Safe
+  // Add event listener to first leg route to update aircraft availability and recalculate
+  firstLegRouteSelect.addEventListener('change', function() {
+    try {
+      // Update aircraft availability when first leg route changes
+      updateAircraftAvailability();
+      
+      // Only recalculate if aircraft is selected and we won't interfere with main logic
+      if (availableAircraftSelect && availableAircraftSelect.value) {
+        setTimeout(() => {
+          try {
+            populateRouteInformationSafely();
+          } catch (error) {
+            console.error('Error in delayed route calculation:', error);
+          }
+        }, 100); // Small delay to avoid interfering with main route logic
+      }
+      updateShipmentSummaryRoutes();
+    } catch (error) {
+      console.error('Error in first leg route change:', error);
+    }
+  });
+
+  // Add event listener to second leg route to enable/disable aircraft
+  secondLegRouteSelect.addEventListener('change', function() {
+    try {
+      updateAircraftAvailability();
+      // Only recalculate if aircraft is selected and we won't interfere with main logic
+      if (availableAircraftSelect && availableAircraftSelect.value) {
+        setTimeout(() => {
+          try {
+            populateRouteInformationSafely();
+          } catch (error) {
+            console.error('Error in delayed route calculation:', error);
+          }
+        }, 100); // Small delay to avoid interfering with main route logic
+      }
+      updateShipmentSummaryRoutes();
+    } catch (error) {
+      console.error('Error in second leg route change:', error);
+    }
+  });
+
+  // Add event listener to return type to recalculate costs
+  returnTypeSelect.addEventListener('change', function() {
+    try {
+      updatePercentFields();
+      // Only recalculate if aircraft is selected
+      if (availableAircraftSelect && availableAircraftSelect.value) {
+        setTimeout(() => {
+          try {
+            populateRouteInformationSafely();
+          } catch (error) {
+            console.error('Error in delayed cost calculation:', error);
+          }
+        }, 100); // Small delay to prevent interference
+      }
+    } catch (error) {
+      console.error('Error in return type change:', error);
+    }
+  });
+
+  // Initialize aircraft availability on page load
+  updateAircraftAvailability();
+
+
+
+  // --- COMMENTED OUT: Previous Add Product / Cargo button logic ---
+  /*
+  function isFilled(val) {
+    return val !== undefined && val !== null && val !== '' && val !== false && val !== '0';
+  }
+  function validateAddCargoButton() {
+    // ...previous logic...
+  }
+  [firstLegRouteSelect, secondLegRouteSelect, availableAircraftSelect, returnTypeSelect,
+   outboundPercentInput, outboundExtraInput, returnPercentInput, returnExtraInput].forEach(function(el) {
+    if (el) {
+      el.addEventListener('change', validateAddCargoButton);
+      el.addEventListener('input', validateAddCargoButton);
+    }
+  });
+  validateAddCargoButton();
+  */
+
+  // --- COMMENTED OUT: New Add Product / Cargo button logic from scratch ---
+  /*
+  function allRequiredFieldsValid() {
+    // ...new logic...
+  }
+  function updateAddCargoBtnState() {
+    // ...new logic...
+  }
+  [firstLegRouteSelect, secondLegRouteSelect, availableAircraftSelect, returnTypeSelect,
+   outboundPercentInput, outboundExtraInput, returnPercentInput, returnExtraInput].forEach(function(el) {
+    if (el) {
+      el.addEventListener('change', updateAddCargoBtnState);
+      el.addEventListener('input', updateAddCargoBtnState);
+    }
+  });
+  updateAddCargoBtnState();
+  */
+
+  // Add event listener for Add Product / Cargo button (unchanged, but after validation)
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'add_product_cargo_btn') {
+      // Placeholder for add product/cargo functionality
+      alert('Add Product / Cargo functionality will be implemented here.');
+    }
+  });
+
+  // Test function to verify all elements exist
+  function testElementsExist() {
+    console.log('=== TESTING ELEMENT EXISTENCE ===');
+    const elementsToTest = [
+      'first_leg_distance', 'first_leg_flight_time', 'first_leg_route_cost', 'first_leg_payload',
+      'second_leg_distance', 'second_leg_flight_time', 'second_leg_route_cost', 'second_leg_payload',
+      'total_flight_cost', 'outbound_kg_cost', 'return_kg_cost'
+    ];
+    
+    elementsToTest.forEach(elementId => {
+      const element = document.getElementById(elementId);
+      console.log(`${elementId}: ${element ? '✓ EXISTS' : '✗ MISSING'}`);
+    });
+    console.log('=== ELEMENT TEST COMPLETE ===');
+  }
+  
+  // Run the test
+  testElementsExist();
+  // Helper to show/hide route not found message
+  function showRouteNotFound(show) {
+    let msg = document.getElementById('route-not-found-msg');
+    const shipmentSection = document.querySelector('.shipment-section');
+    if (!msg) {
+      msg = document.createElement('div');
+      msg.id = 'route-not-found-msg';
+      msg.className = 'coming-soon-notice';
+      msg.innerHTML = '<strong>No route found between selected shipper and consignee cities.</strong><br>' +
+        '<button id="add-route-btn" style="margin:10px;">Add Route</button>' +
+        '<button id="cancel-route-btn" style="margin:10px;">Cancel & Clear</button>';
+      // Insert below the first shipment-section (Shipment Information)
+      if (shipmentSection) {
+        shipmentSection.parentNode.insertBefore(msg, shipmentSection.nextSibling);
+      }
+    }
+    msg.style.display = show ? 'block' : 'none';
+    // Always re-attach event listeners (in case DOM was recreated)
+    const addRouteBtn = document.getElementById('add-route-btn');
+    const cancelRouteBtn = document.getElementById('cancel-route-btn');
+    if (addRouteBtn) {
+      addRouteBtn.onclick = function() {
+        window.location.href = '/operations/add-route';
+      };
+    }
+    if (cancelRouteBtn) {
+      cancelRouteBtn.onclick = function() {
+        document.getElementById('shipment-form').reset();
+        firstLegRouteSelect.innerHTML = '<option value="">Departure Route...</option>';
+        secondLegRouteSelect.innerHTML = '<option value="">Return Route...</option>';
+        availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
+        showRouteNotFound(false);
+        routeInfoSection.style.display = 'none';
+      };
+    }
+  }
+
+    function filterRoutes(allRoutes, shipperCity, consigneeCity) {
+    const firstLegRoutes = [];
+    const returnLegRoutes = [];
+
+    Object.entries(allRoutes).forEach(([routeId, route]) => {
+      // Add checks to prevent errors if city data is missing
+      if (!route.fromCity || !route.toCity) {
+        return; // Skip this route if data is incomplete
+      }
+      const fromCityLower = route.fromCity.toLowerCase();
+      const toCityLower = route.toCity.toLowerCase();
+
+      // Find first leg routes (from shipper to consignee)
+      if (fromCityLower === shipperCity.toLowerCase() && toCityLower === consigneeCity.toLowerCase()) {
+        firstLegRoutes.push({
+          value: routeId,
+          text: `${route.fromAirport} - ${route.toAirport}`,
+          aircraft: route.aircraft || []
+        });
+      }
+
+      // Find return leg routes (from consignee to anywhere)
+      if (fromCityLower === consigneeCity.toLowerCase()) {
+        returnLegRoutes.push({
+          value: routeId,
+          text: `${route.fromAirport} - ${route.toAirport}`
+        });
+      }
+    });
+    return { firstLegRoutes, returnLegRoutes };
+  }
+
+
+  // Always update city fields on selection
+  shipperSelect.addEventListener('change', function() {
+    generateShipmentReference();
+    // Only load routes if both shipper and consignee are selected
+    if (shipperSelect.value && consigneeSelect.value) {
+      loadRoutesLogic();
+    }
+  });
+  consigneeSelect.addEventListener('change', function() {
+    generateShipmentReference();
+    loadRoutesLogic();
+  });
+
+  // Logic to load routes based on shipper/consignee selection
+  function loadRoutesLogic() {
+    console.log('loadRoutesLogic called');
+    firstLegRouteSelect.innerHTML = '<option value="">Departure Route...</option>';
+    secondLegRouteSelect.innerHTML = '<option value="">Return Route...</option>';
+    showRouteNotFound(false);
+
+    const shipperId = shipperSelect.value;
+    const consigneeId = consigneeSelect.value;
+    console.log('Shipper ID:', shipperId, 'Consignee ID:', consigneeId);
+
+    if (!shipperId || !consigneeId) {
+      console.log('Missing shipper or consignee');
+      routeInfoSection.style.display = 'none';
+      return;
+    }
+
+    // Defensive check: ensure trader data exists before accessing properties
+    const shipperData = traderData[shipperId];
+    const consigneeData = traderData[consigneeId];
+
+    if (!shipperData || !consigneeData) {
+      console.log('Trader data not found for selected shipper or consignee');
+      routeInfoSection.style.display = 'none';
+      return;
+    }
+
+    const shipperCity = shipperData.city;
+    const consigneeCity = consigneeData.city;
+    console.log('Shipper city:', shipperCity, 'Consignee city:', consigneeCity);
+
+    const { firstLegRoutes, returnLegRoutes } = filterRoutes(routeData, shipperCity, consigneeCity);
+    const found = firstLegRoutes.length > 0;
+
+    // Populate first leg route select
+    firstLegRoutes.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.text;
+      firstLegRouteSelect.appendChild(option);
+    });
+    // Populate return leg route select
+    returnLegRoutes.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.text;
+      secondLegRouteSelect.appendChild(option);
+    });
+
+    // Update aircraft availability after populating return routes
+    updateAircraftAvailability();
+
+    // Aircraft dropdown: only show aircraft for selected first leg route
+    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
+    if (firstLegRoutes.length > 0) {
+      let aircraftList = [];
+      if (Array.isArray(firstLegRoutes[0].aircraft)) {
+        aircraftList = firstLegRoutes[0].aircraft;
+      } else if (typeof firstLegRoutes[0].aircraft === 'string') {
+        aircraftList = firstLegRoutes[0].aircraft.split(',').map(ac => ac.trim()).filter(ac => ac);
+      }
+      aircraftList.forEach(ac => {
+        const acOption = document.createElement('option');
+        acOption.value = ac;
+        acOption.textContent = ac;
+        availableAircraftSelect.appendChild(acOption);
+      });
+    }
+    if (!found) {
+      routeInfoSection.style.display = 'none';
+      showRouteNotFound(true);
+    } else {
+      routeInfoSection.style.display = 'block';
+      showRouteNotFound(false);
+    }
+  }
+
+  // Form submission handling
+    if (form) {
+    form.addEventListener('submit', function(e) {
+      const shipper = shipperSelect.value;
+      const consignee = consigneeSelect.value;
+      const firstLegRoute = firstLegRouteSelect.value;
+      if (!shipper) {
+        alert('Please select a shipper.');
+        e.preventDefault();
+        return false;
+      }
+      if (!consignee) {
+        alert('Please select a consignee.');
+        e.preventDefault();
+        return false;
+      }
+      if (shipper === consignee) {
+        alert('Shipper and consignee cannot be the same.');
+        e.preventDefault();
+        return false;
+      }
+      if (!firstLegRoute) {
+        alert('Please select a route for the first leg.');
+        e.preventDefault();
+        return false;
+      }
+      // ...existing code...
+    });
+  }
+});
+
+// Enable/disable "Add Cargo to" buttons based on shipper and consignee selection
+document.addEventListener('DOMContentLoaded', function() {
+  const shipperSelect = document.getElementById('shipper');
+  const exchangeRateInput = document.getElementById('exchange_rate');
+  // traderData is injected from Flask
+ // const traderData = typeof window.traderData !== "undefined" ? window.traderData : JSON.parse('{{ trader_data|tojson|safe }}');
+
+  function updateFcaCosts() {
+    document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
+      const row = input.closest('div[data-product-type]');
+      if (!row) return;
+      const packWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
+      const packCost = parseFloat(row.getAttribute('data-pack-cost')) || 0;
+      const amount = parseFloat(input.value) || 0;
+
+      // Calculate totals
+      const totalWeight = amount * packWeight;
+      const totalCost = amount * packCost;
+
+      // Get shipper's export tax and profit %
+      let taxPct = 0, profitPct = 0;
+      const shipperId = shipperSelect ? shipperSelect.value : null;
+      if (shipperId && traderData[shipperId]) {
+        taxPct = parseFloat(traderData[shipperId].export_sales_tax) || 0;
+        profitPct = parseFloat(traderData[shipperId].export_profit_pct) || 0;
+      }
+
+      // Calculate taxes and profit
+      const taxes = totalCost * (taxPct / 100);
+      const profit = totalCost * (profitPct / 100);
+
+      // FCA Cost = totalCost + taxes + profit
+      const fcaCost = totalCost + taxes + profit;
+
+      // FCA Cost (USD) = FCA Cost ($Local) * Exchange Rate
+      const exchangeRate = parseFloat(exchangeRateInput?.value) || 0;
+      const fcaCostUSD = (exchangeRate > 0) ? fcaCost / exchangeRate : 0;
+
+      // Update the corresponding columns
+      const weightCell = row.querySelector('[id^="total_weight_"]');
+      const costCell = row.querySelector('[id^="total_cost_"]');
+      const taxesCell = row.querySelector('[id^="taxes_"]');
+      const profitCell = row.querySelector('[id^="profit_"]');
+      const fcaCostCell = row.querySelector('[id^="fca_cost_"]');
+      const fcaCostUSDCell = row.querySelector('[id^="fca_cost_usd_"]');
+      if (weightCell) weightCell.textContent = totalWeight ? totalWeight.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg' : '-';
+      if (costCell) costCell.textContent = totalCost ? '$' + totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (taxesCell) taxesCell.textContent = taxes ? '$' + taxes.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (profitCell) profitCell.textContent = profit ? '$' + profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (fcaCostCell) fcaCostCell.textContent = fcaCost ? '$' + fcaCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (fcaCostUSDCell) fcaCostUSDCell.textContent = fcaCostUSD ? '$' + fcaCostUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+    });
+  }
+
+  // For each amount input, update all computed columns on change
+  document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
+    input.addEventListener('input', updateFcaCosts);
+  });
+
+  // Recalculate all rows when shipper or exchange rate changes
+  if (shipperSelect) {
+    shipperSelect.addEventListener('change', updateFcaCosts);
+  }
+  if (exchangeRateInput) {
+    exchangeRateInput.addEventListener('input', updateFcaCosts);
+  }
+
+  // Initial calculation
+  updateFcaCosts();
+});
