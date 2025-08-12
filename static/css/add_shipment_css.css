@@ -69,3 +69,15 @@
     padding: 4px 8px;
     font-size: 0.8rem;
   }
+
+  .product-table-body {
+  max-height: 350px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+#product-totals-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}

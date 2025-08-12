@@ -344,4 +344,30 @@ document.addEventListener('DOMContentLoaded', function() {
   recalcAll();
 });
 
-// Context-aware FCA cost calculation for each product row
+function updateProductTotals() {
+  // Helper to sum all cells by id prefix
+  function sumCells(prefix) {
+    let sum = 0;
+    document.querySelectorAll(`[id^="${prefix}_"]`).forEach(cell => {
+      // Remove $ and commas, parse as float
+      let val = parseFloat((cell.textContent || '').replace(/[$,]/g, ''));
+      if (!isNaN(val)) sum += val;
+    });
+    return sum;
+  }
+
+  // Update each total cell
+  document.getElementById('total_total_weight').textContent = sumCells('total_weight').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_total_cost').textContent = '$' + sumCells('total_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_taxes').textContent = '$' + sumCells('taxes').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_profit').textContent = '$' + sumCells('profit').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_fca_cost').textContent = '$' + sumCells('fca_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_fca_cost_usd').textContent = '$' + sumCells('fca_cost_usd').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_cargo_load_cost').textContent = '$' + sumCells('cargo_load_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_freight_cost').textContent = '$' + sumCells('freight_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_cargo_unload_cost').textContent = '$' + sumCells('cargo_unload_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_cip_cost').textContent = '$' + sumCells('cip_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_import_taxes').textContent = '$' + sumCells('import_taxes').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_import_profit').textContent = '$' + sumCells('import_profit').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total_dat_cost').textContent = '$' + sumCells('dat_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
