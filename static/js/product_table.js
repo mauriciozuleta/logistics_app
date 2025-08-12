@@ -338,11 +338,14 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof updateCargoLoadCost === 'function') updateCargoLoadCost();
   if (typeof updateAvgKgPerPL === 'function') updateAvgKgPerPL();
   // Add any other calculation functions here
+  updateProductTotals()
   }
 
   // Initial state: disable inputs, no context selected
+  
   recalcAll();
-});
+  
+
 
 function updateProductTotals() {
   // Helper to sum all cells by id prefix
@@ -371,3 +374,5 @@ function updateProductTotals() {
   document.getElementById('total_import_profit').textContent = '$' + sumCells('import_profit').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   document.getElementById('total_dat_cost').textContent = '$' + sumCells('dat_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
+
+});
