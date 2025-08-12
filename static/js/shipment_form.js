@@ -933,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!row) return;
       const packWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
       const packCost = parseFloat(row.getAttribute('data-pack-cost')) || 0;
-      const amount = parseFloat(input.value) || 0;
+      const amount = parseFloat(input.value.replace(/,/g, '')) || 0;
 
       // Calculate totals
       const totalWeight = amount * packWeight;
@@ -965,12 +965,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const profitCell = row.querySelector('[id^="profit_"]');
       const fcaCostCell = row.querySelector('[id^="fca_cost_"]');
       const fcaCostUSDCell = row.querySelector('[id^="fca_cost_usd_"]');
-      if (weightCell) weightCell.textContent = totalWeight ? totalWeight.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg' : '-';
-      if (costCell) costCell.textContent = totalCost ? '$' + totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (taxesCell) taxesCell.textContent = taxes ? '$' + taxes.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (profitCell) profitCell.textContent = profit ? '$' + profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (fcaCostCell) fcaCostCell.textContent = fcaCost ? '$' + fcaCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (fcaCostUSDCell) fcaCostUSDCell.textContent = fcaCostUSD ? '$' + fcaCostUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (weightCell) weightCell.textContent = totalWeight ? totalWeight.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg' : '-';
+      if (costCell) costCell.textContent = totalCost ? '$' + totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (taxesCell) taxesCell.textContent = taxes ? '$' + taxes.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (profitCell) profitCell.textContent = profit ? '$' + profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (fcaCostCell) fcaCostCell.textContent = fcaCost ? '$' + fcaCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      if (fcaCostUSDCell) fcaCostUSDCell.textContent = fcaCostUSD ? '$' + fcaCostUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
     });
   }
   window.updateFcaCosts = updateFcaCosts; // Expose to global scope

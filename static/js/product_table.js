@@ -1,53 +1,36 @@
+// --- Highlight products selected from the previous page ---
 document.addEventListener('DOMContentLoaded', function() {
-    // --- CACHE DOM ELEMENTS ---
-    const productTypeFilter = document.getElementById('product_type_filter');
-    const productRows = document.querySelectorAll('#product-cost-section .product-cost-col > div[style*="display: flex"][data-product-type]');
-    const header = document.getElementById('product-list-header');
-    const depBtn = document.getElementById('add_cargo_departure_btn');
-    const retBtn = document.getElementById('add_cargo_return_btn');
-    const amountInputs = document.querySelectorAll('input[type="number"][name^="amount_"]');
-    const shipperSelect = document.getElementById('shipper');
-    const consigneeSelect = document.getElementById('consignee');
-    const outboundPercentInput = document.getElementById('outbound_percent');
-    const totalFlightCostElement = document.getElementById('total_flight_cost');
-    const avgKgCell = document.getElementById('summary_dep_avg_kg');
-    const exchangeRateInput = document.getElementById('exchange_rate');
-
-    // --- LOCAL STORAGE & DRAFT LOGIC ---
     const SHIPMENT_DRAFT_KEY = 'shipmentDraft';
 
     function getShipmentDraft() {
         const data = localStorage.getItem(SHIPMENT_DRAFT_KEY);
         return data ? JSON.parse(data) : {};
     }
+
     function saveShipmentDraft(draft) {
         localStorage.setItem(SHIPMENT_DRAFT_KEY, JSON.stringify(draft));
     }
 
-    // --- CONTEXT-AWARE PRODUCT DATA STORE ---
-    const productInputs = {
-        departure: {},
-        return: {},
-        exchangeRate: 0
-    };
-    let currentContext = null; // "departure" or "return"
-
-    // --- INITIALIZATION ---
-
-    // 1. Highlight products selected from the previous page
     const draft = getShipmentDraft();
     const selectedProducts = draft.selected_products;
+
     if (selectedProducts && Array.isArray(selectedProducts) && selectedProducts.length > 0) {
         console.log(`Found ${selectedProducts.length} products sent from the selection page.`);
-        const selectedProductIds = new Set(selectedProducts.map(p => String(p.prod_id)));
+        const selectedProductIds = new Set(selectedProducts.map(p => String(p.prod_id))); // Ensure IDs are strings
+
+        // Highlight the corresponding rows in the product table
         document.querySelectorAll('#product-cost-section div[data-product-id]').forEach(row => {
             const productId = row.getAttribute('data-product-id');
             if (selectedProductIds.has(productId)) {
                 row.classList.add('product-selected');
                 const checkbox = row.querySelector('input[type="checkbox"][name="selected_products"]');
-                if (checkbox) checkbox.checked = true;
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
             }
         });
+
+        // Clear the selected_products from the draft so they aren't processed again on reload
         delete draft.selected_products;
         saveShipmentDraft(draft);
         console.log('Processed and cleared selected products from the draft.');
