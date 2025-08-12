@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  window.updateCargoLoadCost = updateCargoLoadCost; // Expose to global scope
 
   // Update when shipper changes or when product amounts change
   if (shipperSelect) {

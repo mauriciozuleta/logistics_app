@@ -2,72 +2,52 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from extensions import db
 from models import Product, Country, Aircraft, Airport, Trader
-from coredata.forms import AircraftForm, AirportForm, TraderForm
+from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
+def _generate_next_code(model, field_name, prefix):
+    """Generates the next sequential code for a given model and prefix."""
+    prefix_len = len(prefix)
+    field = getattr(model, field_name)
+    
+    last_item = model.query.filter(field.like(f'{prefix}%')).order_by(field.desc()).first()
+    last_code = getattr(last_item, field_name) if last_item else None
+    
+    if last_code and last_code[prefix_len:].isdigit():
+        next_num = int(last_code[prefix_len:]) + 1
+    else:
+        next_num = 1
+        
+    padding = 2 if prefix == "ACFT" else 3
+    return f"{prefix}{next_num:0{padding}d}"
 
 # Add Trader
 @coredata_bp.route('/add-trader', methods=['GET', 'POST'])
 def add_trader():
-    countries = Country.query.order_by(Country.country_name).all()
-    country_choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
     edit_id = request.args.get('edit_id') or request.form.get('edit_id')
     trader = Trader.query.get(edit_id) if edit_id else None
-    
-    if request.method == 'POST':
-        form = TraderForm()  # Let FlaskForm handle request.form automatically
-        form.country_id.choices = country_choices
-        if form.validate_on_submit():
-            print(f"DEBUG: edit_id = {edit_id}")
-            print(f"DEBUG: existing trader = {trader}")
-            print(f"DEBUG: form.trader_code.data = {form.trader_code.data}")
-            
-            if trader:
-                # Update existing trader
-                form.populate_obj(trader)
-                
-                # Generate trader code if the existing trader doesn't have one
-                if not trader.trader_code or trader.trader_code.strip() == '':
-                    last_trader = Trader.query.filter(Trader.trader_code.like('TR%')).order_by(Trader.trader_code.desc()).first()
-                    if last_trader and last_trader.trader_code[2:].isdigit():
-                        next_num = int(last_trader.trader_code[2:]) + 1
-                    else:
-                        next_num = 1
-                    trader.trader_code = f"TR{next_num:03d}"
-                
-                print(f"DEBUG: Updated trader {trader.id} (code: {trader.trader_code}) with name '{trader.name}'")
-            else:
-                # Create new trader with custom trader_code
-                trader = Trader()
-                form.populate_obj(trader)
-                
-                # Generate custom trader code like TR001, TR002, etc.
-                if not trader.trader_code or trader.trader_code.strip() == '':
-                    last_trader = Trader.query.filter(Trader.trader_code.like('TR%')).order_by(Trader.trader_code.desc()).first()
-                    if last_trader and last_trader.trader_code[2:].isdigit():
-                        next_num = int(last_trader.trader_code[2:]) + 1
-                    else:
-                        next_num = 1
-                    trader.trader_code = f"TR{next_num:03d}"
-                
-                db.session.add(trader)
-                print(f"DEBUG: Created new trader {trader.trader_code} with name '{trader.name}'")
-            db.session.commit()
-            return redirect(url_for('coredata.view_edit_traders'))
-    else:
-        if trader:
-            form = TraderForm(obj=trader)
-        else:
-            # Pre-generate trader_code for new trader
-            last_trader = Trader.query.filter(Trader.trader_code.like('TR%')).order_by(Trader.trader_code.desc()).first()
-            if last_trader and last_trader.trader_code[2:].isdigit():
-                next_num = int(last_trader.trader_code[2:]) + 1
-            else:
-                next_num = 1
-            new_trader_code = f"TR{next_num:03d}"
-            form = TraderForm(trader_code=new_trader_code)
-        form.country_id.choices = country_choices
+    form = TraderForm(obj=trader)
+
+    countries = Country.query.order_by(Country.country_name).all()
+    form.country_id.choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
+
+    if form.validate_on_submit():
+        if not trader:
+            trader = Trader()
+            db.session.add(trader)
+
+        form.populate_obj(trader)
+
+        if not trader.trader_code or trader.trader_code.strip() == '':
+            trader.trader_code = _generate_next_code(Trader, 'trader_code', 'TR')
+
+        db.session.commit()
+        return redirect(url_for('coredata.view_edit_traders'))
+
+    if request.method == 'GET' and not trader:
+        form.trader_code.data = _generate_next_code(Trader, 'trader_code', 'TR')
+
     return render_template('coredata/add_trader.html', form=form, edit_id=edit_id)
 
 # View/Edit Traders
@@ -119,64 +99,46 @@ def delete_airport(airport_id):
 # Add Airport
 @coredata_bp.route('/add-airport', methods=['GET', 'POST'])
 def add_airport():
-    countries = Country.query.order_by(Country.country_name).all()
-    country_choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
     edit_id = request.args.get('edit_id') or request.form.get('edit_id')
     airport = Airport.query.get(edit_id) if edit_id else None
-    if request.method == 'POST':
-        form = AirportForm(request.form)
-        form.country_id.choices = country_choices
-        if form.validate_on_submit():
-            # Fetch coordinates and altitude using OpenFlights data (local API, no key required)
-            iata = form.iata_code.data.strip().upper()
-            latitude = None
-            longitude = None
-            altitude_ft = None
-            if iata and len(iata) == 3:
-                import requests, csv
-                from io import StringIO
-                API_URL = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-                try:
-                    resp = requests.get(API_URL, timeout=10)
-                    if resp.ok:
-                        reader = csv.reader(StringIO(resp.text))
-                        for fields in reader:
-                            if len(fields) > 8 and fields[4].strip('"').upper() == iata:
-                                try:
-                                    latitude = float(fields[6])
-                                    longitude = float(fields[7])
-                                    # Field 8 contains altitude in feet
-                                    altitude_ft = float(fields[8]) if fields[8] and fields[8] != '\\N' else None
-                                    break
-                                except Exception:
-                                    latitude = None
-                                    longitude = None
-                                    altitude_ft = None
-                                    break
-                except Exception:
-                    latitude = None
-                    longitude = None
-                    altitude_ft = None
-            if airport:
-                form.populate_obj(airport)
-                airport.latitude = latitude
-                airport.longitude = longitude
-                airport.altitude_ft = altitude_ft
-            else:
-                airport = Airport()
-                form.populate_obj(airport)
-                airport.latitude = latitude
-                airport.longitude = longitude
-                airport.altitude_ft = altitude_ft
-                db.session.add(airport)
-            db.session.commit()
-            return redirect(url_for('coredata.view_edit_airport'))
-    else:
-        if airport:
-            form = AirportForm(obj=airport)
-        else:
-            form = AirportForm()
-        form.country_id.choices = country_choices
+    form = AirportForm(obj=airport)
+
+    countries = Country.query.order_by(Country.country_name).all()
+    form.country_id.choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
+
+    if form.validate_on_submit():
+        # Fetch coordinates and altitude using OpenFlights data
+        iata = form.iata_code.data.strip().upper()
+        latitude, longitude, altitude_ft = None, None, None
+        if iata and len(iata) == 3:
+            import requests, csv
+            from io import StringIO
+            API_URL = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+            try:
+                resp = requests.get(API_URL, timeout=10)
+                if resp.ok:
+                    reader = csv.reader(StringIO(resp.text))
+                    for fields in reader:
+                        if len(fields) > 8 and fields[4].strip('"').upper() == iata:
+                            latitude = float(fields[6]) if fields[6] else None
+                            longitude = float(fields[7]) if fields[7] else None
+                            altitude_ft = float(fields[8]) if fields[8] and fields[8] != '\\N' else None
+                            break
+            except Exception as e:
+                print(f"Could not fetch airport data for {iata}: {e}")
+
+        if not airport:
+            airport = Airport()
+            db.session.add(airport)
+
+        form.populate_obj(airport)
+        airport.latitude = latitude
+        airport.longitude = longitude
+        airport.altitude_ft = altitude_ft
+
+        db.session.commit()
+        return redirect(url_for('coredata.view_edit_airport'))
+
     return render_template('coredata/add_airport.html', form=form, edit_id=edit_id)
 
 # View/Edit Aircraft list
@@ -195,49 +157,25 @@ def delete_multiple_aircraft():
     db.session.commit()
     return jsonify({'success': True})
 
-# Utility: Safe type casting
-def parse_float_or_none(val):
-    try:
-        return float(val.strip()) if val and val.strip() else None
-    except ValueError:
-        return None
-
-def parse_int_or_none(val):
-    try:
-        return int(val.strip()) if val and val.strip() else None
-    except ValueError:
-        return None
-
-
 # Aircraft add form
-from coredata.forms import AircraftForm
 @coredata_bp.route('/add-aircraft', methods=['GET', 'POST'])
 def add_aircraft():
     edit_id = request.args.get('edit_id') or request.form.get('edit_id')
     aircraft = Aircraft.query.get(edit_id) if edit_id else None
-    if request.method == 'POST':
-        form = AircraftForm(request.form)
-        if form.validate_on_submit():
-            if aircraft:
-                form.populate_obj(aircraft)
-            else:
-                aircraft = Aircraft()
-                form.populate_obj(aircraft)
-                db.session.add(aircraft)
-            db.session.commit()
-            return redirect(url_for('coredata.view_edit_aircraft'))
-    else:
-        if aircraft:
-            form = AircraftForm(obj=aircraft)
-        else:
-            # Generate new ID for new aircraft
-            last_aircraft = Aircraft.query.filter(Aircraft.id.like('ACFT%')).order_by(Aircraft.id.desc()).first()
-            if last_aircraft and last_aircraft.id[4:].isdigit():
-                next_num = int(last_aircraft.id[4:]) + 1
-            else:
-                next_num = 1
-            new_id = f"ACFT{next_num:02d}"
-            form = AircraftForm(id=new_id)
+    form = AircraftForm(obj=aircraft)
+
+    if form.validate_on_submit():
+        if not aircraft:
+            aircraft = Aircraft()
+            db.session.add(aircraft)
+
+        form.populate_obj(aircraft)
+        db.session.commit()
+        return redirect(url_for('coredata.view_edit_aircraft'))
+
+    if request.method == 'GET' and not aircraft:
+        form.id.data = _generate_next_code(Aircraft, 'id', 'ACFT')
+
     return render_template('coredata/add_aircraft.html', form=form, edit_id=edit_id)
 
 # Dashboard page
@@ -249,87 +187,54 @@ def dashboard():
 @coredata_bp.route('/add-product', methods=['GET', 'POST'])
 def add_product():
     countries = Country.query.all()
-    products = Product.query.all()
+    country_choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
 
-    # Check edit_id from GET or POST to support redirects and updates
     edit_id = request.args.get('edit_id', type=int) or request.form.get('edit_id', type=int)
-    existing_product = Product.query.get(edit_id) if edit_id else None
+    product = Product.query.get(edit_id) if edit_id else None
+    form = ProductForm(obj=product)
+    form.country_id.choices = country_choices
 
-    if request.method == 'POST':
-        # Parse fields from form
-        product_type = request.form.get('product_type')
-        name = request.form.get('name')
-        country_id = request.form.get('country_id')
-        trade_unit = request.form.get('trade_unit')  # Keep as string, don't parse as int
-        fca_cost_per_wu = parse_float_or_none(request.form.get('fca_cost_per_wu'))
-        packaging = request.form.get('packaging')
-        packaging_weight = parse_float_or_none(request.form.get('packaging_weight'))
-        packaging_cost = parse_float_or_none(request.form.get('packaging_cost'))
-        units_per_pack = parse_int_or_none(request.form.get('units_per_pack'))
-        currency = request.form.get('currency')
-        other_info = request.form.get('other_info')
-
-        # Debug logging
-        print(f"DEBUG: edit_id = {edit_id}")
-        print(f"DEBUG: existing_product = {existing_product}")
-        print(f"DEBUG: Product name being saved = {name}")
-
-        if existing_product:
-            # Update product
-            existing_product.product_type = product_type
-            existing_product.name = name
-            existing_product.country_id = country_id
-            existing_product.trade_unit = trade_unit
-            existing_product.fca_cost_per_wu = fca_cost_per_wu
-            existing_product.packaging = packaging
-            existing_product.packaging_weight = packaging_weight
-            existing_product.packaging_cost = packaging_cost
-            existing_product.units_per_pack = units_per_pack
-            existing_product.currency = currency
-            existing_product.other_info = other_info
-            print(f"DEBUG: Updated product {existing_product.id} with name '{existing_product.name}'")
-
-        else:
-            # Check for duplicate (only for new records)
-            duplicate = Product.query.filter_by(name=name, country_id=country_id).first()
+    if form.validate_on_submit():
+        if not product: # This is a new product
+            # Check for duplicate
+            duplicate = Product.query.filter_by(name=form.name.data, country_id=form.country_id.data).first()
             if duplicate and not request.form.get("force_submit"):
-                return render_template(
-                    'coredata/add_product.html',
-                    countries=countries,
-                    products=products,
-                    duplicate=True,
-                    duplicate_name=duplicate.name,
-                    duplicate_country=duplicate.country.country_name,
-                    request_form=request.form
-                )
+                 # Repopulate choices before rendering the form again
+                 form.country_id.choices = country_choices
+                 return render_template('coredata/add_product.html', 
+                                       form=form, 
+                                       edit_id=edit_id,
+                                       duplicate=True, duplicate_name=duplicate.name,
+                                       duplicate_country=duplicate.country.country_name,
+                                       countries=countries,
+                                       product=product)
 
-            # Create new product
-            product = Product(
-                product_type=product_type,
-                name=name,
-                country_id=country_id,
-                trade_unit=trade_unit,
-                fca_cost_per_wu=fca_cost_per_wu,
-                packaging=packaging,
-                packaging_weight=packaging_weight,
-                packaging_cost=packaging_cost,
-                units_per_pack=units_per_pack,
-                currency=currency,
-                other_info=other_info
-            )
+            product = Product()
+            form.populate_obj(product)
+            product.product_code = _generate_next_code(Product, 'product_code', 'PROD')
             db.session.add(product)
+            print(f"DEBUG: Created new product {product.product_code} with name '{product.name}'")
+        else: # This is an existing product
+            form.populate_obj(product)
+            if not product.product_code or product.product_code.strip() == '':
+                product.product_code = _generate_next_code(Product, 'product_code', 'PROD')
+            print(f"DEBUG: Updated product {product.id} (code: {product.product_code}) with name '{product.name}'")
 
         db.session.commit()
-        print(f"DEBUG: Database commit completed")
         return redirect(url_for('coredata.view_edit_product'))
 
-    return render_template(
-        'coredata/add_product.html',
-        countries=countries,
-        products=products,
-        product=existing_product,
-        edit_id=edit_id  # Pass to form for hidden field
-    )
+    if request.method == 'GET':
+        if not product:
+            # Pre-populate the form with a new product code
+            new_code = _generate_next_code(Product, 'product_code', 'PROD')
+            form.product_code.data = new_code
+
+    # For rendering the template, we pass the form and edit_id
+    return render_template('coredata/add_product.html', 
+                           form=form, 
+                           edit_id=edit_id,
+                           countries=countries,
+                           product=product)
 
 # Delete multiple products
 @coredata_bp.route('/delete-multiple-products', methods=['POST'])

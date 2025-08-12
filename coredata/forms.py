@@ -77,3 +77,24 @@ class AircraftForm(FlaskForm):
     cruise_speed = FloatField('Cruise Speed', validators=[Optional()])
     acmi_cost = FloatField('ACMI Cost', validators=[Optional()])
     submit = SubmitField('Add Aircraft')
+
+
+class ProductForm(FlaskForm):
+    product_code = StringField('Product Code', render_kw={'readonly': True})
+    product_type = SelectField('Product Type', choices=[
+        ('General Cargo', 'General Cargo'),
+        ('Perishables', 'Perishables'),
+        ('Hazardous', 'Hazardous'),
+        ('Other', 'Other')
+    ], validators=[DataRequired()])
+    name = StringField('Product Name', validators=[DataRequired()])
+    country_id = SelectField('Country of Origin', coerce=str, validators=[DataRequired()])
+    trade_unit = SelectField('Trade Unit', choices=[('KG', 'KG'), ('LB', 'LB'), ('Unit', 'Unit')], validators=[DataRequired()])
+    fca_cost_per_wu = FloatField('FCA Cost per WU', validators=[Optional()], default=0.0)
+    packaging = StringField('Packaging', validators=[Optional()])
+    packaging_weight = FloatField('Packaging Weight (per unit)', validators=[Optional()], default=0.0)
+    packaging_cost = FloatField('Packaging Cost (per unit)', validators=[Optional()], default=0.0)
+    units_per_pack = IntegerField('Units per Pack', validators=[Optional()], default=1)
+    currency = StringField('Currency', validators=[DataRequired()])
+    other_info = StringField('Other Info', validators=[Optional()])
+    submit = SubmitField('Save Product')

@@ -257,6 +257,7 @@
             <!-- Update your product row snippet to match the header widths exactly -->
             {% for product in products %}
               <div style="display: flex; border-bottom: 1px solid #333; align-items: center;"
+                  data-product-id="{{ product.id }}"
                   data-product-type="{{ product.product_type }}"
                   data-pack-weight="{{ product.packaging_weight or 0 }}"
                   data-pack-cost="{{ product.packaging_cost or 0 }}">

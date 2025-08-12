@@ -973,6 +973,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (fcaCostUSDCell) fcaCostUSDCell.textContent = fcaCostUSD ? '$' + fcaCostUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
     });
   }
+  window.updateFcaCosts = updateFcaCosts; // Expose to global scope
 
   // For each amount input, update all computed columns on change
   document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
