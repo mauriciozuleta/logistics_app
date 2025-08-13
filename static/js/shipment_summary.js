@@ -106,6 +106,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const availablePayloadStr = document.getElementById('first_leg_payload').textContent || '';
     const availablePayload = normalizeNumber(availablePayloadStr);
 
+    // Calculate and update Remaining Payload
+    const remainingPayload = availablePayload - totalProductWeight;
+    const remainingPayloadCell = document.getElementById('summary_dep_payload');
+    if (remainingPayloadCell) {
+      if (availablePayload > 0) {
+        remainingPayloadCell.textContent = remainingPayload.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg';
+        remainingPayloadCell.style.color = remainingPayload < 0 ? '#ff4444' : '#00bcd4';
+      } else {
+        remainingPayloadCell.textContent = '-';
+        remainingPayloadCell.style.color = '#00bcd4';
+      }
+    }
+
     // Calculate Avg. Kg / P-L using the correct cost-based logic
     let avgKgPL = 0;
     let displayValue = '-';
@@ -207,6 +220,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const availablePayloadStr = document.getElementById('second_leg_payload').textContent || '';
     const availablePayload = normalizeNumber(availablePayloadStr);
+
+    // Calculate and update Remaining Payload
+    const remainingPayload = availablePayload - totalProductWeight;
+    const remainingPayloadCell = document.getElementById('summary_ret_payload');
+    if (remainingPayloadCell) {
+      if (availablePayload > 0) {
+        remainingPayloadCell.textContent = remainingPayload.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg';
+        remainingPayloadCell.style.color = remainingPayload < 0 ? '#ff4444' : '#4caf50';
+      } else {
+        remainingPayloadCell.textContent = '-';
+        remainingPayloadCell.style.color = '#4caf50';
+      }
+    }
 
     let avgKgPL = 0;
     let displayValue = '-';

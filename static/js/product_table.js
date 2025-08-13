@@ -208,6 +208,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof updateCargoLoadCost === 'function') updateCargoLoadCost();
     if (typeof updateDepartureAvgKgPL === 'function') updateDepartureAvgKgPL();
     if (typeof updateReturnAvgKgPL === 'function') updateReturnAvgKgPL();
+    if (typeof updateCargoUnloadCosts === 'function') updateCargoUnloadCosts();
+    if (typeof updateFreightCosts === 'function') updateFreightCosts();
     // Add other calculation functions as needed
   }
 
@@ -286,14 +288,114 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof updateCargoLoadCost === 'function') updateCargoLoadCost();
   if (typeof updateDepartureAvgKgPL === 'function') updateDepartureAvgKgPL();
   if (typeof updateReturnAvgKgPL === 'function') updateReturnAvgKgPL();
+  if (typeof updateCargoUnloadCosts === 'function') updateCargoUnloadCosts();
+  if (typeof updateFreightCosts === 'function') updateFreightCosts();
   // Add any other calculation functions here
   updateProductTotals()
   }
 
+  // --- Freight Cost Calculation ---
+  function updateFreightCosts() {
+    const currentContext = window.shipmentContext?.getCurrentContext();
+
+    // Helper to parse currency values from cells, handling '$', ',', and '/kg'
+    function parseCostValue(element) {
+        if (!element || !element.textContent || !element.textContent.includes('$')) {
+            return 0;
+        }
+        // Remove '$', commas, and anything after '/'
+        const cleanString = String(element.textContent).split('/')[0].replace(/[$,]/g, '');
+        return parseFloat(cleanString) || 0;
+    }
+
+    // Determine which cells to use based on the current context
+    const avgKgCellId = currentContext === 'departure' ? 'summary_dep_avg_kg' : 'summary_ret_avg_kg';
+    const routeKgCostCellId = currentContext === 'departure' ? 'outbound_kg_cost' : 'return_kg_cost';
+
+    const avgKgCell = document.getElementById(avgKgCellId);
+    const routeKgCostCell = document.getElementById(routeKgCostCellId);
+
+    const avgKgValue = parseCostValue(avgKgCell);
+    const routeKgCostValue = parseCostValue(routeKgCostCell);
+
+    // Use the higher of the two costs as the multiplier rate
+    const freightRate = Math.max(avgKgValue, routeKgCostValue);
+
+    // If the rate is invalid or zero, clear the column and exit
+    if (freightRate <= 0) {
+        document.querySelectorAll('[id^="freight_cost_"]').forEach(cell => {
+            if (!cell.id.startsWith('total_')) cell.textContent = '-';
+        });
+        return;
+    }
+
+    document.querySelectorAll('div[data-product-id]').forEach(row => {
+        const productId = row.getAttribute('data-product-id');
+        const weightCell = document.getElementById(`total_weight_${productId}`);
+        const freightCostCell = document.getElementById(`freight_cost_${productId}`);
+
+        if (weightCell && freightCostCell) {
+            // Parse weight, removing ' kg' and commas
+            const weightValue = parseFloat(String(weightCell.textContent).replace(/,/g, '')) || 0;
+            const freightCost = freightRate * weightValue;
+
+            freightCostCell.textContent = freightCost > 0
+                ? '$' + freightCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : '-';
+        }
+    });
+  }
+  window.updateFreightCosts = updateFreightCosts;
+
+  // --- Cargo Unload Cost Calculation ---
+  function updateCargoUnloadCosts() {
+    const currentContext = window.shipmentContext?.getCurrentContext();
+    if (!currentContext) return;
+
+    // Determine destination airport based on the current context's selected route
+    const firstLegRouteId = document.getElementById('first_leg_route').value;
+    const secondLegRouteId = document.getElementById('second_leg_route').value;
+    let destinationCity = '';
+
+    if (currentContext === 'departure' && firstLegRouteId && window.routeData[firstLegRouteId]) {
+        destinationCity = window.routeData[firstLegRouteId].toCity;
+    } else if (currentContext === 'return' && secondLegRouteId && window.routeData[secondLegRouteId]) {
+        destinationCity = window.routeData[secondLegRouteId].toCity;
+    }
+
+    // Find the destination airport's handling cost
+    let handlingCostKg = 0;
+    if (destinationCity && window.airportData) {
+        for (const airportId in window.airportData) {
+            const airport = window.airportData[airportId];
+            if (airport.city && airport.city.toLowerCase().trim() === destinationCity.toLowerCase().trim()) {
+                handlingCostKg = parseFloat(airport.cargo_handling_cost_kg) || 0;
+                break;
+            }
+        }
+    }
+
+    // Calculate and update cost for each product row
+    document.querySelectorAll('div[data-product-id]').forEach(row => {
+        const productId = row.getAttribute('data-product-id');
+        const weightCell = document.getElementById(`total_weight_${productId}`);
+        const unloadCostCell = document.getElementById(`cargo_unload_cost_${productId}`);
+
+        if (weightCell && unloadCostCell) {
+            const weightValue = parseFloat(String(weightCell.textContent).replace(/,/g, '')) || 0;
+            const unloadCost = weightValue * handlingCostKg;
+
+            unloadCostCell.textContent = unloadCost > 0
+                ? '$' + unloadCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : '-';
+        }
+    });
+  }
+  window.updateCargoUnloadCosts = updateCargoUnloadCosts;
+
   // Initial state: disable inputs, no context selected
   
   recalcAll();
-  
 
 
 function updateProductTotals() {
