@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (avgKgCell) {
       avgKgCell.style.textAlign = 'center';
       avgKgCell.textContent = avgKg > 0
-        ? '$' + avgKg.toLocaleString(undefined, {minimumFractionDigits: 3, maximumFractionDigits: 3})
+        ? '$' + avgKg.toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3})
         : '-';
     }
   }
