@@ -153,69 +153,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // Context-aware productInputs: manages product amounts and exchange rate for each route context,
 // restores values on context/filter switch, disables/enables inputs, and triggers recalculations.
 document.addEventListener('DOMContentLoaded', function() {
-  const outboundPercentInput = document.getElementById('outbound_percent');
-  const totalFlightCostElement = document.getElementById('total_flight_cost');
-  const avgKgCell = document.getElementById('summary_dep_avg_kg');
-
-  function getOutboundCost() {
-    // Get outbound % and total flight cost
-    const outboundVal = parseFloat(outboundPercentInput?.value) || 0;
-    let totalFlightCost = 0;
-    if (totalFlightCostElement && totalFlightCostElement.textContent && totalFlightCostElement.textContent !== 'N/A' && !totalFlightCostElement.textContent.includes('Error')) {
-      totalFlightCost = parseFloat(totalFlightCostElement.textContent.replace(/[$,]/g, '')) || 0;
-    }
-    return totalFlightCost * (outboundVal / 100);
-  }
-
-  function getTotalProductWeight() {
-    let totalWeightSum = 0;
-    document.querySelectorAll('div[id^="total_weight_"]').forEach(cell => {
-      if (cell.textContent && cell.textContent !== '-') {
-        const match = cell.textContent.match(/([\d.,]+)\s*kg/);
-        if (match) {
-          let weightStr = match[1].replace(/,/g, ''); // Remove thousands separator
-          const weight = parseFloat(weightStr) || 0;
-          totalWeightSum += weight;
-        }
-      }
-    });
-    return totalWeightSum;
-  }
-
-  function updateAvgKgPerPL() {
-    const outboundCost = getOutboundCost();
-    const totalWeightSum = getTotalProductWeight();
-    let avgKg = 0;
-    if (totalWeightSum > 0) {
-      avgKg = outboundCost / totalWeightSum;
-    }
-    if (avgKgCell) {
-      avgKgCell.style.textAlign = 'center';
-      avgKgCell.textContent = avgKg > 0
-        ? '$' + avgKg.toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3})
-        : '-';
-    }
-  }
-
-  // Listen for changes in outbound %, total flight cost, and product weights
-  if (outboundPercentInput) outboundPercentInput.addEventListener('input', updateAvgKgPerPL);
-  if (totalFlightCostElement) new MutationObserver(updateAvgKgPerPL).observe(totalFlightCostElement, {childList: true, characterData: true, subtree: true});
-  document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
-    input.addEventListener('input', updateAvgKgPerPL);
-  });
-
-  // Initial calculation
-  updateAvgKgPerPL();
-});
-
-// Context-aware productInputs: manages product amounts and exchange rate for each route context,
-// restores values on context/filter switch, disables/enables inputs, and triggers recalculations.
-document.addEventListener('DOMContentLoaded', function() {
   // --- Context-aware productInputs ---
   const productInputs = {
     departure: {},
     return: {},
     exchangeRate: 0
+  };
+  // Expose for other modules to access context-specific data
+  window.shipmentContext = {
+      productData: productInputs,
+      getCurrentContext: () => currentContext
   };
   let currentContext = null; // "departure" or "return"
 
@@ -259,7 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function triggerAllCalculations() {
     if (typeof updateFcaCosts === 'function') updateFcaCosts();
     if (typeof updateCargoLoadCost === 'function') updateCargoLoadCost();
-    if (typeof updateAvgKgPerPL === 'function') updateAvgKgPerPL();
+    if (typeof updateDepartureAvgKgPL === 'function') updateDepartureAvgKgPL();
+    if (typeof updateReturnAvgKgPL === 'function') updateReturnAvgKgPL();
     // Add other calculation functions as needed
   }
 
@@ -336,7 +284,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function recalcAll() {
   if (typeof updateFcaCosts === 'function') updateFcaCosts();
   if (typeof updateCargoLoadCost === 'function') updateCargoLoadCost();
-  if (typeof updateAvgKgPerPL === 'function') updateAvgKgPerPL();
+  if (typeof updateDepartureAvgKgPL === 'function') updateDepartureAvgKgPL();
+  if (typeof updateReturnAvgKgPL === 'function') updateReturnAvgKgPL();
   // Add any other calculation functions here
   updateProductTotals()
   }
