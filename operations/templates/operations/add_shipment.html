@@ -202,11 +202,13 @@
     </div>
 
     <!-- Product / Cost Details Section -->
+    <!-- Product / Cost Details Section -->
+    <!-- Product / Cost Details Section -->
+    <!-- Product / Cost Details Section -->
     <div class="shipment-section" id="product-cost-section">
       <div class="section-title">Product / Cost Details</div>
       <div class="product-cost-columns" style="display: flex; gap: 1.5rem;">
         <div class="product-cost-col" style="flex: 1; min-width: 220px;">
-          <!-- Column 1: Product List -->
           <div style="font-weight: bold; color: #FF5C00;">Products</div>
           <!-- Filter and Exchange Rate (fixed) -->
           <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 24px;">
@@ -226,119 +228,119 @@
               <input type="number" id="exchange_rate" name="exchange_rate" step="0.0001" min="0" style="width: 100px; margin-left:8px; background-color: #23272f; color: #fff; border: 1px solid #2196f3; border-radius: 4px;">
             </div>
           </div>
-          <!-- Headers row (fixed) -->
-          <div id="product-list-header" style="display: flex; font-weight: normal; border-bottom: 2px solid #2196f3; background: #23272f;">
-            <div style="flex: 0 0 32px; padding: 6px;"></div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Code</div>
-            <div style="width: 150px; min-width:120px; max-width:120px; padding: 6px;">Name</div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Country ID</div>
-            <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;">Trade Unit</div>
-            <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">Packaging</div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Pack Weight</div>
-            <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;">Pack Cost</div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Currency</div>
-            <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">Amount</div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Total Product Weight (Kg)</div>
-            <div style="width: 160px; min-width:160px; max-width:160px; padding: 6px;">Total Product Cost</div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Taxes ($Local)</div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Profit ($Local)</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost ($Local)</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost (USD)</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Cargo Load Cost</div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Freight Cost</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Cargo Unload Cost</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">CIP Cost</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Taxes</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Profit</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">DAT Cost</div>
+          <!-- Single horizontally scrollable area: header, body, totals row -->
+          <div class="product-table-scroll-x" style="overflow-x: auto; width: 100%;">
+            <!-- Headers row -->
+            <div id="product-list-header" style="display: flex; font-weight: normal; border-bottom: 2px solid #2196f3; background: #23272f; min-width: 1800px;">
+              <div style="flex: 0 0 32px; padding: 6px;"></div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Code</div>
+              <div style="width: 150px; min-width:120px; max-width:120px; padding: 6px;">Name</div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Country ID</div>
+              <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;">Trade Unit</div>
+              <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">Packaging</div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Pack Weight</div>
+              <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;">Pack Cost</div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Currency</div>
+              <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">Amount</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Total Product Weight (Kg)</div>
+              <div style="width: 160px; min-width:160px; max-width:160px; padding: 6px;">Total Product Cost</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Taxes ($Local)</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Profit ($Local)</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost ($Local)</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost (USD)</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Cargo Load Cost</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Freight Cost</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Cargo Unload Cost</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">CIP Cost</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Taxes</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Profit</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">DAT Cost</div>
+            </div>
+            <!-- Product rows (vertical scroll only) -->
+            <div class="product-table-body" style="max-height: 350px; overflow-y: auto; min-width: 1800px;">
+              {% for product in products %}
+                <div style="display: flex; border-bottom: 1px solid #333; align-items: center;"
+                    data-product-id="{{ product.id }}"
+                    data-product-type="{{ product.product_type }}"
+                    data-pack-weight="{{ product.packaging_weight or 0 }}"
+                    data-pack-cost="{{ product.packaging_cost or 0 }}">
+                  <!-- Checkbox and hidden fields -->
+                  <div style="flex: 0 0 32px; padding: 6px;">
+                    <input type="checkbox" name="selected_products" value="{{ product.id }}">
+                    <input type="hidden" name="product_name_{{ product.id }}" value="{{ product.name }}">
+                    <input type="hidden" name="country_id_{{ product.id }}" value="{{ product.country_id }}">
+                    <input type="hidden" name="trade_unit_{{ product.id }}" value="{{ product.trade_unit }}">
+                    <input type="hidden" name="packaging_{{ product.id }}" value="{{ product.packaging }}">
+                    <input type="hidden" name="pack_weight_{{ product.id }}" value="{{ product.packaging_weight }}">
+                    <input type="hidden" name="pack_cost_{{ product.id }}" value="{{ product.packaging_cost }}">
+                    <input type="hidden" name="currency_{{ product.id }}" value="{{ product.currency }}">
+                  </div>
+                  <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px; color: #2196f3;">{{ product.product_code }}</div>
+                  <div style="width: 150px; min-width:120px; max-width:120px; padding: 6px;">{{ product.name }}</div>
+                  <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">{{ product.country_id }}</div>
+                  <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;">{{ product.trade_unit }}</div>
+                  <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">{{ product.packaging }}</div>
+                  <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">
+                    {{ '{:,.2f} kg'.format(product.packaging_weight) if product.packaging_weight else '-' }}
+                  </div>
+                  <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;">
+                    {{ '${:,.2f}'.format(product.packaging_cost) if product.packaging_cost else '-' }}
+                  </div>
+                  <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">{{ product.currency }}</div>
+                  <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">
+                    <input type="number"
+                      name="amount_{{ product.id }}"
+                      id="amount_{{ product.id }}"
+                      min="0"
+                      step="1"
+                      value="0"
+                      style="width: 70px; text-align: right; background-color: #23272f; color: #fff; border: 1px solid #2196f3; border-radius: 4px;">
+                  </div>
+                  <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_weight_{{ product.id }}">-</div>
+                  <div style="width: 180px; min-width:180px; max-width:180px; padding: 6px;" id="total_cost_{{ product.id }}">-</div>
+                  <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="taxes_{{ product.id }}">-</div>
+                  <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="profit_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_usd_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cargo_load_cost_{{ product.id }}">-</div>
+                  <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="freight_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cargo_unload_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cip_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_taxes_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_profit_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="dat_cost_{{ product.id }}">-</div>
+                </div>
+              {% else %}
+                <div style="padding: 10px 0; color: #888;">No products available.</div>
+              {% endfor %}
+            </div>
+            <!-- Totals row (outside vertical scroll, inside horizontal scroll) -->
+            <div id="product-totals-row" style="display: flex; font-weight: bold; border-top: 2px solid #2196f3; background: #23272f; min-width: 1800px;">
+              <div style="flex: 0 0 32px; padding: 6px;"></div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Totals</div>
+              <div style="width: 150px; min-width:120px; max-width:120px; padding: 6px;"></div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;"></div>
+              <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;"></div>
+              <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;"></div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;"></div>
+              <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;"></div>
+              <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;"></div>
+              <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;"></div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_total_weight">-</div>
+              <div style="width: 180px; min-width:180px; max-width:180px; padding: 6px;" id="total_total_cost">-</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_taxes">-</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_profit">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost_usd">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cargo_load_cost">-</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_freight_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cargo_unload_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cip_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_taxes">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_profit">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_dat_cost">-</div>
+            </div>
           </div>
-          <!-- Scrollable product rows -->
-          <div class="product-table-body" style="max-height: 350px; overflow-y: auto;">
-            {% for product in products %}
-              <div style="display: flex; border-bottom: 1px solid #333; align-items: center;"
-                  data-product-id="{{ product.id }}"
-                  data-product-type="{{ product.product_type }}"
-                  data-pack-weight="{{ product.packaging_weight or 0 }}"
-                  data-pack-cost="{{ product.packaging_cost or 0 }}">
-                <!-- Checkbox and hidden fields -->
-                <div style="flex: 0 0 32px; padding: 6px;">
-                  <input type="checkbox" name="selected_products" value="{{ product.id }}">
-                  <input type="hidden" name="product_name_{{ product.id }}" value="{{ product.name }}">
-                  <input type="hidden" name="country_id_{{ product.id }}" value="{{ product.country_id }}">
-                  <input type="hidden" name="trade_unit_{{ product.id }}" value="{{ product.trade_unit }}">
-                  <input type="hidden" name="packaging_{{ product.id }}" value="{{ product.packaging }}">
-                  <input type="hidden" name="pack_weight_{{ product.id }}" value="{{ product.packaging_weight }}">
-                  <input type="hidden" name="pack_cost_{{ product.id }}" value="{{ product.packaging_cost }}">
-                  <input type="hidden" name="currency_{{ product.id }}" value="{{ product.currency }}">
-                </div>
-                <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px; color: #2196f3;">{{ product.product_code }}</div>
-                <div style="width: 150px; min-width:120px; max-width:120px; padding: 6px;">{{ product.name }}</div>
-                <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">{{ product.country_id }}</div>
-                <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;">{{ product.trade_unit }}</div>
-                <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">{{ product.packaging }}</div>
-                <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">
-                  {{ '{:,.2f} kg'.format(product.packaging_weight) if product.packaging_weight else '-' }}
-                </div>
-                <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;">
-                  {{ '${:,.2f}'.format(product.packaging_cost) if product.packaging_cost else '-' }}
-                </div>
-                <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">{{ product.currency }}</div>
-                <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;">
-                  <input type="number"
-                    name="amount_{{ product.id }}"
-                    id="amount_{{ product.id }}"
-                    min="0"
-                    step="1"
-                    value="0"
-                    style="width: 70px; text-align: right; background-color: #23272f; color: #fff; border: 1px solid #2196f3; border-radius: 4px;">
-                </div>
-                <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_weight_{{ product.id }}">-</div>
-                <div style="width: 180px; min-width:180px; max-width:180px; padding: 6px;" id="total_cost_{{ product.id }}">-</div>
-                <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="taxes_{{ product.id }}">-</div>
-                <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="profit_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_usd_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cargo_load_cost_{{ product.id }}">-</div>
-                <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="freight_cost_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cargo_unload_cost_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cip_cost_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_taxes_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_profit_{{ product.id }}">-</div>
-                <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="dat_cost_{{ product.id }}">-</div>
-              </div>
-            {% else %}
-              <div style="padding: 10px 0; color: #888;">No products available.</div>
-            {% endfor %}
-          </div>
-
-          <!-- Totals row (fixed, outside scroll) -->
-          <div id="product-totals-row" style="display: flex; font-weight: bold; border-top: 2px solid #2196f3; background: #23272f;">
-            <div style="flex: 0 0 32px; padding: 6px;"></div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;">Totals</div>
-            <div style="width: 150px; min-width:120px; max-width:120px; padding: 6px;"></div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;"></div>
-            <div style="width: 60px; min-width:60px; max-width:60px; padding: 6px;"></div>
-            <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;"></div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;"></div>
-            <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;"></div>
-            <div style="width: 80px; min-width:80px; max-width:80px; padding: 6px;"></div>
-            <div style="width: 100px; min-width:100px; max-width:100px; padding: 6px;"></div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_total_weight">-</div>
-            <div style="width: 180px; min-width:180px; max-width:180px; padding: 6px;" id="total_total_cost">-</div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_taxes">-</div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_profit">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost_usd">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cargo_load_cost">-</div>
-            <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_freight_cost">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cargo_unload_cost">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cip_cost">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_taxes">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_profit">-</div>
-            <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_dat_cost">-</div>
-          </div>
-
-
         </div>
       </div>
     </div>

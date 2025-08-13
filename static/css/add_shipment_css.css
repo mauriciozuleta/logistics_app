@@ -73,11 +73,30 @@
   .product-table-body {
   max-height: 350px;
   overflow-y: auto;
-  width: 100%;
+  min-width: 1800px;
+  width: max-content; /* Ensures it matches header/totals width */
 }
 
 #product-totals-row {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
+  /* Remove sticky positioning */
+  min-width: 1800px;
+  width: max-content;
+}
+
+.product-table-scroll-x {
+  overflow-x: auto;
+  width: 100%;
+}
+
+#product-list-header {
+  min-width: 1800px;
+  width: max-content;
+}
+
+/* Ensure all three match in width */
+.product-table-body,
+#product-list-header,
+#product-totals-row {
+  min-width: 1800px;
+  width: max-content;
 }
