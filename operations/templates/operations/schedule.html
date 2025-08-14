@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var calendarEl = document.getElementById('calendar');
   
   var calendar = new FullCalendar.Calendar(calendarEl, {
-    themeSystem: 'bootstrap5',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
@@ -74,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     navLinks: true, // can click day/week names to navigate views
     editable: true, // allows dragging and resizing
     dayMaxEvents: true, // allow "more" link when too many events
+    height: '100%', // Make the calendar fill its container
   });
   
   calendar.render();
