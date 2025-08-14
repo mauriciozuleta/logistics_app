@@ -51,6 +51,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (exchangeRateInput) {
     exchangeRateInput.addEventListener('input', function() {
+      // Update the state for the currently active context
+      if (currentContext) {
+        productInputs[currentContext].exchangeRate = parseFloat(this.value) || 0;
+      }
+
       if (parseFloat(this.value) > 0) {
         this.classList.remove('input-invalid');
       }
@@ -59,7 +64,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // --- CONTEXT-AWARE PRODUCT INPUTS ---
-  const productInputs = { departure: {}, return: {}, exchangeRate: 0 };
+  const productInputs = {
+    departure: { exchangeRate: 0 },
+    return: { exchangeRate: 0 }
+  };
   window.shipmentContext = { productData: productInputs, getCurrentContext: () => currentContext };
   let currentContext = null;
 
@@ -68,7 +76,10 @@ document.addEventListener('DOMContentLoaded', function() {
     productInputs.departure[productId] = 0;
     productInputs.return[productId] = 0;
   });
-  productInputs.exchangeRate = parseFloat(exchangeRateInput?.value) || 0;
+  // Initialize both contexts with the current exchange rate value on the page
+  const initialExchangeRate = parseFloat(exchangeRateInput?.value) || 0;
+  productInputs.departure.exchangeRate = initialExchangeRate;
+  productInputs.return.exchangeRate = initialExchangeRate;
 
   function restoreInputsForContext(context) {
     amountInputs.forEach(input => {
@@ -76,7 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
       input.value = productInputs[context][productId] || 0;
     });
     if (exchangeRateInput) {
-      exchangeRateInput.value = productInputs.exchangeRate || 0;
+      // Restore the exchange rate for the specific context
+      exchangeRateInput.value = productInputs[context].exchangeRate || 0;
     }
     recalcAll();
   }
@@ -130,6 +142,81 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   window.updateFcaCosts = updateFcaCosts;
 
+  // New function to calculate freight costs based on the conditional logic
+  function updateFreightCosts() {
+    // Helper to parse numeric values from text content, removing $, kg, and commas
+    function parseCost(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el || !el.textContent || el.textContent === '-' || el.textContent.includes('Error') || el.textContent.includes('Exceeding')) {
+        return 0;
+      }
+      // Remove currency symbols, commas, and units like '/kg'
+      const cleanedText = el.textContent.replace(/[$,\/kg]/g, '').trim();
+      return parseFloat(cleanedText) || 0;
+    }
+
+    // 1. Read the calculated Avg. Kg / P-L value
+    const avgKgPl = parseCost('summary_dep_avg_kg');
+
+    // 2. Read the calculated Outbound Kg. Cost value
+    const outboundKgCost = parseCost('outbound_kg_cost');
+
+    console.log(`Gathered data for freight cost: Avg. Kg/PL=${avgKgPl}, Outbound Kg Cost=${outboundKgCost}`);
+
+    // 3. Loop through each product row
+    document.querySelectorAll('div[data-product-id]').forEach(row => {
+      const productId = row.getAttribute('data-product-id');
+      const totalWeight = parseCost(`total_weight_${productId}`);
+
+      // --- Part 3: Conditional Calculation Logic ---
+      const freightCostCell = row.querySelector(`#freight_cost_${productId}`);
+      if (freightCostCell) {
+        if (totalWeight > 0 && (avgKgPl > 0 || outboundKgCost > 0)) {
+          // Use the higher of the two rates as the final rate
+          const finalRate = Math.max(avgKgPl, outboundKgCost);
+          const freightCost = totalWeight * finalRate;
+          freightCostCell.textContent = '$' + freightCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        } else {
+          // If there's no weight or no rates, the cost is zero
+          freightCostCell.textContent = '-';
+        }
+      }
+    });
+  }
+  window.updateFreightCosts = updateFreightCosts; // Expose to global scope
+
+  // New function to calculate CIP Cost by summing its components
+  function updateCipCosts() {
+    // Helper to parse currency values from text content
+    function parseCurrency(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el || !el.textContent || el.textContent === '-') {
+        return 0;
+      }
+      return parseFloat(el.textContent.replace(/[$,]/g, '')) || 0;
+    }
+
+    document.querySelectorAll('div[data-product-id]').forEach(row => {
+      const productId = row.getAttribute('data-product-id');
+
+      // Read the values of the component costs
+      const fcaCostUSD = parseCurrency(`fca_cost_usd_${productId}`);
+      const cargoLoadCost = parseCurrency(`cargo_load_cost_${productId}`);
+      const freightCost = parseCurrency(`freight_cost_${productId}`);
+      const cargoUnloadCost = parseCurrency(`cargo_unload_cost_${productId}`);
+
+      // Sum them to get the CIP cost
+      const cipCost = fcaCostUSD + cargoLoadCost + freightCost + cargoUnloadCost;
+
+      // Update the CIP Cost cell
+      const cipCostCell = row.querySelector(`#cip_cost_${productId}`);
+      if (cipCostCell) {
+        cipCostCell.textContent = cipCost > 0 ? '$' + cipCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      }
+    });
+  }
+  window.updateCipCosts = updateCipCosts; // Expose to global scope
+
   function updateProductTotals() {
     function sumCells(prefix) {
       let sum = 0;
@@ -162,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof window.updateReturnAvgKgPL === 'function') window.updateReturnAvgKgPL();
     if (typeof window.updateCargoUnloadCosts === 'function') window.updateCargoUnloadCosts();
     if (typeof window.updateFreightCosts === 'function') window.updateFreightCosts();
+    if (typeof updateCipCosts === 'function') updateCipCosts();
     updateProductTotals();
   }
 

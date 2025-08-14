@@ -4,17 +4,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const airportData = window.airportData;
   const traderData = window.traderData;
   const shipperSelect = document.getElementById('shipper');
+  const consigneeSelect = document.getElementById('consignee');
 
-  // Helper to find the airport ID by city (case-insensitive)
-  function getDepartureAirportIdByShipperCity() {
-    const shipperId = shipperSelect.value;
-    if (!shipperId || !traderData[shipperId]) return null;
-    const shipperCity = traderData[shipperId].city;
+  // Generic helper to find an airport ID based on a trader's city
+  function getAirportIdByTrader(traderId) {
+    if (!traderId || !traderData[traderId]) return null;
+    const traderCity = traderData[traderId].city;
     for (const airportId in airportData) {
-      if (
-        airportData[airportId].city &&
-        airportData[airportId].city.toLowerCase().trim() === shipperCity.toLowerCase().trim()
-      ) {
+      if (airportData[airportId].city && airportData[airportId].city.toLowerCase().trim() === traderCity.toLowerCase().trim()) {
         return airportId;
       }
     }
@@ -23,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Function to update Cargo Load Cost for all product rows
   function updateCargoLoadCost() {
-    const departureAirportId = getDepartureAirportIdByShipperCity();
+    const shipperId = shipperSelect.value;
+    const departureAirportId = getAirportIdByTrader(shipperId);
     let handlingCost = 0;
     if (departureAirportId && airportData[departureAirportId]) {
       handlingCost = parseFloat(airportData[departureAirportId].cargo_handling_cost_kg) || 0;
@@ -50,6 +48,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   window.updateCargoLoadCost = updateCargoLoadCost; // Expose to global scope
+
+  // New function to calculate Cargo Unload Cost based on the destination airport
+  function updateCargoUnloadCosts() {
+    const context = window.shipmentContext?.getCurrentContext();
+    // This cost is context-dependent, so we do nothing if no context is set.
+    if (!context) return;
+
+    // Determine the destination trader based on the current context
+    const destinationTraderId = (context === 'departure') ? consigneeSelect.value : shipperSelect.value;
+    const destinationAirportId = getAirportIdByTrader(destinationTraderId);
+
+    let handlingCost = 0;
+    if (destinationAirportId && airportData[destinationAirportId]) {
+      handlingCost = parseFloat(airportData[destinationAirportId].cargo_handling_cost_kg) || 0;
+    }
+
+    document.querySelectorAll('div[data-product-id]').forEach(function(row) {
+      const weightCell = row.querySelector('[id^="total_weight_"]');
+      const unloadCostCell = row.querySelector('[id^="cargo_unload_cost_"]');
+      let totalWeight = 0;
+      if (weightCell && weightCell.textContent && weightCell.textContent !== '-') {
+        const match = weightCell.textContent.match(/([\d.,]+)\s*kg/);
+        if (match) {
+          totalWeight = parseFloat(match[1].replace(/,/g, '')) || 0;
+        }
+      }
+      const cargoUnloadCost = totalWeight * handlingCost;
+      if (unloadCostCell) {
+        unloadCostCell.textContent = cargoUnloadCost ? '$' + cargoUnloadCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+      }
+    });
+  }
+  window.updateCargoUnloadCosts = updateCargoUnloadCosts; // Expose to global scope
 
   // Function to update Avg. Kg / P-L with color and restrictions
   function updateDepartureAvgKgPL() {
