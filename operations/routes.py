@@ -432,8 +432,7 @@ def add_route(route_id=None):
     return render_template('operations/add_route.html', 
                          airport_choices=airport_choices, 
                          aircraft_choices=aircraft_choices,
-                         route_to_edit=route_to_edit,
-                         csrf_token=generate_csrf())
+                         route_to_edit=route_to_edit)
 
 @operations.route('/view-routes')
 def view_routes():
@@ -547,93 +546,6 @@ def airport_altitude():
     if airport:
         return jsonify({'altitude_ft': airport.altitude_ft})
     return jsonify({'altitude_ft': None}), 404
-
-# API endpoint to check if route already exists
-@operations_api.route('/check-route-exists', methods=['POST'])
-def check_route_exists():
-    data = request.get_json()
-    aircraft_id = data.get('aircraft_id')
-    route_type = data.get('route_type')
-    from_airport_id = data.get('from_airport_id')
-    to_airport_id = data.get('to_airport_id')
-    finish_airport_id = data.get('finish_airport_id')
-    
-    try:
-        # Get airport objects for IATA codes
-        from_airport = Airport.query.get(from_airport_id)
-        to_airport = Airport.query.get(to_airport_id)
-        finish_airport = Airport.query.get(finish_airport_id) if finish_airport_id else None
-        
-        if not from_airport or not to_airport:
-            return jsonify({'exists': False, 'routes': []})
-        
-        existing_routes = []
-        
-        if route_type == 'one-way':
-            # Check for one-way route: from → to
-            routes = Route.query.filter_by(
-                aircraft_id=aircraft_id,
-                from_airport_id=from_airport_id,
-                to_airport_id=to_airport_id
-            ).all()
-            existing_routes.extend(routes)
-            
-        elif route_type == 'round-trip':
-            # Check for both legs of round-trip: from → to and to → from
-            leg1_routes = Route.query.filter_by(
-                aircraft_id=aircraft_id,
-                from_airport_id=from_airport_id,
-                to_airport_id=to_airport_id
-            ).all()
-            
-            leg2_routes = Route.query.filter_by(
-                aircraft_id=aircraft_id,
-                from_airport_id=to_airport_id,
-                to_airport_id=from_airport_id
-            ).all()
-            
-            existing_routes.extend(leg1_routes)
-            existing_routes.extend(leg2_routes)
-            
-        elif route_type == 'multiple' and finish_airport:
-            # Check for both legs of multiple route: from → to and to → finish
-            leg1_routes = Route.query.filter_by(
-                aircraft_id=aircraft_id,
-                from_airport_id=from_airport_id,
-                to_airport_id=to_airport_id
-            ).all()
-            
-            leg2_routes = Route.query.filter_by(
-                aircraft_id=aircraft_id,
-                from_airport_id=to_airport_id,
-                to_airport_id=finish_airport_id
-            ).all()
-            
-            existing_routes.extend(leg1_routes)
-            existing_routes.extend(leg2_routes)
-        
-        if existing_routes:
-            # Format route information for display
-            route_info = []
-            for route in existing_routes:
-                route_info.append({
-                    'id': route.id,
-                    'summary': route.route_summary,
-                    'total_cost': route.total_cost,
-                    'created_at': route.created_at.strftime('%Y-%m-%d %H:%M') if route.created_at else None
-                })
-            
-            return jsonify({
-                'exists': True,
-                'routes': route_info,
-                'message': f'Found {len(existing_routes)} existing route(s) with similar configuration'
-            })
-        else:
-            return jsonify({'exists': False, 'routes': []})
-            
-    except Exception as e:
-        print(f"Error checking route existence: {str(e)}")
-        return jsonify({'exists': False, 'routes': [], 'error': str(e)}), 500
 
 # API endpoint for distance calculation
 @operations_api.route('/leg-distances', methods=['POST'])
@@ -826,3 +738,8 @@ def delete_shipment(shipment_id):
     except Exception as e:
         flash(f'Error deleting shipment: {str(e)}', 'error')
         return redirect(url_for('operations.view_shipments'))
+    
+@operations.route('/schedule')
+def schedule():
+    """Renders the schedule calendar page."""
+    return render_template('operations/schedule.html')

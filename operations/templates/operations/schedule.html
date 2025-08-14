@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+  <h2>Schedule Calendar</h2>
+  <div id="calendar-controls" style="margin-bottom: 1em;">
+    <button id="day-view-btn">Day</button>
+    <button id="week-view-btn">Week</button>
+    <button id="month-view-btn">Month</button>
+    <button id="year-view-btn">Year</button>
+  </div>
+  <div id="calendar-container"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarContainer = document.getElementById('calendar-container');
+  const views = ['day', 'week', 'month', 'year'];
+  let currentView = 'month';
+
+  function renderCalendar(view) {
+    calendarContainer.innerHTML = '';
+    const today = new Date();
+    if (view === 'day') {
+      calendarContainer.innerHTML = `<h3>Day View</h3><div>${today.toDateString()}</div>`;
+    } else if (view === 'week') {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      calendarContainer.innerHTML = `<h3>Week View</h3><div>${startOfWeek.toDateString()} - ${endOfWeek.toDateString()}</div>`;
+    } else if (view === 'month') {
+      calendarContainer.innerHTML = `<h3>Month View</h3><div>${today.toLocaleString('default', { month: 'long', year: 'numeric' })}</div>`;
+    } else if (view === 'year') {
+      calendarContainer.innerHTML = `<h3>Year View</h3><div>${today.getFullYear()}</div>`;
+    }
+  }
+
+  views.forEach(view => {
+    document.getElementById(view + '-view-btn').addEventListener('click', function() {
+      currentView = view;
+      renderCalendar(view);
+    });
+  });
+
+  renderCalendar(currentView);
+});
+</script>
+{% endblock %}
