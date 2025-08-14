@@ -427,3 +427,46 @@ function updateProductTotals() {
 }
 
 });
+
+// --- FCA Cost Tooltip Logic ---
+document.addEventListener('DOMContentLoaded', function() {
+  // Step 1: Create a single, reusable tooltip element and add it to the page body.
+  const tooltip = document.createElement('div');
+  tooltip.id = 'fca-cost-tooltip';
+  document.body.appendChild(tooltip);
+
+  // Step 2: Identify all the "FCA Cost ($Local)" cells that will trigger the tooltip.
+  const fcaCostCells = document.querySelectorAll('[id^="fca_cost_"]');
+
+  // Step 3: Add event listeners to each cell to show, hide, and position the tooltip.
+  fcaCostCells.forEach(cell => {
+      // Add mouseover event to show and populate the tooltip
+      cell.addEventListener('mouseover', function(e) {
+          const row = this.closest('div[data-product-id], div#product-totals-row');
+          if (!row) return;
+
+          const productId = row.getAttribute('data-product-id');
+          let totalCost, taxes, profit;
+
+          if (productId) { // It's a product row
+              totalCost = document.getElementById(`total_cost_${productId}`)?.textContent || '-';
+              taxes = document.getElementById(`taxes_${productId}`)?.textContent || '-';
+              profit = document.getElementById(`profit_${productId}`)?.textContent || '-';
+          } else { // It's the totals row
+              totalCost = document.getElementById('total_total_cost')?.textContent || '-';
+              taxes = document.getElementById('total_taxes')?.textContent || '-';
+              profit = document.getElementById('total_profit')?.textContent || '-';
+          }
+
+          // Build the tooltip content and display it
+          tooltip.innerHTML = `<strong>Total Product Cost:</strong> ${totalCost}<br><strong>Taxes ($Local):</strong> ${taxes}<br><strong>Profit ($Local):</strong> ${profit}`;
+          tooltip.style.display = 'block';
+      });
+
+      // Add mouseout event to hide the tooltip
+      cell.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
+
+      // Add mousemove event to update the tooltip's position to follow the cursor
+      cell.addEventListener('mousemove', e => { tooltip.style.left = (e.pageX + 15) + 'px'; tooltip.style.top = (e.pageY + 15) + 'px'; });
+  });
+});
