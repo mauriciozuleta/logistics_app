@@ -583,6 +583,26 @@ def check_route_exists():
 
     return jsonify({'exists': bool(existing_route)})
 
+# API endpoint to fetch routes as calendar events
+@operations_api.route('/scheduled-shipments')
+def scheduled_shipments():
+    """
+    Provides shipment/route data formatted for FullCalendar.
+    """
+    try:
+        # For now, we will use Routes as the event source.
+        # This can be changed to Shipments later.
+        routes = Route.query.all()
+        events = []
+        for route in routes:
+            events.append({
+                'id': route.id,
+                'title': route.route_summary or 'Unnamed Route',
+                'start': route.created_at.isoformat() # Using created_at as the start date for now
+            })
+        return jsonify(events)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # =====================================
 # SHIPMENT MANAGEMENT ROUTES

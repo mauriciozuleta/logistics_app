@@ -59,12 +59,11 @@
             <ul class="dropdown-submenu">
               <li><a href="{{ url_for('operations.add_shipment') }}">Add Shipment</a></li>
               <li><a href="{{ url_for('operations.view_shipments') }}">View / Edit Shipments</a></li>
-              <li><a href="/operations/preview_shipment">Test Shipment Draft (Debug)</a></li>
             </ul>
           </li>
-          <li class="dropdown">
+          <li class="dropdown-sub">
             <a href="#">Operations Programming</a>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-submenu">
               <li><a href="{{ url_for('operations.schedule') }}">Schedule</a></li>
             </ul>
           </li>
