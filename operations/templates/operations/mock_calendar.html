@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mock Calendar</title>
+  <style>
+    body { background: #23272f; color: #FFD600; font-family: Arial, sans-serif; }
+    .calendar-container { max-width: 900px; margin: 40px auto; background: #23272f; border-radius: 8px; padding: 24px; }
+    table { width: 100%; border-collapse: collapse; background: #181c22; }
+    th, td { border: 1px solid #FFD600; height: 60px; text-align: center; color: #fff; }
+    th { color: #FFD600; }
+    h2 { color: #FFD600; text-align: center; }
+    .calendar-controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 18px; }
+    .calendar-controls button { padding: 8px 24px; background: #181c22; color: #FFD600; border: 1px solid #FFD600; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="calendar-container">
+    <h2>Mockup Calendar</h2>
+    <div class="calendar-controls">
+      <button onclick="showView('day')">Day</button>
+      <button onclick="showView('week')">Week</button>
+      <button onclick="showView('month')">Month</button>
+    </div>
+    <div id="mock-calendar-view"></div>
+  </div>
+  <script>
+    function showView(view) {
+      const calendar = document.getElementById('mock-calendar-view');
+      if (view === 'day') {
+        calendar.innerHTML = `
+          <table>
+            <tr>
+              <th>Hour</th>
+              <th>Event</th>
+            </tr>
+            ${Array.from({length: 12}, (_, i) => `
+              <tr>
+                <td>${8 + i}:00</td>
+                <td></td>
+              </tr>
+            `).join('')}
+          </table>
+        `;
+      } else if (view === 'week') {
+        calendar.innerHTML = `
+          <table>
+            <tr>
+              <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+            </tr>
+            <tr>
+              ${Array.from({length: 7}, () => `<td style="height: 80px;"></td>`).join('')}
+            </tr>
+          </table>
+        `;
+      } else if (view === 'month') {
+        calendar.innerHTML = `
+          <table>
+            <tr>
+              <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+            </tr>
+            ${Array.from({length: 5}, () => `
+              <tr>
+                ${Array.from({length: 7}, () => `<td></td>`).join('')}
+              </tr>
+            `).join('')}
+          </table>
+        `;
+      }
+    }
+    // Show month view by default
+    showView('month');
+  </script>
+</body>
+</html>

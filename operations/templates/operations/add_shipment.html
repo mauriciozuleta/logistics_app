@@ -14,6 +14,39 @@
 <script src="{{ url_for('static', filename='js/product_table.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
 
+<style>
+  /* Animation for the flash effect */
+  @keyframes flash-warning {
+    0%, 100% {
+      border-color: #2196f3;
+      background-color: #23272f;
+      box-shadow: none;
+    }
+    50% {
+      border-color: #ff4444;
+      background-color: rgba(255, 68, 68, 0.3); /* Reddish background */
+      box-shadow: 0 0 8px rgba(255, 68, 68, 0.7);
+    }
+  }
+  /* Class to apply the animation */
+  .input-flash { animation: flash-warning 1s ease-in-out; }
+  /* Class for the persistent warning state */
+  /* Make the selector more specific to override the default ID-based style */
+  #exchange_rate.input-invalid {
+    border-color: #ff4444;
+    background-color: rgba(255, 68, 68, 0.2); /* A persistent, less intense red */
+  }
+
+  /* Default styling for the exchange rate input */
+  #exchange_rate {
+    background-color: #23272f;
+    color: #fff;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
+    /* Add a transition for a smooth color change back to normal */
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+</style>
 
 
 <div class="content-section">
@@ -226,7 +259,7 @@
             </div>
             <div>
               <label for="exchange_rate" style="color:#FF5C00; font-weight:bold; margin-left:12px;">Exchange Rate:</label>
-              <input type="number" id="exchange_rate" name="exchange_rate" step="0.0001" min="0" style="width: 100px; margin-left:8px; background-color: #23272f; color: #fff; border: 1px solid #2196f3; border-radius: 4px;">
+              <input type="number" id="exchange_rate" name="exchange_rate" step="0.0001" min="0" style="width: 100px; margin-left:8px;">
             </div>
           </div>
           <!-- Single horizontally scrollable area: header, body, totals row -->
