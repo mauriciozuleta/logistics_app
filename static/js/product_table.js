@@ -340,10 +340,66 @@ document.addEventListener('DOMContentLoaded', function() {
         taxes = document.getElementById('total_taxes')?.textContent || '-';
         profit = document.getElementById('total_profit')?.textContent || '-';
       }
+
+      // --- Dynamic Tooltip Coloring (to match CIP tooltip) ---
+      const context = window.shipmentContext?.getCurrentContext();
+      let tooltipColor = '#2196f3'; // Default/fallback color
+      if (context === 'departure') {
+        tooltipColor = '#00bcd4'; // Match departure context color
+      } else if (context === 'return') {
+        tooltipColor = '#4caf50'; // Match return context color
+      }
+      tooltip.style.borderColor = tooltipColor;
+      tooltip.style.color = tooltipColor;
+
       tooltip.innerHTML = `<strong>Total Product Cost:</strong> ${totalCost}<br><strong>Taxes ($Local):</strong> ${taxes}<br><strong>Profit ($Local):</strong> ${profit}`;
       tooltip.style.display = 'block';
     });
     cell.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
     cell.addEventListener('mousemove', e => { tooltip.style.left = (e.pageX + 15) + 'px'; tooltip.style.top = (e.pageY + 15) + 'px'; });
+  });
+
+  // --- CIP Cost Tooltip Logic ---
+  const cipTooltip = document.createElement('div');
+  cipTooltip.id = 'cip-cost-tooltip';
+  document.body.appendChild(cipTooltip);
+
+  const cipCostCells = document.querySelectorAll('.cip-tooltip-trigger');
+  cipCostCells.forEach(cell => {
+    cell.addEventListener('mouseover', function(e) {
+      const row = this.closest('div[data-product-id], div#product-totals-row');
+      if (!row) return;
+      const productId = row.getAttribute('data-product-id');
+      let fcaCostUSD, cargoLoadCost, freightCost, cargoUnloadCost;
+
+      if (productId) {
+        fcaCostUSD = document.getElementById(`fca_cost_usd_${productId}`)?.textContent || '-';
+        cargoLoadCost = document.getElementById(`cargo_load_cost_${productId}`)?.textContent || '-';
+        freightCost = document.getElementById(`freight_cost_${productId}`)?.textContent || '-';
+        cargoUnloadCost = document.getElementById(`cargo_unload_cost_${productId}`)?.textContent || '-';
+      } else { // Totals row
+        fcaCostUSD = document.getElementById('total_fca_cost_usd')?.textContent || '-';
+        cargoLoadCost = document.getElementById('total_cargo_load_cost')?.textContent || '-';
+        freightCost = document.getElementById('total_freight_cost')?.textContent || '-';
+        cargoUnloadCost = document.getElementById('total_cargo_unload_cost')?.textContent || '-';
+      }
+      
+      // --- Dynamic Tooltip Coloring ---
+      const context = window.shipmentContext?.getCurrentContext();
+      let tooltipColor = '#2196f3'; // Default/fallback color
+      if (context === 'departure') {
+        tooltipColor = '#00bcd4'; // Match departure context color
+      } else if (context === 'return') {
+        tooltipColor = '#4caf50'; // Match return context color
+      }
+      // Set both the border and the font color for the values
+      cipTooltip.style.borderColor = tooltipColor;
+      cipTooltip.style.color = tooltipColor;
+
+      cipTooltip.innerHTML = `<strong>FCA Cost (USD):</strong> ${fcaCostUSD}<br><strong>Cargo Load Cost:</strong> ${cargoLoadCost}<br><strong>Freight Cost:</strong> ${freightCost}<br><strong>Cargo Unload Cost:</strong> ${cargoUnloadCost}`;
+      cipTooltip.style.display = 'block';
+    });
+    cell.addEventListener('mouseout', () => { cipTooltip.style.display = 'none'; });
+    cell.addEventListener('mousemove', e => { cipTooltip.style.left = (e.pageX + 15) + 'px'; cipTooltip.style.top = (e.pageY + 15) + 'px'; });
   });
 });

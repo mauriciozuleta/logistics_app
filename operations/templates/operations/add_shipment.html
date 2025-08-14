@@ -46,6 +46,26 @@
     /* Add a transition for a smooth color change back to normal */
     transition: background-color 0.3s ease, border-color 0.3s ease;
   }
+
+  /* Style for the tooltips */
+  #fca-cost-tooltip,
+  #cip-cost-tooltip {
+    position: absolute;
+    display: none;
+    background-color: #1e2228;
+    color: #fff;
+    border: 1px solid #2196f3;
+    padding: 10px;
+    border-radius: 4px;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  /* Keep the tooltip labels a consistent, readable color */
+  #fca-cost-tooltip strong,
+  #cip-cost-tooltip strong {
+    color: #e0e0e0;
+    margin-right: 8px;
+  }
 </style>
 
 
@@ -282,10 +302,10 @@
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" class="fca-tooltip-column">Profit ($Local)</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost ($Local)</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost (USD)</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Cargo Load Cost</div>
-              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;">Freight Cost</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Cargo Unload Cost</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">CIP Cost</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;">Cargo Load Cost</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;">Freight Cost</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;">Cargo Unload Cost</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" class="cip-tooltip-trigger">CIP Cost</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Taxes</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Profit</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">DAT Cost</div>
@@ -336,10 +356,10 @@
                   <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="profit_{{ product.id }}" class="fca-tooltip-column">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_{{ product.id }}">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_usd_{{ product.id }}">-</div>
-                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cargo_load_cost_{{ product.id }}">-</div>
-                  <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="freight_cost_{{ product.id }}">-</div>
-                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cargo_unload_cost_{{ product.id }}">-</div>
-                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cip_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="cargo_load_cost_{{ product.id }}">-</div>
+                  <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;" id="freight_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="cargo_unload_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cip_cost_{{ product.id }}" class="cip-tooltip-trigger">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_taxes_{{ product.id }}">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_profit_{{ product.id }}">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="dat_cost_{{ product.id }}">-</div>
@@ -366,10 +386,10 @@
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_profit" class="fca-tooltip-column">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost_usd">-</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cargo_load_cost">-</div>
-              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_freight_cost">-</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cargo_unload_cost">-</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cip_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="total_cargo_load_cost">-</div>
+              <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;" id="total_freight_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="total_cargo_unload_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cip_cost" class="cip-tooltip-trigger">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_taxes">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_profit">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_dat_cost">-</div>
