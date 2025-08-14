@@ -600,10 +600,89 @@ function updateShipmentSummaryRoutes() {
     }
   }
 
+  // New function to filter return routes based on the selected aircraft
+  function updateReturnRoutes(selectedAircraft) {
+    console.log(`Filtering return routes for aircraft: ${selectedAircraft || 'None'}`);
+    const consigneeId = consigneeSelect.value;
+    const returnMessageEl = document.getElementById('return-route-message');
+
+    // Clear previous options and message
+    secondLegRouteSelect.innerHTML = '<option value="">Return Route...</option>';
+    if (returnMessageEl) returnMessageEl.style.display = 'none';
+
+    // If no aircraft is selected, or no consignee, we can't filter.
+    if (!selectedAircraft || !consigneeId) {
+      return;
+    }
+
+    const consigneeCity = window.traderData[consigneeId]?.city;
+    if (!consigneeCity) return;
+
+    let routesFound = 0;
+    Object.entries(window.routeData).forEach(([routeId, route]) => {
+      // Check if the route starts from the consignee's city
+      // and uses the selected aircraft.
+      if (route.fromCity?.toLowerCase() === consigneeCity.toLowerCase() &&
+          route.aircraft?.includes(selectedAircraft)) {
+        const option = document.createElement('option');
+        option.value = routeId;
+        option.textContent = route.summary;
+        secondLegRouteSelect.appendChild(option);
+        routesFound++;
+      }
+    });
+
+    // If no matching return routes were found, show a message.
+    if (routesFound === 0 && returnMessageEl) {
+      returnMessageEl.innerHTML = `No return route found for ${selectedAircraft}. <a href="/operations/add-route" style="color: #2196f3;">Add one?</a>`;
+      returnMessageEl.style.display = 'block';
+    }
+  }
+
+  // New function to populate the aircraft dropdown for a specific route
+  function populateAircraftForRoute(routeId) {
+    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>'; // Clear existing options
+
+    if (routeId && window.routeData[routeId]) {
+      const route = window.routeData[routeId];
+      const aircraftList = route.aircraft || [];
+
+      aircraftList.forEach(ac => {
+        const option = document.createElement('option');
+        option.value = ac;
+        option.textContent = ac;
+        availableAircraftSelect.appendChild(option);
+      });
+
+      // If there's only one aircraft for the route, auto-select it
+      if (aircraftList.length === 1) {
+        availableAircraftSelect.value = aircraftList[0];
+      }
+    }
+  }
+
   // Route Selection Event Listeners - Isolated and Safe
   // Add event listener to first leg route to update aircraft availability and recalculate
   firstLegRouteSelect.addEventListener('change', function() {
     try {
+      // --- New Aircraft-Dependent Filtering Logic (Step 1) ---
+      const selectedRouteId = this.value;
+      let selectedAircraft = null;
+
+      if (selectedRouteId && window.routeData[selectedRouteId]) {
+        const routeInfo = window.routeData[selectedRouteId];
+        // The 'aircraft' property is an array; we get the first one.
+        if (routeInfo.aircraft && routeInfo.aircraft.length > 0) {
+          selectedAircraft = routeInfo.aircraft[0];
+        }
+      }
+      console.log('Departure route changed. Captured Aircraft:', selectedAircraft);
+
+      // Populate the aircraft dropdown based on the selected route
+      populateAircraftForRoute(selectedRouteId);
+      // Call the new function to update the return routes dropdown
+      updateReturnRoutes(selectedAircraft);
+
       // Update aircraft availability when first leg route changes
       updateAircraftAvailability();
       
@@ -782,7 +861,7 @@ function updateShipmentSummaryRoutes() {
       if (fromCityLower === shipperCity.toLowerCase() && toCityLower === consigneeCity.toLowerCase()) {
         firstLegRoutes.push({
           value: routeId,
-          text: `${route.fromAirport} - ${route.toAirport}`,
+          text: route.summary,
           aircraft: route.aircraft || []
         });
       }
@@ -791,7 +870,7 @@ function updateShipmentSummaryRoutes() {
       if (fromCityLower === consigneeCity.toLowerCase()) {
         returnLegRoutes.push({
           value: routeId,
-          text: `${route.fromAirport} - ${route.toAirport}`
+          text: route.summary
         });
       }
     });
@@ -864,22 +943,8 @@ function updateShipmentSummaryRoutes() {
     // Update aircraft availability after populating return routes
     updateAircraftAvailability();
 
-    // Aircraft dropdown: only show aircraft for selected first leg route
-    availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>';
-    if (firstLegRoutes.length > 0) {
-      let aircraftList = [];
-      if (Array.isArray(firstLegRoutes[0].aircraft)) {
-        aircraftList = firstLegRoutes[0].aircraft;
-      } else if (typeof firstLegRoutes[0].aircraft === 'string') {
-        aircraftList = firstLegRoutes[0].aircraft.split(',').map(ac => ac.trim()).filter(ac => ac);
-      }
-      aircraftList.forEach(ac => {
-        const acOption = document.createElement('option');
-        acOption.value = ac;
-        acOption.textContent = ac;
-        availableAircraftSelect.appendChild(acOption);
-      });
-    }
+    // Populate aircraft based on the initially selected route (if any)
+    populateAircraftForRoute(firstLegRouteSelect.value);
     if (!found) {
       routeInfoSection.style.display = 'none';
       showRouteNotFound(true);

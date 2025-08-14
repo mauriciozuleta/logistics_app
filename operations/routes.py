@@ -725,12 +725,15 @@ def add_shipment(shipment_id=None):
         elif r.aircraft and hasattr(r.aircraft, 'payload_capacity'):
             payload_display = f"{r.aircraft.payload_capacity} kg"
 
+        aircraft_suffix = f" ({r.aircraft.short_name})" if r.aircraft else ""
+        summary_text = r.route_summary or r.route_name or f"{from_airport.iata_code} → {to_airport.iata_code}"
+
         route_data[str(r.id)] = {
             'fromCity': from_airport.city if from_airport else '',
             'toCity': to_airport.city if to_airport else '',
             'fromAirport': from_airport.iata_code if from_airport else '',
             'toAirport': to_airport.iata_code if to_airport else '',
-            'summary': r.route_summary or r.route_name,
+            'summary': f"{summary_text}{aircraft_suffix}",
             'aircraft': [r.aircraft.short_name] if r.aircraft and r.aircraft.short_name else [],
             'distance': distance_display,
             'flight_time': flight_time_display,
