@@ -62,7 +62,7 @@
 </style>
   <h2>Route Information</h2>
   <form method="post" id="route-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="route-form-row">
           <div class="form-group">
             <label for="aircraft_type">Aircraft Type</label>
@@ -225,6 +225,96 @@ document.addEventListener('DOMContentLoaded', function() {
       clearTables();
       activateSelections();
     });
+  }
+
+  // --- Route Exists Check Functions ---
+
+  // Main function to check for duplicates via API
+  async function checkRouteExists() {
+    // 1. Validate selections
+    if (!aircraftSelect.value || !fromSelect.value || !toSelect.value) {
+      // Not enough info to check, ensure any previous warning is hidden
+      hideRouteExistsWarning();
+      return;
+    }
+
+    try {
+      // 2. Gather data and call API
+      const routeCheckData = {
+        aircraft_id: aircraftSelect.value,
+        from_airport_id: fromSelect.value,
+        to_airport_id: toSelect.value
+      };
+
+      const response = await fetch('/api/check-route-exists', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(routeCheckData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API check failed with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // 3. Handle the response from the API
+      if (result.exists) {
+        showRouteExistsWarning();
+      } else {
+        hideRouteExistsWarning();
+      }
+
+    } catch (error) {
+      console.error('Error during route existence check:', error);
+      // In case of an error, hide the warning to not block the user
+      hideRouteExistsWarning();
+    }
+  }
+
+  // Helper to show a warning message
+  function showRouteExistsWarning() {
+    // First, remove any existing warning to avoid duplicates
+    hideRouteExistsWarning();
+
+    // Create the warning element
+    const warningDiv = document.createElement('div');
+    warningDiv.id = 'route-exists-warning';
+    warningDiv.style.cssText = `
+      width: 80%;
+      margin: 1rem auto;
+      background-color: #856404;
+      border: 1px solid #ffeaa7;
+      color: #fff;
+      padding: 1rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      text-align: center;
+      font-weight: bold;
+    `;
+    
+    warningDiv.innerHTML = `⚠️ This route already exists for the selected aircraft. Saving will create a duplicate.`;
+    
+    // Insert the warning message after the form and before the tables.
+    const form = document.getElementById('route-form');
+    if (form) {
+      form.after(warningDiv);
+    }
+  }
+
+  // Helper to hide the warning message
+  function hideRouteExistsWarning() {
+    const existingWarning = document.getElementById('route-exists-warning');
+    if (existingWarning) {
+      existingWarning.remove();
+    }
+  }
+
+  // Add event listeners to trigger the route check
+  if (aircraftSelect && fromSelect && toSelect) {
+    aircraftSelect.addEventListener('change', checkRouteExists);
+    fromSelect.addEventListener('change', checkRouteExists);
+    toSelect.addEventListener('change', checkRouteExists);
   }
 
 
@@ -508,103 +598,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Function to show route exists warning
-  function showRouteExistsWarning(existingRoutes) {
-    // Remove existing warning if any
-    hideRouteExistsWarning();
-    
-    // Create warning element
-    const warningDiv = document.createElement('div');
-    warningDiv.id = 'route-exists-warning';
-    warningDiv.style.cssText = `
-      background-color: #fff3cd;
-      border: 1px solid #ffeaa7;
-      color: #856404;
-      padding: 8px 12px;
-      margin: 10px 0;
-      border-radius: 4px;
-      font-size: 14px;
-      text-align: center;
-    `;
-    
-    warningDiv.innerHTML = `
-      <strong>⚠️ Route already exists</strong>
-    `;
-    
-    // Insert warning before the Load button
-    const loadBtn = document.getElementById('load_finish_btn');
-    if (loadBtn && loadBtn.parentNode) {
-      loadBtn.parentNode.insertBefore(warningDiv, loadBtn);
-    }
-  }
-
-  // Function to hide route exists warning
-  function hideRouteExistsWarning() {
-    const existingWarning = document.getElementById('route-exists-warning');
-    if (existingWarning) {
-      existingWarning.remove();
-    }
-  }
-  // Function to check if route already exists based on current selections
-  async function checkRouteExists() {
-    // Only check if all required fields are selected
-    if (!aircraftSelect.value || !fromSelect.value || !toSelect.value) {
-      return; // Not enough data to check
-    }
-
-    try {
-      const routeCheckData = {
-        aircraft_id: aircraftSelect.value,
-        from_airport_id: fromSelect.value,
-        to_airport_id: toSelect.value
-      };
-
-      const response = await fetch('/api/check-route-exists', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(routeCheckData)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-
-        if (result.exists && result.routes.length > 0) {
-          // Show warning message near the Load button
-          showRouteExistsWarning(result.routes);
-        } else {
-          // Hide warning if no duplicates found
-          hideRouteExistsWarning();
-        }
-      }
-  } catch (error) {
-    console.log('Route existence check failed:', error);
-    // Silently fail - don't interfere with user experience
-  }
-}
-
-  // Add event listeners to form fields to check for route existence
-  if (aircraftSelect && fromSelect && toSelect) {
-    aircraftSelect.addEventListener('change', checkRouteExists);
-    fromSelect.addEventListener('change', checkRouteExists);
-    toSelect.addEventListener('change', checkRouteExists);
-  }
-
   // Function to extract calculated route data from tables
-
   function extractRouteData() {
-    const routeData = {
-      leg: {},
-      payload: {}
-    };
+    const routeSummary = {};
+    const payloadSummary = {};
 
     // Extract route summary data from the single data row
     const routeTable = document.getElementById('route-summary-table');
     if (routeTable) {
-      const rows = routeTable.getElementsByTagName('tr');
-      if (rows.length > 1) { // Check if the data row exists
-        const cells = rows[1].cells;
+      const dataRow = routeTable.tBodies[0].rows[0];
+      if (dataRow) {
+        const cells = dataRow.cells;
         if (cells.length >= 7) {
-          routeData.leg = {
+          Object.assign(routeSummary, {
             route: cells[0].innerText,
             distance_nm: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
             flight_time_hours: parseFloat(cells[2].innerText.replace(' hr', '')) || 0,
@@ -612,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
             block_hours_cost: parseFloat(cells[4].innerText.replace(/[$,]/g, '')) || 0,
             fuel_cost: parseFloat(cells[5].innerText.replace(/[$,]/g, '')) || 0,
             total_leg_cost: parseFloat(cells[6].innerText.replace(/[$,]/g, '')) || 0
-          };
+          });
         }
       }
     }
@@ -620,11 +626,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Extract payload data from the single data row
     const payloadTable = document.getElementById('payload-summary-table');
     if (payloadTable) {
-      const rows = payloadTable.getElementsByTagName('tr');
-      if (rows.length > 1) { // Check if the data row exists
-        const cells = rows[1].cells;
+      const dataRow = payloadTable.tBodies[0].rows[0];
+      if (dataRow) {
+        const cells = dataRow.cells;
         if (cells.length >= 7) {
-          routeData.payload = {
+          Object.assign(payloadSummary, {
             route: cells[0].innerText,
             empty_weight_lbs: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
             fuel_weight_lbs: parseFloat(cells[2].innerText.replace(/,/g, '')) || 0,
@@ -632,12 +638,16 @@ document.addEventListener('DOMContentLoaded', function() {
             no_tank_tow_lbs: parseFloat(cells[4].innerText.replace(/,/g, '')) || 0,
             avail_extra_fuel_lbs: parseFloat(cells[5].innerText.replace(/,/g, '')) || 0,
             tank_tow_lbs: parseFloat(cells[6].innerText.replace(/,/g, '')) || 0
-          };
+          });
         }
       }
     }
 
-    return routeData;
+    // Return data in the format expected by the backend
+    return {
+      legs: [routeSummary],
+      payloadData: [payloadSummary]
+    };
   }
 
   // Handle Save Route button click
@@ -648,40 +658,38 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Check if route has been analyzed
       const routeTable = document.getElementById('route-summary-table');
-      const hasData = routeTable && routeTable.getElementsByTagName('tr')[1].cells[1].innerText !== '';
+      const firstDataCell = routeTable.tBodies[0].rows[0].cells[1];
+      const hasData = firstDataCell && firstDataCell.innerText.trim() !== '' && firstDataCell.innerText.trim() !== '&nbsp;';
       
       if (!hasData) {
         alert('Please analyze the route first by clicking "Load" before saving.');
         return;
       }
 
-      // Create a new form for submission
-      const submissionForm = document.createElement('form');
-      submissionForm.method = 'POST';
-      submissionForm.action = "{{ url_for('operations.add_route') }}";
+      const form = document.getElementById('route-form');
 
-      // Helper to add a hidden input to the form
-      function addHiddenInput(name, value) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        submissionForm.appendChild(input);
+      // Helper to add or update a hidden input in the main form
+      function addOrUpdateHiddenInput(name, value) {
+        let input = form.querySelector(`input[name="${name}"]`);
+        if (input) {
+          input.value = value;
+        } else {
+          input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = name;
+          input.value = value;
+          form.appendChild(input);
+        }
       }
 
-      // Add form data as hidden inputs
-      addHiddenInput('csrf_token', '{{ csrf_token }}');
-      addHiddenInput('aircraft_type', document.getElementById('aircraft_type').value);
-      addHiddenInput('from_airport', document.getElementById('from_airport').value);
-      addHiddenInput('to_airport', document.getElementById('to_airport').value);
-      
-      // Add calculated data as hidden input
+      // Add the calculated and required data to the form
+      addOrUpdateHiddenInput('route_type', 'one-way');
       const routeData = extractRouteData();
-      addHiddenInput('route_data', JSON.stringify(routeData));
-
-      // Append form to body and submit
-      document.body.appendChild(submissionForm);
-      submissionForm.submit();
+      addOrUpdateHiddenInput('route_data', JSON.stringify(routeData));
+      
+      // The other fields (aircraft_type, from_airport, to_airport, csrf_token)
+      // are already part of the form, so we just submit it.
+      form.submit();
     });
   }
 

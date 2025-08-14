@@ -560,6 +560,29 @@ def leg_distances():
         results.append({'from': from_iata, 'to': to_iata, 'distance': dist})
     return jsonify({'distances': results})
 
+# API endpoint to check if a route already exists
+@operations_api.route('/check-route-exists', methods=['POST'])
+def check_route_exists():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Missing JSON in request'}), 400
+
+    aircraft_id = data.get('aircraft_id')
+    from_airport_id = data.get('from_airport_id')
+    to_airport_id = data.get('to_airport_id')
+
+    if not all([aircraft_id, from_airport_id, to_airport_id]):
+        return jsonify({'error': 'Missing required route parameters'}), 400
+
+    # Query the database to see if a route with this exact combination exists
+    existing_route = Route.query.filter_by(
+        aircraft_id=aircraft_id,
+        from_airport_id=from_airport_id,
+        to_airport_id=to_airport_id
+    ).first()
+
+    return jsonify({'exists': bool(existing_route)})
+
 
 # =====================================
 # SHIPMENT MANAGEMENT ROUTES

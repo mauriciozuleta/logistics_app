@@ -204,7 +204,7 @@
 
 <div class="routes-actions" style="margin-bottom: 1rem;">
   <div>
-    <button class="routes-btn routes-btn-warning edit-btn" disabled>Edit Selected</button>
+    <button class="routes-btn routes-btn-warning edit-btn" disabled title="Route editing is not yet implemented.">Edit Selected</button>
     <button class="routes-btn routes-btn-danger delete-btn" disabled>Delete Selected</button>
     <span class="selected-count" id="selectedCount">0 selected</span>
   </div>
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateSelectedCount() {
     const checked = document.querySelectorAll('.routes-checkbox:not(#select-all):checked');
     selectedCount.textContent = `${checked.length} selected`;
-    editBtn.disabled = checked.length === 0;
+    // editBtn.disabled = checked.length === 0; // Keep edit disabled as backend is not ready
     deleteBtn.disabled = checked.length === 0;
   }
 
@@ -333,29 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Edit Selected functionality
-  editBtn.addEventListener('click', function() {
-    const checkedBoxes = document.querySelectorAll('.routes-checkbox:not(#select-all):checked');
-    if (checkedBoxes.length === 0) return;
-    
-    if (checkedBoxes.length === 1) {
-      // Single route - redirect to add_route form with route_id for editing
-      const routeId = checkedBoxes[0].value;
-      window.location.href = `/operations/add-route/${routeId}`;
-    } else {
-      // Multiple routes - show options
-      const routeIds = Array.from(checkedBoxes).map(cb => cb.value);
-      const message = `You have selected ${routeIds.length} routes for editing.\n\nOptions:\n1. Edit routes individually (opens tabs)\n2. Cancel`;
-      
-      if (confirm(message + '\n\nClick OK to edit individually, Cancel to abort.')) {
-        // Open each route in a new tab for editing
-        routeIds.forEach((routeId, index) => {
-          setTimeout(() => {
-            window.open(`/operations/add-route/${routeId}`, '_blank');
-          }, index * 100); // Small delay to prevent browser blocking
-        });
-      }
-    }
-  });
+  // The 'Edit' button is currently disabled as the backend functionality is not yet implemented.
 
   // Delete Selected functionality
   deleteBtn.addEventListener('click', function() {
