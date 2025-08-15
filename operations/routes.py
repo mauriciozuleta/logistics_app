@@ -169,6 +169,7 @@ def add_route(route_id=None):
                             # Individual leg data (using leg1 data)
                             total_distance_nm=leg1_data.get('distance_nm', 0),
                             total_flight_time_hours=leg1_data.get('flight_time_hours', 0),
+                            total_adjusted_flight_time_hours=leg1_data.get('adjusted_flight_time_hours', 0),
                             total_fuel_gallons=leg1_data.get('fuel_gallons', 0),
                             total_fuel_cost=leg1_data.get('fuel_cost', 0),
                             total_block_hours_cost=leg1_data.get('block_hours_cost', 0),
@@ -217,6 +218,7 @@ def add_route(route_id=None):
                             # Individual leg data (using leg1 data)
                             total_distance_nm=leg1_data.get('distance_nm', 0),
                             total_flight_time_hours=leg1_data.get('flight_time_hours', 0),
+                            total_adjusted_flight_time_hours=leg1_data.get('adjusted_flight_time_hours', 0),
                             total_fuel_gallons=leg1_data.get('fuel_gallons', 0),
                             total_fuel_cost=leg1_data.get('fuel_cost', 0),
                             total_block_hours_cost=leg1_data.get('block_hours_cost', 0),
@@ -261,6 +263,7 @@ def add_route(route_id=None):
                             # Individual leg data (using leg2 data)
                             total_distance_nm=leg2_data.get('distance_nm', 0),
                             total_flight_time_hours=leg2_data.get('flight_time_hours', 0),
+                            total_adjusted_flight_time_hours=leg2_data.get('adjusted_flight_time_hours', 0),
                             total_fuel_gallons=leg2_data.get('fuel_gallons', 0),
                             total_fuel_cost=leg2_data.get('fuel_cost', 0),
                             total_block_hours_cost=leg2_data.get('block_hours_cost', 0),
@@ -309,6 +312,7 @@ def add_route(route_id=None):
                             # Individual leg data (using leg1 data)
                             total_distance_nm=leg1_data.get('distance_nm', 0),
                             total_flight_time_hours=leg1_data.get('flight_time_hours', 0),
+                            total_adjusted_flight_time_hours=leg1_data.get('adjusted_flight_time_hours', 0),
                             total_fuel_gallons=leg1_data.get('fuel_gallons', 0),
                             total_fuel_cost=leg1_data.get('fuel_cost', 0),
                             total_block_hours_cost=leg1_data.get('block_hours_cost', 0),
@@ -353,6 +357,7 @@ def add_route(route_id=None):
                             # Individual leg data (using leg2 data)
                             total_distance_nm=leg2_data.get('distance_nm', 0),
                             total_flight_time_hours=leg2_data.get('flight_time_hours', 0),
+                            total_adjusted_flight_time_hours=leg2_data.get('adjusted_flight_time_hours', 0),
                             total_fuel_gallons=leg2_data.get('fuel_gallons', 0),
                             total_fuel_cost=leg2_data.get('fuel_cost', 0),
                             total_block_hours_cost=leg2_data.get('block_hours_cost', 0),

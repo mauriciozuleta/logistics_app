@@ -118,7 +118,7 @@ class Airport(BaseModel):
     iata_code = db.Column(db.String(3), unique=True, nullable=False)
     city = db.Column(db.String(100), nullable=False)
 
-    country_id = db.Column(db.Integer, db.ForeignKey('countries.country_code'), nullable=False)
+    country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=False)
     country = db.relationship('Country', backref='airports')
 
     fuel_cost_gl = db.Column(db.Float)
@@ -166,6 +166,7 @@ class Route(BaseModel):
     # New fields to match the save functionality
     total_distance_nm = db.Column(db.Float)
     total_flight_time_hours = db.Column(db.Float)
+    total_adjusted_flight_time_hours = db.Column(db.Float)
     total_fuel_gallons = db.Column(db.Float)
     total_fuel_cost = db.Column(db.Float)
     total_block_hours_cost = db.Column(db.Float)
@@ -179,6 +180,7 @@ class Route(BaseModel):
     leg1_route = db.Column(db.String(128))
     leg1_distance = db.Column(db.Float)
     leg1_flight_time = db.Column(db.Float)
+    leg1_adjusted_flight_time = db.Column(db.Float)
     leg1_route_fuel_gls = db.Column(db.Float)
     leg1_bh_cost_usd = db.Column(db.Float)
     leg1_fuel_cost_usd = db.Column(db.Float)
@@ -196,6 +198,7 @@ class Route(BaseModel):
     leg2_route = db.Column(db.String(128))
     leg2_distance = db.Column(db.Float)
     leg2_flight_time = db.Column(db.Float)
+    leg2_adjusted_flight_time = db.Column(db.Float)
     leg2_route_fuel_gls = db.Column(db.Float)
     leg2_bh_cost_usd = db.Column(db.Float)
     leg2_fuel_cost_usd = db.Column(db.Float)
@@ -224,31 +227,44 @@ class Route(BaseModel):
         return f"<Route {self.route_name or f'{self.leg1_route}'} ({self.route_type})>"
 
 
-class Shipment(db.Model):
+class Shipment(BaseModel):
     __tablename__ = 'shipments'
 
     id = db.Column(db.Integer, primary_key=True)
     shipment_reference = db.Column(db.String(64), unique=True, nullable=False)
-    shipper = db.Column(db.String(64), nullable=False)
-    consignee = db.Column(db.String(64), nullable=False)
-    first_leg_route = db.Column(db.String(64), nullable=False)
+
+    # Relationships to other models for data integrity
+    shipper_id = db.Column(db.Integer, db.ForeignKey('traders.id'), nullable=False)
+    consignee_id = db.Column(db.Integer, db.ForeignKey('traders.id'), nullable=False)
+    departure_route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), nullable=False)
+    return_route_id = db.Column(db.Integer, db.ForeignKey('routes.id'))
+
+    # Denormalized/calculated fields from the form
+    first_leg_route = db.Column(db.String(64), nullable=False) # Kept for display/reference
     first_leg_distance = db.Column(db.Float)
     first_leg_ft = db.Column(db.Float)
     first_leg_cost = db.Column(db.Float)
     first_leg_payload = db.Column(db.Float)
-    second_leg_route = db.Column(db.String(64))
+    second_leg_route = db.Column(db.String(64)) # Kept for display/reference
     second_leg_distance = db.Column(db.Float)
     second_leg_ft = db.Column(db.Float)
     second_leg_cost = db.Column(db.Float)
     second_leg_payload = db.Column(db.Float)
     selected_aircraft = db.Column(db.String(64))
     return_type = db.Column(db.String(32))
+
     outbound_cost_weight = db.Column(db.Float)
     outbound_tcl = db.Column(db.Float)
     outbound_kg_cost = db.Column(db.Float)
     return_cost_weight = db.Column(db.Float)
     return_tcl = db.Column(db.Float)
     return_kg_cost = db.Column(db.Float)
+
+    # Relationships for easy access to related objects
+    shipper = db.relationship('Trader', foreign_keys=[shipper_id], backref='shipments_as_shipper')
+    consignee = db.relationship('Trader', foreign_keys=[consignee_id], backref='shipments_as_consignee')
+    departure_route = db.relationship('Route', foreign_keys=[departure_route_id], backref='shipments_departing')
+    return_route = db.relationship('Route', foreign_keys=[return_route_id], backref='shipments_returning')
 
     def __repr__(self):
         return f'<Shipment {self.shipment_reference}>'

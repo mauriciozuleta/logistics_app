@@ -223,6 +223,7 @@
         <th class="type-col">Route Type</th>
         <th class="distance-col">Distance</th>
         <th class="time-col">Flight Time</th>
+        <th class="time-col">Adj. Flight Time</th>
         <th class="fuel-col">Route Fuel (Gls.)</th>
         <th class="cost-col">B/H Cost (USD)</th>
         <th class="cost-col">Fuel Cost (USD)</th>
@@ -253,6 +254,9 @@
           </td>
           <td class="time-col">
             {% if route.total_flight_time_hours %}{{ "{:.1f}".format(route.total_flight_time_hours) }}{% else %}-{% endif %}
+          </td>
+          <td class="time-col">
+            {% if route.total_adjusted_flight_time_hours %}{{ "{:.1f}".format(route.total_adjusted_flight_time_hours) }}{% else %}-{% endif %}
           </td>
           <td class="fuel-col">
             {% if route.total_fuel_gallons %}{{ "{:,.0f}".format(route.total_fuel_gallons) }}{% else %}-{% endif %}
@@ -288,7 +292,7 @@
         {% endfor %}
       {% else %}
         <tr>
-          <td colspan="17" class="no-routes">
+          <td colspan="18" class="no-routes">
             No routes available. <a href="/operations/add-route" style="color: #FF5C00;">Create your first route</a>
           </td>
         </tr>
