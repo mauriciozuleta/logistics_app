@@ -49,7 +49,8 @@
 
   /* Style for the tooltips */
   #fca-cost-tooltip,
-  #cip-cost-tooltip {
+  #cip-cost-tooltip,
+  #dat-cost-tooltip {
     position: absolute;
     display: none;
     background-color: #1e2228;
@@ -62,7 +63,8 @@
   }
   /* Keep the tooltip labels a consistent, readable color */
   #fca-cost-tooltip strong,
-  #cip-cost-tooltip strong {
+  #cip-cost-tooltip strong,
+  #dat-cost-tooltip strong {
     color: #e0e0e0;
     margin-right: 8px;
   }
@@ -143,7 +145,7 @@
         </div>
 
         <div class="form-group" style="flex: 0.7; min-width: 100px;">
-          <label for="available_aircraft">Available Aircraft</label>
+          <label for="available_aircraft">Trigger calc. for:</label>
           <select id="available_aircraft" name="available_aircraft" style="width: 100%;" disabled>
             <option value="">Select Aircraft...</option>
           </select>
@@ -160,7 +162,7 @@
           </div>
         </div>
         <div class="form-group" style="flex: 1.3; min-width: 160px;">
-          <label for="outbound_percent" id="outbound_percent_label">Outbound %</label>
+          <label for="outbound_percent" id="outbound_percent_label">Outbound Cost Weight %</label>
           <input type="number" id="outbound_percent" name="outbound_percent" min="0" max="100" step="0.01" value="100" style="width:100%;" disabled>
           <!-- Restore cargo spread % above Outbound Kg. Cost -->
           <label for="outbound_extra" id="outbound_extra_label" style="margin-top:0.5rem;">target cargo load (%)</label>
@@ -170,7 +172,7 @@
           </div>
         </div>
         <div class="form-group" style="flex: 1.3; min-width: 160px;">
-          <label for="return_percent" id="return_percent_label">Return %</label>
+          <label for="return_percent" id="return_percent_label">Return Cost Weight%</label>
           <input type="number" id="return_percent" name="return_percent" min="0" max="100" step="0.01" value="0" style="width:100%;" readonly>
           <!-- Restore cargo spread % above Return Kg. Cost -->
           <label for="return_extra" id="return_extra_label" style="margin-top:0.5rem;">target cargo load (%)</label>
@@ -306,9 +308,9 @@
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;">Freight Cost</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;">Cargo Unload Cost</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" class="cip-tooltip-trigger">CIP Cost</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Taxes</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">Import Profit</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">DAT Cost</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;">Import Taxes</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;">Import Profit</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" class="dat-tooltip-trigger">DAT Cost</div>
             </div>
             <!-- Product rows (vertical scroll only) -->
             <div class="product-table-body" style="max-height: 350px; overflow-y: auto; min-width: 1800px;">
@@ -360,9 +362,9 @@
                   <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;" id="freight_cost_{{ product.id }}">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="cargo_unload_cost_{{ product.id }}">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="cip_cost_{{ product.id }}" class="cip-tooltip-trigger">-</div>
-                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_taxes_{{ product.id }}">-</div>
-                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="import_profit_{{ product.id }}">-</div>
-                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="dat_cost_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="import_taxes_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="import_profit_{{ product.id }}">-</div>
+                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="dat_cost_{{ product.id }}" class="dat-tooltip-trigger">-</div>
                 </div>
               {% else %}
                 <div style="padding: 10px 0; color: #888;">No products available.</div>
@@ -390,9 +392,9 @@
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;" id="total_freight_cost">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="total_cargo_unload_cost">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_cip_cost" class="cip-tooltip-trigger">-</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_taxes">-</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_import_profit">-</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_dat_cost">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="total_import_taxes">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="total_import_profit">-</div>
+              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_dat_cost" class="dat-tooltip-trigger">-</div>
             </div>
           </div>
         </div>

@@ -217,6 +217,50 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   window.updateCipCosts = updateCipCosts; // Expose to global scope
 
+  // New function to calculate Import Taxes, Import Profit, and DAT Cost
+  function updateFinalCosts() {
+    const context = window.shipmentContext?.getCurrentContext();
+    // This cost is context-dependent, so we do nothing if no context is set.
+    if (!context) return;
+
+    // Helper to parse currency values from text content
+    function parseCurrency(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el || !el.textContent || el.textContent === '-') {
+        return 0;
+      }
+      return parseFloat(el.textContent.replace(/[$,]/g, '')) || 0;
+    }
+
+    // Determine the destination trader based on the current context
+    const destinationTraderId = (context === 'departure') ? consigneeSelect.value : shipperSelect.value;
+    
+    let importTaxPct = 0;
+    let importProfitPct = 0;
+
+    if (destinationTraderId && window.traderData[destinationTraderId]) {
+      const destinationTrader = window.traderData[destinationTraderId];
+      importTaxPct = parseFloat(destinationTrader.import_taxes) || 0;
+      importProfitPct = parseFloat(destinationTrader.import_profit_pct) || 0;
+    }
+
+    document.querySelectorAll('div[data-product-id]').forEach(row => {
+      const productId = row.getAttribute('data-product-id');
+      const cipCost = parseCurrency(`cip_cost_${productId}`);
+
+      // Calculate Import Taxes and Profit
+      const importTaxes = cipCost * (importTaxPct / 100);
+      const importProfit = cipCost * (importProfitPct / 100);
+      const datCost = cipCost + importTaxes + importProfit;
+
+      // Update the cells
+      row.querySelector(`#import_taxes_${productId}`).textContent = importTaxes > 0 ? '$' + importTaxes.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      row.querySelector(`#import_profit_${productId}`).textContent = importProfit > 0 ? '$' + importProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      row.querySelector(`#dat_cost_${productId}`).textContent = datCost > 0 ? '$' + datCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+    });
+  }
+  window.updateFinalCosts = updateFinalCosts; // Expose to global scope
+
   function updateProductTotals() {
     function sumCells(prefix) {
       let sum = 0;
@@ -250,6 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof window.updateCargoUnloadCosts === 'function') window.updateCargoUnloadCosts();
     if (typeof window.updateFreightCosts === 'function') window.updateFreightCosts();
     if (typeof updateCipCosts === 'function') updateCipCosts();
+    if (typeof updateFinalCosts === 'function') updateFinalCosts();
     updateProductTotals();
   }
 
@@ -401,5 +446,42 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     cell.addEventListener('mouseout', () => { cipTooltip.style.display = 'none'; });
     cell.addEventListener('mousemove', e => { cipTooltip.style.left = (e.pageX + 15) + 'px'; cipTooltip.style.top = (e.pageY + 15) + 'px'; });
+  });
+
+  // --- DAT Cost Tooltip Logic ---
+  const datTooltip = document.createElement('div');
+  datTooltip.id = 'dat-cost-tooltip';
+  document.body.appendChild(datTooltip);
+
+  const datCostCells = document.querySelectorAll('.dat-tooltip-trigger');
+  datCostCells.forEach(cell => {
+    cell.addEventListener('mouseover', function(e) {
+      const row = this.closest('div[data-product-id], div#product-totals-row');
+      if (!row) return;
+      const productId = row.getAttribute('data-product-id');
+      let cipCost, importTaxes, importProfit;
+
+      if (productId) {
+        cipCost = document.getElementById(`cip_cost_${productId}`)?.textContent || '-';
+        importTaxes = document.getElementById(`import_taxes_${productId}`)?.textContent || '-';
+        importProfit = document.getElementById(`import_profit_${productId}`)?.textContent || '-';
+      } else { // Totals row
+        cipCost = document.getElementById('total_cip_cost')?.textContent || '-';
+        importTaxes = document.getElementById('total_import_taxes')?.textContent || '-';
+        importProfit = document.getElementById('total_import_profit')?.textContent || '-';
+      }
+
+      const context = window.shipmentContext?.getCurrentContext();
+      let tooltipColor = '#2196f3'; // Default
+      if (context === 'departure') tooltipColor = '#00bcd4';
+      else if (context === 'return') tooltipColor = '#4caf50';
+      datTooltip.style.borderColor = tooltipColor;
+      datTooltip.style.color = tooltipColor;
+
+      datTooltip.innerHTML = `<strong>CIP Cost:</strong> ${cipCost}<br><strong>Import Taxes:</strong> ${importTaxes}<br><strong>Import Profit:</strong> ${importProfit}`;
+      datTooltip.style.display = 'block';
+    });
+    cell.addEventListener('mouseout', () => { datTooltip.style.display = 'none'; });
+    cell.addEventListener('mousemove', e => { datTooltip.style.left = (e.pageX + 15) + 'px'; datTooltip.style.top = (e.pageY + 15) + 'px'; });
   });
 });
