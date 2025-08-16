@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from flask_wtf.csrf import generate_csrf
 from models import Airport, Aircraft, Route, Shipment
 from operations.flight_distances_db import calculate_distance_db
+from sqlalchemy.orm import joinedload
 from extensions import db
 
 def generate_product_code(product_type):
@@ -669,7 +670,13 @@ def add_shipment(shipment_id=None):
 
     product_choices = [(p.id, p.name) for p in products]
 
-    routes = Route.query.order_by(Route.route_name).all()
+    # Eagerly load related aircraft and airport data to prevent N+1 query issues.
+    # This assumes relationships 'from_airport' and 'to_airport' exist on the Route model.
+    routes = Route.query.options(
+        joinedload(Route.aircraft),
+        joinedload(Route.from_airport),
+        joinedload(Route.to_airport)
+    ).order_by(Route.route_name).all()
     route_choices = [(r.id, r.route_summary or r.route_name) for r in routes]
 
     airports = Airport.query.all()
@@ -704,8 +711,8 @@ def add_shipment(shipment_id=None):
 
     route_data = {}
     for r in routes:
-        from_airport = Airport.query.get(r.from_airport_id)
-        to_airport = Airport.query.get(r.to_airport_id)
+        from_airport = r.from_airport
+        to_airport = r.to_airport
 
         distance_display = f"{r.total_distance_nm:.1f} NM" if r.total_distance_nm else "N/A"
         flight_time_display = f"{r.total_flight_time_hours:.2f} hrs" if r.total_flight_time_hours else "N/A"

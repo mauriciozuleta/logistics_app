@@ -196,12 +196,12 @@
           <table id="shipment_summary_table" style="width: 100%; background-color: #23272f; border-radius: 4px; color: #bbb; font-size: 0.95rem; line-height: 1.6; border-collapse: collapse; border-spacing: 0; margin-bottom: 18px;">
             <thead>
               <tr>
-                <th style="border: 1.5px solid #2196f3; height: 32px; min-width: 160px; width: 1%; color: #FF5C00; font-weight: normal; text-align: center;"></th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Route</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Avg. Kg / P-L</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Remaining Payload</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Acum. Shpmt. Cost</th>
-                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Acum. Revenue</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; width: 160px; color: #FF5C00; font-weight: normal; text-align: center;"></th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; width: 200px; color: #FF5C00; font-weight: normal; text-align: center;">Route</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; width: 200px; color: #FF5C00; font-weight: normal; text-align: center;">Avg. Kg / P-L</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; width: 200px; color: #FF5C00; font-weight: normal; text-align: center;">Payload Status</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">FCA Cost</th>
+                <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">FCA Profit</th>
                 <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 9</th>
                 <th style="border: 1.5px solid #2196f3; height: 32px; color: #FF5C00; font-weight: normal; text-align: center;">Col 10</th>
               </tr>
@@ -216,11 +216,11 @@
                     Add Cargo to
                   </button>
                 </td>
-                <td id="summary_dep_route" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
-                <td id="summary_dep_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
-                <td id="summary_dep_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
-                <td id="summary_dep_cost" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
-                <td id="summary_dep_revenue" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
+                <td id="summary_dep_route" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_dep_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_dep_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_dep_fca_cost" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
+                <td id="summary_dep_fca_profit" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
                 <td id="summary_dep_col9" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
                 <td id="summary_dep_col10" style="border: 1.5px solid #2196f3; height: 32px; color: #00bcd4; font-weight: normal;">-</td>
               </tr>
@@ -233,21 +233,21 @@
                     Add Cargo to
                   </button>
                 </td>
-                <td id="summary_ret_route" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
-                <td id="summary_ret_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
-                <td id="summary_ret_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
-                <td id="summary_ret_cost" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
-                <td id="summary_ret_revenue" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
+                <td id="summary_ret_route" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_ret_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_ret_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_ret_fca_cost" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
+                <td id="summary_ret_fca_profit" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
                 <td id="summary_ret_col9" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
                 <td id="summary_ret_col10" style="border: 1.5px solid #2196f3; height: 32px; color: #4caf50; font-weight: normal;">-</td>
               </tr>
               <tr>
                 <td style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">Totals</td>
-                <td id="summary_totals_route" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
-                <td id="summary_totals_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
-                <td id="summary_totals_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
-                <td id="summary_totals_cost" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
-                <td id="summary_totals_revenue" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
+                <td id="summary_totals_route" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_totals_avg_kg" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_totals_payload" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal; width: 200px;">-</td>
+                <td id="summary_totals_fca_cost" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
+                <td id="summary_totals_fca_profit" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
                 <td id="summary_totals_col9" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
                 <td id="summary_totals_col10" style="border: 1.5px solid #2196f3; height: 32px; color: #ff4444; font-weight: normal;">-</td>
               </tr>
@@ -412,7 +412,60 @@
 
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // This function updates the "Payload Status" column in the summary table.
+  function updatePayloadStatus() {
+    // Assumption: For now, all weight from the product table applies to the departure leg.
+    const totalWeightEl = document.getElementById('total_total_weight');
+    const usedPayloadDep = parseFloat(totalWeightEl.textContent.replace(/,/g, '')) || 0;
+    const usedPayloadRet = 0; // Return leg has 0 used payload for now.
 
+    const formatKg = (num) => num.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
+    // --- Update Departure Leg ---
+    const depRouteSelect = document.getElementById('first_leg_route');
+    const depRouteId = depRouteSelect.value;
+    const depPayloadCell = document.getElementById('summary_dep_payload');
+
+    if (depRouteId && window.routeData[depRouteId]) {
+      const routeInfo = window.routeData[depRouteId];
+      const maxPayloadDep = parseFloat(routeInfo.payload.replace(/[^0-9.]/g, '')) || 0;
+      const remainingPayloadDep = maxPayloadDep - usedPayloadDep;
+      depPayloadCell.textContent = `${formatKg(remainingPayloadDep)} / ${formatKg(usedPayloadDep)}`;
+    } else {
+      depPayloadCell.textContent = '-';
+    }
+
+    // --- Update Return Leg ---
+    const retRouteSelect = document.getElementById('second_leg_route');
+    const retRouteId = retRouteSelect.value;
+    const retPayloadCell = document.getElementById('summary_ret_payload');
+
+    if (retRouteId && window.routeData[retRouteId]) {
+      const routeInfo = window.routeData[retRouteId];
+      const maxPayloadRet = parseFloat(routeInfo.payload.replace(/[^0-9.]/g, '')) || 0;
+      const remainingPayloadRet = maxPayloadRet - usedPayloadRet;
+      retPayloadCell.textContent = `${formatKg(remainingPayloadRet)} / ${formatKg(usedPayloadRet)}`;
+    } else {
+      retPayloadCell.textContent = '-';
+    }
+
+    // --- Update Totals ---
+    document.getElementById('summary_totals_payload').textContent = '-';
+  }
+
+  // --- Event Listeners to trigger updates ---
+  document.getElementById('first_leg_route').addEventListener('change', updatePayloadStatus);
+  document.getElementById('second_leg_route').addEventListener('change', updatePayloadStatus);
+
+  // Use a MutationObserver to detect when the total weight is recalculated by other scripts.
+  const totalWeightEl = document.getElementById('total_total_weight');
+  if (totalWeightEl) {
+    const observer = new MutationObserver(() => updatePayloadStatus());
+    observer.observe(totalWeightEl, { childList: true, characterData: true, subtree: true });
+  }
+});
+</script>
 
 {% endblock %}
