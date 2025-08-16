@@ -204,7 +204,6 @@
 
 <div class="routes-actions" style="margin-bottom: 1rem;">
   <div>
-    <button class="routes-btn routes-btn-warning edit-btn" disabled title="Route editing is not yet implemented.">Edit Selected</button>
     <button class="routes-btn routes-btn-danger delete-btn" disabled>Delete Selected</button>
     <span class="selected-count" id="selectedCount">0 selected</span>
   </div>
@@ -307,13 +306,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const selectAll = document.getElementById('select-all');
   const checkboxes = document.querySelectorAll('.routes-checkbox:not(#select-all)');
   const selectedCount = document.getElementById('selectedCount');
-  const editBtn = document.querySelector('.edit-btn');
   const deleteBtn = document.querySelector('.delete-btn');
 
   function updateSelectedCount() {
     const checked = document.querySelectorAll('.routes-checkbox:not(#select-all):checked');
     selectedCount.textContent = `${checked.length} selected`;
-    // editBtn.disabled = checked.length === 0; // Keep edit disabled as backend is not ready
     deleteBtn.disabled = checked.length === 0;
   }
 
@@ -335,9 +332,6 @@ document.addEventListener('DOMContentLoaded', function() {
       updateSelectedCount();
     });
   });
-
-  // Edit Selected functionality
-  // The 'Edit' button is currently disabled as the backend functionality is not yet implemented.
 
   // Delete Selected functionality
   deleteBtn.addEventListener('click', function() {

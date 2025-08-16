@@ -58,13 +58,7 @@ def dashboard():
     return render_template('operations/operations_dashboard.html')
 
 @operations.route('/add-route', methods=['GET', 'POST'])
-@operations.route('/add-route/<int:route_id>', methods=['GET', 'POST'])
-def add_route(route_id=None):
-    # Check if we're editing an existing route
-    route_to_edit = None
-    if route_id:
-        route_to_edit = Route.query.get_or_404(route_id)
-    
+def add_route():
     if request.method == 'POST':
         try:
             print("=== DEBUG: POST request received ===")  # Debug log
@@ -145,12 +139,9 @@ def add_route(route_id=None):
             created_routes = []
             
             try:
-                if route_to_edit:
-                    # For editing, we'll handle this differently - for now, let's focus on new routes
-                    flash('Route editing is not supported with the new multi-record system yet', 'warning')
-                    return redirect(url_for('operations.add_route'))
-                else:
-                    # Create separate records for each leg
+                # Create separate records for each leg
+                # Since we removed edit, we only handle new route creation
+                if route_type == 'one-way':
                     if route_type == 'one-way':
                         # One record: from → to
                         print("Creating one-way route record")
@@ -433,11 +424,9 @@ def add_route(route_id=None):
     aircrafts = Aircraft.query.order_by(Aircraft.short_name).all()
     aircraft_choices = [(a.id, a.short_name) for a in aircrafts]
     
-    # Pass route data for editing if route_id is provided
     return render_template('operations/add_route.html', 
                          airport_choices=airport_choices, 
-                         aircraft_choices=aircraft_choices,
-                         route_to_edit=route_to_edit)
+                         aircraft_choices=aircraft_choices)
 
 @operations.route('/view-routes')
 def view_routes():

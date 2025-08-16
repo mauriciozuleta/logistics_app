@@ -99,10 +99,6 @@
             <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
             <button type="button" id="load_finish_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #2196f3; border: 0.5px solid #2196f3;">Load</button>
           </div>
-          <div class="form-group">
-            <label style="visibility:hidden; display:block; height:22px;">&nbsp;</label>
-            <button type="button" id="edit_route_btn" class="btn btn-primary" style="width: 100%; height: 38px; font-weight: normal; font-family: inherit; background-color: #181c22; color: #b34700; border: 0.5px solid #b34700; display: flex; align-items: center; justify-content: center; text-align: center;">Edit Route</button>
-          </div>
         </div>
   </form>
   <div id="load-table-container" style="width:100%; display:flex; justify-content:center; margin-top:2rem; flex-direction:column; align-items:center;">
@@ -192,8 +188,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  var editRouteBtn = document.getElementById('edit_route_btn');
-
   function clearTables() {
     var routeTable = document.getElementById('route-summary-table');
     if (routeTable) {
@@ -219,13 +213,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fromSelect.disabled = false;
     toSelect.disabled = false;
     aircraftSelect.disabled = false;
-  }
-
-  if (editRouteBtn) {
-    editRouteBtn.addEventListener('click', function() {
-      clearTables();
-      activateSelections();
-    });
   }
 
   // --- Route Exists Check Functions ---
@@ -430,9 +417,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const routeFuelLbs = aircraftData.fuel_burn_lbs * flightTime;
     const routeFuelGal = routeFuelLbs / 6.7;
-    const bhMultiplier = flightTime < 1 ? 1 : flightTime;
-    const bhCost = aircraftData.acmi_cost * bhMultiplier;
 
+    // The block hour cost is now calculated using the adjusted (billable) flight time.
+    const bhCost = aircraftData.acmi_cost * adjustedFlightTime;
     // Fetch fuel cost
     let fuelCost = 0;
     try {
@@ -674,6 +661,9 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Please analyze the route first by clicking "Load" before saving.');
         return;
       }
+
+      // FIX: Re-enable the select dropdowns to ensure their values are submitted.
+      activateSelections();
 
       const form = document.getElementById('route-form');
 
