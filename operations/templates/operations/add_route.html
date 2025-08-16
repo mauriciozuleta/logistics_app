@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Column 2 is Fuel Weight (Lbs.) = Route Fuel (gls) * 6.7 + Min Land + Alt Fuel
       if (payloadRows[i].cells[2] && routeRows[i] && routeRows[i].cells[3]) {
-        var routeFuelGls = parseFloat(routeRows[i].cells[3].innerText.replace(/,/g, '')) || 0;
+        var routeFuelGls = parseFloat(routeRows[i].cells[4].innerText.replace(/,/g, '')) || 0;
         var routeFuelLbs = routeFuelGls * galToLbsFactor;
         var minLandingFuel = aircraftData.min_fuel_landed_lbs || 0;
         var altFuel = aircraftData.min_fuel_alternate_lbs || 0;
@@ -557,7 +557,19 @@ document.addEventListener('DOMContentLoaded', function() {
       payloadRow.cells[4].innerText = formatNumber(noTankTOW, 0);
 
       // Calculate Available Extra Fuel (Column 5)
-      var availExtraFuel = adjustedMTOW - noTankTOW;
+      // This is limited by both MTOW and MLDW.
+      // 1. Limit from MTOW: The takeoff weight cannot exceed the adjusted MTOW.
+      var availExtraFuel_from_MTOW = adjustedMTOW - noTankTOW;
+
+      // 2. Limit from MLDW: The landing weight cannot exceed the MLDGW.
+      // Landing Weight = OEW + Reserves + Max Payload + Extra Fuel
+      // Reserves = Total Fuel Weight - Route Fuel Burn
+      var reserves = totalFuelWeight - routeFuelLbs;
+      var landingWeightWithoutExtra = oew + reserves + maxPayload;
+      var availExtraFuel_from_MLDW = aircraftData.mldgw_lbs - landingWeightWithoutExtra;
+
+      // The actual available extra fuel is the minimum of the two constraints.
+      var availExtraFuel = Math.min(availExtraFuel_from_MTOW, availExtraFuel_from_MLDW);
       availExtraFuel = Math.max(0, availExtraFuel); // Cannot be negative
       payloadRow.cells[5].innerText = formatNumber(availExtraFuel, 0);
 
