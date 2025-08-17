@@ -216,8 +216,7 @@
         <div class="form-group">
           <div class="product-form-group">
             <label for="productCountry">Country</label>
-            <select class="product-form-control" name="country_id" id="productCountry">
-              {% for country in countries %}
+            <select class="product-form-control" name="country_id" id="productCountry" required>              {% for country in countries %}
                 <option value="{{ country.country_code }}"
                         data-currency="{{ country.currency_code }}"
                         {% if product and country.country_code == product.country_id %}selected{% endif %}>
@@ -231,8 +230,8 @@
         <div class="form-group">
           <div class="product-form-group">
             <label for="tradeUnit">Trade Unit</label>
-            {% set trade = product.trade_unit if product else '' %}
-            <select class="product-form-control" name="trade_unit" id="tradeUnit">
+            <select class="product-form-control" name="trade_unit" id="tradeUnit" required>
+              {% set trade = product.trade_unit if product else '' %}
               <option value="UN" {% if trade == "UN" %}selected{% endif %}>Unit (Un)</option>
               <option value="BU" {% if trade == "BU" %}selected{% endif %}>Bunch (BU)</option>
               <option value="KG" {% if trade == "KG" %}selected{% endif %}>Kilogram (Kg.)</option>
@@ -251,7 +250,7 @@
         <div class="form-group">
           <div class="product-form-group">
             <label for="fcaCost">FCA Cost per WU</label>
-            <input type="number" step="0.01" class="product-form-control" name="fca_cost_per_wu" id="fcaCost"
+            <input type="number" step="0.01" class="product-form-control" name="fca_cost_per_wu" id="fcaCost" required
                    value="{{ product.fca_cost_per_wu if product else '' }}" placeholder="0.00">
           </div>
         </div>
@@ -259,16 +258,15 @@
         <div class="form-group">
           <div class="product-form-group">
             <label>Currency</label>
-            {% set currency = product.currency if product else '' %}
             <div class="product-radio-group">
               <div class="product-radio-item">
-                <input type="radio" name="currency_option" id="currencyLocal" value="local"
-                       {% if currency == "local" %}checked{% endif %}>
+                <input type="radio" name="currency_option" id="currencyLocal" value="local" 
+                       {% if not product or product.currency != 'USD' %}checked{% endif %}>
                 <label for="currencyLocal">Local</label>
               </div>
               <div class="product-radio-item">
-                <input type="radio" name="currency_option" id="currencyUSD" value="USD"
-                       {% if currency == "USD" %}checked{% endif %}>
+                <input type="radio" name="currency_option" id="currencyUSD" value="USD" 
+                       {% if product and product.currency == 'USD' %}checked{% endif %}>
                 <label for="currencyUSD">USD</label>
               </div>
             </div>
@@ -285,7 +283,7 @@
         <div class="form-group">
           <div class="product-form-group">
             <label for="productPackaging">Packaging Type</label>
-            <input type="text" class="product-form-control" name="packaging" id="productPackaging"
+            <input type="text" class="product-form-control" name="packaging" id="productPackaging" required
                    value="{{ product.packaging if product else '' }}" placeholder="e.g., Box, Bag, Container">
           </div>
         </div>
@@ -293,7 +291,7 @@
         <div class="form-group">
           <div class="product-form-group">
             <label for="packagingWeight">Packaging Weight (kg)</label>
-            <input type="number" step="0.01" class="product-form-control" name="packaging_weight" id="packagingWeight"
+            <input type="number" step="0.01" class="product-form-control" name="packaging_weight" id="packagingWeight" required
                    value="{{ product.packaging_weight if product else '' }}" placeholder="0.00">
           </div>
         </div>
@@ -303,7 +301,7 @@
         <div class="form-group">
           <div class="product-form-group">
             <label for="packagingCost">Packaging Cost</label>
-            <input type="number" step="0.01" class="product-form-control" name="packaging_cost" id="packagingCost"
+            <input type="number" step="0.01" class="product-form-control" name="packaging_cost" id="packagingCost" required
                    value="{{ product.packaging_cost if product else '' }}" placeholder="0.00">
           </div>
         </div>
@@ -311,7 +309,7 @@
         <div class="form-group">
           <div class="product-form-group">
             <label for="unitsPerPack">Units per Pack</label>
-            <input type="number" class="product-form-control" name="units_per_pack" id="unitsPerPack"
+            <input type="number" class="product-form-control" name="units_per_pack" id="unitsPerPack" required
                    value="{{ product.units_per_pack if product else '' }}" placeholder="1">
           </div>
         </div>
@@ -329,7 +327,7 @@
       </div>
     </div>
 
-    <input type="hidden" name="currency" id="currencyField" value="{{ currency }}">
+    <input type="hidden" name="currency" id="currencyField" value="{{ product.currency if product else '' }}">
     
     <button type="submit" class="product-btn">{{ "Update Product" if edit_id else "Add Product" }}</button>
   </form>
@@ -365,8 +363,11 @@
       </div>
       <div class="modal-footer" style="border-top: 1px solid #2196f3; gap: 1rem;">
         <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {% for key, val in request.form.items() %}
+            {% if key != 'csrf_token' %}
             <input type="hidden" name="{{ key }}" value="{{ val }}">
+            {% endif %}
           {% endfor %}
           <input type="hidden" name="force_submit" value="true">
           <button type="submit" class="product-btn" style="background-color: #ff9800; width: auto; margin: 0; padding: 0.5rem 1rem;">Save Anyway</button>
@@ -379,47 +380,31 @@
 {% endif %}
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const localRadio = document.getElementById("currencyLocal");
-    const usdRadio = document.getElementById("currencyUSD");
-    const countrySelect = document.getElementById("productCountry");
-    const hiddenCurrency = document.getElementById("currencyField");
+document.addEventListener("DOMContentLoaded", function () {
+  const localRadio = document.getElementById("currencyLocal");
+  const usdRadio = document.getElementById("currencyUSD");
+  const countrySelect = document.getElementById("productCountry");
+  const hiddenCurrency = document.getElementById("currencyField");
 
-    function setCurrencyValue() {
-      const selectedOption = countrySelect.selectedOptions[0];
-      const countryCurrencyCode = selectedOption?.getAttribute("data-currency");
+  function setCurrencyValue() {
+    const selectedOption = countrySelect.selectedOptions[0];
+    const countryCurrencyCode = selectedOption?.getAttribute("data-currency");
 
-      if (usdRadio.checked) {
-        hiddenCurrency.value = "USD";
-      } else if (localRadio.checked) {
-        hiddenCurrency.value = countryCurrencyCode || "";
-      } else {
-        hiddenCurrency.value = "";
-      }
+    if (usdRadio.checked) {
+      hiddenCurrency.value = "USD";
+    } else { // "local" is the only other option
+      hiddenCurrency.value = countryCurrencyCode || "";
     }
+  }
 
-    usdRadio.addEventListener("change", () => {
-      localRadio.checked = false;
-      setCurrencyValue();
-    });
+  // Attach event listeners
+  usdRadio.addEventListener("change", setCurrencyValue);
+  localRadio.addEventListener("change", setCurrencyValue);
+  countrySelect.addEventListener("change", setCurrencyValue);
 
-    localRadio.addEventListener("change", () => {
-      usdRadio.checked = false;
-      setCurrencyValue();
-    });
-
-    countrySelect.addEventListener("change", setCurrencyValue);
-    setCurrencyValue(); // Initial value
-  });
-</script>
-
-<script>
-  document.getElementById('productForm').addEventListener('keydown', function(e) {
-    // Prevent Enter from submitting unless focus is on the submit button
-    if (e.key === 'Enter' && e.target.type !== 'submit') {
-      e.preventDefault();
-    }
-  });
+  // Set the initial value on page load
+  setCurrencyValue();
+});
 </script>
 
 <script>

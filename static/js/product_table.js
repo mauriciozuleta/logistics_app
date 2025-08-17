@@ -118,11 +118,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalWeight = amount * packWeight;
       let totalCost = amount * packCost;
 
+      const context = window.shipmentContext?.getCurrentContext();
+      // Determine the exporter based on the current context. Default to shipper if no context.
+      const exporterId = (context === 'return') 
+        ? (consigneeSelect ? consigneeSelect.value : null) 
+        : (shipperSelect ? shipperSelect.value : null);
+
       let taxPct = 0, profitPct = 0;
-      const shipperId = shipperSelect ? shipperSelect.value : null;
-      if (shipperId && window.traderData[shipperId]) {
-        taxPct = parseFloat(window.traderData[shipperId].export_sales_tax) || 0;
-        profitPct = parseFloat(window.traderData[shipperId].export_profit_pct) || 0;
+      if (exporterId && window.traderData[exporterId]) {
+        taxPct = parseFloat(window.traderData[exporterId].export_sales_tax) || 0;
+        profitPct = parseFloat(window.traderData[exporterId].export_profit_pct) || 0;
       }
       let taxes = totalCost * (taxPct / 100);
       let profit = totalCost * (profitPct / 100);
@@ -164,13 +169,18 @@ document.addEventListener('DOMContentLoaded', function() {
       return parseFloat(cleanedText) || 0;
     }
 
-    // 1. Read the calculated Avg. Kg / P-L value
-    const avgKgPl = parseCost('summary_dep_avg_kg');
+    const context = window.shipmentContext?.getCurrentContext();
+    // This cost is context-dependent, so we do nothing if no context is set.
+    if (!context) return;
 
-    // 2. Read the calculated Outbound Kg. Cost value
-    const outboundKgCost = parseCost('outbound_kg_cost');
+    // 1. Read the calculated Avg. Kg / P-L and Kg. Cost values based on context
+    const avgKgPlId = (context === 'return') ? 'summary_ret_avg_kg' : 'summary_dep_avg_kg';
+    const kgCostId = (context === 'return') ? 'return_kg_cost' : 'outbound_kg_cost';
+    
+    const avgKgPl = parseCost(avgKgPlId);
+    const kgCost = parseCost(kgCostId);
 
-    console.log(`Gathered data for freight cost: Avg. Kg/PL=${avgKgPl}, Outbound Kg Cost=${outboundKgCost}`);
+    console.log(`Gathered data for freight cost (${context}): Avg. Kg/PL=${avgKgPl}, Kg Cost=${kgCost}`);
 
     // 3. Loop through each product row
     document.querySelectorAll('div[data-product-id]').forEach(row => {
@@ -180,9 +190,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // --- Part 3: Conditional Calculation Logic ---
       const freightCostCell = row.querySelector(`#freight_cost_${productId}`);
       if (freightCostCell) {
-        if (totalWeight > 0 && (avgKgPl > 0 || outboundKgCost > 0)) {
+        if (totalWeight > 0 && (avgKgPl > 0 || kgCost > 0)) {
           // Use the higher of the two rates as the final rate
-          const finalRate = Math.max(avgKgPl, outboundKgCost);
+          const finalRate = Math.max(avgKgPl, kgCost);
           const freightCost = totalWeight * finalRate;
           freightCostCell.textContent = '$' + freightCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         } else {
@@ -294,6 +304,53 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('total_dat_cost').textContent = '$' + sumCells('dat_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   }
 
+  // --- SUMMARY TABLE UPDATE FUNCTIONS ---
+  function updateSummaryCosts() {
+    const context = window.shipmentContext?.getCurrentContext();
+    if (!context) return;
+
+    // Helper to parse currency from an element's text content
+    function parseCurrencyFromElement(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el || !el.textContent || el.textContent === '-') {
+            return 0;
+        }
+        return parseFloat(el.textContent.replace(/[$,]/g, '')) || 0;
+    }
+
+    // Calculate FCA Cost for the summary: Total Product Cost + Taxes
+    const totalProductCost = parseCurrencyFromElement('total_total_cost');
+    const totalTaxes = parseCurrencyFromElement('total_taxes');
+    const fcaCost = totalProductCost + totalTaxes;
+    const formattedFcaCost = fcaCost > 0 ? '$' + fcaCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+
+    // Calculate FCA Profit for the summary: Total Profit
+    const totalProfit = parseCurrencyFromElement('total_profit');
+    const formattedFcaProfit = totalProfit > 0 ? '$' + totalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+
+    // Calculate DAT Cost for the summary: Total CIP Cost + Total Import Taxes
+    const totalCipCost = parseCurrencyFromElement('total_cip_cost');
+    const totalImportTaxes = parseCurrencyFromElement('total_import_taxes');
+    const datCost = totalCipCost + totalImportTaxes;
+    const formattedDatCost = datCost > 0 ? '$' + datCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+
+    // Calculate DAT Profit for the summary: Total Import Profit
+    const totalImportProfit = parseCurrencyFromElement('total_import_profit');
+    const formattedDatProfit = totalImportProfit > 0 ? '$' + totalImportProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+
+    // Update the correct cells in the summary table based on context
+    const prefix = (context === 'departure') ? 'summary_dep' : 'summary_ret';
+    const summaryFcaCostCell = document.getElementById(`${prefix}_fca_cost`);
+    const summaryFcaProfitCell = document.getElementById(`${prefix}_fca_profit`);
+    const summaryDatCostCell = document.getElementById(`${prefix}_dat_cost`);
+    const summaryDatProfitCell = document.getElementById(`${prefix}_dat_profit`);
+
+    if (summaryFcaCostCell) summaryFcaCostCell.textContent = formattedFcaCost;
+    if (summaryFcaProfitCell) summaryFcaProfitCell.textContent = formattedFcaProfit;
+    if (summaryDatCostCell) summaryDatCostCell.textContent = formattedDatCost;
+    if (summaryDatProfitCell) summaryDatProfitCell.textContent = formattedDatProfit;
+  }
+
   function recalcAll() {
     if (typeof updateFcaCosts === 'function') updateFcaCosts();
     if (typeof window.updateCargoLoadCost === 'function') window.updateCargoLoadCost();
@@ -304,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof updateCipCosts === 'function') updateCipCosts();
     if (typeof updateFinalCosts === 'function') updateFinalCosts();
     updateProductTotals();
+    updateSummaryCosts(); // Update summary table costs after all calculations
   }
 
   // --- EVENT LISTENERS ---

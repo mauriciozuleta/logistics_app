@@ -81,15 +81,21 @@ class AircraftForm(FlaskForm):
 
 class ProductForm(FlaskForm):
     product_code = StringField('Product Code', render_kw={'readonly': True})
-    product_type = SelectField('Product Type', choices=[
-        ('General Cargo', 'General Cargo'),
-        ('Perishables', 'Perishables'),
-        ('Hazardous', 'Hazardous'),
-        ('Other', 'Other')
-    ], validators=[DataRequired()])
+    product_type = SelectField(
+        'Product Type',
+        choices=[
+            ('Produce', 'Produce'),
+            ('Meats', 'Meats'),
+            ('Other Perishable', 'Other Perishable'),
+            ('Dry Goods', 'Dry Goods'),
+            ('Technology', 'Technology'),
+            ('Other', 'Other'),
+        ],
+        validators=[DataRequired()]
+    )
     name = StringField('Product Name', validators=[DataRequired()])
     country_id = SelectField('Country of Origin', coerce=str, validators=[DataRequired()])
-    trade_unit = SelectField('Trade Unit', choices=[('KG', 'KG'), ('LB', 'LB'), ('Unit', 'Unit')], validators=[DataRequired()])
+    trade_unit = SelectField('Trade Unit', choices=[('UN', 'Unit (Un)'), ('BU', 'Bunch (BU)'), ('KG', 'Kilogram (Kg.)'), ('LBS', 'Pound (Lbs.)')], validators=[DataRequired()])
     fca_cost_per_wu = FloatField('FCA Cost per WU', validators=[Optional()], default=0.0)
     packaging = StringField('Packaging', validators=[Optional()])
     packaging_weight = FloatField('Packaging Weight (per unit)', validators=[Optional()], default=0.0)
