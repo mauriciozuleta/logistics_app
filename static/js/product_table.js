@@ -283,10 +283,19 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateProductTotals() {
     function sumCells(prefix) {
       let sum = 0;
+      // The selector `[id^="${prefix}_"]` correctly targets individual product cells,
+      // e.g., `[id^="total_weight_"]` gets `total_weight_1`, `total_weight_2`, etc.
+      // It does NOT match the totals row cells like `total_total_weight`.
       document.querySelectorAll(`[id^="${prefix}_"]`).forEach(cell => {
-        if (cell.id.startsWith('total_total_')) return; // Exclude the total cell itself
-        let val = parseFloat((cell.textContent || '').replace(/[$,]/g, ''));
-        if (!isNaN(val)) sum += val;
+        // Find the parent product row for the current cell.
+        const productRow = cell.closest('div[data-product-id]');
+
+        // Only add the cell's value to the sum if its parent row is visible.
+        // A row is hidden by the filter by setting its display style to 'none'.
+        if (productRow && productRow.style.display !== 'none') {
+          let val = parseFloat((cell.textContent || '').replace(/[$,]/g, ''));
+          if (!isNaN(val)) sum += val;
+        }
       });
       return sum;
     }
@@ -371,7 +380,10 @@ document.addEventListener('DOMContentLoaded', function() {
       productRows.forEach(row => {
         row.style.display = (!selectedType || row.getAttribute('data-product-type') === selectedType) ? 'flex' : 'none';
       });
-      if (currentContext) restoreInputsForContext(currentContext);
+      // After hiding or showing rows, we must always recalculate the totals
+      // to ensure they reflect only the visible items. This fixes the bug where
+      // totals wouldn't update if a context (Departure/Return) wasn't set.
+      recalcAll();
     });
   }
 
