@@ -113,31 +113,40 @@ document.addEventListener('DOMContentLoaded', function() {
       const packWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
       const packCost = parseFloat(row.getAttribute('data-pack-cost')) || 0;
       const amount = parseFloat(amountInput.value.replace(/,/g, '')) || 0;
+      const currency = row.getAttribute('data-currency');
+
       const totalWeight = amount * packWeight;
-      const totalCost = amount * packCost;
+      let totalCost = amount * packCost;
+
       let taxPct = 0, profitPct = 0;
       const shipperId = shipperSelect ? shipperSelect.value : null;
       if (shipperId && window.traderData[shipperId]) {
         taxPct = parseFloat(window.traderData[shipperId].export_sales_tax) || 0;
         profitPct = parseFloat(window.traderData[shipperId].export_profit_pct) || 0;
       }
-      const taxes = totalCost * (taxPct / 100);
-      const profit = totalCost * (profitPct / 100);
+      let taxes = totalCost * (taxPct / 100);
+      let profit = totalCost * (profitPct / 100);
+
+      // --- New Currency Conversion Rule ---
+      // If the product's currency is not USD, convert its costs using the exchange rate.
+      if (currency !== 'USD' && exchangeRate > 0) {
+        totalCost = totalCost / exchangeRate;
+        taxes = taxes / exchangeRate;
+        profit = profit / exchangeRate;
+      }
+
       const fcaCost = totalCost + taxes + profit;
-      const fcaCostUSD = (exchangeRate > 0) ? fcaCost / exchangeRate : 0;
 
       const weightCell = row.querySelector('[id^="total_weight_"]');
       const costCell = row.querySelector('[id^="total_cost_"]');
       const taxesCell = row.querySelector('[id^="taxes_"]');
       const profitCell = row.querySelector('[id^="profit_"]');
       const fcaCostCell = row.querySelector('[id^="fca_cost_"]');
-      const fcaCostUSDCell = row.querySelector('[id^="fca_cost_usd_"]');
       if (weightCell) weightCell.textContent = totalWeight ? totalWeight.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg' : '-';
       if (costCell) costCell.textContent = totalCost ? '$' + totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
       if (taxesCell) taxesCell.textContent = taxes ? '$' + taxes.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
       if (profitCell) profitCell.textContent = profit ? '$' + profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
       if (fcaCostCell) fcaCostCell.textContent = fcaCost ? '$' + fcaCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (fcaCostUSDCell) fcaCostUSDCell.textContent = fcaCostUSD ? '$' + fcaCostUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
     });
   }
   window.updateFcaCosts = updateFcaCosts;
@@ -200,13 +209,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const productId = row.getAttribute('data-product-id');
 
       // Read the values of the component costs
-      const fcaCostUSD = parseCurrency(`fca_cost_usd_${productId}`);
+      const fcaCostLocal = parseCurrency(`fca_cost_${productId}`);
       const cargoLoadCost = parseCurrency(`cargo_load_cost_${productId}`);
       const freightCost = parseCurrency(`freight_cost_${productId}`);
       const cargoUnloadCost = parseCurrency(`cargo_unload_cost_${productId}`);
 
       // Sum them to get the CIP cost
-      const cipCost = fcaCostUSD + cargoLoadCost + freightCost + cargoUnloadCost;
+      const cipCost = fcaCostLocal + cargoLoadCost + freightCost + cargoUnloadCost;
 
       // Update the CIP Cost cell
       const cipCostCell = row.querySelector(`#cip_cost_${productId}`);
@@ -276,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('total_taxes').textContent = '$' + sumCells('taxes').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('total_profit').textContent = '$' + sumCells('profit').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('total_fca_cost').textContent = '$' + sumCells('fca_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('total_fca_cost_usd').textContent = '$' + sumCells('fca_cost_usd').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('total_cargo_load_cost').textContent = '$' + sumCells('cargo_load_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('total_freight_cost').textContent = '$' + sumCells('freight_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('total_cargo_unload_cost').textContent = '$' + sumCells('cargo_unload_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -368,6 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- FCA Cost Tooltip Logic ---
   const tooltip = document.createElement('div');
   tooltip.id = 'fca-cost-tooltip';
+  tooltip.classList.add('cost-tooltip');
   document.body.appendChild(tooltip);
   const fcaCostCells = document.querySelectorAll('[id^="fca_cost_"]');
   fcaCostCells.forEach(cell => {
@@ -398,15 +407,20 @@ document.addEventListener('DOMContentLoaded', function() {
       tooltip.style.color = tooltipColor;
 
       tooltip.innerHTML = `<strong>Total Product Cost:</strong> ${totalCost}<br><strong>Taxes ($Local):</strong> ${taxes}<br><strong>Profit ($Local):</strong> ${profit}`;
+      
+      // Position the tooltip relative to the cell, not the mouse
+      const rect = this.getBoundingClientRect();
+      tooltip.style.left = `${rect.left + window.scrollX}px`;
+      tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
       tooltip.style.display = 'block';
     });
     cell.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
-    cell.addEventListener('mousemove', e => { tooltip.style.left = (e.pageX + 15) + 'px'; tooltip.style.top = (e.pageY + 15) + 'px'; });
   });
 
   // --- CIP Cost Tooltip Logic ---
   const cipTooltip = document.createElement('div');
   cipTooltip.id = 'cip-cost-tooltip';
+  cipTooltip.classList.add('cost-tooltip');
   document.body.appendChild(cipTooltip);
 
   const cipCostCells = document.querySelectorAll('.cip-tooltip-trigger');
@@ -415,15 +429,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const row = this.closest('div[data-product-id], div#product-totals-row');
       if (!row) return;
       const productId = row.getAttribute('data-product-id');
-      let fcaCostUSD, cargoLoadCost, freightCost, cargoUnloadCost;
+      let fcaCostLocal, cargoLoadCost, freightCost, cargoUnloadCost;
 
       if (productId) {
-        fcaCostUSD = document.getElementById(`fca_cost_usd_${productId}`)?.textContent || '-';
+        fcaCostLocal = document.getElementById(`fca_cost_${productId}`)?.textContent || '-';
         cargoLoadCost = document.getElementById(`cargo_load_cost_${productId}`)?.textContent || '-';
         freightCost = document.getElementById(`freight_cost_${productId}`)?.textContent || '-';
         cargoUnloadCost = document.getElementById(`cargo_unload_cost_${productId}`)?.textContent || '-';
       } else { // Totals row
-        fcaCostUSD = document.getElementById('total_fca_cost_usd')?.textContent || '-';
+        fcaCostLocal = document.getElementById('total_fca_cost')?.textContent || '-';
         cargoLoadCost = document.getElementById('total_cargo_load_cost')?.textContent || '-';
         freightCost = document.getElementById('total_freight_cost')?.textContent || '-';
         cargoUnloadCost = document.getElementById('total_cargo_unload_cost')?.textContent || '-';
@@ -441,16 +455,21 @@ document.addEventListener('DOMContentLoaded', function() {
       cipTooltip.style.borderColor = tooltipColor;
       cipTooltip.style.color = tooltipColor;
 
-      cipTooltip.innerHTML = `<strong>FCA Cost (USD):</strong> ${fcaCostUSD}<br><strong>Cargo Load Cost:</strong> ${cargoLoadCost}<br><strong>Freight Cost:</strong> ${freightCost}<br><strong>Cargo Unload Cost:</strong> ${cargoUnloadCost}`;
+      cipTooltip.innerHTML = `<strong>FCA Cost ($Local):</strong> ${fcaCostLocal}<br><strong>Cargo Load Cost:</strong> ${cargoLoadCost}<br><strong>Freight Cost:</strong> ${freightCost}<br><strong>Cargo Unload Cost:</strong> ${cargoUnloadCost}`;
+      
+      // Position the tooltip relative to the cell
+      const rect = this.getBoundingClientRect();
+      cipTooltip.style.left = `${rect.left + window.scrollX}px`;
+      cipTooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
       cipTooltip.style.display = 'block';
     });
     cell.addEventListener('mouseout', () => { cipTooltip.style.display = 'none'; });
-    cell.addEventListener('mousemove', e => { cipTooltip.style.left = (e.pageX + 15) + 'px'; cipTooltip.style.top = (e.pageY + 15) + 'px'; });
   });
 
   // --- DAT Cost Tooltip Logic ---
   const datTooltip = document.createElement('div');
   datTooltip.id = 'dat-cost-tooltip';
+  datTooltip.classList.add('cost-tooltip');
   document.body.appendChild(datTooltip);
 
   const datCostCells = document.querySelectorAll('.dat-tooltip-trigger');
@@ -479,9 +498,13 @@ document.addEventListener('DOMContentLoaded', function() {
       datTooltip.style.color = tooltipColor;
 
       datTooltip.innerHTML = `<strong>CIP Cost:</strong> ${cipCost}<br><strong>Import Taxes:</strong> ${importTaxes}<br><strong>Import Profit:</strong> ${importProfit}`;
+      
+      // Position the tooltip relative to the cell
+      const rect = this.getBoundingClientRect();
+      datTooltip.style.left = `${rect.left + window.scrollX}px`;
+      datTooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
       datTooltip.style.display = 'block';
     });
     cell.addEventListener('mouseout', () => { datTooltip.style.display = 'none'; });
-    cell.addEventListener('mousemove', e => { datTooltip.style.left = (e.pageX + 15) + 'px'; datTooltip.style.top = (e.pageY + 15) + 'px'; });
   });
 });

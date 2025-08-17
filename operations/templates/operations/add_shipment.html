@@ -47,27 +47,6 @@
     transition: background-color 0.3s ease, border-color 0.3s ease;
   }
 
-  /* Style for the tooltips */
-  #fca-cost-tooltip,
-  #cip-cost-tooltip,
-  #dat-cost-tooltip {
-    position: absolute;
-    display: none;
-    background-color: #1e2228;
-    color: #fff;
-    border: 1px solid #2196f3;
-    padding: 10px;
-    border-radius: 4px;
-    z-index: 1000;
-    pointer-events: none;
-  }
-  /* Keep the tooltip labels a consistent, readable color */
-  #fca-cost-tooltip strong,
-  #cip-cost-tooltip strong,
-  #dat-cost-tooltip strong {
-    color: #e0e0e0;
-    margin-right: 8px;
-  }
 </style>
 
 
@@ -293,7 +272,6 @@
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" class="fca-tooltip-column">Taxes ($Local)</div>
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" class="fca-tooltip-column">Profit ($Local)</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost ($Local)</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;">FCA Cost (USD)</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;">Cargo Load Cost</div>
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;">Freight Cost</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;">Cargo Unload Cost</div>
@@ -309,7 +287,8 @@
                     data-product-id="{{ product.id }}"
                     data-product-type="{{ product.product_type }}"
                     data-pack-weight="{{ product.packaging_weight or 0 }}"
-                    data-pack-cost="{{ product.packaging_cost or 0 }}">
+                    data-pack-cost="{{ product.packaging_cost or 0 }}"
+                    data-currency="{{ product.currency }}">
                   <!-- Checkbox and hidden fields -->
                   <div style="flex: 0 0 32px; padding: 6px;">
                     <input type="checkbox" name="selected_products" value="{{ product.id }}">
@@ -347,7 +326,6 @@
                   <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="taxes_{{ product.id }}" class="fca-tooltip-column">-</div>
                   <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="profit_{{ product.id }}" class="fca-tooltip-column">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_{{ product.id }}">-</div>
-                  <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="fca_cost_usd_{{ product.id }}">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="cargo_load_cost_{{ product.id }}">-</div>
                   <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;" id="freight_cost_{{ product.id }}">-</div>
                   <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="cargo_unload_cost_{{ product.id }}">-</div>
@@ -377,7 +355,6 @@
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_taxes" class="fca-tooltip-column">-</div>
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px;" id="total_profit" class="fca-tooltip-column">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost">-</div>
-              <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px;" id="total_fca_cost_usd">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="total_cargo_load_cost">-</div>
               <div style="width: 110px; min-width:110px; max-width:110px; padding: 6px; display: none;" id="total_freight_cost">-</div>
               <div style="width: 200px; min-width:200px; max-width:200px; padding: 6px; display: none;" id="total_cargo_unload_cost">-</div>

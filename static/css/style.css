@@ -1,4 +1,9 @@
 /* Force dark theme for select dropdowns and options */
+.fresh-highlight {
+  color: #62588a; /* Use your desired color */
+}
+
+
 select,
 select.form-control,
 .form-group select {

@@ -106,8 +106,8 @@
   display: none !important;
 }
 
-/* Tooltip for FCA Cost hover */
-#fca-cost-tooltip {
+/* Generic tooltip for cost hovers */
+.cost-tooltip {
   position: absolute;
   display: none;
   background-color: #2a2e35;
@@ -123,6 +123,8 @@
   white-space: nowrap;
 }
 
-#fca-cost-tooltip strong {
+/* Style for the labels (e.g., "FCA Cost:") inside the tooltip */
+.cost-tooltip strong {
   color: #FF5C00;
+  margin-right: 8px;
 }
