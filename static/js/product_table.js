@@ -270,12 +270,39 @@ document.addEventListener('DOMContentLoaded', function() {
       // Calculate Import Taxes and Profit
       const importTaxes = cipCost * (importTaxPct / 100);
       const importProfit = cipCost * (importProfitPct / 100);
-      const datCost = cipCost + importTaxes + importProfit;
+      const datCost = cipCost + importTaxes;
 
       // Update the cells
       row.querySelector(`#import_taxes_${productId}`).textContent = importTaxes > 0 ? '$' + importTaxes.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
       row.querySelector(`#import_profit_${productId}`).textContent = importProfit > 0 ? '$' + importProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
       row.querySelector(`#dat_cost_${productId}`).textContent = datCost > 0 ? '$' + datCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      // --- DAT Kg/$ column logic ---
+      const datKgCell = row.querySelector(`#dat_kg_usd_${productId}`);
+      const totalWeightCell = row.querySelector(`#total_weight_${productId}`);
+      let totalWeight = 0;
+      if (totalWeightCell && totalWeightCell.textContent && totalWeightCell.textContent !== '-') {
+        totalWeight = parseFloat(totalWeightCell.textContent.replace(/[^\d\.]/g, '')) || 0;
+      }
+      let datKgValue = (datCost > 0 && totalWeight > 0) ? (datCost / totalWeight) : 0;
+      if (datKgCell) datKgCell.textContent = (datKgValue > 0) ? '$' + datKgValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      // --- DAT Ea/$ column logic ---
+      const datEaCell = row.querySelector(`#dat_ea_usd_${productId}`);
+      // Get units_per_pack from hidden column
+      let unitsPerPack = 0;
+      const unitsPerPackEl = row.querySelector(`#units_per_pack_${productId}`);
+      if (unitsPerPackEl && unitsPerPackEl.textContent) {
+        unitsPerPack = parseFloat(unitsPerPackEl.textContent) || 0;
+      }
+      if (!unitsPerPack || isNaN(unitsPerPack)) {
+        unitsPerPack = 1;
+      }
+      // Get amount from input
+      const amountInput = row.querySelector('input[name^="amount_"]');
+      let amount = amountInput ? parseFloat(amountInput.value.replace(/,/g, '')) || 0 : 0;
+      let denominator = amount * unitsPerPack;
+      console.log(`DEBUG DAT Ea/$: productId=${productId}, datCost=${datCost}, amount=${amount}, unitsPerPack=${unitsPerPack}, denominator=${denominator}`);
+      let datEaValue = (datCost > 0 && denominator > 0) ? (datCost / denominator) : 0;
+      if (datEaCell) datEaCell.textContent = (datEaValue > 0) ? '$' + datEaValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
     });
   }
   window.updateFinalCosts = updateFinalCosts; // Expose to global scope
@@ -374,6 +401,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // --- EVENT LISTENERS ---
+  document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => {
+    input.addEventListener('input', function() {
+      if (typeof updateFinalCosts === 'function') updateFinalCosts();
+    });
+  });
+
   if (productTypeFilter) {
     productTypeFilter.addEventListener('change', function() {
       const selectedType = this.value;
@@ -548,16 +581,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const row = this.closest('div[data-product-id], div#product-totals-row');
       if (!row) return;
       const productId = row.getAttribute('data-product-id');
-      let cipCost, importTaxes, importProfit;
+      let cipCost, importTaxes;
 
       if (productId) {
         cipCost = document.getElementById(`cip_cost_${productId}`)?.textContent || '-';
         importTaxes = document.getElementById(`import_taxes_${productId}`)?.textContent || '-';
-        importProfit = document.getElementById(`import_profit_${productId}`)?.textContent || '-';
       } else { // Totals row
         cipCost = document.getElementById('total_cip_cost')?.textContent || '-';
         importTaxes = document.getElementById('total_import_taxes')?.textContent || '-';
-        importProfit = document.getElementById('total_import_profit')?.textContent || '-';
       }
 
       const context = window.shipmentContext?.getCurrentContext();
@@ -567,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datTooltip.style.borderColor = tooltipColor;
       datTooltip.style.color = tooltipColor;
 
-      datTooltip.innerHTML = `<strong>CIP Cost:</strong> ${cipCost}<br><strong>Import Taxes:</strong> ${importTaxes}<br><strong>Import Profit:</strong> ${importProfit}`;
+      datTooltip.innerHTML = `<strong>CIP Cost:</strong> ${cipCost}<br><strong>Import Taxes:</strong> ${importTaxes}`;
       
       // Position the tooltip relative to the cell
       const rect = this.getBoundingClientRect();

@@ -661,7 +661,8 @@ def add_shipment(shipment_id=None):
             'packaging_weight': p.packaging_weight,
             'packaging_cost': p.packaging_cost,
             'currency': p.currency,
-            'product_type': p.product_type
+            'product_type': p.product_type,
+            'units_per_pack': p.units_per_pack,
             # Add any other fields you need in JS
         }
         for p in products
