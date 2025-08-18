@@ -3,21 +3,22 @@
 
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <h2>Competitive Prices for {{ country }}</h2>
     <hr>
     <div class="row" id="competitive-prices-content">
         <!-- Left column: Product list -->
-        <div class="col-md-6">
+        <div class="col-lg-6 col-md-7">
             <h5>Products (not from {{ country }})</h5>
             <div style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; background: #fafafa;">
-                <table class="table table-striped table-hover mb-0">
+                <table class="table table-striped table-hover mb-0" id="products-table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
                             <th>Trade Unit</th>
-                            <th>Input</th>
+                            <th>Updated:</th>
+                            <th>Price to Compare</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -27,32 +28,70 @@
                             <td>{{ product.id }}</td>
                             <td>{{ product.name }}</td>
                             <td>{{ product.trade_unit }}</td>
+                            <td><span id="updated-{{ product.id }}">-</span></td>
                             <td>
-                                <input type="text" class="form-control form-control-sm" placeholder="$ value" style="width: 90px;" id="input-{{ product.id }}">
+                                <input type="text" class="form-control form-control-sm" placeholder="$ value" style="width: 90px;" id="input-{{ product.id }}" oninput="updateDate('{{ product.id }}')">
                             </td>
                             <td>
-                                <button class="btn btn-primary btn-sm" style="width: 80px;" onclick="searchPrice('{{ product.id }}', '{{ product.name|escape }}', '{{ country|escape }}')">Search</button>
+                                <button class="btn" style="background: none; color: #2196f3; font-weight: normal; border: 0.5px solid #2196f3; padding: 6px 18px; border-radius: 4px; height: 38px; font-family: inherit; display: flex; align-items: center; justify-content: center; text-align: center; width: 100px;" onclick="searchPrice('{{ product.id }}', '{{ product.name|escape }}', '{{ country|escape }}')">Search</button>
                             </td>
                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
+            <div class="mt-3 text-center">
+                <button id="save-prices-btn" class="btn" style="background: none; color: #2196f3; font-weight: normal; border: 0.5px solid #2196f3; padding: 8px 32px; border-radius: 4px; height: 44px; font-family: inherit; display: flex; align-items: center; justify-content: center; text-align: center; width: 220px; font-size: 1.1rem;" onclick="handleSavePrices()">Save product Prices</button>
+            </div>
         </div>
         <!-- Right column: Bing search iframe -->
-        <div class="col-md-6">
+        <div class="col-lg-6 col-md-5">
             <h5>Average Price Search Result</h5>
-            <iframe id="search-iframe" src="" width="100%" height="400" style="border: 1px solid #ccc; background: #fff;"></iframe>
+            <iframe id="search-iframe" src="" width="100%" height="600" style="border: 1.5px solid #007bff; background: #fff; border-radius: 6px;"></iframe>
+            <div id="warning-msg" class="mt-3" style="display:none; color: #d32f2f; border: 1.5px solid #d32f2f; border-radius: 4px; padding: 12px; font-size: 1.1rem; background: none; font-weight: 500; text-align: center;"></div>
+            <div id="save-options" class="mt-2 text-center" style="display:none;">
+                <button class="btn" style="background: none; color: #d32f2f; font-weight: normal; border: 0.5px solid #d32f2f; padding: 10px 48px; border-radius: 4px; height: 48px; font-family: inherit; display: inline-block; text-align: center; width: 320px; font-size: 1.1rem; margin-right: 18px; margin-bottom: 8px;" onclick="continueToSave()">Continue to Save</button>
+                <button class="btn" style="background: none; color: #2196f3; font-weight: normal; border: 0.5px solid #2196f3; padding: 10px 48px; border-radius: 4px; height: 48px; font-family: inherit; display: inline-block; text-align: center; width: 320px; font-size: 1.1rem; margin-bottom: 8px;" onclick="returnToSearch()">Return to Search</button>
+            </div>
         </div>
     </div>
 </div>
 <script>
 function searchPrice(productId, productName, country) {
     var value = document.getElementById('input-' + productId).value;
-    var prompt = `Average Price for ${productName} in ${country}`;
-    // Use Bing search (less likely to block embedding)
+    var prompt = `Average Price for ${productName} in ${country} in supermarkets in USD`;
     var bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(prompt)}`;
     document.getElementById('search-iframe').src = bingUrl;
+}
+
+function updateDate(productId) {
+    var now = new Date();
+    var formatted = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    document.getElementById('updated-' + productId).innerText = formatted;
+}
+
+function handleSavePrices() {
+    var allFilled = true;
+    var inputs = document.querySelectorAll('#products-table input[type="text"]');
+    inputs.forEach(function(input) {
+        if (!input.value.trim()) {
+            allFilled = false;
+        }
+    });
+    if (allFilled) {
+        alert('All product prices are filled. Ready to save!');
+    } else {
+        document.getElementById('warning-msg').style.display = 'block';
+        document.getElementById('warning-msg').innerText = "Some products don't have a price to compare.";
+        document.getElementById('save-options').style.display = 'block';
+    }
+}
+function continueToSave() {
+    alert('Continue to save logic will be implemented.');
+}
+function returnToSearch() {
+    document.getElementById('warning-msg').style.display = 'none';
+    document.getElementById('save-options').style.display = 'none';
 }
 </script>
 {% endblock %}
