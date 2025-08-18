@@ -1,10 +1,21 @@
 
+
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from extensions import db
 from models import Product, Country, Aircraft, Airport, Trader
 from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+
+@coredata_bp.route('/competitive_prices')
+def competitive_prices():
+    country = request.args.get('country')
+    # Get all products not from the selected country
+    products = []
+    if country:
+        products = Product.query.join(Country, Product.country_id == Country.country_code)\
+            .filter(Country.country_name != country).all()
+    return render_template('coredata/competitive_prices.html', country=country, products=products)
 
 def _generate_next_code(model, field_name, prefix):
     """Generates the next sequential code for a given model and prefix."""

@@ -1,5 +1,36 @@
+
 {% extends 'base.html' %}
 {% block content %}
+  <!-- Competitive Prices Button and Country List -->
+  {% if trader_list %}
+    {% set country_dict = {} %}
+    {% for trader in trader_list %}
+      {% if trader.country and trader.country.country_name %}
+        {% set _ = country_dict.update({trader.country.country_name: 1}) %}
+      {% endif %}
+    {% endfor %}
+    <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+  <button type="button" id="check-prices-btn" class="btn btn-primary" style="background-color: #181c22; color: #2196f3; font-weight: normal; border: 0.5px solid #2196f3; padding: 6px 18px; border-radius: 4px; height: 38px; font-family: inherit; display: flex; align-items: center; justify-content: center; text-align: center;">Check competitive prices for:</button>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('check-prices-btn');
+    const countryList = document.getElementById('country-list');
+    if (btn && countryList) {
+      btn.addEventListener('click', function() {
+        const selectedCountry = countryList.value;
+        window.location.href = `/coredata/competitive_prices?country=${encodeURIComponent(selectedCountry)}`;
+      });
+    }
+  });
+</script>
+      <select id="country-list" style="padding: 6px; border-radius: 4px; border: 1px solid #2196f3; min-width: 120px; max-width: 160px; font-size: 0.95rem;">
+        {% for country in country_dict.keys() %}
+          <option value="{{ country }}">{{ country }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  {% endif %}
+
 <div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
   <div class="row justify-content-center">
     <div class="col-12">
