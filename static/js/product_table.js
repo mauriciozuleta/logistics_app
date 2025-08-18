@@ -99,12 +99,38 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- CALCULATION FUNCTIONS ---
   function updateFcaCosts() {
     let amountEntered = false;
+    let nonUsdAmountInputs = [];
     document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => {
-      if (parseFloat(input.value) > 0) amountEntered = true;
+      if (parseFloat(input.value) > 0) {
+        amountEntered = true;
+        // Find the corresponding product row and check currency
+        const productId = input.name.replace('amount_', '');
+        const row = document.querySelector(`div[data-product-id="${productId}"]`);
+        if (row) {
+          const currency = row.getAttribute('data-currency');
+          if (currency && currency !== 'USD') {
+            nonUsdAmountInputs.push(input);
+          }
+        }
+      }
     });
     const exchangeRate = parseFloat(exchangeRateInput?.value) || 0;
     if (amountEntered && exchangeRate <= 0) {
-      flashElement(exchangeRateInput);
+      // Always keep input-invalid and input-flash classes while exchange rate is 0
+      if (exchangeRateInput) {
+        exchangeRateInput.classList.add('input-flash', 'input-invalid');
+      }
+      nonUsdAmountInputs.forEach(input => {
+        input.classList.add('input-flash', 'input-invalid');
+      });
+    } else {
+      // Remove blinking classes when exchange rate is set
+      if (exchangeRateInput) {
+        exchangeRateInput.classList.remove('input-flash', 'input-invalid');
+      }
+      document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => {
+        input.classList.remove('input-flash', 'input-invalid');
+      });
     }
 
     productRows.forEach(row => {

@@ -1,3 +1,13 @@
+/* Blinking and red border for invalid inputs */
+@keyframes inputBlink {
+  0% { box-shadow: 0 0 0 0 #ff4444; }
+  50% { box-shadow: 0 0 8px 2px #ff4444; }
+  100% { box-shadow: 0 0 0 0 #ff4444; }
+}
+.input-invalid {
+  border: 2px solid #ff4444 !important;
+  animation: inputBlink 1s infinite;
+}
 
   .shipment-form-row {
     display: flex;
