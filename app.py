@@ -28,6 +28,7 @@ def create_app():
     from users.routes import users
     from ops.routes import ops
     from operations.routes import operations, operations_api
+    from operations.exchange_api import exchange_api
 
     app.register_blueprint(coredata_bp, url_prefix='/coredata')
     app.register_blueprint(financial, url_prefix='/financial')
@@ -35,6 +36,7 @@ def create_app():
     app.register_blueprint(operations, url_prefix='/operations')
     app.register_blueprint(operations_api, url_prefix='/api')
     app.register_blueprint(ops, url_prefix='/ops')
+    app.register_blueprint(exchange_api, url_prefix='/api/exchange')
 
     # Exempt API routes from CSRF protection
     csrf.exempt(operations_api)

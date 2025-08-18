@@ -456,21 +456,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  async function fetchExchangeRate(currency) {
+    try {
+      const resp = await fetch(`/api/exchange/get_exchange_rate?currency=${currency}`);
+      const data = await resp.json();
+      return data.rate || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function handleAddCargo(context) {
+    currentContext = context;
+    setHeaderColor(context === 'departure' ? '#00bcd4' : '#4caf50', '#fff');
+    restoreInputsForContext(context);
+    enableAmountInputs();
+    // Get the first non-USD currency from visible products
+    let currency = 'USD';
+    productRows.forEach(row => {
+      if (row.style.display !== 'none') {
+        const c = row.getAttribute('data-currency');
+        if (c && c !== 'USD') currency = c;
+      }
+    });
+    const rate = await fetchExchangeRate(currency);
+    const currentExchangeRateInput = document.getElementById('current_exchange_rate');
+    if (currentExchangeRateInput && rate) {
+      currentExchangeRateInput.value = rate;
+    }
+  }
+
   if (depBtn) {
     depBtn.addEventListener('click', function() {
-      currentContext = 'departure';
-      setHeaderColor('#00bcd4', '#fff');
-      restoreInputsForContext('departure');
-      enableAmountInputs();
+      handleAddCargo('departure');
     });
   }
 
   if (retBtn) {
     retBtn.addEventListener('click', function() {
-      currentContext = 'return';
-      setHeaderColor('#4caf50', '#fff');
-      restoreInputsForContext('return');
-      enableAmountInputs();
+      handleAddCargo('return');
     });
   }
 
