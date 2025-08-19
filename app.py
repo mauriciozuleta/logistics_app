@@ -31,6 +31,7 @@ def create_app():
     from operations.exchange_api import exchange_api
 
     app.register_blueprint(coredata_bp, url_prefix='/coredata')
+    csrf.exempt(coredata_bp)
     app.register_blueprint(financial, url_prefix='/financial')
     app.register_blueprint(users, url_prefix='/users')
     app.register_blueprint(operations, url_prefix='/operations')

@@ -329,6 +329,30 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log(`DEBUG DAT Ea/$: productId=${productId}, datCost=${datCost}, amount=${amount}, unitsPerPack=${unitsPerPack}, denominator=${denominator}`);
       let datEaValue = (datCost > 0 && denominator > 0) ? (datCost / denominator) : 0;
       if (datEaCell) datEaCell.textContent = (datEaValue > 0) ? '$' + datEaValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+
+      // --- Local Ea/$ column logic ---
+      try {
+        const localEaCell = row.querySelector(`#lcal_ea_usd_${productId}`);
+        const packagingWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
+
+        let priceToCompare = 0;
+        const priceInput = row.querySelector(`input[name="price_to_compare_${productId}"]`);
+        if (priceInput) {
+          priceToCompare = parseFloat(priceInput.value) || 0;
+        }
+
+        let localEaValue = 0;
+        // Assuming priceToCompare is per KG, calculate price per unit (Ea)
+        // Price per unit = (Price per KG) * (Weight per unit)
+        // Weight per unit = packagingWeight / unitsPerPack
+        if (priceToCompare > 0 && packagingWeight > 0 && unitsPerPack > 0) {
+          const weightPerUnit = packagingWeight / unitsPerPack;
+          localEaValue = priceToCompare * weightPerUnit;
+        }
+        if (localEaCell) localEaCell.textContent = (localEaValue > 0) ? localEaValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+      } catch (e) {
+        console.error('Error calculating Local Ea/$:', e);
+      }
     });
   }
   window.updateFinalCosts = updateFinalCosts; // Expose to global scope
@@ -364,6 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('total_import_taxes').textContent = '$' + sumCells('import_taxes').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('total_import_profit').textContent = '$' + sumCells('import_profit').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('total_dat_cost').textContent = '$' + sumCells('dat_cost').toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      // Local Ea/$ totals row
+      // Sum all Local Ea/$ values for visible products
+      let totalLocalEa = 0;
+      document.querySelectorAll('[id^="lcal_ea_usd_"]').forEach(cell => {
+        const productRow = cell.closest('div[data-product-id]');
+        if (productRow && productRow.style.display !== 'none') {
+          let val = parseFloat((cell.textContent || '').replace(/[$,]/g, ''));
+          if (!isNaN(val)) totalLocalEa += val;
+        }
+      });
+      document.getElementById('total_lcal_ea_usd').textContent = totalLocalEa > 0 ? totalLocalEa.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
   }
 
   // --- SUMMARY TABLE UPDATE FUNCTIONS ---
@@ -425,6 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateProductTotals();
     updateSummaryCosts(); // Update summary table costs after all calculations
   }
+  window.recalcAll = recalcAll; // Expose to global scope for other scripts
 
   // --- EVENT LISTENERS ---
   document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => {

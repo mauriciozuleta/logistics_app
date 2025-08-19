@@ -578,6 +578,30 @@ def check_route_exists():
 
     return jsonify({'exists': bool(existing_route)})
 
+@operations_api.route('/product_prices', methods=['GET'])
+def product_prices():
+    """
+    API endpoint to fetch competitive prices for a given consignee's country.
+    """
+    from models import Trader, CompetitivePrice, Country
+    consignee_id = request.args.get('consignee_id')
+    if not consignee_id:
+        return jsonify({'error': 'Missing consignee_id parameter'}), 400
+
+    consignee = Trader.query.get(consignee_id)
+    if not consignee or not consignee.country_id:
+        return jsonify({'error': 'Consignee or consignee country not found'}), 404
+
+    country_obj = Country.query.get(consignee.country_id)
+    if not country_obj:
+        return jsonify({'error': 'Country for consignee not found'}), 404
+    consignee_country_name = country_obj.country_name
+
+    prices = CompetitivePrice.query.filter_by(country=consignee_country_name).all()
+    price_map = {p.product_id: p.price_to_compare for p in prices}
+
+    return jsonify(price_map)
+
 # API endpoint to fetch routes as calendar events
 @operations_api.route('/scheduled-shipments')
 def scheduled_shipments():
@@ -647,11 +671,27 @@ def add_shipment(shipment_id=None):
     traders = Trader.query.order_by(Trader.trader_code).all()
     trader_choices = [(t.id, f"{t.trader_code} - {t.name} ({t.city})") for t in traders]
 
-    products = Product.query.order_by(Product.name).all()
 
-# Convert products to a list of dicts for JSON serialization
-    products_dicts = [
-        {
+    products = Product.query.order_by(Product.name).all()
+    consignee_id = request.form.get('consignee') or request.args.get('consignee')
+    consignee_country = None
+    if consignee_id:
+        from models import Trader
+        consignee = Trader.query.filter_by(id=consignee_id).first()
+        if consignee:
+            consignee_country = consignee.country_id
+
+    # For each product, fetch the competitive price for the consignee's country
+    products_dicts = []
+    for p in products:
+        price_to_compare = None
+        if consignee_country:
+            from models import CompetitivePrice
+            cp = CompetitivePrice.query.filter_by(product_id=p.id, country=consignee_country).first()
+            if cp:
+                price_to_compare = cp.price_to_compare
+        print(f"DEBUG: Product {p.id} ({p.name}) | Consignee Country: {consignee_country} | price_to_compare: {price_to_compare}")
+        products_dicts.append({
             'id': p.id,
             'product_code': p.product_code,
             'name': p.name,
@@ -663,10 +703,8 @@ def add_shipment(shipment_id=None):
             'currency': p.currency,
             'product_type': p.product_type,
             'units_per_pack': p.units_per_pack,
-            # Add any other fields you need in JS
-        }
-        for p in products
-    ]
+            'price_to_compare': price_to_compare if price_to_compare is not None else 0
+        })
 
 
     product_choices = [(p.id, p.name) for p in products]

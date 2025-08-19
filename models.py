@@ -268,3 +268,14 @@ class Shipment(BaseModel):
 
     def __repr__(self):
         return f'<Shipment {self.shipment_reference}>'
+
+class CompetitivePrice(db.Model):
+    __tablename__ = 'competitive_prices'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)  # Fixed FK
+    product_code = db.Column(db.String(32), nullable=False)
+    country = db.Column(db.String(64), nullable=False)
+    origin = db.Column(db.String(64), nullable=False)
+    price_to_compare = db.Column(db.Float, nullable=False)
+    updated_date = db.Column(db.Date, nullable=False)
+    product = db.relationship('Product', backref='competitive_prices')

@@ -1,22 +1,92 @@
-
-
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from extensions import db
 from models import Product, Country, Aircraft, Airport, Trader
+from models import CompetitivePrice
 from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
 @coredata_bp.route('/competitive_prices')
 def competitive_prices():
+    from models import CompetitivePrice
     country = request.args.get('country')
-    # Get all products not from the selected country
     products = []
+    product_data = []
     if country:
         products = Product.query.join(Country, Product.country_id == Country.country_code)\
             .filter(Country.country_name != country).all()
-    return render_template('coredata/competitive_prices.html', country=country, products=products)
+        for product in products:
+            saved = CompetitivePrice.query.filter_by(product_id=product.id, country=country).first()
+            product_data.append({
+                'id': product.id,
+                'product_code': product.product_code,
+                'name': product.name,
+                'origin': product.country.country_name if product.country else '-',
+                'trade_unit': product.trade_unit,
+                'price_to_compare': saved.price_to_compare if saved else '',
+                'updated_date': saved.updated_date.strftime('%Y-%m-%d') if saved and saved.updated_date else '-',
+            })
+    return render_template('coredata/competitive_prices.html', country=country, products=product_data)
 
+@coredata_bp.route('/save_competitive_prices', methods=['POST'])
+def save_competitive_prices():
+    print('DEBUG: Route hit')
+    import datetime
+    data = request.get_json(force=True)
+    country = data.get('country')
+    prices = data.get('prices', [])
+    errors = []
+    print('DEBUG: Received prices:', prices)
+    for item in prices:
+        try:
+            print('DEBUG: Processing item:', item)
+            product_id = int(item['product_id'])
+            product_code = item['product_code']
+            origin = item['origin']
+            price_to_compare = item['price_to_compare']
+            updated_date = item['updated_date']
+            # Validate required fields
+            if not (product_id and product_code and country and origin and price_to_compare and updated_date):
+                errors.append(f"Missing data for product_id {product_id}")
+                print('DEBUG: Missing data for', product_id)
+                continue
+            # Convert price_to_compare to float
+            try:
+                price_to_compare = float(price_to_compare)
+            except Exception:
+                errors.append(f"Invalid price for product_id {product_id}")
+                print('DEBUG: Invalid price for', product_id)
+                continue
+            # Convert updated_date to datetime.date if string
+            if isinstance(updated_date, str):
+                try:
+                    updated_date = datetime.datetime.strptime(updated_date, '%Y-%m-%d').date()
+                except Exception:
+                    errors.append(f"Invalid date for product_id {product_id}")
+                    print('DEBUG: Invalid date for', product_id, updated_date)
+                    continue
+            cp = CompetitivePrice.query.filter_by(product_id=product_id, country=country).first()
+            if cp:
+                cp.price_to_compare = price_to_compare
+                cp.updated_date = updated_date
+            else:
+                cp = CompetitivePrice(
+                    product_id=product_id,
+                    product_code=product_code,
+                    country=country,
+                    origin=origin,
+                    price_to_compare=price_to_compare,
+                    updated_date=updated_date
+                )
+                db.session.add(cp)
+        except Exception as e:
+            errors.append(str(e))
+            print('DEBUG: Exception:', str(e))
+    db.session.commit()
+    if errors:
+        print('DEBUG: Errors:', errors)
+        return jsonify({'message': 'Some prices failed to save.', 'errors': errors}), 400
+    return jsonify({'message': 'Competitive prices saved successfully.'})
 def _generate_next_code(model, field_name, prefix):
     """Generates the next sequential code for a given model and prefix."""
     prefix_len = len(prefix)

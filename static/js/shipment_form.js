@@ -889,6 +889,30 @@ function updateShipmentSummaryRoutes() {
   consigneeSelect.addEventListener('change', function() {
     generateShipmentReference();
     loadRoutesLogic();
+    // --- NEW: Fetch competitive prices ---
+    const consigneeId = this.value;
+    if (consigneeId) {
+        fetch(`/api/product_prices?consignee_id=${consigneeId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(prices => {
+                console.log('Fetched competitive prices:', prices);
+                // Update the hidden input fields for each product
+                for (const productId in prices) {
+                    const priceInput = document.querySelector(`input[name="price_to_compare_${productId}"]`);
+                    if (priceInput) {
+                        priceInput.value = prices[productId];
+                    }
+                }
+                // Trigger a full recalculation of the product table
+                if (window.recalcAll) { window.recalcAll(); }
+            })
+            .catch(error => { console.error('Error fetching competitive prices:', error); });
+    }
   });
 
   // Logic to load routes based on shipper/consignee selection
