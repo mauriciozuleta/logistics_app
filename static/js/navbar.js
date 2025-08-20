@@ -280,11 +280,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const viewportHeight = window.innerHeight;
     
     // Reset positioning and transforms
-    submenu.style.left = 'calc(100% + 2px)';
+    submenu.style.left = '100%';
     submenu.style.right = 'auto';
     submenu.style.top = '0';
     submenu.style.bottom = 'auto';
-    submenu.style.transform = 'translateX(-8px)';
     
     // Temporarily show to get dimensions
     const originalDisplay = submenu.style.display;
@@ -297,8 +296,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Check if submenu would go off right edge (with 30px buffer)
     if (rect.right + submenuRect.width > viewportWidth - 30) {
       submenu.style.left = 'auto';
-      submenu.style.right = 'calc(100% + 2px)';
-      submenu.style.transform = 'translateX(8px)';
+      submenu.style.right = '100%';
     }
     
     // Check if submenu would go off bottom edge (with 30px buffer)

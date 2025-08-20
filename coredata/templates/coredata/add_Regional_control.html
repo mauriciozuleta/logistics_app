@@ -6,6 +6,7 @@
     <div class="col-12 col-lg-10">
       <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
         <div class="card-body" style="color: #fff;">
+        <div id="region-warning" style="display:none; color:#FF5C00; font-weight:bold; margin-top:10px;">Please select a region before adding a branch.</div>
           <h2 class="mb-4" style="color: #2196f3; text-align: center;">Regional Trade Management</h2>
           <!-- Display form errors if any -->
           {% if form.errors %}
@@ -20,7 +21,7 @@
               </ul>
             </div>
           {% endif %}
-          <form method="POST" action="{{ url_for('coredata.add_trader') }}" class="add-trader-form">
+          <form method="POST" action="{{ url_for('coredata.regional_management') }}" class="add-trader-form">
             {{ form.hidden_tag() }}
             {{ form.csrf_token }}
             <input type="hidden" name="edit_id" value="{{ edit_id }}">
@@ -50,16 +51,24 @@
                 </div>
               </div>
             </div>
-              <!-- Empty container between trader info and branch info -->
-              <div class="mb-4">
-                <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; min-height: 80px; padding: 1rem; color: #fff;">
-                  <!-- Empty container for future content -->
-                </div>
+            <!-- Section 2: Branch Display -->
+            <div class="mb-4">
+              <div id="branch-display-container" class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; min-height: 80px; padding: 1rem; color: #fff;">
+                <!-- Branch data will be displayed here -->
               </div>
-            <!-- Section 2: Trader Information (without trader_code) -->
-            <div class="mb-5" id="branch-info-container" style="display: none;">
-              <fieldset style="border: 1px solid #2196f3; padding: 1.5rem; border-radius: 8px; background-color: #181c22;">
-                <legend style="color: #2196f3; font-weight: bold; font-size: 1.2rem; padding: 0 15px;">Branch Information</legend>
+            </div>
+
+            <!-- Section 3: Add Branch Button -->
+            <div class="text-center mb-4">
+              <button type="button" id="add-branch-btn" class="btn btn-success" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                Add Branch
+              </button>
+            </div>
+
+            <!-- Section 4: Branch Information Form (initially hidden) -->
+            <div id="branch-info-container" class="mb-4" style="display: none;">
+              <fieldset style="border: 1px solid #FF5C00; padding: 1.5rem; border-radius: 8px; background-color: #181c22;">
+                <legend style="color: #FF5C00; font-weight: bold; font-size: 1.2rem; padding: 0 15px;">Branch Information</legend>
                 <div class="row mb-3">
                   <div class="col-md-3">
                     <label for="country_id" class="form-label" style="color: #fff; font-weight: 500;">Country</label>
@@ -79,123 +88,6 @@
                     <button type="button" id="add-airport-btn" class="btn btn-info w-100" style="height: 40px; background-color: transparent; border: 1px solid #FF5C00; color: #FF5C00; font-weight: bold;" disabled>Add Airport</button>
                   </div>
                 </div>
-                <script>
-                  document.addEventListener('DOMContentLoaded', function() {
-                    const regionSelect = document.getElementById('region');
-                    const countrySelect = document.getElementById('country_id');
-                    const addAirportBtn = document.getElementById('add-airport-btn');
-                    const cityInput = document.getElementById('city');
-                    const availAirportsSelect = document.getElementById('avail_airports');
-
-
-                    async function updateCountryOptions() {
-                      const selectedRegion = regionSelect.value;
-                      // Clear current country options and show loading state
-                      countrySelect.innerHTML = '<option value="">Loading...</option>';
-                      countrySelect.disabled = true;
-
-                      if (!selectedRegion) {
-                        countrySelect.innerHTML = '<option value="">Select Region First</option>';
-                        return;
-                      }
-
-                      try {
-                        const response = await fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(selectedRegion)}`);
-                        if (!response.ok) {
-                          throw new Error('Network response was not ok');
-                        }
-                        const countries = await response.json();
-                        
-                        // Clear loading message
-                        countrySelect.innerHTML = '<option value="">Select Country</option>';
-
-                        if (countries.length > 0) {
-                          countries.forEach(function(country) {
-                            const option = document.createElement('option');
-                            // The form expects the country *code* as the value
-                            option.value = country.code; 
-                            option.textContent = country.name;
-                            countrySelect.appendChild(option);
-                          });
-                        } else {
-                          countrySelect.innerHTML = '<option value="">No countries found</option>';
-                        }
-                      } catch (error) {
-                        console.error('Error fetching countries:', error);
-                        countrySelect.innerHTML = '<option value="">Error loading countries</option>';
-                      } finally {
-                        countrySelect.disabled = false;
-                      }
-                    }
-
-                    regionSelect.addEventListener('change', updateCountryOptions);
-
-                    // --- New Airport Lookup Logic ---
-                    async function findAirports() {
-                        const city = cityInput.value.trim();
-                        const countryCode = countrySelect.value;
-
-                        availAirportsSelect.innerHTML = '<option value="">Finding airports...</option>';
-                        availAirportsSelect.disabled = true;
-                        addAirportBtn.disabled = true;
-
-                        if (!city || !countryCode) {
-                            availAirportsSelect.innerHTML = '<option value="">Enter City first</option>';
-                            return;
-                        }
-
-                        try {
-                            const response = await fetch(`/coredata/api/find_airports_for_city?city=${encodeURIComponent(city)}&country_code=${encodeURIComponent(countryCode)}`);
-                            const airports = await response.json();
-
-                            availAirportsSelect.innerHTML = '<option value="">Select an airport</option>';
-                            if (airports.length > 0) {
-                                airports.forEach(airport => {
-                                    const option = document.createElement('option');
-                                    option.value = airport.iata;
-                                    option.dataset.exists = airport.exists; // Store existence status
-                                    option.dataset.name = airport.name; // Store airport name
-                                    option.textContent = `${airport.iata} - ${airport.name}${airport.exists ? '' : ' (not in DB)'}`;
-                                    availAirportsSelect.appendChild(option);
-                                });
-                            } else {
-                                availAirportsSelect.innerHTML = '<option value="">No airports found</option>';
-                            }
-                        } catch (error) {
-                            console.error('Error fetching airports:', error);
-                            availAirportsSelect.innerHTML = '<option value="">Error looking up airports</option>';
-                        } finally {
-                            availAirportsSelect.disabled = false;
-                        }
-                    }
-
-                    // Trigger lookup when user leaves the city field
-                    cityInput.addEventListener('blur', findAirports);
-
-                    // Enable/disable "Add Airport" button based on selection
-                    availAirportsSelect.addEventListener('change', function() {
-                        const selectedOption = this.options[this.selectedIndex];
-                        if (selectedOption && selectedOption.dataset.exists === 'false') {
-                            addAirportBtn.disabled = false;
-                        } else {
-                            addAirportBtn.disabled = true;
-                        }
-                    });
-
-                    // Add Airport button logic
-                    if (addAirportBtn) {
-                      addAirportBtn.addEventListener('click', function() {
-                        const city = cityInput.value.trim();
-                        const countryCode = countrySelect.value;
-                        const selectedOption = availAirportsSelect.options[availAirportsSelect.selectedIndex];
-                        const iataCode = selectedOption.value;
-                        const airportName = selectedOption.dataset.name || '';
-                        // Redirect to the add_airport page with pre-filled data
-                        window.location.href = `{{ url_for('coredata.add_airport') }}?city=${encodeURIComponent(city)}&country_id=${encodeURIComponent(countryCode)}&iata_code=${encodeURIComponent(iataCode)}&name=${encodeURIComponent(airportName)}`;
-                      });
-                    }
-                  });
-                </script>
                 <div class="row mb-0">
                   <div class="col-md-6">
                     {{ form.revenue_taxes.label(class="form-label", style="color: #fff; font-weight: 500;") }}
@@ -212,68 +104,170 @@
                   </button>
                 </div>
               </fieldset>
-              </div>
+            </div>
 
-              <div class="text-center mb-4">
-                <button type="button" id="add-branch-btn" class="btn btn-success" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
-                  Add Branch
+            <!-- Section 5: Main Form Submission -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                    Save Regional Manager
                 </button>
-              </div>
+            </div>
             <script>
               document.addEventListener('DOMContentLoaded', function() {
-                const addBranchBtn = document.getElementById('add-branch-btn');
-                const branchInfoContainer = document.getElementById('branch-info-container');
-                const regionalFields = document.querySelectorAll('.card-body input, .card-body select');
-                const saveBranchBtn = document.getElementById('save-branch-btn');
-                const emptyContainer = document.getElementById('empty-between-containers');
-
-                addBranchBtn.addEventListener('click', function() {
-                  branchInfoContainer.style.display = 'block';
-                  // Freeze only regional fields, not branch info fields
-                  regionalFields.forEach(function(field) {
-                    // Only disable fields outside the branch info container
-                    if (!branchInfoContainer.contains(field)) {
-                      field.disabled = true;
-                    }
+                  // --- Element Cache ---
+                  const regionSelect = document.getElementById('region');
+                  const countrySelect = document.getElementById('country_id');
+                  const cityInput = document.getElementById('city');
+                  const availAirportsSelect = document.getElementById('avail_airports');
+                  const addAirportBtn = document.getElementById('add-airport-btn');
+                  const addBranchBtn = document.getElementById('add-branch-btn');
+                  const saveBranchBtn = document.getElementById('save-branch-btn');
+                  const branchInfoContainer = document.getElementById('branch-info-container');
+                  const branchDisplayContainer = document.getElementById('branch-display-container');
+                  const regionalInfoCard = document.getElementById('regional-info-card');
+              
+                  // --- API & Dynamic Dropdown Logic ---
+                  async function updateCountryOptions() {
+                      const selectedRegion = regionSelect.value;
+                      countrySelect.innerHTML = '<option value="">Loading...</option>';
+                      countrySelect.disabled = true;
+                      if (!selectedRegion) {
+                          countrySelect.innerHTML = '<option value="">Select Region First</option>';
+                          return;
+                      }
+                      try {
+                          const response = await fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(selectedRegion)}`);
+                          if (!response.ok) throw new Error('Network response was not ok');
+                          const countries = await response.json();
+                          countrySelect.innerHTML = '<option value="">Select Country</option>';
+                          if (countries.length > 0) {
+                              countries.forEach(function(country) {
+                                  const option = document.createElement('option');
+                                  option.value = country.code;
+                                  option.textContent = country.name;
+                                  countrySelect.appendChild(option);
+                              });
+                          } else {
+                              countrySelect.innerHTML = '<option value="">No countries found</option>';
+                          }
+                      } catch (error) {
+                          console.error('Error fetching countries:', error);
+                          countrySelect.innerHTML = '<option value="">Error loading countries</option>';
+                      } finally {
+                          countrySelect.disabled = false;
+                      }
+                  }
+                  regionSelect.addEventListener('change', updateCountryOptions);
+              
+                  async function findAirports() {
+                      const city = cityInput.value.trim();
+                      const countryCode = countrySelect.value;
+                      availAirportsSelect.innerHTML = '<option value="">Finding airports...</option>';
+                      availAirportsSelect.disabled = true;
+                      addAirportBtn.disabled = true;
+                      if (!city || !countryCode) {
+                          availAirportsSelect.innerHTML = '<option value="">Enter City first</option>';
+                          return;
+                      }
+                      try {
+                          const response = await fetch(`/coredata/api/find_airports_for_city?city=${encodeURIComponent(city)}&country_code=${encodeURIComponent(countryCode)}`);
+                          const airports = await response.json();
+                          availAirportsSelect.innerHTML = '<option value="">Select an airport</option>';
+                          if (airports.length > 0) {
+                              airports.forEach(airport => {
+                                  const option = document.createElement('option');
+                                  option.value = airport.iata;
+                                  option.dataset.exists = airport.exists;
+                                  option.dataset.name = airport.name;
+                                  option.textContent = `${airport.iata} - ${airport.name}${airport.exists ? '' : ' (not in DB)'}`;
+                                  availAirportsSelect.appendChild(option);
+                              });
+                          } else {
+                              availAirportsSelect.innerHTML = '<option value="">No airports found</option>';
+                          }
+                      } catch (error) {
+                          console.error('Error fetching airports:', error);
+                          availAirportsSelect.innerHTML = '<option value="">Error looking up airports</option>';
+                      } finally {
+                          availAirportsSelect.disabled = false;
+                      }
+                  }
+                  cityInput.addEventListener('blur', findAirports);
+              
+                  availAirportsSelect.addEventListener('change', function() {
+                      const selectedOption = this.options[this.selectedIndex];
+                      addAirportBtn.disabled = !(selectedOption && selectedOption.dataset.exists === 'false');
                   });
-                  // Unfreeze branch info fields
-                  const branchFields = branchInfoContainer.querySelectorAll('input, select');
-                  branchFields.forEach(function(field) {
-                    field.disabled = false;
+              
+                  if (addAirportBtn) {
+                      addAirportBtn.addEventListener('click', function() {
+                          const city = cityInput.value.trim();
+                          const countryCode = countrySelect.value;
+                          const selectedOption = availAirportsSelect.options[availAirportsSelect.selectedIndex];
+                          const iataCode = selectedOption.value;
+                          const airportName = selectedOption.dataset.name || '';
+                          window.location.href = `{{ url_for('coredata.add_airport') }}?city=${encodeURIComponent(city)}&country_id=${encodeURIComponent(countryCode)}&iata_code=${encodeURIComponent(iataCode)}&name=${encodeURIComponent(airportName)}`;
+                      });
+                  }
+              
+                  // --- Branch Management UI Logic ---
+                  addBranchBtn.addEventListener('click', function() {
+                      if (!regionSelect.value) {
+                        document.getElementById('region-warning').style.display = 'block';
+                        regionSelect.focus();
+                        return;
+                      } else {
+                        document.getElementById('region-warning').style.display = 'none';
+                      }
+                      branchInfoContainer.style.display = 'block';
+                      const regionalFields = regionalInfoCard.querySelectorAll('input, select');
+                      regionalFields.forEach(field => { field.disabled = true; });
+                      addBranchBtn.disabled = true;
                   });
-                  addBranchBtn.disabled = true;
-                });
 
-                saveBranchBtn.addEventListener('click', function() {
-                  // Gather data from branch info fields
-                  const country = document.getElementById('country_id').selectedOptions[0]?.textContent || '';
-                  const city = document.getElementById('city').value || '';
-                  const airports = document.getElementById('avail_airports').value || '';
-                  const revenueTaxes = document.getElementById('revenue_taxes')?.value || '';
-                  const operationalCost = document.getElementById('operational_cost_year')?.value || '';
-
-                  // Display in empty container
-                  emptyContainer.innerHTML = `
-                    <div class='card' style='background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; padding: 1rem; color: #fff;'>
-                      <h5 style='color: #2196f3;'>Branch Data</h5>
-                      <ul style='list-style:none; padding-left:0;'>
-                        <li><strong>Country:</strong> ${country}</li>
-                        <li><strong>City:</strong> ${city}</li>
-                        <li><strong>Available Airports:</strong> ${airports}</li>
-                        <li><strong>Revenue Taxes:</strong> ${revenueTaxes}</li>
-                        <li><strong>Operational Cost/Year (USD):</strong> ${operationalCost}</li>
-                      </ul>
-                    </div>
-                  `;
-                });
+                  saveBranchBtn.addEventListener('click', function() {
+                      // 1. Gather data and labels from the branch form
+                      const countryLabel = document.querySelector('label[for="country_id"]').textContent;
+                      const cityLabel = document.querySelector('label[for="city"]').textContent;
+                      const airportsLabel = document.querySelector('label[for="avail_airports"]').textContent;
+                      const branchRevenueInput = branchInfoContainer.querySelector('input[name="revenue_taxes"]');
+                      const branchOpCostInput = branchInfoContainer.querySelector('input[name="operational_cost_year"]');
+                      const revenueLabel = branchInfoContainer.querySelector('label[for="revenue_taxes"]').textContent;
+                      const costLabel = branchInfoContainer.querySelector('label[for="operational_cost_year"]').textContent;
+              
+                      const countryValue = countrySelect.selectedOptions[0]?.textContent || 'N/A';
+                      const cityValue = cityInput.value || 'N/A';
+                      const airportsValue = Array.from(availAirportsSelect.selectedOptions).map(opt => opt.value).join(', ') || 'N/A';
+                      const revenueValue = branchRevenueInput.value || 'N/A';
+                      const costValue = branchOpCostInput.value || 'N/A';
+              
+                      // 2. Build and display the branch data in the middle container
+                      branchDisplayContainer.innerHTML = `
+                          <h5 style='color: #2196f3; margin-bottom: 1rem;'>New Branch Details</h5>
+                          <ul style='list-style:none; padding-left:0; color: #fff;'>
+                              <li><strong>${countryLabel}:</strong> ${countryValue}</li>
+                              <li><strong>${cityLabel}:</strong> ${cityValue}</li>
+                              <li><strong>${airportsLabel}:</strong> ${airportsValue}</li>
+                              <li><strong>${revenueLabel}:</strong> ${revenueValue}</li>
+                              <li><strong>${costLabel}:</strong> ${costValue}</li>
+                          </ul>
+                      `;
+              
+                      // 3. Clear the branch information form fields
+                      countrySelect.selectedIndex = 0;
+                      cityInput.value = '';
+                      availAirportsSelect.innerHTML = '<option value="">Select an airport</option>';
+                      branchRevenueInput.value = '';
+                      branchOpCostInput.value = '';
+              
+                      // 4. Hide the branch information container
+                      branchInfoContainer.style.display = 'none';
+              
+                      // 5. Re-enable the "Add Branch" button
+                      addBranchBtn.disabled = false;
+                  });
               });
-            </script>
-                    field.disabled = true;
-                  });
-                  addBranchBtn.disabled = true;
-                });
-              });
-            </script>
+              </script>
           </form>
         </div>
       </div>
