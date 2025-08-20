@@ -41,23 +41,9 @@
                     <label for="region" class="form-label" style="color: #fff; font-weight: 500;">Region</label>
                     <select name="region" id="region" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
                       <option value="">Select Region</option>
-                      <option value="North America">North America</option>
-                      <option value="Central America">Central America</option>
-                      <option value="Caribbean">Caribbean</option>
-                      <option value="South America">South America</option>
-                      <option value="West Europe">West Europe</option>
-                      <option value="East Europe">East Europe</option>
-                      <option value="Northern Europe">Northern Europe</option>
-                      <option value="Southern Europe">Southern Europe</option>
-                      <option value="Africa">Africa</option>
-                      <option value="Middle East">Middle East</option>
-                      <option value="West Asia">West Asia</option>
-                      <option value="Central Asia">Central Asia</option>
-                      <option value="South Asia">South Asia</option>
-                      <option value="East Asia">East Asia</option>
-                      <option value="South East Asia">South East Asia</option>
-                      <option value="Oceania">Oceania</option>
-                      <option value="Antarctica">Antarctica</option>
+                      {% for region in regions %}
+                      <option value="{{ region }}">{{ region }}</option>
+                      {% endfor %}
                     </select>
                   </div>
                 </div>

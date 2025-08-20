@@ -28,12 +28,12 @@ coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 @coredata_bp.route('/country_branch', methods=['GET', 'POST'])
 def country_branch():
     form = TraderForm()
-    if form.validate_on_submit():
-        # Add branch logic here (save to DB, etc.)
-        # You can access form data via form.<field>.data
-        # For now, just redirect to the same page or a success page
-        return redirect(url_for('coredata.country_branch'))
-    return render_template('coredata/country_branch.html', form=form, edit_id=None)
+    # Get distinct regions from the Country model to populate the dropdown
+    regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
+    # Flatten the list of tuples and filter out None/empty values
+    region_choices = [r[0] for r in regions if r[0]]
+    # The rest of your view logic...
+    return render_template('coredata/country_branch.html', form=form, edit_id=None, regions=region_choices)
 
 @coredata_bp.route('/traders/Regional_Management', methods=['GET', 'POST'])
 def regional_management():
@@ -94,14 +94,15 @@ def find_airports_for_city():
                         continue
 
                     match = False
+                    airport_city = fields[2].strip('"') # Get city from CSV
+                    airport_country = fields[3].strip('"') # Get country from CSV
+
                     # Search by IATA code if provided
                     if iata_code_arg:
                         if iata.lower() == iata_code_arg.lower():
                             match = True
                     # Else, search by city and country
                     elif city and country_name_to_match:
-                        airport_city = fields[2].strip('"')
-                        airport_country = fields[3].strip('"')
                         if (airport_city.lower() == city.lower() and
                             airport_country.lower() == country_name_to_match.lower()):
                             match = True
@@ -110,6 +111,7 @@ def find_airports_for_city():
                         found_airports.append({
                             'iata': iata,
                             'name': name,
+                            'city': airport_city,
                             'exists': iata in existing_iatas
                         })
                         # If searching by IATA, we can stop after finding it.
