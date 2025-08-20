@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json
 from extensions import db
 from models import Product, Country, Aircraft, Airport, Trader
 from models import CompetitivePrice
-from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
+from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm, RegionalManagerForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
@@ -10,23 +10,8 @@ coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
 @coredata_bp.route('/country_branch', methods=['GET', 'POST'])
 def country_branch():
-    form = TraderForm()
-    if request.method == 'POST':
-        # Add branch logic here (save to DB, etc.)
-        # You can access form data via form.<field>.data
-        # For now, just redirect to the same page or a success page
-        return redirect(url_for('coredata.country_branch'))
-    return render_template('coredata/country_branch.html', form=form, edit_id=None)
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
-from extensions import db
-from models import Product, Country, Aircraft, Airport, Trader
-from models import CompetitivePrice
-from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
-
-coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
-
-@coredata_bp.route('/country_branch', methods=['GET', 'POST'])
-def country_branch():
+    # This route seems to be a duplicate or older version of regional_management.
+    # Let's keep it simple for now.
     form = TraderForm()
     # Get distinct regions from the Country model to populate the dropdown
     regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
@@ -37,12 +22,36 @@ def country_branch():
 
 @coredata_bp.route('/traders/Regional_Management', methods=['GET', 'POST'])
 def regional_management():
-    form = TraderForm()
+    manager_form = RegionalManagerForm()
+    branch_form = TraderForm()
+
     # Get distinct regions from the Country model to populate the dropdown
     regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
-    # Flatten the list of tuples and filter out None/empty values
     region_choices = [r[0] for r in regions if r[0]]
-    return render_template('coredata/add_Regional_control.html', form=form, edit_id=None, regions=region_choices)
+    manager_form.region.choices = [("", "Select Region")] + [(r, r) for r in region_choices]
+
+    if request.method == 'POST':
+        # This is where we'll handle the final submission of the manager and all branches
+        # For now, we'll just flash a success message and redirect.
+        # The actual saving logic will be built after the front-end is complete.
+        
+        manager_name = request.form.get('name')
+        branches_json = request.form.get('branches_data', '[]')
+        branches = json.loads(branches_json)
+
+        # Here you would create the RegionalManager and Trader (branch) objects
+        # and save them to the database.
+        
+        print(f"Manager to save: {manager_name}")
+        print(f"Branches to save: {len(branches)}")
+        print(branches)
+
+        # flash(f"Regional Manager '{manager_name}' and {len(branches)} branches saved.", "success")
+        return redirect(url_for('coredata.view_edit_traders')) # Placeholder redirect
+
+    return render_template('coredata/add_Regional_control.html', 
+                           manager_form=manager_form, 
+                           branch_form=branch_form)
 
 @coredata_bp.route('/api/countries_by_region')
 def api_countries_by_region():

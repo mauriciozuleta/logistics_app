@@ -1,6 +1,60 @@
 {% extends 'base.html' %}
 {% block content %}
-<!-- Duplicated from add_trader.html for regional control development -->
+<style>
+  /* Accordion styling */
+  .accordion-header {
+    background-color: #2a3038;
+    color: #2196f3;
+    cursor: pointer;
+    padding: 1rem;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
+  .accordion-header:hover {
+    background-color: #3c424a;
+  }
+  .accordion-header.active {
+    background-color: #3c424a;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .accordion-body {
+    padding: 0 1rem;
+    background-color: #181c22;
+    display: none;
+    overflow: hidden;
+    border: 1px solid #2a3038;
+    border-top: none;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+  .branch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #2a3038;
+  }
+  .branch-item:last-child {
+    border-bottom: none;
+  }
+  .branch-details {
+    color: #e0e0e0;
+  }
+  .branch-actions button {
+    background: none;
+    border: 1px solid transparent;
+    color: #ff9800;
+    cursor: pointer;
+  }
+</style>
 <div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
   <div class="row justify-content-center">
     <div class="col-12 col-lg-10">
@@ -8,12 +62,12 @@
         <div class="card-body" style="color: #fff;">
         <div id="region-warning" style="display:none; color:#FF5C00; font-weight:bold; margin-top:10px;">Please select a region before adding a branch.</div>
           <h2 class="mb-4" style="color: #2196f3; text-align: center;">Regional Trade Management</h2>
-          <!-- Display form errors if any -->
-          {% if form.errors %}
+          <!-- Display form errors if any (for manager form) -->
+          {% if manager_form.errors %}
             <div class="alert alert-danger" style="background-color: #f44336; color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
               <h5>Form Errors:</h5>
               <ul style="margin: 0; padding-left: 1rem;">
-                {% for field, errors in form.errors.items() %}
+                {% for field, errors in manager_form.errors.items() %}
                   {% for error in errors %}
                     <li><strong>{{ field }}:</strong> {{ error }}</li>
                   {% endfor %}
@@ -21,8 +75,8 @@
               </ul>
             </div>
           {% endif %}
-          <form method="POST" action="{{ url_for('coredata.regional_management') }}" class="add-trader-form">
-            <script>
+          <form method="POST" id="regional-manager-form" action="{{ url_for('coredata.regional_management') }}" class="add-trader-form">
+            <script> // Prevent enter from submitting the whole form
               document.addEventListener('DOMContentLoaded', function() {
                 var form = document.querySelector('.add-trader-form');
                 form.addEventListener('keydown', function(e) {
@@ -32,30 +86,24 @@
                 });
               });
             </script>
-            {{ form.hidden_tag() }}
-            {{ form.csrf_token }}
-            <input type="hidden" name="edit_id" value="{{ edit_id }}">
+            {{ manager_form.hidden_tag() }}
+            <input type="hidden" name="branches_data" id="branches_data_hidden_input">
             <!-- Section 1: Trader Info Grouped -->
             <div class="mb-4">
               <div id="regional-info-card" class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 1rem;">
                 <div class="card-body">
                   <div class="row">
                     <div class="col-md-4">
-                      {{ form.name.label(class="form-label", style="color: #fff; font-weight: 500;") }}
-                      {{ form.name(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                      {{ manager_form.name.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                      {{ manager_form.name(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                     </div>
                     <div class="col-md-4">
-                      <label for="region" class="form-label" style="color: #fff; font-weight: 500;">Region</label>
-                      <select name="region" id="region" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
-                        <option value="">Select Region</option>
-                        {% for region in regions %}
-                        <option value="{{ region }}">{{ region }}</option>
-                        {% endfor %}
-                      </select>
+                      {{ manager_form.region.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                      {{ manager_form.region(id="region", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                     </div>
                     <div class="col-md-4">
-                      {{ form.operational_cost_year.label(class="form-label", style="color: #fff; font-weight: 500;") }}
-                      {{ form.operational_cost_year(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                      {{ manager_form.operational_cost_year.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                      {{ manager_form.operational_cost_year(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                     </div>
                   </div>
                 </div>
@@ -64,7 +112,7 @@
             <!-- Section 2: Branch Display -->
             <div class="mb-4">
               <div id="branch-display-container" class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; min-height: 80px; padding: 1rem; color: #fff;">
-                <!-- Branch data will be displayed here -->
+                <!-- Accordion for branches will be displayed here -->
               </div>
             </div>
 
@@ -81,14 +129,12 @@
                 <legend style="color: #FF5C00; font-weight: bold; font-size: 1.2rem; padding: 0 15px;">Branch Information</legend>
                 <div class="row mb-3">
                   <div class="col-md-4">
-                    <label for="country_id" class="form-label" style="color: #fff; font-weight: 500;">Country</label>
-                    <select name="country_id" id="country_id" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
-                      <option value="">Select Country</option>
-                    </select>
+                    {{ branch_form.country_id.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.country_id(id="branch_country_id", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                   </div>
                   <div class="col-md-4">
-                    {{ form.city.label(class="form-label", style="color: #fff; font-weight: 500;") }}
-                    {{ form.city(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                    {{ branch_form.city.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.city(id="branch_city", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                   </div>
                   <div class="col-md-4">
                     <label for="iata_code_input" class="form-label" style="color: #fff; font-weight: 500;">IATA</label>
@@ -109,12 +155,32 @@
                 </div>
                 <div class="row mb-0">
                   <div class="col-md-6">
-                    {{ form.revenue_taxes.label(class="form-label", style="color: #fff; font-weight: 500;") }}
-                    {{ form.revenue_taxes(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                    {{ branch_form.revenue_taxes.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.revenue_taxes(id="branch_revenue_taxes", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                   </div>
                   <div class="col-md-6">
-                    {{ form.operational_cost_year.label(class="form-label", style="color: #fff; font-weight: 500;") }}
-                    {{ form.operational_cost_year(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                    {{ branch_form.operational_cost_year.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.operational_cost_year(id="branch_op_cost", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-md-4">
+                    {{ branch_form.export_sales_tax.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.export_sales_tax(id="branch_export_sales_tax", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                  </div>
+                  <div class="col-md-4">
+                    {{ branch_form.import_taxes.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.import_taxes(id="branch_import_taxes", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                  </div>
+                  <div class="col-md-4">
+                    {{ branch_form.other_taxes.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.other_taxes(id="branch_other_taxes", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                  </div>
+                </div>
+                <div class="row mt-3 mb-0">
+                  <div class="col-md-12">
+                    {{ branch_form.additional_info.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ branch_form.additional_info(id="branch_additional_info", class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;", rows=2) }}
                   </div>
                 </div>
                 <div class="text-center mt-4">
@@ -127,16 +193,18 @@
 
             <!-- Section 5: Main Form Submission -->
             <div class="text-center">
-                <button type="submit" class="btn btn-primary" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                <button type="submit" id="save-manager-btn" class="btn btn-primary" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
                     Save Regional Manager
                 </button>
             </div>
             <script>
               document.addEventListener('DOMContentLoaded', function() {
+                  // --- State ---
+                  let branchesByCountry = {};
                   // --- Element Cache ---
                   const regionSelect = document.getElementById('region');
-                  const countrySelect = document.getElementById('country_id');
-                  const cityInput = document.getElementById('city');
+                  const countrySelect = document.getElementById('branch_country_id');
+                  const cityInput = document.getElementById('branch_city');
                   const iataCodeInput = document.getElementById('iata_code_input');
                   const availAirportsSelect = document.getElementById('avail_airports');
                   const addAirportBtn = document.getElementById('add-airport-btn');
@@ -145,6 +213,7 @@
                   const branchInfoContainer = document.getElementById('branch-info-container');
                   const branchDisplayContainer = document.getElementById('branch-display-container');
                   const regionalInfoCard = document.getElementById('regional-info-card');
+                  const mainForm = document.getElementById('regional-manager-form');
               
                   // --- API & Dynamic Dropdown Logic ---
                   async function updateCountryOptions() {
@@ -329,73 +398,126 @@
                       addAirportBtn.disabled = !(selectedOption && selectedOption.dataset.exists === 'false');
                   });
               
-                  if (addAirportBtn) {
-                      addAirportBtn.addEventListener('click', function() {
-                          const city = cityInput.value.trim();
-                          const countryCode = countrySelect.value;
-                          const selectedOption = availAirportsSelect.options[availAirportsSelect.selectedIndex];
-                          const iataCode = selectedOption.value;
-                          const airportName = selectedOption.dataset.name || '';
-                          window.location.href = `{{ url_for('coredata.add_airport') }}?city=${encodeURIComponent(city)}&country_id=${encodeURIComponent(countryCode)}&iata_code=${encodeURIComponent(iataCode)}&name=${encodeURIComponent(airportName)}`;
-                      });
-                  }
+                  addAirportBtn?.addEventListener('click', function() {
+                      const city = cityInput.value.trim();
+                      const countryCode = countrySelect.value;
+                      const selectedOption = availAirportsSelect.options[availAirportsSelect.selectedIndex];
+                      const iataCode = selectedOption.value;
+                      const airportName = selectedOption.dataset.name || '';
+                      window.open(`{{ url_for('coredata.add_airport') }}?city=${encodeURIComponent(city)}&country_id=${encodeURIComponent(countryCode)}&iata_code=${encodeURIComponent(iataCode)}&name=${encodeURIComponent(airportName)}`, '_blank');
+                  });
               
                   // --- Branch Management UI Logic ---
-                  addBranchBtn.addEventListener('click', function() {
+                  function renderAccordion() {
+                      branchDisplayContainer.innerHTML = '';
+                      if (Object.keys(branchesByCountry).length === 0) {
+                          branchDisplayContainer.innerHTML = '<p>No branches added yet. Click "Add Branch" to start.</p>';
+                          return;
+                      }
+
+                      for (const countryName in branchesByCountry) {
+                          const branches = branchesByCountry[countryName];
+                          const countryCode = branches.length > 0 ? branches[0].countryCode : '';
+                          
+                          const header = document.createElement('button');
+                          header.type = 'button';
+                          header.className = 'accordion-header';
+                          header.textContent = `${countryName} (${branches.length} Branches)`;
+                          
+                          const body = document.createElement('div');
+                          body.className = 'accordion-body';
+
+                          branches.forEach((branch, index) => {
+                              const item = document.createElement('div');
+                              item.className = 'branch-item';
+                              item.innerHTML = `
+                                  <div class="branch-details">
+                                      <strong>City:</strong> ${branch.city} | <strong>Airport:</strong> ${branch.airport}
+                                  </div>
+                                  <div class="branch-actions">
+                                      <button type="button" class="delete-branch-btn" data-country="${countryName}" data-index="${index}">🗑️ Delete</button>
+                                  </div>
+                              `;
+                              body.appendChild(item);
+                          });
+
+                          branchDisplayContainer.appendChild(header);
+                          branchDisplayContainer.appendChild(body);
+                      }
+                  }
+
+                  branchDisplayContainer.addEventListener('click', function(e) {
+                      if (e.target.classList.contains('accordion-header')) {
+                          e.target.classList.toggle('active');
+                          const body = e.target.nextElementSibling;
+                          body.style.display = body.style.display === 'block' ? 'none' : 'block';
+                      }
+                      if (e.target.classList.contains('delete-branch-btn')) {
+                          const country = e.target.dataset.country;
+                          const index = parseInt(e.target.dataset.index, 10);
+                          branchesByCountry[country].splice(index, 1);
+                          if (branchesByCountry[country].length === 0) {
+                              delete branchesByCountry[country];
+                          }
+                          renderAccordion();
+                      }
+                  });
+
+                  addBranchBtn.addEventListener('click', () => {
                       if (!regionSelect.value) {
                         document.getElementById('region-warning').style.display = 'block';
                         regionSelect.focus();
                         return;
-                      } else {
-                        document.getElementById('region-warning').style.display = 'none';
                       }
+                      document.getElementById('region-warning').style.display = 'none';
                       branchInfoContainer.style.display = 'block';
                       const regionalFields = regionalInfoCard.querySelectorAll('input, select');
                       regionalFields.forEach(field => { field.disabled = true; });
                       addBranchBtn.disabled = true;
                   });
 
-                  saveBranchBtn.addEventListener('click', function() {
-                      // 1. Gather data and labels from the branch form
-                      const countryLabel = document.querySelector('label[for="country_id"]').textContent;
-                      const cityLabel = document.querySelector('label[for="city"]').textContent;
-                      const airportsLabel = document.querySelector('label[for="avail_airports"]').textContent;
-                      const branchRevenueInput = branchInfoContainer.querySelector('input[name="revenue_taxes"]');
-                      const branchOpCostInput = branchInfoContainer.querySelector('input[name="operational_cost_year"]');
-                      const revenueLabel = branchInfoContainer.querySelector('label[for="revenue_taxes"]').textContent;
-                      const costLabel = branchInfoContainer.querySelector('label[for="operational_cost_year"]').textContent;
-              
-                      const countryValue = countrySelect.selectedOptions[0]?.textContent || 'N/A';
-                      const cityValue = cityInput.value || 'N/A';
-                      const airportsValue = Array.from(availAirportsSelect.selectedOptions).map(opt => opt.value).join(', ') || 'N/A';
-                      const revenueValue = branchRevenueInput.value || 'N/A';
-                      const costValue = branchOpCostInput.value || 'N/A';
-              
-                      // 2. Build and display the branch data in the middle container
-                      branchDisplayContainer.innerHTML = `
-                          <h5 style='color: #2196f3; margin-bottom: 1rem;'>New Branch Details</h5>
-                          <ul style='list-style:none; padding-left:0; color: #fff;'>
-                              <li><strong>${countryLabel}:</strong> ${countryValue}</li>
-                              <li><strong>${cityLabel}:</strong> ${cityValue}</li>
-                              <li><strong>${airportsLabel}:</strong> ${airportsValue}</li>
-                              <li><strong>${revenueLabel}:</strong> ${revenueValue}</li>
-                              <li><strong>${costLabel}:</strong> ${costValue}</li>
-                          </ul>
-                      `;
-              
-                      // 3. Clear the branch information form fields
-                      countrySelect.selectedIndex = 0;
-                      cityInput.value = '';
-                      availAirportsSelect.innerHTML = '<option value="">Select an airport</option>';
-                      branchRevenueInput.value = '';
-                      branchOpCostInput.value = '';
-              
-                      // 4. Hide the branch information container
+                  saveBranchBtn.addEventListener('click', () => {
+                      const countryOption = countrySelect.options[countrySelect.selectedIndex];
+                      const countryName = countryOption.text;
+                      const countryCode = countryOption.value;
+                      const city = cityInput.value;
+                      const airport = availAirportsSelect.value;
+                      const revenue = document.getElementById('branch_revenue_taxes').value;
+                      const opCost = document.getElementById('branch_op_cost').value;
+                      const exportSalesTax = document.getElementById('branch_export_sales_tax').value;
+                      const importTaxes = document.getElementById('branch_import_taxes').value;
+                      const otherTaxes = document.getElementById('branch_other_taxes').value;
+                      const additionalInfo = document.getElementById('branch_additional_info').value;
+
+                      if (!countryCode || !city || !airport) {
+                          alert('Please fill out Country, City, and select an Airport for the branch.');
+                          return;
+                      }
+
+                      if (!branchesByCountry[countryName]) {
+                          branchesByCountry[countryName] = [];
+                      }
+                      branchesByCountry[countryName].push({ countryCode, countryName, city, airport, revenue, opCost, exportSalesTax, importTaxes, otherTaxes, additionalInfo });
+
+                      renderAccordion();
+                      
+                      // Reset and hide form
+                      branchInfoContainer.querySelectorAll('input, select').forEach(el => el.value = '');
+                      availAirportsSelect.innerHTML = '<option value="">Select Country first</option>';
                       branchInfoContainer.style.display = 'none';
-              
-                      // 5. Re-enable the "Add Branch" button
                       addBranchBtn.disabled = false;
                   });
+
+                  mainForm.addEventListener('submit', function(e) {
+                      const hiddenInput = document.getElementById('branches_data_hidden_input');
+                      hiddenInput.value = JSON.stringify(branchesByCountry);
+                      // Re-enable regional fields so they are submitted
+                      const regionalFields = regionalInfoCard.querySelectorAll('input, select');
+                      regionalFields.forEach(field => { field.disabled = false; });
+                  });
+
+                  // Initial render
+                  renderAccordion();
               });
               </script>
           </form>

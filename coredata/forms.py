@@ -1,5 +1,5 @@
-from wtforms import StringField, FloatField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Optional
+from wtforms import StringField, FloatField, SelectField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Optional, Length
 from flask_wtf import FlaskForm
 from wtforms import FormField
 
@@ -26,7 +26,17 @@ class TraderForm(FlaskForm):
     import_other_taxes = FloatField('Other Taxes (%)', validators=[Optional()])
     import_other_cost = FloatField('Other Cost (USD)', validators=[Optional()])
 
+    # New fields for regional management branches
+    other_taxes = FloatField('Other Taxes', validators=[Optional()])
+    additional_info = TextAreaField('Additional Information', validators=[Optional()])
+
     submit = SubmitField('Add Trader')
+
+class RegionalManagerForm(FlaskForm):
+    name = StringField('Manager Name', validators=[DataRequired(), Length(min=3, max=128)])
+    region = SelectField('Region', validators=[DataRequired()])
+    operational_cost_year = FloatField('Operational Cost/Year (USD)', validators=[Optional()])
+    submit = SubmitField('Save Regional Manager')
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, IntegerField, SubmitField, SelectField
