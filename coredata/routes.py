@@ -57,21 +57,23 @@ def api_countries_by_region():
 @coredata_bp.route('/api/find_airports_for_city', methods=['GET'])
 def find_airports_for_city():
     """
-    Finds airport IATA codes for a given city using the OpenFlights database.
+    Finds airport IATA codes for a given city or IATA code using the OpenFlights database.
     Checks which of those airports already exist in the local database.
     """
     city = request.args.get('city', type=str)
     country_code = request.args.get('country_code', type=str)
+    iata_code_arg = request.args.get('iata', type=str)
 
-    if not city or not country_code:
-        return jsonify({'error': 'City and country_code are required'}), 400
+    # Validate parameters
+    if not iata_code_arg and (not city or not country_code):
+        return jsonify({'error': 'City and country_code are required when not searching by IATA'}), 400
 
-    # --- FIX: Look up the full country name from the provided country code ---
-    country = Country.query.get(country_code)
-    if not country:
-        # Return an empty list if the country code is invalid, to prevent errors.
-        return jsonify([])
-    country_name_to_match = country.country_name
+    country_name_to_match = None
+    if country_code:
+        country = Country.query.get(country_code)
+        if not country:
+            return jsonify([])  # Invalid country code
+        country_name_to_match = country.country_name
 
     found_airports = []
     try:
@@ -80,25 +82,41 @@ def find_airports_for_city():
         API_URL = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
         resp = requests.get(API_URL, timeout=10)
         if resp.ok:
-            # Get all IATA codes that exist in our local DB for quick lookup
             existing_iatas = {a.iata_code for a in Airport.query.with_entities(Airport.iata_code).all()}
             
             reader = csv.reader(StringIO(resp.text))
             for fields in reader:
-                # --- FIX: Match by city and full country name (both case-insensitive) ---
-                if (len(fields) > 4 and
-                    fields[2].strip('"').lower() == city.lower() and
-                    fields[3].strip('"').lower() == country_name_to_match.lower()):
+                if len(fields) > 4:
                     iata = fields[4].strip('"')
                     name = fields[1].strip('"')
-                    if iata and iata != r'\N':
+                    
+                    if not iata or iata == r'\N':
+                        continue
+
+                    match = False
+                    # Search by IATA code if provided
+                    if iata_code_arg:
+                        if iata.lower() == iata_code_arg.lower():
+                            match = True
+                    # Else, search by city and country
+                    elif city and country_name_to_match:
+                        airport_city = fields[2].strip('"')
+                        airport_country = fields[3].strip('"')
+                        if (airport_city.lower() == city.lower() and
+                            airport_country.lower() == country_name_to_match.lower()):
+                            match = True
+                    
+                    if match:
                         found_airports.append({
                             'iata': iata,
                             'name': name,
                             'exists': iata in existing_iatas
                         })
+                        # If searching by IATA, we can stop after finding it.
+                        if iata_code_arg:
+                            break
     except Exception as e:
-        print(f"Error fetching airport data for {city}: {e}")
+        print(f"Error fetching airport data for {city or iata_code_arg}: {e}")
         return jsonify({'error': 'Failed to fetch airport data'}), 500
 
     return jsonify(found_airports)

@@ -70,19 +70,28 @@
               <fieldset style="border: 1px solid #FF5C00; padding: 1.5rem; border-radius: 8px; background-color: #181c22;">
                 <legend style="color: #FF5C00; font-weight: bold; font-size: 1.2rem; padding: 0 15px;">Branch Information</legend>
                 <div class="row mb-3">
-                  <div class="col-md-3">
+                  <div class="col-md-4">
                     <label for="country_id" class="form-label" style="color: #fff; font-weight: 500;">Country</label>
-                    <select name="country_id" id="country_id" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3; min-width: 120px;">
+                    <select name="country_id" id="country_id" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
                       <option value="">Select Country</option>
                     </select>
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-md-4">
                     {{ form.city.label(class="form-label", style="color: #fff; font-weight: 500;") }}
-                    {{ form.city(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3; min-width: 120px;") }}
+                    {{ form.city(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-md-4">
+                    <label for="iata_code_input" class="form-label" style="color: #fff; font-weight: 500;">IATA</label>
+                    <input type="text" id="iata_code_input" name="iata_code_input" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;" maxlength="3" placeholder="e.g. MIA">
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-md-9">
                     <label for="avail_airports" class="form-label" style="color: #fff; font-weight: 500;">Avail. Airports</label>
-                    <select name="avail_airports" id="avail_airports" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3; min-width: 120px;"></select>
+                    <div class="d-flex align-items-center">
+                      <select name="avail_airports" id="avail_airports" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;"></select>
+                      <!-- Button will be injected here by JS -->
+                    </div>
                   </div>
                   <div class="col-md-3 d-flex align-items-end">
                     <button type="button" id="add-airport-btn" class="btn btn-info w-100" style="height: 40px; background-color: transparent; border: 1px solid #FF5C00; color: #FF5C00; font-weight: bold;" disabled>Add Airport</button>
@@ -118,6 +127,7 @@
                   const regionSelect = document.getElementById('region');
                   const countrySelect = document.getElementById('country_id');
                   const cityInput = document.getElementById('city');
+                  const iataCodeInput = document.getElementById('iata_code_input');
                   const availAirportsSelect = document.getElementById('avail_airports');
                   const addAirportBtn = document.getElementById('add-airport-btn');
                   const addBranchBtn = document.getElementById('add-branch-btn');
@@ -159,19 +169,28 @@
                   }
                   regionSelect.addEventListener('change', updateCountryOptions);
               
-                  async function findAirports() {
-                      const city = cityInput.value.trim();
-                      const countryCode = countrySelect.value;
-                      availAirportsSelect.innerHTML = '<option value="">Finding airports...</option>';
-                      availAirportsSelect.disabled = true;
-                      addAirportBtn.disabled = true;
-                      if (!city || !countryCode) {
-                          availAirportsSelect.innerHTML = '<option value="">Enter City first</option>';
+                  async function searchByIata() {
+                      const iataCode = iataCodeInput.value.trim().toUpperCase();
+              
+                      if (!iataCode) {
+                          iataCodeInput.style.borderColor = '#FF5C00'; // Highlight border
+                          iataCodeInput.focus();
                           return;
                       }
+                      iataCodeInput.style.borderColor = ''; // Reset border
+              
+                      availAirportsSelect.innerHTML = '<option value="">Finding by IATA...</option>';
+                      availAirportsSelect.disabled = true;
+                      addAirportBtn.disabled = true;
+                      
+                      const iataSearchContainer = document.getElementById('search-by-iata-btn');
+                      if (iataSearchContainer) iataSearchContainer.remove();
+              
                       try {
-                          const response = await fetch(`/coredata/api/find_airports_for_city?city=${encodeURIComponent(city)}&country_code=${encodeURIComponent(countryCode)}`);
+                          const countryCode = countrySelect.value;
+                          const response = await fetch(`/coredata/api/find_airports_for_city?iata=${encodeURIComponent(iataCode)}&country_code=${encodeURIComponent(countryCode)}`);
                           const airports = await response.json();
+                          
                           availAirportsSelect.innerHTML = '<option value="">Select an airport</option>';
                           if (airports.length > 0) {
                               airports.forEach(airport => {
@@ -183,7 +202,52 @@
                                   availAirportsSelect.appendChild(option);
                               });
                           } else {
-                              availAirportsSelect.innerHTML = '<option value="">No airports found</option>';
+                              availAirportsSelect.innerHTML = '<option value="">No airport found for IATA</option>';
+                          }
+                      } catch (error) {
+                          console.error('Error fetching airport by IATA:', error);
+                          availAirportsSelect.innerHTML = '<option value="">Error looking up airport</option>';
+                      } finally {
+                          availAirportsSelect.disabled = false;
+                      }
+                  }
+
+                  async function findAirports() {
+                      const city = cityInput.value.trim();
+                      const countryCode = countrySelect.value;
+                      availAirportsSelect.innerHTML = '<option value="">Finding airports...</option>';
+                      availAirportsSelect.disabled = true;
+                      addAirportBtn.disabled = true;
+                      const existingIataBtn = document.getElementById('search-by-iata-btn');
+                      if (existingIataBtn) existingIataBtn.remove();
+
+                      if (!city || !countryCode) {
+                          availAirportsSelect.innerHTML = '<option value="">Enter City first</option>';
+                          return;
+                      }
+                      try {
+                          const response = await fetch(`/coredata/api/find_airports_for_city?city=${encodeURIComponent(city)}&country_code=${encodeURIComponent(countryCode)}`);
+                          const airports = await response.json();
+                          if (airports.length > 0) {
+                              availAirportsSelect.innerHTML = '<option value="">Select an airport</option>';
+                              airports.forEach(airport => {
+                                  const option = document.createElement('option');
+                                  option.value = airport.iata;
+                                  option.dataset.exists = airport.exists;
+                                  option.dataset.name = airport.name;
+                                  option.textContent = `${airport.iata} - ${airport.name}${airport.exists ? '' : ' (not in DB)'}`;
+                                  availAirportsSelect.appendChild(option);
+                              });
+                          } else {
+                              availAirportsSelect.innerHTML = '<option value="">No airports in that City.</option>';
+                              const iataSearchContainer = document.createElement('span');
+                              iataSearchContainer.id = 'search-by-iata-btn';
+                              iataSearchContainer.innerHTML = `
+                                  <span style="margin-left: 10px; color: #FF5C00;">Try with IATA code?</span>
+                                  <button type="button" id="confirm-iata-search" class="btn btn-sm btn-link" style="color: #2196f3; text-decoration: underline;">Yes</button>
+                              `;
+                              availAirportsSelect.parentElement.appendChild(iataSearchContainer);
+                              document.getElementById('confirm-iata-search').addEventListener('click', searchByIata);
                           }
                       } catch (error) {
                           console.error('Error fetching airports:', error);
