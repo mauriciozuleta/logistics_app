@@ -330,26 +330,20 @@ document.addEventListener('DOMContentLoaded', function() {
       let datEaValue = (datCost > 0 && denominator > 0) ? (datCost / denominator) : 0;
       if (datEaCell) datEaCell.textContent = (datEaValue > 0) ? '$' + datEaValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
 
-      // --- Local Ea/$ column logic ---
+      // --- Local Ea/$ column logic (displays the pre-fetched competitive price) ---
       try {
         const localEaCell = row.querySelector(`#lcal_ea_usd_${productId}`);
-        const packagingWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
-
-        let priceToCompare = 0;
         const priceInput = row.querySelector(`input[name="price_to_compare_${productId}"]`);
+        let priceToCompare = 0;
+
         if (priceInput) {
           priceToCompare = parseFloat(priceInput.value) || 0;
         }
 
-        let localEaValue = 0;
-        // Assuming priceToCompare is per KG, calculate price per unit (Ea)
-        // Price per unit = (Price per KG) * (Weight per unit)
-        // Weight per unit = packagingWeight / unitsPerPack
-        if (priceToCompare > 0 && packagingWeight > 0 && unitsPerPack > 0) {
-          const weightPerUnit = packagingWeight / unitsPerPack;
-          localEaValue = priceToCompare * weightPerUnit;
+        if (localEaCell) {
+          // Only display the value if it's positive AND an amount has been entered for the product.
+          localEaCell.textContent = (priceToCompare > 0 && amount > 0) ? priceToCompare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
         }
-        if (localEaCell) localEaCell.textContent = (localEaValue > 0) ? localEaValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
       } catch (e) {
         console.error('Error calculating Local Ea/$:', e);
       }

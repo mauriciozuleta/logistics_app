@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Duplicated from add_trader.html for regional control development -->
+<div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+      <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
+        <div class="card-body" style="color: #fff;">
+          <h2 class="mb-4" style="color: #2196f3; text-align: center;">Regional Trade Management</h2>
+          <!-- Display form errors if any -->
+          {% if form.errors %}
+            <div class="alert alert-danger" style="background-color: #f44336; color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+              <h5>Form Errors:</h5>
+              <ul style="margin: 0; padding-left: 1rem;">
+                {% for field, errors in form.errors.items() %}
+                  {% for error in errors %}
+                    <li><strong>{{ field }}:</strong> {{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          <form method="POST" action="{{ url_for('coredata.add_trader') }}" class="add-trader-form">
+            {{ form.hidden_tag() }}
+            {{ form.csrf_token }}
+            <input type="hidden" name="edit_id" value="{{ edit_id }}">
+            <!-- Section 1: Trader Info Grouped -->
+            <div class="mb-4">
+              <div id="regional-info-card" class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 1rem;">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      {{ form.name.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                      {{ form.name(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                    </div>
+                    <div class="col-md-4">
+                      <label for="region" class="form-label" style="color: #fff; font-weight: 500;">Region</label>
+                      <select name="region" id="region" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
+                        <option value="">Select Region</option>
+                        {% for region in regions %}
+                          <option value="{{ region }}">{{ region }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      {{ form.operational_cost_year.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                      {{ form.operational_cost_year(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+              <!-- Empty container between trader info and branch info -->
+              <div class="mb-4">
+                <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; min-height: 80px; padding: 1rem; color: #fff;">
+                  <!-- Empty container for future content -->
+                </div>
+              </div>
+            <!-- Section 2: Trader Information (without trader_code) -->
+            <div class="mb-5" id="branch-info-container" style="display: none;">
+              <fieldset style="border: 1px solid #2196f3; padding: 1.5rem; border-radius: 8px; background-color: #181c22;">
+                <legend style="color: #2196f3; font-weight: bold; font-size: 1.2rem; padding: 0 15px;">Branch Information</legend>
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <label for="country_id" class="form-label" style="color: #fff; font-weight: 500;">Country</label>
+                    <select name="country_id" id="country_id" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
+                      <option value="">Select Country</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    {{ form.city.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ form.city(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                  </div>
+                  <div class="col-md-4">
+                    <label for="avail_airports" class="form-label" style="color: #fff; font-weight: 500;">Avail. Airports</label>
+                    <input type="text" name="avail_airports" id="avail_airports" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;" placeholder="Enter airports">
+                  </div>
+                </div>
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    const regionSelect = document.getElementById('region');
+                    const countrySelect = document.getElementById('country_id');
+
+                    async function updateCountryOptions() {
+                      const selectedRegion = regionSelect.value;
+                      // Clear current country options and show loading state
+                      countrySelect.innerHTML = '<option value="">Loading...</option>';
+                      countrySelect.disabled = true;
+
+                      if (!selectedRegion) {
+                        countrySelect.innerHTML = '<option value="">Select Region First</option>';
+                        return;
+                      }
+
+                      try {
+                        const response = await fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(selectedRegion)}`);
+                        if (!response.ok) {
+                          throw new Error('Network response was not ok');
+                        }
+                        const countries = await response.json();
+                        
+                        // Clear loading message
+                        countrySelect.innerHTML = '<option value="">Select Country</option>';
+
+                        if (countries.length > 0) {
+                          countries.forEach(function(country) {
+                            const option = document.createElement('option');
+                            // The form expects the country *code* as the value
+                            option.value = country.code; 
+                            option.textContent = country.name;
+                            countrySelect.appendChild(option);
+                          });
+                        } else {
+                          countrySelect.innerHTML = '<option value="">No countries found</option>';
+                        }
+                      } catch (error) {
+                        console.error('Error fetching countries:', error);
+                        countrySelect.innerHTML = '<option value="">Error loading countries</option>';
+                      } finally {
+                        countrySelect.disabled = false;
+                      }
+                    }
+
+                    regionSelect.addEventListener('change', updateCountryOptions);
+                  });
+                </script>
+                <div class="row mb-0">
+                  <div class="col-md-12">
+                    {{ form.revenue_taxes.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ form.revenue_taxes(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                  </div>
+                </div>
+                <div class="text-center mt-4">
+                  <button type="submit" class="btn btn-primary" style="background-color: transparent; border: 1px solid #FF5C00; color: #FF5C00; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                    Save Branch
+                  </button>
+                </div>
+              </fieldset>
+            </div>
+            <div class="text-center mb-4">
+              <button type="button" id="add-branch-btn" class="btn btn-success" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                Add Branch
+              </button>
+            </div>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const addBranchBtn = document.getElementById('add-branch-btn');
+                const branchInfoContainer = document.getElementById('branch-info-container');
+                const regionalFields = document.querySelectorAll('#regional-info-card input, #regional-info-card select');
+                addBranchBtn.addEventListener('click', function() {
+                  branchInfoContainer.style.display = 'block';
+                  // Freeze all regional fields
+                  regionalFields.forEach(function(field) {
+                    field.disabled = true;
+                  });
+                  addBranchBtn.disabled = true;
+                });
+              });
+            </script>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

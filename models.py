@@ -15,6 +15,7 @@ class Country(db.Model):
     country_code = db.Column(db.String(10), primary_key=True)
     country_name = db.Column(db.String(64), nullable=False)
     currency_code = db.Column(db.String(4), nullable=False)
+    region = db.Column(db.String(32), nullable=True)  # Added region column
 
     products = db.relationship('Product', backref='country', lazy=True)
 
@@ -84,6 +85,7 @@ class Trader(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     trader_code = db.Column(db.String(10), unique=True, nullable=True)  # Custom ID like TR001
+    region = db.Column(db.String(64), nullable=True)
     country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=False)
     city = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(128), nullable=False)

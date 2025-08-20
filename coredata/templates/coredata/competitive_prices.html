@@ -20,7 +20,6 @@
                             <th>Trade Unit</th>
                             <th>Updated:</th>
                             <th>Price to Compare</th>
-                            <th>Local Ea/$</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -33,9 +32,8 @@
                             <td>{{ product.trade_unit }}</td>
                             <td><span id="updated-{{ product.id }}">{{ product.updated_date }}</span></td>
                             <td>
-                                <input type="text" class="form-control form-control-sm" placeholder="$ value" style="width: 90px;" id="input-{{ product.id }}" value="{{ product.price_to_compare }}" oninput="updateDate('{{ product.id }}'); updateLocalEa('{{ product.id }}')">
+                                <input type="text" class="form-control form-control-sm" placeholder="$ value" style="width: 90px;" id="input-{{ product.id }}" value="{{ product.price_to_compare }}" oninput="updateDate('{{ product.id }}')">
                             </td>
-                            <td><span id="local-ea-{{ product.id }}"></span></td>
                             <td>
                                 <button class="btn" style="background: none; color: #2196f3; font-weight: normal; border: 0.5px solid #2196f3; padding: 6px 18px; border-radius: 4px; height: 38px; font-family: inherit; display: flex; align-items: center; justify-content: center; text-align: center; width: 100px;" onclick="searchPrice('{{ product.id }}', '{{ product.name|escape }}', '{{ country|escape }}')">Search</button>
                             </td>
@@ -74,25 +72,6 @@ function updateDate(productId) {
     document.getElementById('updated-' + productId).innerText = formatted;
 }
 
-function updateLocalEa(productId) {
-    var price = parseFloat(document.getElementById('input-' + productId).value);
-    var row = document.getElementById('input-' + productId).closest('tr');
-    // Get packaging_weight and units_per_pack from data attributes
-    var packagingWeight = parseFloat(row.getAttribute('data-packaging-weight'));
-    var unitsPerPack = parseFloat(row.getAttribute('data-units-per-pack'));
-    var localEa = '';
-    if (!isNaN(price) && packagingWeight && unitsPerPack) {
-        localEa = (price / (packagingWeight / unitsPerPack)).toFixed(2);
-    }
-    document.getElementById('local-ea-' + productId).innerText = localEa;
-}
-
-// On page load, initialize all Local Ea/$
-document.addEventListener('DOMContentLoaded', function() {
-    {% for product in products %}
-    updateLocalEa('{{ product.id }}');
-    {% endfor %}
-});
 
 function handleSavePrices() {
     var allFilled = true;

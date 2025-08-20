@@ -280,6 +280,9 @@
               <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;">DAT Kg/$</div>
               <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;">DAT Ea/$</div>
               <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;">Local Ea/$</div>
+              <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;">Sug. Imp. Profit %</div>
+              <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;">Imp. Profit %</div>
+              <div style="width: 140px; min-width:140px; max-width:140px; padding: 6px;">Final DAT $</div>
             </div>
             <!-- Product rows (vertical scroll only) -->
             <div class="product-table-body" style="max-height: 350px; overflow-y: auto; min-width: 1800px;">
@@ -340,6 +343,9 @@
                   <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;" id="dat_ea_usd_{{ product.id }}">-</div>
                   <div style="display:none;" id="units_per_pack_{{ product.id }}">{{ product.units_per_pack or 0 }}</div>
                   <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;" id="lcal_ea_usd_{{ product.id }}">-</div>
+                  <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;" id="sug_imp_profit_pct_{{ product.id }}">-</div>
+                  <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;" id="imp_profit_pct_{{ product.id }}">-</div>
+                  <div style="width: 140px; min-width:140px; max-width:140px; padding: 6px;" id="final_dat_usd_{{ product.id }}">-</div>
                 </div>
               {% else %}
                 <div style="padding: 10px 0; color: #888;">No products available.</div>
@@ -372,6 +378,9 @@
               <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;" id="total_dat_kg_usd">-</div>
               <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;" id="total_dat_ea_usd">-</div>
               <div style="width: 145px; min-width:145px; max-width:145px; padding: 6px;" id="total_lcal_ea_usd">-</div>
+              <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;" id="total_sug_imp_profit_pct">-</div>
+              <div style="width: 120px; min-width:120px; max-width:120px; padding: 6px;" id="total_imp_profit_pct">-</div>
+              <div style="width: 140px; min-width:140px; max-width:140px; padding: 6px;" id="total_final_dat_usd">-</div>
             </div>
           </div>
         </div>

@@ -6,6 +6,54 @@ from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
+# ...existing code...
+
+@coredata_bp.route('/country_branch', methods=['GET', 'POST'])
+def country_branch():
+    form = TraderForm()
+    if request.method == 'POST':
+        # Add branch logic here (save to DB, etc.)
+        # You can access form data via form.<field>.data
+        # For now, just redirect to the same page or a success page
+        return redirect(url_for('coredata.country_branch'))
+    return render_template('coredata/country_branch.html', form=form, edit_id=None)
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from extensions import db
+from models import Product, Country, Aircraft, Airport, Trader
+from models import CompetitivePrice
+from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
+
+coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+
+@coredata_bp.route('/country_branch', methods=['GET', 'POST'])
+def country_branch():
+    form = TraderForm()
+    if form.validate_on_submit():
+        # Add branch logic here (save to DB, etc.)
+        # You can access form data via form.<field>.data
+        # For now, just redirect to the same page or a success page
+        return redirect(url_for('coredata.country_branch'))
+    return render_template('coredata/country_branch.html', form=form, edit_id=None)
+
+@coredata_bp.route('/traders/Regional_Management', methods=['GET', 'POST'])
+def regional_management():
+    form = TraderForm()
+    # Get distinct regions from the Country model to populate the dropdown
+    regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
+    # Flatten the list of tuples and filter out None/empty values
+    region_choices = [r[0] for r in regions if r[0]]
+    return render_template('coredata/add_Regional_control.html', form=form, edit_id=None, regions=region_choices)
+
+@coredata_bp.route('/api/countries_by_region')
+def api_countries_by_region():
+    region = request.args.get('region', type=str)
+    if not region:
+        return jsonify([])
+
+    countries = Country.query.filter_by(region=region).order_by(Country.country_name).all()
+    country_list = [{'code': c.country_code, 'name': c.country_name} for c in countries]
+    return jsonify(country_list)
+
 @coredata_bp.route('/competitive_prices')
 def competitive_prices():
     from models import CompetitivePrice

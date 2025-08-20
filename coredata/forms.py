@@ -8,9 +8,9 @@ class TraderForm(FlaskForm):
     trader_code = StringField('Trader Code', validators=[Optional()])
     
     # Section 1: Trader Information
-    country_id = SelectField('Country', coerce=str, validators=[DataRequired()])
-    city = StringField('City', validators=[DataRequired()])
-    name = StringField('Trader Name', validators=[DataRequired()])
+    country_id = SelectField('Country', coerce=str, validators=[Optional()])
+    city = StringField('City', validators=[Optional()])
+    name = StringField('Trader Name', validators=[Optional()])
     revenue_taxes = FloatField('Revenue Taxes (%)', validators=[Optional()])
     operational_cost_year = FloatField('Operational Cost/Year (USD)', validators=[Optional()])
 

@@ -73,11 +73,11 @@ def seed_all():
             field_map={
                 'CountryCode': 'country_code',
                 'Country': 'country_name',
-                # 'Currency': not mapped, since not in model
-                'Code': 'currency_code'
+                'Code': 'currency_code',
+                'Region': 'region'
             },
             skip_duplicates_field='CountryCode',
-            required_csv_fields=['CountryCode', 'Country', 'Code']
+            required_csv_fields=['CountryCode', 'Country', 'Code', 'Region']
         )
         seed_table_from_csv(Aircraft, os.path.join(base_dir, 'aircraft_export.csv'))
         seed_table_from_csv(Trader, os.path.join(base_dir, 'traders_export.csv'))
