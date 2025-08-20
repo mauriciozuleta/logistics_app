@@ -54,6 +54,54 @@ def api_countries_by_region():
     country_list = [{'code': c.country_code, 'name': c.country_name} for c in countries]
     return jsonify(country_list)
 
+@coredata_bp.route('/api/find_airports_for_city', methods=['GET'])
+def find_airports_for_city():
+    """
+    Finds airport IATA codes for a given city using the OpenFlights database.
+    Checks which of those airports already exist in the local database.
+    """
+    city = request.args.get('city', type=str)
+    country_code = request.args.get('country_code', type=str)
+
+    if not city or not country_code:
+        return jsonify({'error': 'City and country_code are required'}), 400
+
+    # --- FIX: Look up the full country name from the provided country code ---
+    country = Country.query.get(country_code)
+    if not country:
+        # Return an empty list if the country code is invalid, to prevent errors.
+        return jsonify([])
+    country_name_to_match = country.country_name
+
+    found_airports = []
+    try:
+        import requests, csv
+        from io import StringIO
+        API_URL = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+        resp = requests.get(API_URL, timeout=10)
+        if resp.ok:
+            # Get all IATA codes that exist in our local DB for quick lookup
+            existing_iatas = {a.iata_code for a in Airport.query.with_entities(Airport.iata_code).all()}
+            
+            reader = csv.reader(StringIO(resp.text))
+            for fields in reader:
+                # --- FIX: Match by city and full country name (both case-insensitive) ---
+                if (len(fields) > 4 and
+                    fields[2].strip('"').lower() == city.lower() and
+                    fields[3].strip('"').lower() == country_name_to_match.lower()):
+                    iata = fields[4].strip('"')
+                    name = fields[1].strip('"')
+                    if iata and iata != r'\N':
+                        found_airports.append({
+                            'iata': iata,
+                            'name': name,
+                            'exists': iata in existing_iatas
+                        })
+    except Exception as e:
+        print(f"Error fetching airport data for {city}: {e}")
+        return jsonify({'error': 'Failed to fetch airport data'}), 500
+
+    return jsonify(found_airports)
 @coredata_bp.route('/competitive_prices')
 def competitive_prices():
     from models import CompetitivePrice
@@ -267,6 +315,13 @@ def add_airport():
 
         db.session.commit()
         return redirect(url_for('coredata.view_edit_airport'))
+
+    # Pre-fill form from query parameters if they exist
+    if request.method == 'GET':
+        form.city.data = request.args.get('city', form.city.data)
+        form.country_id.data = request.args.get('country_id', form.country_id.data)
+        form.iata_code.data = request.args.get('iata_code', form.iata_code.data)
+        form.name.data = request.args.get('name', form.name.data)
 
     return render_template('coredata/add_airport.html', form=form, edit_id=edit_id)
 

@@ -61,25 +61,32 @@
               <fieldset style="border: 1px solid #2196f3; padding: 1.5rem; border-radius: 8px; background-color: #181c22;">
                 <legend style="color: #2196f3; font-weight: bold; font-size: 1.2rem; padding: 0 15px;">Branch Information</legend>
                 <div class="row mb-3">
-                  <div class="col-md-4">
+                  <div class="col-md-3">
                     <label for="country_id" class="form-label" style="color: #fff; font-weight: 500;">Country</label>
-                    <select name="country_id" id="country_id" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
+                    <select name="country_id" id="country_id" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3; min-width: 120px;">
                       <option value="">Select Country</option>
                     </select>
                   </div>
-                  <div class="col-md-4">
+                  <div class="col-md-3">
                     {{ form.city.label(class="form-label", style="color: #fff; font-weight: 500;") }}
-                    {{ form.city(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                    {{ form.city(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3; min-width: 120px;") }}
                   </div>
-                  <div class="col-md-4">
+                  <div class="col-md-3">
                     <label for="avail_airports" class="form-label" style="color: #fff; font-weight: 500;">Avail. Airports</label>
-                    <input type="text" name="avail_airports" id="avail_airports" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;" placeholder="Enter airports">
+                    <select name="avail_airports" id="avail_airports" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3; min-width: 120px;"></select>
+                  </div>
+                  <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" id="add-airport-btn" class="btn btn-info w-100" style="height: 40px; background-color: transparent; border: 1px solid #FF5C00; color: #FF5C00; font-weight: bold;" disabled>Add Airport</button>
                   </div>
                 </div>
                 <script>
                   document.addEventListener('DOMContentLoaded', function() {
                     const regionSelect = document.getElementById('region');
                     const countrySelect = document.getElementById('country_id');
+                    const addAirportBtn = document.getElementById('add-airport-btn');
+                    const cityInput = document.getElementById('city');
+                    const availAirportsSelect = document.getElementById('avail_airports');
+
 
                     async function updateCountryOptions() {
                       const selectedRegion = regionSelect.value;
@@ -122,35 +129,145 @@
                     }
 
                     regionSelect.addEventListener('change', updateCountryOptions);
+
+                    // --- New Airport Lookup Logic ---
+                    async function findAirports() {
+                        const city = cityInput.value.trim();
+                        const countryCode = countrySelect.value;
+
+                        availAirportsSelect.innerHTML = '<option value="">Finding airports...</option>';
+                        availAirportsSelect.disabled = true;
+                        addAirportBtn.disabled = true;
+
+                        if (!city || !countryCode) {
+                            availAirportsSelect.innerHTML = '<option value="">Enter City first</option>';
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`/coredata/api/find_airports_for_city?city=${encodeURIComponent(city)}&country_code=${encodeURIComponent(countryCode)}`);
+                            const airports = await response.json();
+
+                            availAirportsSelect.innerHTML = '<option value="">Select an airport</option>';
+                            if (airports.length > 0) {
+                                airports.forEach(airport => {
+                                    const option = document.createElement('option');
+                                    option.value = airport.iata;
+                                    option.dataset.exists = airport.exists; // Store existence status
+                                    option.dataset.name = airport.name; // Store airport name
+                                    option.textContent = `${airport.iata} - ${airport.name}${airport.exists ? '' : ' (not in DB)'}`;
+                                    availAirportsSelect.appendChild(option);
+                                });
+                            } else {
+                                availAirportsSelect.innerHTML = '<option value="">No airports found</option>';
+                            }
+                        } catch (error) {
+                            console.error('Error fetching airports:', error);
+                            availAirportsSelect.innerHTML = '<option value="">Error looking up airports</option>';
+                        } finally {
+                            availAirportsSelect.disabled = false;
+                        }
+                    }
+
+                    // Trigger lookup when user leaves the city field
+                    cityInput.addEventListener('blur', findAirports);
+
+                    // Enable/disable "Add Airport" button based on selection
+                    availAirportsSelect.addEventListener('change', function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        if (selectedOption && selectedOption.dataset.exists === 'false') {
+                            addAirportBtn.disabled = false;
+                        } else {
+                            addAirportBtn.disabled = true;
+                        }
+                    });
+
+                    // Add Airport button logic
+                    if (addAirportBtn) {
+                      addAirportBtn.addEventListener('click', function() {
+                        const city = cityInput.value.trim();
+                        const countryCode = countrySelect.value;
+                        const selectedOption = availAirportsSelect.options[availAirportsSelect.selectedIndex];
+                        const iataCode = selectedOption.value;
+                        const airportName = selectedOption.dataset.name || '';
+                        // Redirect to the add_airport page with pre-filled data
+                        window.location.href = `{{ url_for('coredata.add_airport') }}?city=${encodeURIComponent(city)}&country_id=${encodeURIComponent(countryCode)}&iata_code=${encodeURIComponent(iataCode)}&name=${encodeURIComponent(airportName)}`;
+                      });
+                    }
                   });
                 </script>
                 <div class="row mb-0">
-                  <div class="col-md-12">
+                  <div class="col-md-6">
                     {{ form.revenue_taxes.label(class="form-label", style="color: #fff; font-weight: 500;") }}
                     {{ form.revenue_taxes(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
                   </div>
+                  <div class="col-md-6">
+                    {{ form.operational_cost_year.label(class="form-label", style="color: #fff; font-weight: 500;") }}
+                    {{ form.operational_cost_year(class="form-control", style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;") }}
+                  </div>
                 </div>
                 <div class="text-center mt-4">
-                  <button type="submit" class="btn btn-primary" style="background-color: transparent; border: 1px solid #FF5C00; color: #FF5C00; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                  <button type="button" id="save-branch-btn" class="btn btn-primary" style="background-color: transparent; border: 1px solid #FF5C00; color: #FF5C00; padding: 12px 40px; font-size: 16px; font-weight: bold;">
                     Save Branch
                   </button>
                 </div>
               </fieldset>
-            </div>
-            <div class="text-center mb-4">
-              <button type="button" id="add-branch-btn" class="btn btn-success" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
-                Add Branch
-              </button>
-            </div>
+              </div>
+
+              <div class="text-center mb-4">
+                <button type="button" id="add-branch-btn" class="btn btn-success" style="background-color: transparent; border: 1px solid #2196f3; color: #2196f3; padding: 12px 40px; font-size: 16px; font-weight: bold;">
+                  Add Branch
+                </button>
+              </div>
             <script>
               document.addEventListener('DOMContentLoaded', function() {
                 const addBranchBtn = document.getElementById('add-branch-btn');
                 const branchInfoContainer = document.getElementById('branch-info-container');
-                const regionalFields = document.querySelectorAll('#regional-info-card input, #regional-info-card select');
+                const regionalFields = document.querySelectorAll('.card-body input, .card-body select');
+                const saveBranchBtn = document.getElementById('save-branch-btn');
+                const emptyContainer = document.getElementById('empty-between-containers');
+
                 addBranchBtn.addEventListener('click', function() {
                   branchInfoContainer.style.display = 'block';
-                  // Freeze all regional fields
+                  // Freeze only regional fields, not branch info fields
                   regionalFields.forEach(function(field) {
+                    // Only disable fields outside the branch info container
+                    if (!branchInfoContainer.contains(field)) {
+                      field.disabled = true;
+                    }
+                  });
+                  // Unfreeze branch info fields
+                  const branchFields = branchInfoContainer.querySelectorAll('input, select');
+                  branchFields.forEach(function(field) {
+                    field.disabled = false;
+                  });
+                  addBranchBtn.disabled = true;
+                });
+
+                saveBranchBtn.addEventListener('click', function() {
+                  // Gather data from branch info fields
+                  const country = document.getElementById('country_id').selectedOptions[0]?.textContent || '';
+                  const city = document.getElementById('city').value || '';
+                  const airports = document.getElementById('avail_airports').value || '';
+                  const revenueTaxes = document.getElementById('revenue_taxes')?.value || '';
+                  const operationalCost = document.getElementById('operational_cost_year')?.value || '';
+
+                  // Display in empty container
+                  emptyContainer.innerHTML = `
+                    <div class='card' style='background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; padding: 1rem; color: #fff;'>
+                      <h5 style='color: #2196f3;'>Branch Data</h5>
+                      <ul style='list-style:none; padding-left:0;'>
+                        <li><strong>Country:</strong> ${country}</li>
+                        <li><strong>City:</strong> ${city}</li>
+                        <li><strong>Available Airports:</strong> ${airports}</li>
+                        <li><strong>Revenue Taxes:</strong> ${revenueTaxes}</li>
+                        <li><strong>Operational Cost/Year (USD):</strong> ${operationalCost}</li>
+                      </ul>
+                    </div>
+                  `;
+                });
+              });
+            </script>
                     field.disabled = true;
                   });
                   addBranchBtn.disabled = true;
