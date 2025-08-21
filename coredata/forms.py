@@ -28,7 +28,8 @@ class TraderForm(FlaskForm):
 
     # New fields for regional management branches
     other_taxes = FloatField('Other Taxes', validators=[Optional()])
-    additional_info = TextAreaField('Additional Information', validators=[Optional()])
+    other_costs = FloatField('Other Costs (USD)', validators=[Optional()])
+    additional_info = TextAreaField('Additional Information', validators=[Optional(), Length(max=500)])
 
     submit = SubmitField('Add Trader')
 

@@ -79,16 +79,31 @@ class Aircraft(BaseModel):
     acmi_cost = db.Column(db.Float)
 
 
+class RegionalManager(BaseModel):
+    __tablename__ = 'regional_managers'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False, unique=True)
+    region = db.Column(db.String(64), nullable=False)
+    operational_cost_year = db.Column(db.Float)
+
+    # Relationship to Trader (which now also represents branches)
+    branches = db.relationship('Trader', backref='regional_manager', lazy='dynamic')
+
+    def __repr__(self):
+        return f"<RegionalManager {self.name} ({self.region})>"
+
+
 # Trader model
 class Trader(BaseModel):
     __tablename__ = 'traders'
 
     id = db.Column(db.Integer, primary_key=True)
     trader_code = db.Column(db.String(10), unique=True, nullable=True)  # Custom ID like TR001
-    region = db.Column(db.String(64), nullable=True)
     country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=False)
     city = db.Column(db.String(100), nullable=False)
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(128), nullable=True) # Name is optional for branches, can be same as city
+    airport_iata = db.Column(db.String(3), nullable=True) # IATA of the main airport for this branch
     
     # Section 1: Trader Information
     revenue_taxes = db.Column(db.Float)  # Revenue Taxes (%)
@@ -105,6 +120,14 @@ class Trader(BaseModel):
     import_taxes = db.Column(db.Float)  # Import Taxes (%)
     import_other_taxes = db.Column(db.Float)  # Other Taxes (%)
     import_other_cost = db.Column(db.Float)  # Other Cost (USD)
+
+    # New fields for regional management branches
+    other_taxes = db.Column(db.Float)
+    other_costs = db.Column(db.Float)
+    additional_info = db.Column(db.Text)
+
+    # Foreign key to link to a regional manager
+    regional_manager_id = db.Column(db.Integer, db.ForeignKey('regional_managers.id'), nullable=True)
 
     country = db.relationship('Country', backref='traders')
 

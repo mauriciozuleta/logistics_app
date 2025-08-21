@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
 from extensions import db
-from models import Product, Country, Aircraft, Airport, Trader
+from models import Product, Country, Aircraft, Airport, Trader, RegionalManager
 from models import CompetitivePrice
 from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm, RegionalManagerForm
 
@@ -30,28 +30,99 @@ def regional_management():
     region_choices = [r[0] for r in regions if r[0]]
     manager_form.region.choices = [("", "Select Region")] + [(r, r) for r in region_choices]
 
-    if request.method == 'POST':
-        # This is where we'll handle the final submission of the manager and all branches
-        # For now, we'll just flash a success message and redirect.
-        # The actual saving logic will be built after the front-end is complete.
-        
-        manager_name = request.form.get('name')
-        branches_json = request.form.get('branches_data', '[]')
-        branches = json.loads(branches_json)
-
-        # Here you would create the RegionalManager and Trader (branch) objects
-        # and save them to the database.
-        
-        print(f"Manager to save: {manager_name}")
-        print(f"Branches to save: {len(branches)}")
-        print(branches)
-
-        # flash(f"Regional Manager '{manager_name}' and {len(branches)} branches saved.", "success")
-        return redirect(url_for('coredata.view_edit_traders')) # Placeholder redirect
-
     return render_template('coredata/add_Regional_control.html', 
                            manager_form=manager_form, 
                            branch_form=branch_form)
+
+@coredata_bp.route('/api/save_branch', methods=['POST'])
+def api_save_branch():
+    data = request.get_json()
+    manager_data = data.get('manager_data')
+    branch_data = data.get('branch_data')
+
+    if not manager_data or not branch_data:
+        return jsonify({'success': False, 'error': 'Missing manager or branch data'}), 400
+
+    try:
+        # Find or create the Regional Manager
+        manager = RegionalManager.query.filter_by(region=manager_data['region']).first()
+        if not manager:
+            if not manager_data.get('name'):
+                return jsonify({'success': False, 'error': 'Manager name is required for a new region'}), 400
+            manager = RegionalManager(
+                name=manager_data['name'],
+                region=manager_data['region']
+            )
+            db.session.add(manager)
+        
+        # Update manager's operational cost
+        manager.operational_cost_year = manager_data.get('operational_cost_year')
+
+        # Create the new branch (Trader)
+        new_branch = Trader(
+            name=branch_data.get('city'),
+            trader_code=_generate_next_code(Trader, 'trader_code', 'BR'),
+            country_id=branch_data.get('countryCode'),
+            city=branch_data.get('city'),
+            airport_iata=branch_data.get('airport'),
+            revenue_taxes=branch_data.get('revenue'),
+            operational_cost_year=branch_data.get('opCost'),
+            export_sales_tax=branch_data.get('exportSalesTax'),
+            import_taxes=branch_data.get('importTaxes'),
+            other_taxes=branch_data.get('otherTaxes'),
+            other_costs=branch_data.get('otherCosts'),
+            additional_info=branch_data.get('additionalInfo'),
+            regional_manager=manager
+        )
+        db.session.add(new_branch)
+        db.session.commit()
+
+        return jsonify({
+            'success': True, 
+            'message': 'Branch saved successfully!',
+            'branch': {
+                'id': new_branch.id,
+                'city': new_branch.city,
+                'airport': new_branch.airport_iata,
+                'countryCode': new_branch.country_id,
+                'countryName': new_branch.country.country_name if new_branch.country else ''
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving branch: {e}") # for debugging
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@coredata_bp.route('/api/branch_defaults_by_country')
+def api_branch_defaults_by_country():
+    country_code = request.args.get('country_code', type=str)
+    if not country_code:
+        return jsonify(None)
+
+    # Find the most recently created trader in that country to use as a default
+    last_branch_in_country = Trader.query.filter_by(country_id=country_code).order_by(Trader.created_at.desc()).first()
+
+    if last_branch_in_country:
+        return jsonify({
+            'revenue_taxes': last_branch_in_country.revenue_taxes,
+            'export_sales_tax': last_branch_in_country.export_sales_tax,
+            'import_taxes': last_branch_in_country.import_taxes,
+            'other_taxes': last_branch_in_country.other_taxes,
+        })
+    return jsonify(None)
+
+
+@coredata_bp.route('/api/regional_manager_by_region')
+def api_regional_manager_by_region():
+    region = request.args.get('region', type=str)
+    if not region:
+        return jsonify(None)
+
+    manager = RegionalManager.query.filter_by(region=region).first()
+    if manager:
+        return jsonify({'id': manager.id, 'name': manager.name, 'operational_cost_year': manager.operational_cost_year})
+    return jsonify(None)
 
 @coredata_bp.route('/api/countries_by_region')
 def api_countries_by_region():
@@ -259,8 +330,12 @@ def add_trader():
 # View/Edit Traders
 @coredata_bp.route('/view-edit-traders')
 def view_edit_traders():
-    trader_list = Trader.query.all()
-    return render_template('coredata/view_edit_traders.html', trader_list=trader_list)
+    # Fetch managers and their branches, and also traders who are not part of a region
+    regional_managers = RegionalManager.query.order_by(RegionalManager.name).all()
+    independent_traders = Trader.query.filter(Trader.regional_manager_id.is_(None)).order_by(Trader.name).all()
+    return render_template('coredata/view_edit_traders.html', 
+                           regional_managers=regional_managers, 
+                           independent_traders=independent_traders)
 
 # Debug Traders
 @coredata_bp.route('/debug-traders')
