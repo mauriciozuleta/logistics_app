@@ -80,7 +80,7 @@
               document.addEventListener('DOMContentLoaded', function() {
                 var form = document.querySelector('.add-trader-form');
                 form.addEventListener('keydown', function(e) {
-                  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
                     e.preventDefault();
                   }
                 });
@@ -194,7 +194,7 @@
                 </fieldset>
               </div>
 
-              <!-- The "Finish" button has been removed as it's no longer needed. -->
+              <!-- The main form submission button is no longer needed as branches are saved individually. -->
             </div>
             <script>
               document.addEventListener('DOMContentLoaded', function() {
@@ -480,12 +480,31 @@
                               setManagerFieldsDisabled(true); // Disable manager fields
                               isExistingManager = true;
                               if (regionWarning) regionWarning.style.display = 'none';
+
+                              // If branches data is returned, populate the accordion
+                              if (managerData.branches && Object.keys(managerData.branches).length > 0) {
+                                  branchesByCountry = managerData.branches;
+                                  renderAccordion();
+                                  // Also show the branch details section immediately
+                                  branchDetailsSections.style.display = 'block';
+                              } else {
+                                  // Manager exists but has no branches yet
+                                  branchesByCountry = {};
+                                  renderAccordion();
+                                  branchDetailsSections.style.display = 'none'; // Hide until 'Add Branch' is clicked
+                              }
                           } else {
                               // No manager for this region
                               if (managerNameInput) managerNameInput.value = ''; // Clear name if region changed and no manager found
                               if (managerOperationalCostInput) managerOperationalCostInput.value = '';
                               setManagerFieldsDisabled(false); // Ensure manager fields are enabled
                               isExistingManager = false;
+                              
+                              // Clear branches and hide section
+                              branchesByCountry = {};
+                              renderAccordion();
+                              branchDetailsSections.style.display = 'none';
+
                               if (regionWarning) {
                                 regionWarning.textContent = 'Please enter a Manager Name to add branches for this new region.';
                                 regionWarning.style.display = 'block';
@@ -521,10 +540,22 @@
                           const branches = branchesByCountry[countryName];
                           const countryCode = branches.length > 0 ? branches[0].countryCode : '';
                           
-                          const header = document.createElement('button');
-                          header.type = 'button';
-                          header.className = 'accordion-header';
-                          header.textContent = `${countryName} (${branches.length} Branches)`;
+                          const header = document.createElement('div');
+                          header.className = 'accordion-header d-flex justify-content-between align-items-center';
+                          
+                           const headerText = document.createElement('span');
+                          headerText.textContent = `${countryName} (${branches.length} Branches)`;
+
+                          const competitivePricesButton = document.createElement('a');
+                          competitivePricesButton.href = `{{ url_for('coredata.competitive_prices') }}?country=${encodeURIComponent(countryName)}`;
+                          competitivePricesButton.className = 'btn btn-sm btn-outline-info';
+                          competitivePricesButton.target = '_blank';
+                          competitivePricesButton.style.textDecoration = 'none';
+                          competitivePricesButton.textContent = `Go to Country Prices`;
+                          competitivePricesButton.addEventListener('click', (e) => e.stopPropagation()); // Prevent accordion from toggling
+
+                          header.appendChild(headerText);
+                          header.appendChild(competitivePricesButton);
                           
                           const body = document.createElement('div');
                           body.className = 'accordion-body';
@@ -537,8 +568,8 @@
                                       <strong>City:</strong> ${branch.city} | <strong>Airport:</strong> ${branch.airport}
                                   </div>
                                   <div class="branch-actions">
-                                      <button type="button" class="edit-branch-btn" data-branch-id="${branch.id}" style="color: #ff9800; background: none; border: none; cursor: pointer; margin-right: 10px;">✏️ Edit Branch</button>
-                                      <button type="button" class="delete-branch-btn" data-country="${countryName}" data-index="${index}" style="color: #f44336; background: none; border: none; cursor: pointer;">🗑️ Delete</button>
+                                      <button type="button" class="edit-branch-btn" data-branch-id="${branch.id}" style="color: #ff9800; background: none; border: none; cursor: pointer; margin-right: 10px;">✏️ Edit</button>
+                                      <button type="button" class="delete-branch-btn" data-branch-id="${branch.id}" data-country="${countryName}" data-index="${index}" style="color: #f44336; background: none; border: none; cursor: pointer;">🗑️ Delete</button>
                                   </div>
                               `;
                               body.appendChild(item);
@@ -549,20 +580,47 @@
                       }
                   }
 
-                  branchDisplayContainer.addEventListener('click', function(e) {
-                      if (e.target.classList.contains('accordion-header')) {
-                          e.target.classList.toggle('active');
-                          const body = e.target.nextElementSibling;
+                  branchDisplayContainer.addEventListener('click', async function(e) {
+                      const header = e.target.closest('.accordion-header');
+                      if (header) {
+                          header.classList.toggle('active');
+                          const body = header.nextElementSibling;
                           body.style.display = body.style.display === 'block' ? 'none' : 'block';
                       }
-                      if (e.target.classList.contains('delete-branch-btn')) {
+                      if (e.target.closest('.delete-branch-btn')) {
+                          const branchId = e.target.dataset.branchId;
                           const country = e.target.dataset.country;
                           const index = parseInt(e.target.dataset.index, 10);
-                          branchesByCountry[country].splice(index, 1);
-                          if (branchesByCountry[country].length === 0) {
-                              delete branchesByCountry[country];
+
+                          if (!branchId) {
+                              alert('Cannot delete a branch without an ID.');
+                              return;
                           }
-                          renderAccordion();
+
+                          if (confirm('Are you sure you want to permanently delete this branch?')) {
+                              try {
+                                  const response = await fetch(`/coredata/api/branch/${branchId}`, {
+                                      method: 'DELETE',
+                                      headers: {
+                                          'X-CSRFToken': '{{ manager_form.csrf_token._value() }}'
+                                      }
+                                  });
+                                  const result = await response.json();
+                                  if (response.ok && result.success) {
+                                      // Remove from local state and re-render
+                                      branchesByCountry[country].splice(index, 1);
+                                      if (branchesByCountry[country].length === 0) {
+                                          delete branchesByCountry[country];
+                                      }
+                                      renderAccordion();
+                                  } else {
+                                      alert(`Error deleting branch: ${result.error || 'Unknown error'}`);
+                                  }
+                              } catch (error) {
+                                  console.error('Fetch error:', error);
+                                  alert('A network error occurred while deleting the branch.');
+                              }
+                          }
                       }
                   });
 
@@ -587,6 +645,18 @@
                   });
 
                   saveBranchBtn.addEventListener('click', async () => {
+                      const countryOption = countrySelect.options[countrySelect.selectedIndex];
+                      const countryName = countryOption.text;
+                      const countryCode = countryOption.value;
+                      const city = cityInput.value;
+                      const airport = availAirportsSelect.value;
+                      const revenue = document.getElementById('branch_revenue_taxes').value;
+                      const opCost = document.getElementById('branch_op_cost').value;
+                      const otherCosts = document.getElementById('branch_other_costs').value;
+                      const exportSalesTax = document.getElementById('branch_export_sales_tax').value;
+                      const importTaxes = document.getElementById('branch_import_taxes').value;
+                      const otherTaxes = document.getElementById('branch_other_taxes').value;
+                      const additionalInfo = document.getElementById('branch_additional_info').value;
                       // 1. Gather data
                       const managerData = {
                           name: managerNameInput.value,
@@ -669,8 +739,6 @@
                           saveBranchBtn.textContent = 'Save Branch';
                       }
                   });
-
-                  // The main form is no longer submitted in the traditional way.
 
                   // Initial render
                   renderAccordion();

@@ -25,7 +25,7 @@
               <div class="accordion-item" style="background-color: #181c22; border: 1px solid #2a3038;">
                 <h2 class="accordion-header" id="heading-{{ manager.id }}">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ manager.id }}" aria-expanded="false" aria-controls="collapse-{{ manager.id }}" style="background-color: #2a3038; color: #2196f3; box-shadow: none;">
-                    <strong>{{ manager.name }}</strong>&nbsp; (Region: {{ manager.region }}) - {{ manager.branches.count() }} Branches
+                    <strong>{{ manager.name }}</strong>&nbsp; (Region: {{ manager.region }}) - {{ manager.branches|length }} Branches
                   </button>
                 </h2>
                 <div id="collapse-{{ manager.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ manager.id }}" data-bs-parent="#regionalManagersAccordion">
@@ -38,6 +38,29 @@
                         <a href="#" class="btn btn-sm btn-warning">✏️ Edit Manager</a>
                         <a href="#" class="btn btn-sm btn-danger">🗑️ Delete Manager</a>
                       </div>
+                    </div>
+
+                    <div class="mb-3 p-3" style="background-color: #2a3038; border-radius: 6px;">
+                        <h6 style="color: #bbb; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">Competitive Price Analysis</h6>
+                        {% set countries = [] %}
+                        {% for branch in manager.branches %}
+                            {% if branch.country and branch.country.country_name not in countries %}
+                                {% set _ = countries.append(branch.country.country_name) %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if countries %}
+                            <div class="d-flex flex-column gap-2">
+                            {% for country_name in countries %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span style="color: #e0e0e0;">{{ country_name }}</span>
+                                    <a href="{{ url_for('coredata.competitive_prices', country=country_name) }}" class="btn btn-sm btn-outline-info">
+                                        Go to Country Prices
+                                    </a>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     
                     <h5 style="color: #bbb;">Branches</h5>

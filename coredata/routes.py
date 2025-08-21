@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
 from extensions import db
 from models import Product, Country, Aircraft, Airport, Trader, RegionalManager
+from sqlalchemy.orm import joinedload
 from models import CompetitivePrice
 from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm, RegionalManagerForm
 
@@ -94,6 +95,21 @@ def api_save_branch():
         print(f"Error saving branch: {e}") # for debugging
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@coredata_bp.route('/api/branch/<int:branch_id>', methods=['DELETE'])
+def api_delete_branch(branch_id):
+    """API endpoint to delete a branch."""
+    branch = Trader.query.get(branch_id)
+    if not branch:
+        return jsonify({'success': False, 'error': 'Branch not found'}), 404
+    
+    try:
+        db.session.delete(branch)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Branch deleted successfully.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @coredata_bp.route('/api/branch_defaults_by_country')
 def api_branch_defaults_by_country():
     country_code = request.args.get('country_code', type=str)
@@ -119,9 +135,28 @@ def api_regional_manager_by_region():
     if not region:
         return jsonify(None)
 
-    manager = RegionalManager.query.filter_by(region=region).first()
+    # Eager load branches and their associated country to avoid N+1 queries
+    manager = RegionalManager.query.options(
+        joinedload(RegionalManager.branches).joinedload(Trader.country)
+    ).filter_by(region=region).first()
+
     if manager:
-        return jsonify({'id': manager.id, 'name': manager.name, 'operational_cost_year': manager.operational_cost_year})
+        branches_by_country = {}
+        # The branches are already loaded, so this loop is efficient
+        for branch in manager.branches:
+            country_name = branch.country.country_name if branch.country else 'Unknown'
+            if country_name not in branches_by_country:
+                branches_by_country[country_name] = []
+            
+            branches_by_country[country_name].append({
+                'id': branch.id,
+                'city': branch.city,
+                'airport': branch.airport_iata,
+                'countryCode': branch.country_id,
+                'countryName': country_name
+            })
+
+        return jsonify({'id': manager.id, 'name': manager.name, 'operational_cost_year': manager.operational_cost_year, 'branches': branches_by_country})
     return jsonify(None)
 
 @coredata_bp.route('/api/countries_by_region')
@@ -331,7 +366,7 @@ def add_trader():
 @coredata_bp.route('/view-edit-traders')
 def view_edit_traders():
     # Fetch managers and their branches, and also traders who are not part of a region
-    regional_managers = RegionalManager.query.order_by(RegionalManager.name).all()
+    regional_managers = RegionalManager.query.options(joinedload(RegionalManager.branches)).order_by(RegionalManager.name).all()
     independent_traders = Trader.query.filter(Trader.regional_manager_id.is_(None)).order_by(Trader.name).all()
     return render_template('coredata/view_edit_traders.html', 
                            regional_managers=regional_managers, 

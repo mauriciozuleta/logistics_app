@@ -88,7 +88,7 @@ class RegionalManager(BaseModel):
     operational_cost_year = db.Column(db.Float)
 
     # Relationship to Trader (which now also represents branches)
-    branches = db.relationship('Trader', backref='regional_manager', lazy='dynamic')
+    branches = db.relationship('Trader', backref='regional_manager')
 
     def __repr__(self):
         return f"<RegionalManager {self.name} ({self.region})>"
