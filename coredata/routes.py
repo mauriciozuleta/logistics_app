@@ -199,6 +199,9 @@ def find_airports_for_city():
         if resp.ok:
             existing_iatas = {a.iata_code for a in Airport.query.with_entities(Airport.iata_code).all()}
             
+            # Create a lookup for country name to country code for efficiency
+            country_name_map = {c.country_name.lower(): c.country_code for c in Country.query.all()}
+            
             reader = csv.reader(StringIO(resp.text))
             for fields in reader:
                 if len(fields) > 4:
@@ -223,11 +226,15 @@ def find_airports_for_city():
                             match = True
                     
                     if match:
+                        # Find the country code from our DB using the map
+                        country_code_to_return = country_name_map.get(airport_country.lower())
+
                         found_airports.append({
                             'iata': iata,
                             'name': name,
                             'city': airport_city,
-                            'exists': iata in existing_iatas
+                            'exists': iata in existing_iatas,
+                            'country_code': country_code_to_return
                         })
                         # If searching by IATA, we can stop after finding it.
                         if iata_code_arg:

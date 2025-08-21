@@ -136,24 +136,24 @@
     <!-- Basic Airport Information -->
     <div class="section-title">Basic Information</div>
     <div class="airport-form-row">
-      <div class="airport-form-group medium">
-        <label class="airport-form-label">{{ form.name.label.text }}</label>
-        {{ form.name(class="airport-form-input", placeholder="Enter airport name") }}
-        {% if form.name.errors %}<div class="error-message">{{ form.name.errors[0] }}</div>{% endif %}
-      </div>
       <div class="airport-form-group small">
         <label class="airport-form-label">{{ form.iata_code.label.text }}</label>
-        {{ form.iata_code(class="airport-form-input", maxlength=3, placeholder="XXX", style="text-transform: uppercase;") }}
+        {{ form.iata_code(class="airport-form-input", id="iata_code_input", maxlength=3, placeholder="XXX", style="text-transform: uppercase;") }}
         {% if form.iata_code.errors %}<div class="error-message">{{ form.iata_code.errors[0] }}</div>{% endif %}
+      </div>
+      <div class="airport-form-group medium">
+        <label class="airport-form-label">{{ form.name.label.text }}</label>
+        {{ form.name(class="airport-form-input", id="airport_name_input", placeholder="Auto-populated") }}
+        {% if form.name.errors %}<div class="error-message">{{ form.name.errors[0] }}</div>{% endif %}
       </div>
       <div class="airport-form-group">
         <label class="airport-form-label">{{ form.city.label.text }}</label>
-        {{ form.city(class="airport-form-input", placeholder="Enter city") }}
+        {{ form.city(class="airport-form-input", id="city_input", placeholder="Auto-populated") }}
         {% if form.city.errors %}<div class="error-message">{{ form.city.errors[0] }}</div>{% endif %}
       </div>
       <div class="airport-form-group">
         <label class="airport-form-label">{{ form.country_id.label.text }}</label>
-        {{ form.country_id(class="airport-form-select") }}
+        {{ form.country_id(class="airport-form-select", id="country_select") }}
         {% if form.country_id.errors %}<div class="error-message">{{ form.country_id.errors[0] }}</div>{% endif %}
       </div>
     </div>
@@ -216,8 +216,60 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  const editId = "{{ edit_id or '' }}";
+  const iataInput = document.getElementById('iata_code_input');
+  const nameInput = document.getElementById('airport_name_input');
+  const cityInput = document.getElementById('city_input');
+  const countrySelect = document.getElementById('country_select');
+  const mainForm = document.querySelector('form');
+
+  if (!editId) {
+    // --- This logic only runs for ADDING a new airport ---
+    nameInput.readOnly = true;
+    cityInput.readOnly = true;
+    countrySelect.disabled = true;
+
+    iataInput.addEventListener('blur', async function() {
+      const iataCode = this.value.trim().toUpperCase();
+      if (iataCode.length !== 3) {
+        nameInput.value = 'Auto-populated';
+        cityInput.value = 'Auto-populated';
+        countrySelect.value = '';
+        return;
+      }
+
+      nameInput.value = 'Searching...';
+      cityInput.value = 'Searching...';
+
+      try {
+        const response = await fetch(`/coredata/api/find_airports_for_city?iata=${encodeURIComponent(iataCode)}`);
+        const airports = await response.json();
+
+        if (airports.length > 0) {
+          const airport = airports[0];
+          nameInput.value = airport.name;
+          cityInput.value = airport.city;
+          if (airport.country_code) {
+            countrySelect.value = airport.country_code;
+          } else {
+            countrySelect.value = '';
+            alert(`Could not map airport country to a country in the database.`);
+          }
+        } else {
+          nameInput.value = 'Not Found';
+          cityInput.value = 'Not Found';
+          countrySelect.value = '';
+        }
+      } catch (error) {
+        console.error('Error fetching airport data:', error);
+        nameInput.value = 'Error';
+        cityInput.value = 'Error';
+        countrySelect.value = '';
+      }
+    });
+  }
+
   // Auto-uppercase IATA code input
-  const iataInput = document.querySelector('input[name="iata_code"]');
   if (iataInput) {
     iataInput.addEventListener('input', function() {
       this.value = this.value.toUpperCase();
@@ -232,6 +284,13 @@ document.addEventListener('DOMContentLoaded', function() {
         this.value = parseFloat(this.value).toFixed(2);
       }
     });
+  });
+
+  // Re-enable fields before form submission so their values are sent
+  mainForm.addEventListener('submit', function() {
+    // nameInput and cityInput are readonly, so they will be submitted.
+    // We only need to re-enable the disabled country select.
+    countrySelect.disabled = false;
   });
 });
 </script>
