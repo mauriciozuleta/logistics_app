@@ -3,6 +3,7 @@
 {% block content %}
 
 <script>
+  window.regionsWithBranches = {{ regions_with_branches | tojson | safe }};
   window.routeData = {{ route_data | tojson | safe }};
   window.airportData = {{ airport_data | tojson | safe }};
   window.traderData = {{ trader_data | tojson | safe }};
@@ -60,36 +61,71 @@
     
     <!-- Section 1: Shipment Information -->
     <div class="shipment-section">
-      <div class="section-title">Shipment Information</div>
-      <div class="shipment-form-row">
-        <div class="form-group" style="flex:1;">
-          <label for="shipment_reference">Shipment Reference *</label>
+      <div class="section-title d-flex justify-content-between align-items-center">
+        <span>Shipment Information</span>
+        <div class="form-group mb-0" style="flex: 0.5; margin-left: auto;">
+          <label for="shipment_reference" class="visually-hidden">Shipment Reference</label>
           <input type="text" id="shipment_reference" name="shipment_reference" 
-                 placeholder="Will be auto-generated from trader codes"
+                 placeholder="Shipment Reference (Auto-Generated)"
                  readonly
-                 style="width: 100%; background-color: #2a2e35; color: #e0e0e0; border: 1.5px solid #2196f3;">
+                 style="background-color: #2a2e35; color: #e0e0e0; border: 1.5px solid #2196f3; text-align: center;">
         </div>
-        <div class="form-group" style="flex:1;">
-          <label for="shipper">Shipper *</label>
-          <select id="shipper" name="shipper" required style="width: 100%;">
-            <option value="">Select Shipper...</option>
-            {% for trader_id, trader_display in trader_choices %}
-              <option value="{{ trader_id }}">{{ trader_display }}</option>
+      </div>
+
+      <!-- Shipper Information -->
+      <div class="shipment-form-row" style="margin-bottom: 1.5rem;">
+        <div class="form-group" style="flex:0.5; align-self: center; color: #FF5C00; font-weight: bold;">Shipper:</div>
+        <div class="form-group" style="flex:1; min-width: 180px;">
+          <label for="shipper_region">Region</label>
+          <select id="shipper_region" name="shipper_region" style="width: 100%;">
+            <option value="">Select Region...</option>
+            {% for region in regions_with_branches.keys()|sort %}
+              <option value="{{ region }}">{{ region }}</option>
             {% endfor %}
           </select>
         </div>
-        <div class="form-group" style="flex:1;">
-          <label for="consignee">Consignee *</label>
-          <select id="consignee" name="consignee" required style="width: 100%;">
-            <option value="">Select Consignee...</option>
-            {% for trader_id, trader_display in trader_choices %}
-              <option value="{{ trader_id }}">{{ trader_display }}</option>
+        <div class="form-group" style="flex:1; min-width: 180px;">
+          <label for="shipper_country">Country</label>
+          <select id="shipper_country" name="shipper_country" style="width: 100%;" disabled>
+            <option value="">Select Region First...</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1; min-width: 180px;">
+          <label for="shipper_branch">Branch *</label>
+          <select id="shipper_branch" name="shipper_branch" required style="width: 100%;" disabled>
+            <option value="">Select Country First...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Consignee Information -->
+      <div class="shipment-form-row">
+        <div class="form-group" style="flex:0.5; align-self: center; color: #FF5C00; font-weight: bold;">Consignee:</div>
+        <div class="form-group" style="flex:1; min-width: 180px;">
+          <label for="consignee_region">Region</label>
+          <select id="consignee_region" name="consignee_region" style="width: 100%;">
+            <option value="">Select Region...</option>
+            {% for region in regions_with_branches.keys()|sort %}
+              <option value="{{ region }}">{{ region }}</option>
             {% endfor %}
           </select>
         </div>
-        <div class="form-group" style="flex:1; align-items: flex-end; justify-content: flex-end;">
-          <!-- Load button removed; logic will be triggered by consignee selection -->
+        <div class="form-group" style="flex:1; min-width: 180px;">
+          <label for="consignee_country">Country</label>
+          <select id="consignee_country" name="consignee_country" style="width: 100%;" disabled>
+            <option value="">Select Region First...</option>
+          </select>
         </div>
+        <div class="form-group" style="flex:1; min-width: 180px;">
+          <label for="consignee_branch">Branch *</label>
+          <select id="consignee_branch" name="consignee_branch" required style="width: 100%;" disabled>
+            <option value="">Select Country First...</option>
+          </select>
+        </div>
+      </div>
+      <!-- Route existence alert logic (preserved) -->
+      <div id="route-alert" style="display:none; color:#ff4444; font-weight:bold; margin-top:10px;">
+        No route exists between the selected shipper and consignee cities. Please create a route first.
       </div>
     </div>
 

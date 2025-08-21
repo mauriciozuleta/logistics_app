@@ -24,8 +24,14 @@ function saveShipmentDraft(draft) {
 
 document.addEventListener('DOMContentLoaded', function() {
   // --- DOM Element Cache ---
-  const shipperSelect = document.getElementById('shipper');
-  const consigneeSelect = document.getElementById('consignee');
+  // New elements for cascading dropdowns
+  const shipperRegionSelect = document.getElementById('shipper_region');
+  const shipperCountrySelect = document.getElementById('shipper_country');
+  const shipperBranchSelect = document.getElementById('shipper_branch');
+  const consigneeRegionSelect = document.getElementById('consignee_region');
+  const consigneeCountrySelect = document.getElementById('consignee_country');
+  const consigneeBranchSelect = document.getElementById('consignee_branch');
+
   const shipmentRefField = document.getElementById('shipment_reference');
   const firstLegRouteSelect = document.getElementById('first_leg_route');
   const secondLegRouteSelect = document.getElementById('second_leg_route');
@@ -46,12 +52,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const returnExtraLabel = document.getElementById('return_extra_label');
   const totalFlightCostElement = document.getElementById('total_flight_cost');
 
+  // Data from Flask
+  const regionsWithBranches = window.regionsWithBranches || {};
+
 // Collect current form data and update the draft
 const updateShipmentDraftFromForm = function() {
   const draft = getShipmentDraft();
   draft.shipment_reference = shipmentRefField?.value || '';
-  draft.shipper = shipperSelect?.value || '';
-  draft.consignee = consigneeSelect?.value || '';
+  draft.shipper = shipperBranchSelect?.value || '';
+  draft.consignee = consigneeBranchSelect?.value || '';
   draft.first_leg_route = firstLegRouteSelect?.value || '';
   draft.first_leg_route_text = firstLegRouteSelect.selectedIndex > 0 ? firstLegRouteSelect.options[firstLegRouteSelect.selectedIndex].text : '';
   draft.second_leg_route = secondLegRouteSelect?.value || '';
@@ -67,7 +76,7 @@ const updateShipmentDraftFromForm = function() {
 };
 
 // Attach update logic to relevant form fields
-  [ shipmentRefField, shipperSelect, consigneeSelect, firstLegRouteSelect, secondLegRouteSelect,
+  [ shipmentRefField, shipperBranchSelect, consigneeBranchSelect, firstLegRouteSelect, secondLegRouteSelect,
     availableAircraftSelect, returnTypeSelect, outboundPercentInput, returnPercentInput, outboundExtraInput, returnExtraInput
   ].forEach(function(el) {
     if (el) {
@@ -78,6 +87,100 @@ const updateShipmentDraftFromForm = function() {
   // Initial save
   updateShipmentDraftFromForm();
 
+  // --- New Cascading Dropdown Logic ---
+
+  function setupCascadingDropdowns(regionSelect, countrySelect, branchSelect) {
+    regionSelect.addEventListener('change', function() {
+      const selectedRegion = this.value;
+      countrySelect.innerHTML = '<option value="">Select Country...</option>';
+      branchSelect.innerHTML = '<option value="">Select Branch...</option>';
+      countrySelect.disabled = !selectedRegion;
+      branchSelect.disabled = true;
+
+      if (selectedRegion && regionsWithBranches[selectedRegion]) {
+        const countries = Object.keys(regionsWithBranches[selectedRegion]).sort();
+        countries.forEach(country => {
+          const option = document.createElement('option');
+          option.value = country;
+          option.textContent = country;
+          countrySelect.appendChild(option);
+        });
+        countrySelect.disabled = false;
+      }
+    });
+
+    countrySelect.addEventListener('change', function() {
+      const selectedRegion = regionSelect.value;
+      const selectedCountry = this.value;
+      branchSelect.innerHTML = '<option value="">Select Branch...</option>';
+      branchSelect.disabled = !selectedCountry;
+
+      if (selectedRegion && selectedCountry && regionsWithBranches[selectedRegion] && regionsWithBranches[selectedRegion][selectedCountry]) {
+        const branches = regionsWithBranches[selectedRegion][selectedCountry];
+        branches.forEach(branch => {
+          const option = document.createElement('option');
+          option.value = branch.id;
+          // Show IATA code + airport name + city
+          let label = '';
+          if (branch.airport_iata) {
+            label += branch.airport_iata + ' - ';
+          }
+          if (branch.airport_name) {
+            label += branch.airport_name + ' - ';
+          }
+          if (branch.city) {
+            label += branch.city;
+          }
+          option.textContent = label.trim();
+          branchSelect.appendChild(option);
+        });
+        branchSelect.disabled = false;
+      }
+    });
+
+    branchSelect.addEventListener('change', function() {
+      generateShipmentReference();
+      if (shipperBranchSelect.value && consigneeBranchSelect.value) {
+        // Get selected shipper and consignee branch IDs
+        const shipperId = shipperBranchSelect.value;
+        const consigneeId = consigneeBranchSelect.value;
+        // Lookup airport IATA codes for shipper and consignee
+        const allBranches = Object.values(regionsWithBranches)
+          .flatMap(region => Object.values(region))
+          .flatMap(country => country);
+        const shipperBranch = allBranches.find(branch => branch.id == shipperId);
+        const consigneeBranch = allBranches.find(branch => branch.id == consigneeId);
+        const shipperIata = shipperBranch && shipperBranch.airport_iata ? shipperBranch.airport_iata : '';
+        const consigneeIata = consigneeBranch && consigneeBranch.airport_iata ? consigneeBranch.airport_iata : '';
+        // Check if a route exists between these IATA codes
+        let routeExists = false;
+        if (shipperIata && consigneeIata) {
+          for (const routeId in window.routeData) {
+            const route = window.routeData[routeId];
+            if (route.fromAirport === shipperIata && route.toAirport === consigneeIata) {
+              routeExists = true;
+              break;
+            }
+          }
+        }
+        const routeAlert = document.getElementById('route-alert');
+        if (!routeExists && shipperIata && consigneeIata) {
+          routeAlert.style.display = 'block';
+          routeAlert.textContent = `No route exists between ${shipperIata} and ${consigneeIata}. Please create a route first.`;
+        } else {
+          routeAlert.style.display = 'none';
+        }
+        loadRoutesLogic();
+      }
+      // Also trigger the competitive price fetch for consignee
+      if (this.id === 'consignee_branch') {
+        fetchCompetitivePrices(this.value);
+      }
+    });
+  }
+
+  setupCascadingDropdowns(shipperRegionSelect, shipperCountrySelect, shipperBranchSelect);
+  setupCascadingDropdowns(consigneeRegionSelect, consigneeCountrySelect, consigneeBranchSelect);
   
   console.log('Trader data loaded:', traderData);
   console.log('Route data loaded:', routeData);
@@ -91,7 +194,6 @@ const updateShipmentDraftFromForm = function() {
   // Helper function to format payload with thousand separators
   function formatPayloadWithSeparators(payloadText) {
     if (!payloadText) return 'N/A';
-    // Extract numeric value from payload string
     const payloadMatch = payloadText.match(/(\d+(?:\.\d+)?)/);
     if (payloadMatch) {
       const payloadValue = parseFloat(payloadMatch[1]);
@@ -228,8 +330,8 @@ const updateShipmentDraftFromForm = function() {
   }
 
   function generateShipmentReference() {
-    const shipperId = shipperSelect.value;
-    const consigneeId = consigneeSelect.value;
+    const shipperId = shipperBranchSelect.value;
+    const consigneeId = consigneeBranchSelect.value;
     
     if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId] && shipmentRefField) {
       const shipperCode = traderData[shipperId].code;
@@ -850,15 +952,15 @@ function updateShipmentSummaryRoutes() {
     const returnLegRoutes = [];
 
     Object.entries(allRoutes).forEach(([routeId, route]) => {
-      // Add checks to prevent errors if city data is missing
-      if (!route.fromCity || !route.toCity) {
+      // Add checks to prevent errors if IATA data is missing
+      if (!route.fromAirport || !route.toAirport) {
         return; // Skip this route if data is incomplete
       }
-      const fromCityLower = route.fromCity.toLowerCase();
-      const toCityLower = route.toCity.toLowerCase();
+      const fromIata = route.fromAirport.toUpperCase();
+      const toIata = route.toAirport.toUpperCase();
 
       // Find first leg routes (from shipper to consignee)
-      if (fromCityLower === shipperCity.toLowerCase() && toCityLower === consigneeCity.toLowerCase()) {
+      if (fromIata === shipperCity.toUpperCase() && toIata === consigneeCity.toUpperCase()) {
         firstLegRoutes.push({
           value: routeId,
           text: route.summary,
@@ -867,7 +969,7 @@ function updateShipmentSummaryRoutes() {
       }
 
       // Find return leg routes (from consignee to anywhere)
-      if (fromCityLower === consigneeCity.toLowerCase()) {
+      if (fromIata === consigneeCity.toUpperCase()) {
         returnLegRoutes.push({
           value: routeId,
           text: route.summary
@@ -879,41 +981,7 @@ function updateShipmentSummaryRoutes() {
 
 
   // Always update city fields on selection
-  shipperSelect.addEventListener('change', function() {
-    generateShipmentReference();
-    // Only load routes if both shipper and consignee are selected
-    if (shipperSelect.value && consigneeSelect.value) {
-      loadRoutesLogic();
-    }
-  });
-  consigneeSelect.addEventListener('change', function() {
-    generateShipmentReference();
-    loadRoutesLogic();
-    // --- NEW: Fetch competitive prices ---
-    const consigneeId = this.value;
-    if (consigneeId) {
-        fetch(`/api/product_prices?consignee_id=${consigneeId}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(prices => {
-                console.log('Fetched competitive prices:', prices);
-                // Update the hidden input fields for each product
-                for (const productId in prices) {
-                    const priceInput = document.querySelector(`input[name="price_to_compare_${productId}"]`);
-                    if (priceInput) {
-                        priceInput.value = prices[productId];
-                    }
-                }
-                // Trigger a full recalculation of the product table
-                if (window.recalcAll) { window.recalcAll(); }
-            })
-            .catch(error => { console.error('Error fetching competitive prices:', error); });
-    }
-  });
+  // REMOVED: old event listeners for shipperSelect and consigneeSelect
 
   // Logic to load routes based on shipper/consignee selection
   function loadRoutesLogic() {
@@ -922,8 +990,8 @@ function updateShipmentSummaryRoutes() {
     secondLegRouteSelect.innerHTML = '<option value="">Return Route...</option>';
     showRouteNotFound(false);
 
-    const shipperId = shipperSelect.value;
-    const consigneeId = consigneeSelect.value;
+    const shipperId = shipperBranchSelect.value;
+    const consigneeId = consigneeBranchSelect.value;
     console.log('Shipper ID:', shipperId, 'Consignee ID:', consigneeId);
 
     if (!shipperId || !consigneeId) {
@@ -942,12 +1010,13 @@ function updateShipmentSummaryRoutes() {
       return;
     }
 
-    const shipperCity = shipperData.city;
-    const consigneeCity = consigneeData.city;
-    console.log('Shipper city:', shipperCity, 'Consignee city:', consigneeCity);
+  // Use airport IATA codes for route matching
+  const shipperIata = shipperData.airport_iata;
+  const consigneeIata = consigneeData.airport_iata;
+  console.log('Shipper IATA:', shipperIata, 'Consignee IATA:', consigneeIata);
 
-    const { firstLegRoutes, returnLegRoutes } = filterRoutes(routeData, shipperCity, consigneeCity);
-    const found = firstLegRoutes.length > 0;
+  const { firstLegRoutes, returnLegRoutes } = filterRoutes(routeData, shipperIata, consigneeIata);
+  const found = firstLegRoutes.length > 0;
 
     // Populate first leg route select
     firstLegRoutes.forEach(opt => {
@@ -981,8 +1050,8 @@ function updateShipmentSummaryRoutes() {
   // Form submission handling
     if (form) {
     form.addEventListener('submit', function(e) {
-      const shipper = shipperSelect.value;
-      const consignee = consigneeSelect.value;
+      const shipper = shipperBranchSelect.value;
+      const consignee = consigneeBranchSelect.value;
       const firstLegRoute = firstLegRouteSelect.value;
       if (!shipper) {
         alert('Please select a shipper.');

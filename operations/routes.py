@@ -631,7 +631,7 @@ def scheduled_shipments():
 @operations.route('/add-shipment/<int:shipment_id>', methods=['GET', 'POST'])
 def add_shipment(shipment_id=None):
     """Add or edit a shipment"""
-    from models import Trader, Product, Route
+    from models import Trader, Product, Route, RegionalManager, Airport
 
     # Check if we're editing an existing shipment
     shipment_to_edit = None
@@ -666,7 +666,37 @@ def add_shipment(shipment_id=None):
             flash(f'Error processing shipment: {str(e)}', 'error')
             return redirect(url_for('operations.add_shipment'))
 
-    # Get choices for form dropdowns
+    # --- Data for Dropdowns ---
+    # Eagerly load relationships to prevent N+1 queries
+    managers = RegionalManager.query.options(
+        joinedload(RegionalManager.branches).joinedload(Trader.country)
+    ).order_by(RegionalManager.region, RegionalManager.name).all()
+
+    # Structure data for the new cascading dropdowns
+    regions_with_branches = {}
+    # Build a lookup for airports by IATA code for fast access
+    airport_lookup = {a.iata_code: a for a in Airport.query.all()}
+    for manager in managers:
+        if manager.region not in regions_with_branches:
+            regions_with_branches[manager.region] = {}
+        for branch in manager.branches:
+            if branch.country:
+                country_name = branch.country.country_name
+                if country_name not in regions_with_branches[manager.region]:
+                    regions_with_branches[manager.region][country_name] = []
+                # Get airport info from branch.airport_iata
+                airport_iata = branch.airport_iata
+                airport_name = None
+                if airport_iata and airport_iata in airport_lookup:
+                    airport_name = airport_lookup[airport_iata].name
+                regions_with_branches[manager.region][country_name].append({
+                    'id': branch.id,
+                    'city': branch.city,
+                    'name': branch.name or branch.city, # Fallback to city if name is null
+                    'airport_iata': airport_iata,
+                    'airport_name': airport_name
+                })
+
     from models import Airport
     traders = Trader.query.order_by(Trader.trader_code).all()
     trader_choices = [(t.id, f"{t.trader_code} - {t.name} ({t.city})") for t in traders]
@@ -737,6 +767,7 @@ def add_shipment(shipment_id=None):
         'name': t.name,
         'city': t.city,
         'country': t.country_id,
+        'airport_iata': t.airport_iata,
         'export_sales_tax': t.export_sales_tax,
         'export_profit_pct': t.export_profit_pct,
         'export_other_taxes': t.export_other_taxes,
@@ -781,6 +812,13 @@ def add_shipment(shipment_id=None):
             'payload': payload_display
         }
 
+    # Ensure all variables are defined and JSON serializable
+    regions_with_branches = regions_with_branches if regions_with_branches is not None else {}
+    route_data = route_data if route_data is not None else {}
+    airport_data = airport_data if airport_data is not None else {}
+    trader_data = trader_data if trader_data is not None else {}
+    products_dicts = products_dicts if products_dicts is not None else []
+
     return render_template(
         'operations/add_shipment.html',
         shipment_to_edit=shipment_to_edit,
@@ -793,7 +831,8 @@ def add_shipment(shipment_id=None):
         airport_data=airport_data, 
         trader_data=trader_data,
         route_data=route_data,
-        products=products_dicts  # <-- NOW PASS THE DICTS
+        products=products_dicts,
+        regions_with_branches=regions_with_branches
     )
 
 @operations.route('/view-shipments')
