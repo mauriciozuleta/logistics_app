@@ -120,23 +120,10 @@ const updateShipmentDraftFromForm = function() {
         branches.forEach(branch => {
           const option = document.createElement('option');
           option.value = branch.id;
-          // Use a more robust method to build the label, avoiding case-sensitive duplicates.
-          const parts = [];
-          const seen = new Set();
-          const addPart = (part) => {
-            if (part && typeof part === 'string' && part.trim()) {
-              const trimmedPart = part.trim();
-              const upperPart = trimmedPart.toUpperCase();
-              if (!seen.has(upperPart)) {
-                seen.add(upperPart);
-                parts.push(trimmedPart);
-              }
-            }
-          };
-          addPart(branch.airport_iata);
-          addPart(branch.airport_name);
-          addPart(branch.city);
-          option.textContent = parts.join(' - ');
+          // Use only branch data for label
+          let label = `${branch.iata_code || ''} - ${branch.airport_name || ''} - ${branch.city || ''}`;
+          label = label.replace(/undefined/g, '').replace(/\s*-\s*/g, ' - ').replace(/^ - | - $/g, '').replace(/\s{2,}/g, ' ').trim();
+          option.textContent = label;
           branchSelect.appendChild(option);
         });
         branchSelect.disabled = false;
@@ -184,6 +171,22 @@ const updateShipmentDraftFromForm = function() {
         fetchCompetitivePrices(this.value);
       }
     });
+      // Populate branch dropdown with correct label format
+      function populateBranchDropdown(branches) {
+        branchSelect.innerHTML = '';
+        branches.forEach(function(branch) {
+          const option = document.createElement('option');
+          let label = branch.iata_code;
+          if (branch.airport_iata && branch.airport_iata !== branch.iata_code) {
+            label += ` - ${branch.airport_iata}`;
+          }
+          label += ` - ${branch.airport_name} - ${branch.city}`;
+          option.value = branch.id;
+          option.text = label;
+          branchSelect.appendChild(option);
+        });
+      }
+      // ...existing code for triggering populateBranchDropdown when needed...
   }
 
   setupCascadingDropdowns(shipperRegionSelect, shipperCountrySelect, shipperBranchSelect);
