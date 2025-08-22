@@ -544,12 +544,16 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function updateAddCargoButtons() {
-    const enabled = !!shipperSelect.value && !!consigneeSelect.value;
+    const shipperBranch = document.getElementById('shipper_branch');
+    const consigneeBranch = document.getElementById('consignee_branch');
+    const enabled = !!(shipperBranch && shipperBranch.value) && !!(consigneeBranch && consigneeBranch.value);
     if (depBtn) depBtn.disabled = !enabled;
     if (retBtn) retBtn.disabled = !enabled;
   }
-  if (shipperSelect) shipperSelect.addEventListener('change', updateAddCargoButtons);
-  if (consigneeSelect) consigneeSelect.addEventListener('change', updateAddCargoButtons);
+  const shipperBranch = document.getElementById('shipper_branch');
+  const consigneeBranch = document.getElementById('consignee_branch');
+  if (shipperBranch) shipperBranch.addEventListener('change', updateAddCargoButtons);
+  if (consigneeBranch) consigneeBranch.addEventListener('change', updateAddCargoButtons);
 
   // --- INITIALIZATION ---
   disableAmountInputs();

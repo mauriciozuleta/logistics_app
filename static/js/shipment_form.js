@@ -23,6 +23,15 @@ function saveShipmentDraft(draft) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // --- CONFLICT OVERRIDE ---
+  // This is an intentional override to prevent a conflicting function
+  // in another file (e.g., product_table.js) from running and causing errors.
+  // The correct logic for enabling/disabling cargo buttons is handled
+  // entirely within this file by the `updateCargoButtonsState` function.
+  window.updateAddCargoButtons = function() {
+    console.warn('Conflict override: A redundant updateAddCargoButtons() function was blocked from running.');
+  };
+
   // --- DOM Element Cache ---
   // New elements for cascading dropdowns
   const shipperRegionSelect = document.getElementById('shipper_region');
@@ -145,7 +154,8 @@ const updateShipmentDraftFromForm = function() {
 
     branchSelect.addEventListener('change', function() {
       generateShipmentReference();
-      if (shipperBranchSelect.value && consigneeBranchSelect.value) {
+      // Defensively check that both branch selects exist and have values
+      if (shipperBranchSelect && shipperBranchSelect.value && consigneeBranchSelect && consigneeBranchSelect.value) {
         // Get selected shipper and consignee branch IDs
         const shipperId = shipperBranchSelect.value;
         const consigneeId = consigneeBranchSelect.value;
@@ -170,36 +180,19 @@ const updateShipmentDraftFromForm = function() {
             }
           }
         }
+        // Defensively check if the route-alert element exists to prevent script crashes.
         const routeAlert = document.getElementById('route-alert');
-        if (!routeExists && shipperIata && consigneeIata) {
-          routeAlert.style.display = 'block';
-          routeAlert.textContent = `No route exists between ${shipperIata} and ${consigneeIata}. Please create a route first.`;
-        } else {
-          routeAlert.style.display = 'none';
+        if (routeAlert) {
+          if (!routeExists && shipperIata && consigneeIata) {
+            routeAlert.style.display = 'block';
+            routeAlert.textContent = `No route exists between ${shipperIata} and ${consigneeIata}. Please create a route first.`;
+          } else {
+            routeAlert.style.display = 'none';
+          }
         }
         loadRoutesLogic();
       }
-      // Also trigger the competitive price fetch for consignee
-      if (this.id === 'consignee_branch') {
-        fetchCompetitivePrices(this.value);
-      }
     });
-      // Populate branch dropdown with correct label format
-      function populateBranchDropdown(branches) {
-        branchSelect.innerHTML = '';
-        branches.forEach(function(branch) {
-          const option = document.createElement('option');
-          let label = branch.iata_code;
-          if (branch.airport_iata && branch.airport_iata !== branch.iata_code) {
-            label += ` - ${branch.airport_iata}`;
-          }
-          label += ` - ${branch.airport_name} - ${branch.city}`;
-          option.value = branch.id;
-          option.text = label;
-          branchSelect.appendChild(option);
-        });
-      }
-      // ...existing code for triggering populateBranchDropdown when needed...
   }
 
   setupCascadingDropdowns(shipperRegionSelect, shipperCountrySelect, shipperBranchSelect);
@@ -353,10 +346,14 @@ const updateShipmentDraftFromForm = function() {
   }
 
   function generateShipmentReference() {
+    // Defensively check for elements before using them.
+    if (!shipperBranchSelect || !consigneeBranchSelect || !shipmentRefField) {
+      return;
+    }
     const shipperId = shipperBranchSelect.value;
     const consigneeId = consigneeBranchSelect.value;
     
-    if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId] && shipmentRefField) {
+    if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId]) {
       const shipperCode = traderData[shipperId].code;
       const consigneeCode = traderData[consigneeId].code;
       const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -399,14 +396,12 @@ const updateShipmentDraftFromForm = function() {
   // Aircraft selection control logic
   function updateAircraftAvailability() {
     const firstLegRouteValue = firstLegRouteSelect.value;
-    const secondLegRouteValue = secondLegRouteSelect.value;
     
-    // Aircraft is only available when BOTH routes are selected
-    if (firstLegRouteValue && secondLegRouteValue) {
-      // Enable aircraft selection when both routes are selected
+    // Aircraft is only available when the First Leg Route is selected
+    if (firstLegRouteValue) {
       availableAircraftSelect.disabled = false;
     } else {
-      // Disable aircraft selection when either route is missing
+      // Disable aircraft selection if no departure route is selected
       availableAircraftSelect.disabled = true;
       availableAircraftSelect.value = ''; // Clear selection
       // Clear route information when aircraft becomes unavailable
@@ -417,17 +412,8 @@ const updateShipmentDraftFromForm = function() {
   // Add event listener to show message when trying to select disabled aircraft
   availableAircraftSelect.addEventListener('click', function(e) {
     if (this.disabled) {
-      const firstLegSelected = firstLegRouteSelect.value;
-      const secondLegSelected = secondLegRouteSelect.value;
-      
-      if (!firstLegSelected && !secondLegSelected) {
-        alert('Please select both First Leg Route and Return/Connecting Route before choosing an aircraft.');
-      } else if (!firstLegSelected) {
-        alert('Please select a First Leg Route before choosing an aircraft.');
-      } else if (!secondLegSelected) {
-        alert('Please select a Return/Connecting Route before choosing an aircraft.');
-      }
-      
+      // Simplified alert to match the new, correct logic
+      alert('Please select a Departure Route before choosing an aircraft.');
       e.preventDefault();
       return false;
     }
@@ -438,6 +424,11 @@ const updateShipmentDraftFromForm = function() {
   availableAircraftSelect.addEventListener('change', function() {
     console.log('=== AIRCRAFT SELECTION TRIGGERED ===');
     console.log('Selected aircraft:', this.value);
+
+    // Filter the return routes based on the selected aircraft.
+    // This is the correct place for this logic.
+    updateReturnRoutes(this.value);
+
     console.log('First leg route selected:', firstLegRouteSelect.value);
     console.log('Second leg route selected:', secondLegRouteSelect.value);
     console.log('Route data available:', Object.keys(routeData).length, 'routes');
@@ -728,37 +719,53 @@ function updateShipmentSummaryRoutes() {
   // New function to filter return routes based on the selected aircraft
   function updateReturnRoutes(selectedAircraft) {
     console.log(`Filtering return routes for aircraft: ${selectedAircraft || 'None'}`);
-    const consigneeId = consigneeSelect.value;
+    const consigneeId = consigneeBranchSelect.value; // Corrected from consigneeSelect
     const returnMessageEl = document.getElementById('return-route-message');
 
+    // Preserve the current selection to try and re-select it later
+    const currentReturnRoute = secondLegRouteSelect.value;
     // Clear previous options and message
     secondLegRouteSelect.innerHTML = '<option value="">Return Route...</option>';
     if (returnMessageEl) returnMessageEl.style.display = 'none';
 
-    // If no aircraft is selected, or no consignee, we can't filter.
-    if (!selectedAircraft || !consigneeId) {
+    // If no consignee is selected, we can't filter.
+    if (!consigneeId) {
       return;
     }
 
-    const consigneeCity = window.traderData[consigneeId]?.city;
-    if (!consigneeCity) return;
+    const consigneeIata = window.traderData[consigneeId]?.airport_iata; // Use IATA code
+    if (!consigneeIata) return;
+    const consigneeIataUpper = consigneeIata.trim().toUpperCase();
 
     let routesFound = 0;
     Object.entries(window.routeData).forEach(([routeId, route]) => {
-      // Check if the route starts from the consignee's city
-      // and uses the selected aircraft.
-      if (route.fromCity?.toLowerCase() === consigneeCity.toLowerCase() &&
-          route.aircraft?.includes(selectedAircraft)) {
-        const option = document.createElement('option');
-        option.value = routeId;
-        option.textContent = route.summary;
-        secondLegRouteSelect.appendChild(option);
-        routesFound++;
+      // Check if the route starts from the consignee's IATA code
+      if (route.fromAirport && route.fromAirport.trim().toUpperCase() === consigneeIataUpper) {
+        // This is a potential return route.
+        // If an aircraft is selected, check if this route supports it.
+        // If no aircraft is selected, show all potential return routes.
+        if (!selectedAircraft || (route.aircraft && route.aircraft.includes(selectedAircraft))) {
+          const option = document.createElement('option');
+          option.value = routeId;
+          option.textContent = route.summary;
+          secondLegRouteSelect.appendChild(option);
+          routesFound++;
+        }
       }
     });
 
-    // If no matching return routes were found, show a message.
-    if (routesFound === 0 && returnMessageEl) {
+    // If the previously selected route is still in the list, re-select it.
+    if (Array.from(secondLegRouteSelect.options).some(opt => opt.value === currentReturnRoute)) {
+      secondLegRouteSelect.value = currentReturnRoute;
+    } else {
+      // If the old selection is no longer valid, trigger a change event to update dependent UI
+      if (secondLegRouteSelect.value !== currentReturnRoute) {
+        secondLegRouteSelect.dispatchEvent(new Event('change'));
+      }
+    }
+
+    // If no matching return routes were found for a specific aircraft, show a message.
+    if (routesFound === 0 && selectedAircraft && returnMessageEl) {
       returnMessageEl.innerHTML = `No return route found for ${selectedAircraft}. <a href="/operations/add-route" style="color: #2196f3;">Add one?</a>`;
       returnMessageEl.style.display = 'block';
     }
@@ -766,11 +773,12 @@ function updateShipmentSummaryRoutes() {
 
   // New function to populate the aircraft dropdown for a specific route
   function populateAircraftForRoute(routeId) {
+    const previousAircraft = availableAircraftSelect.value;
     availableAircraftSelect.innerHTML = '<option value="">Select Aircraft...</option>'; // Clear existing options
 
     if (routeId && window.routeData[routeId]) {
       const route = window.routeData[routeId];
-      const aircraftList = route.aircraft || [];
+      const aircraftList = Array.isArray(route.aircraft) ? route.aircraft : [];
 
       aircraftList.forEach(ac => {
         const option = document.createElement('option');
@@ -784,43 +792,29 @@ function updateShipmentSummaryRoutes() {
         availableAircraftSelect.value = aircraftList[0];
       }
     }
+
+    // If the selection has changed (e.g. cleared or auto-selected), fire the change event
+    // This is crucial for triggering the dependent logic like filtering return routes.
+    if (availableAircraftSelect.value !== previousAircraft) {
+      availableAircraftSelect.dispatchEvent(new Event('change'));
+    }
   }
 
   // Route Selection Event Listeners - Isolated and Safe
   // Add event listener to first leg route to update aircraft availability and recalculate
   firstLegRouteSelect.addEventListener('change', function() {
     try {
-      // --- New Aircraft-Dependent Filtering Logic (Step 1) ---
       const selectedRouteId = this.value;
-      let selectedAircraft = null;
-
-      if (selectedRouteId && window.routeData[selectedRouteId]) {
-        const routeInfo = window.routeData[selectedRouteId];
-        // The 'aircraft' property is an array; we get the first one.
-        if (routeInfo.aircraft && routeInfo.aircraft.length > 0) {
-          selectedAircraft = routeInfo.aircraft[0];
-        }
-      }
-      console.log('Departure route changed. Captured Aircraft:', selectedAircraft);
+      
+      console.log('Departure route changed. Populating available aircraft...');
 
       // Populate the aircraft dropdown based on the selected route
+      // This will now trigger a change event on the aircraft dropdown if the selection changes,
+      // which in turn will filter the return routes.
       populateAircraftForRoute(selectedRouteId);
-      // Call the new function to update the return routes dropdown
-      updateReturnRoutes(selectedAircraft);
 
       // Update aircraft availability when first leg route changes
       updateAircraftAvailability();
-      
-      // Only recalculate if aircraft is selected and we won't interfere with main logic
-      if (availableAircraftSelect && availableAircraftSelect.value) {
-        setTimeout(() => {
-          try {
-            populateRouteInformationSafely();
-          } catch (error) {
-            console.error('Error in delayed route calculation:', error);
-          }
-        }, 100); // Small delay to avoid interfering with main route logic
-      }
       updateShipmentSummaryRoutes();
     } catch (error) {
       console.error('Error in first leg route change:', error);
@@ -833,13 +827,9 @@ function updateShipmentSummaryRoutes() {
       updateAircraftAvailability();
       // Only recalculate if aircraft is selected and we won't interfere with main logic
       if (availableAircraftSelect && availableAircraftSelect.value) {
-        setTimeout(() => {
-          try {
-            populateRouteInformationSafely();
-          } catch (error) {
-            console.error('Error in delayed route calculation:', error);
-          }
-        }, 100); // Small delay to avoid interfering with main route logic
+        // The setTimeout was masking other issues and creating a race condition.
+        // Running this synchronously is safer and more predictable.
+        populateRouteInformationSafely();
       }
       updateShipmentSummaryRoutes();
     } catch (error) {
@@ -853,13 +843,9 @@ function updateShipmentSummaryRoutes() {
       updatePercentFields();
       // Only recalculate if aircraft is selected
       if (availableAircraftSelect && availableAircraftSelect.value) {
-        setTimeout(() => {
-          try {
-            populateRouteInformationSafely();
-          } catch (error) {
-            console.error('Error in delayed cost calculation:', error);
-          }
-        }, 100); // Small delay to prevent interference
+        // The setTimeout was masking other issues and creating a race condition.
+        // Running this synchronously is safer and more predictable.
+        populateRouteInformationSafely();
       }
     } catch (error) {
       console.error('Error in return type change:', error);
@@ -907,14 +893,6 @@ function updateShipmentSummaryRoutes() {
   updateAddCargoBtnState();
   */
 
-  // Add event listener for Add Product / Cargo button (unchanged, but after validation)
-  document.addEventListener('click', function(e) {
-    if (e.target && e.target.id === 'add_product_cargo_btn') {
-      // Placeholder for add product/cargo functionality
-      alert('Add Product / Cargo functionality will be implemented here.');
-    }
-  });
-
   // Test function to verify all elements exist
   function testElementsExist() {
     console.log('=== TESTING ELEMENT EXISTENCE ===');
@@ -934,6 +912,165 @@ function updateShipmentSummaryRoutes() {
   // Run the test
   testElementsExist();
   // Helper to show/hide route not found message
+  
+  // --- Cargo Management Logic ---
+  let cargoLogicInitialized = false;
+
+  // This function sets up the interactive parts of the cargo section
+  // once it's confirmed to be needed and available.
+  function initializeCargoSection() {
+    console.log("Attempting to initialize cargo section...");
+    const addOutboundBtn = document.getElementById('add-cargo-to-departure-btn');
+    const addReturnBtn = document.getElementById('add-cargo-to-return-btn');
+    const exchangeRateInput = document.getElementById('exchange_rate');
+    const cargoHeader = document.getElementById('cargo-details-header');
+    const outboundList = document.getElementById('outbound-product-list');
+    const returnList = document.getElementById('return-product-list');
+
+    if (!outboundList || !returnList) {
+      console.error('CRITICAL: Product list elements not found. Cargo management cannot be initialized.');
+      return;
+    }
+
+    const outboundInputs = outboundList.querySelectorAll('input[name^="amount_"]');
+    const returnInputs = returnList.querySelectorAll('input[name^="amount_"]');
+
+    function activateCargoSection(activeType) {
+      if (cargoHeader) {
+        cargoHeader.classList.remove('highlight-outbound', 'highlight-return');
+      }
+      outboundList.classList.remove('active');
+      returnList.classList.remove('active');
+      outboundInputs.forEach(input => input.disabled = true);
+      returnInputs.forEach(input => input.disabled = true);
+      if (activeType === 'outbound' && cargoHeader) {
+        cargoHeader.classList.add('highlight-outbound');
+        cargoHeader.textContent = 'Editing Departure Cargo (FCA Costs)';
+        outboundList.classList.add('active');
+        outboundInputs.forEach(input => input.disabled = false);
+        updateOutboundCosts();
+      } else if (activeType === 'return' && cargoHeader) {
+        cargoHeader.classList.add('highlight-return');
+        cargoHeader.textContent = 'Editing Return Cargo (Landed Costs)';
+        returnList.classList.add('active');
+        returnInputs.forEach(input => input.disabled = false);
+        updateReturnCosts();
+      }
+    }
+
+    function calculateCosts(productList, traderId, isOutbound) {
+      const exchangeRate = parseFloat(exchangeRateInput?.value) || 0;
+      let taxPct = 0, profitPct = 0;
+      if (traderId && traderData[traderId]) {
+        taxPct = parseFloat(isOutbound ? traderData[traderId].export_sales_tax : traderData[traderId].import_sales_tax) || 0;
+        profitPct = parseFloat(isOutbound ? traderData[traderId].export_profit_pct : traderData[traderId].import_profit_pct) || 0;
+      }
+      productList.querySelectorAll('input[name^="amount_"]').forEach(input => {
+        const row = input.closest('div[data-product-type]');
+        if (!row) return;
+        const packWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
+        const packCost = parseFloat(row.getAttribute('data-pack-cost')) || 0;
+        const amount = parseFloat(input.value.replace(/,/g, '')) || 0;
+        const totalWeight = amount * packWeight;
+        const totalCost = amount * packCost;
+        const taxes = totalCost * (taxPct / 100);
+        const profit = totalCost * (profitPct / 100);
+        const finalCost = totalCost + taxes + profit;
+        const finalCostUSD = (exchangeRate > 0) ? finalCost / exchangeRate : 0;
+        row.querySelector('[id^="total_weight_"]').textContent = totalWeight ? totalWeight.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg' : '-';
+        row.querySelector('[id^="total_cost_"]').textContent = totalCost ? '$' + totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+        row.querySelector('[id^="taxes_"]').textContent = taxes ? '$' + taxes.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+        row.querySelector('[id^="profit_"]').textContent = profit ? '$' + profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+        row.querySelector('[id^="fca_cost_"]').textContent = finalCost ? '$' + finalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+        row.querySelector('[id^="fca_cost_usd_"]').textContent = finalCostUSD ? '$' + finalCostUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+      });
+    }
+
+    const updateOutboundCosts = () => calculateCosts(outboundList, shipperBranchSelect.value, true);
+    const updateReturnCosts = () => calculateCosts(returnList, consigneeBranchSelect.value, false);
+
+    if (addOutboundBtn && addReturnBtn) {
+        addOutboundBtn.addEventListener('click', () => activateCargoSection('outbound'));
+        addReturnBtn.addEventListener('click', () => activateCargoSection('return'));
+    }
+    outboundInputs.forEach(input => input.addEventListener('input', updateOutboundCosts));
+    returnInputs.forEach(input => input.addEventListener('input', updateReturnCosts));
+    shipperBranchSelect.addEventListener('change', updateOutboundCosts);
+    consigneeBranchSelect.addEventListener('change', updateReturnCosts);
+    if (exchangeRateInput) {
+      exchangeRateInput.addEventListener('input', () => {
+        updateOutboundCosts();
+        updateReturnCosts();
+      });
+    }
+
+    activateCargoSection('none');
+    cargoLogicInitialized = true;
+    console.log('Cargo management logic initialized successfully.');
+  }
+
+  // This function ONLY manages the enabled/disabled state of the buttons.
+  function updateCargoButtonsState() {
+    const addOutboundBtn = document.getElementById('add-cargo-to-departure-btn');
+    const addReturnBtn = document.getElementById('add-cargo-to-return-btn');
+    if (!addOutboundBtn || !addReturnBtn) return;
+
+    let isValid = true;
+    const reasons = [];
+    const check = (name, value) => {
+      if (!value) {
+        isValid = false;
+        reasons.push(name);
+      }
+    };
+
+    // Defensively check for element existence before accessing .value
+    check('Shipper', shipperBranchSelect && shipperBranchSelect.value);
+    check('Consignee', consigneeBranchSelect && consigneeBranchSelect.value);
+    check('Departure Route', firstLegRouteSelect && firstLegRouteSelect.value);
+    check('Return Route', secondLegRouteSelect && secondLegRouteSelect.value);
+    check('Aircraft', availableAircraftSelect && availableAircraftSelect.value);
+    check('Return Type', returnTypeSelect && returnTypeSelect.value);
+
+    const returnType = returnTypeSelect ? returnTypeSelect.value : '';
+    if (returnType === 'compensated' || returnType === 'full') {
+      check('Outbound Target Load > 0%', outboundExtraInput && outboundExtraInput.value && parseFloat(outboundExtraInput.value) > 0);
+    }
+    if (returnType === 'compensated') {
+      check('Return Target Load > 0%', returnExtraInput && returnExtraInput.value && parseFloat(returnExtraInput.value) > 0);
+    }
+
+    // If the form becomes valid and we haven't set up the cargo logic yet, do it now.
+    if (isValid && !cargoLogicInitialized) {
+      initializeCargoSection();
+    }
+
+    addOutboundBtn.disabled = !isValid;
+    addReturnBtn.disabled = !isValid;
+
+    if (!isValid) {
+      addOutboundBtn.title = 'Please complete all required fields: ' + reasons.join(', ');
+      addReturnBtn.title = addOutboundBtn.title;
+    } else {
+      addOutboundBtn.title = 'Add cargo to departure leg';
+      addReturnBtn.title = 'Add cargo to return leg';
+    }
+  }
+
+  // Attach listeners to all fields that affect the button's state
+  const fieldsToWatch = [
+    shipperBranchSelect, consigneeBranchSelect, firstLegRouteSelect,
+    secondLegRouteSelect, availableAircraftSelect, returnTypeSelect,
+    outboundExtraInput, returnExtraInput
+  ];
+  fieldsToWatch.forEach(el => {
+    if (el) {
+      el.addEventListener('change', updateCargoButtonsState);
+      el.addEventListener('input', updateCargoButtonsState);
+    }
+  });
+  updateCargoButtonsState(); // Set initial button state
+
   function showRouteNotFound(show) {
     let msg = document.getElementById('route-not-found-msg');
     const shipmentSection = document.querySelector('.shipment-section');
@@ -1076,102 +1213,27 @@ function updateShipmentSummaryRoutes() {
   // Form submission handling
     if (form) {
     form.addEventListener('submit', function(e) {
-      const shipper = shipperBranchSelect.value;
-      const consignee = consigneeBranchSelect.value;
-      const firstLegRoute = firstLegRouteSelect.value;
-      if (!shipper) {
+      // Defensively check for elements before accessing .value
+      if (!shipperBranchSelect || !shipperBranchSelect.value) {
         alert('Please select a shipper.');
         e.preventDefault();
         return false;
       }
-      if (!consignee) {
+      if (!consigneeBranchSelect || !consigneeBranchSelect.value) {
         alert('Please select a consignee.');
         e.preventDefault();
         return false;
       }
-      if (shipper === consignee) {
+      if (shipperBranchSelect.value === consigneeBranchSelect.value) {
         alert('Shipper and consignee cannot be the same.');
         e.preventDefault();
         return false;
       }
-      if (!firstLegRoute) {
+      if (!firstLegRouteSelect || !firstLegRouteSelect.value) {
         alert('Please select a route for the first leg.');
         e.preventDefault();
         return false;
       }
-      // ...existing code...
     });
   }
-});
-
-// Enable/disable "Add Cargo to" buttons based on shipper and consignee selection
-document.addEventListener('DOMContentLoaded', function() {
-  const shipperSelect = document.getElementById('shipper');
-  const exchangeRateInput = document.getElementById('exchange_rate');
-  // traderData is injected from Flask
- // const traderData = typeof window.traderData !== "undefined" ? window.traderData : JSON.parse('{{ trader_data|tojson|safe }}');
-
-  function updateFcaCosts() {
-    document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
-      const row = input.closest('div[data-product-type]');
-      if (!row) return;
-      const packWeight = parseFloat(row.getAttribute('data-pack-weight')) || 0;
-      const packCost = parseFloat(row.getAttribute('data-pack-cost')) || 0;
-      const amount = parseFloat(input.value.replace(/,/g, '')) || 0;
-
-      // Calculate totals
-      const totalWeight = amount * packWeight;
-      const totalCost = amount * packCost;
-
-      // Get shipper's export tax and profit %
-      let taxPct = 0, profitPct = 0;
-      const shipperId = shipperSelect ? shipperSelect.value : null;
-      if (shipperId && traderData[shipperId]) {
-        taxPct = parseFloat(traderData[shipperId].export_sales_tax) || 0;
-        profitPct = parseFloat(traderData[shipperId].export_profit_pct) || 0;
-      }
-
-      // Calculate taxes and profit
-      const taxes = totalCost * (taxPct / 100);
-      const profit = totalCost * (profitPct / 100);
-
-      // FCA Cost = totalCost + taxes + profit
-      const fcaCost = totalCost + taxes + profit;
-
-      // FCA Cost (USD) = FCA Cost ($Local) * Exchange Rate
-      const exchangeRate = parseFloat(exchangeRateInput?.value) || 0;
-      const fcaCostUSD = (exchangeRate > 0) ? fcaCost / exchangeRate : 0;
-
-      // Update the corresponding columns
-      const weightCell = row.querySelector('[id^="total_weight_"]');
-      const costCell = row.querySelector('[id^="total_cost_"]');
-      const taxesCell = row.querySelector('[id^="taxes_"]');
-      const profitCell = row.querySelector('[id^="profit_"]');
-      const fcaCostCell = row.querySelector('[id^="fca_cost_"]');
-      const fcaCostUSDCell = row.querySelector('[id^="fca_cost_usd_"]');
-      if (weightCell) weightCell.textContent = totalWeight ? totalWeight.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kg' : '-';
-      if (costCell) costCell.textContent = totalCost ? '$' + totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (taxesCell) taxesCell.textContent = taxes ? '$' + taxes.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (profitCell) profitCell.textContent = profit ? '$' + profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (fcaCostCell) fcaCostCell.textContent = fcaCost ? '$' + fcaCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-      if (fcaCostUSDCell) fcaCostUSDCell.textContent = fcaCostUSD ? '$' + fcaCostUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
-    });
-  }
-  window.updateFcaCosts = updateFcaCosts; // Expose to global scope
-
-  // For each amount input, update all computed columns on change
-  document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(function(input) {
-    input.addEventListener('input', updateFcaCosts);
-  });
-
-  // Recalculate all rows when shipper or exchange rate changes
-  if (shipperSelect) {
-    shipperSelect.addEventListener('change', updateFcaCosts);
-  }
-  if (exchangeRateInput) {
-    exchangeRateInput.addEventListener('input', updateFcaCosts);
-  }
-
-  // Initial calculation
-  updateFcaCosts();
 });
