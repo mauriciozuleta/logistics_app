@@ -120,18 +120,23 @@ const updateShipmentDraftFromForm = function() {
         branches.forEach(branch => {
           const option = document.createElement('option');
           option.value = branch.id;
-          // Show IATA code + airport name + city
-          let label = '';
-          if (branch.airport_iata) {
-            label += branch.airport_iata + ' - ';
-          }
-          if (branch.airport_name) {
-            label += branch.airport_name + ' - ';
-          }
-          if (branch.city) {
-            label += branch.city;
-          }
-          option.textContent = label.trim();
+          // Use a more robust method to build the label, avoiding case-sensitive duplicates.
+          const parts = [];
+          const seen = new Set();
+          const addPart = (part) => {
+            if (part && typeof part === 'string' && part.trim()) {
+              const trimmedPart = part.trim();
+              const upperPart = trimmedPart.toUpperCase();
+              if (!seen.has(upperPart)) {
+                seen.add(upperPart);
+                parts.push(trimmedPart);
+              }
+            }
+          };
+          addPart(branch.airport_iata);
+          addPart(branch.airport_name);
+          addPart(branch.city);
+          option.textContent = parts.join(' - ');
           branchSelect.appendChild(option);
         });
         branchSelect.disabled = false;
@@ -144,20 +149,22 @@ const updateShipmentDraftFromForm = function() {
         // Get selected shipper and consignee branch IDs
         const shipperId = shipperBranchSelect.value;
         const consigneeId = consigneeBranchSelect.value;
-        // Lookup airport IATA codes for shipper and consignee
-        const allBranches = Object.values(regionsWithBranches)
-          .flatMap(region => Object.values(region))
-          .flatMap(country => country);
-        const shipperBranch = allBranches.find(branch => branch.id == shipperId);
-        const consigneeBranch = allBranches.find(branch => branch.id == consigneeId);
-        const shipperIata = shipperBranch && shipperBranch.airport_iata ? shipperBranch.airport_iata : '';
-        const consigneeIata = consigneeBranch && consigneeBranch.airport_iata ? consigneeBranch.airport_iata : '';
+        // Use traderData for a more direct and reliable lookup
+        const shipperBranch = window.traderData[shipperId];
+        const consigneeBranch = window.traderData[consigneeId];
+        const shipperIata = shipperBranch && shipperBranch.airport_iata ? shipperBranch.airport_iata.trim() : '';
+        const consigneeIata = consigneeBranch && consigneeBranch.airport_iata ? consigneeBranch.airport_iata.trim() : '';
+
         // Check if a route exists between these IATA codes
         let routeExists = false;
         if (shipperIata && consigneeIata) {
+          const shipperIataUpper = shipperIata.toUpperCase();
+          const consigneeIataUpper = consigneeIata.toUpperCase();
           for (const routeId in window.routeData) {
             const route = window.routeData[routeId];
-            if (route.fromAirport === shipperIata && route.toAirport === consigneeIata) {
+            if (route.fromAirport && route.toAirport &&
+                route.fromAirport.trim().toUpperCase() === shipperIataUpper &&
+                route.toAirport.trim().toUpperCase() === consigneeIataUpper) {
               routeExists = true;
               break;
             }
@@ -956,11 +963,14 @@ function updateShipmentSummaryRoutes() {
       if (!route.fromAirport || !route.toAirport) {
         return; // Skip this route if data is incomplete
       }
-      const fromIata = route.fromAirport.toUpperCase();
-      const toIata = route.toAirport.toUpperCase();
+      // Trim all IATA codes before comparison to avoid whitespace issues.
+      const fromIata = route.fromAirport.trim().toUpperCase();
+      const toIata = route.toAirport.trim().toUpperCase();
+      const shipperIataUpper = shipperCity.trim().toUpperCase();
+      const consigneeIataUpper = consigneeCity.trim().toUpperCase();
 
       // Find first leg routes (from shipper to consignee)
-      if (fromIata === shipperCity.toUpperCase() && toIata === consigneeCity.toUpperCase()) {
+      if (fromIata === shipperIataUpper && toIata === consigneeIataUpper) {
         firstLegRoutes.push({
           value: routeId,
           text: route.summary,
@@ -969,7 +979,7 @@ function updateShipmentSummaryRoutes() {
       }
 
       // Find return leg routes (from consignee to anywhere)
-      if (fromIata === consigneeCity.toUpperCase()) {
+      if (fromIata === consigneeIataUpper) {
         returnLegRoutes.push({
           value: routeId,
           text: route.summary
