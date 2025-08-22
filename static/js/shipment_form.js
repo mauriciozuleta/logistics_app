@@ -120,10 +120,23 @@ const updateShipmentDraftFromForm = function() {
         branches.forEach(branch => {
           const option = document.createElement('option');
           option.value = branch.id;
-          // Use only branch data for label
-          let label = `${branch.iata_code || ''} - ${branch.airport_name || ''} - ${branch.city || ''}`;
-          label = label.replace(/undefined/g, '').replace(/\s*-\s*/g, ' - ').replace(/^ - | - $/g, '').replace(/\s{2,}/g, ' ').trim();
-          option.textContent = label;
+          // Build label from non-empty, trimmed values only, avoiding case-insensitive duplicates.
+          const labelParts = [];
+          const seen = new Set();
+          const addPart = (part) => {
+            if (part && typeof part === 'string' && part.trim()) {
+              const trimmedPart = part.trim();
+              const upperPart = trimmedPart.toUpperCase();
+              if (!seen.has(upperPart)) {
+                seen.add(upperPart);
+                labelParts.push(trimmedPart);
+              }
+            }
+          };
+          addPart(branch.airport_iata);
+          addPart(branch.airport_name);
+          addPart(branch.city);
+          option.textContent = labelParts.join(' - ');
           branchSelect.appendChild(option);
         });
         branchSelect.disabled = false;
