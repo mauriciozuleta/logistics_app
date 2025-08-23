@@ -23,14 +23,23 @@ function saveShipmentDraft(draft) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  // --- CONFLICT OVERRIDE ---
-  // This is an intentional override to prevent a conflicting function
-  // in another file (e.g., product_table.js) from running and causing errors.
-  // The correct logic for enabling/disabling cargo buttons is handled
-  // entirely within this file by the `updateCargoButtonsState` function.
-  window.updateAddCargoButtons = function() {
-    console.warn('Conflict override: A redundant updateAddCargoButtons() function was blocked from running.');
-  };
+  // --- Initialization Polling ---
+  // This is a robust way to handle dynamically loaded content.
+  // It waits until the main form element is available before running any setup logic.
+  const checkInterval = setInterval(function() {
+    const form = document.getElementById('shipment-form');
+    if (form) {
+      clearInterval(checkInterval);
+      console.log('Shipment form found. Initializing script...');
+      initShipmentForm();
+    }
+  }, 100); // Check every 100ms for the form
+});
+
+function initShipmentForm() {
+  // --- Initial State Setup ---
+  // Now that we know the form exists, we can safely disable the amount inputs.
+  document.querySelectorAll('input[name^="amount_"]').forEach(input => input.disabled = true);
 
   // --- DOM Element Cache ---
   // New elements for cascading dropdowns
@@ -52,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const returnExtraInput = document.getElementById('return_extra');
   const routeInfoSection = document.getElementById('route-info-section');
   const form = document.getElementById('shipment-form');
-  const addCargoBtn = document.getElementById('add_product_cargo_btn');
 
   // Labels and spans that are frequently updated
   const outboundPercentLabel = document.getElementById('outbound_percent_label');
@@ -154,8 +162,7 @@ const updateShipmentDraftFromForm = function() {
 
     branchSelect.addEventListener('change', function() {
       generateShipmentReference();
-      // Defensively check that both branch selects exist and have values
-      if (shipperBranchSelect && shipperBranchSelect.value && consigneeBranchSelect && consigneeBranchSelect.value) {
+      if (shipperBranchSelect.value && consigneeBranchSelect.value) {
         // Get selected shipper and consignee branch IDs
         const shipperId = shipperBranchSelect.value;
         const consigneeId = consigneeBranchSelect.value;
@@ -346,14 +353,10 @@ const updateShipmentDraftFromForm = function() {
   }
 
   function generateShipmentReference() {
-    // Defensively check for elements before using them.
-    if (!shipperBranchSelect || !consigneeBranchSelect || !shipmentRefField) {
-      return;
-    }
     const shipperId = shipperBranchSelect.value;
     const consigneeId = consigneeBranchSelect.value;
     
-    if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId]) {
+    if (shipperId && consigneeId && traderData[shipperId] && traderData[consigneeId] && shipmentRefField) {
       const shipperCode = traderData[shipperId].code;
       const consigneeCode = traderData[consigneeId].code;
       const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -932,28 +935,34 @@ function updateShipmentSummaryRoutes() {
       return;
     }
 
-    const outboundInputs = outboundList.querySelectorAll('input[name^="amount_"]');
-    const returnInputs = returnList.querySelectorAll('input[name^="amount_"]');
-
     function activateCargoSection(activeType) {
       if (cargoHeader) {
         cargoHeader.classList.remove('highlight-outbound', 'highlight-return');
       }
+
+      // Re-query the DOM every time to get the most current set of inputs.
+      // This is more robust against timing issues where the product table is loaded dynamically.
+      const currentOutboundInputs = outboundList.querySelectorAll('input[name^="amount_"]');
+      const currentReturnInputs = returnList.querySelectorAll('input[name^="amount_"]');
+
       outboundList.classList.remove('active');
       returnList.classList.remove('active');
-      outboundInputs.forEach(input => input.disabled = true);
-      returnInputs.forEach(input => input.disabled = true);
+
+      // Disable all inputs first to ensure a clean state
+      currentOutboundInputs.forEach(input => input.disabled = true);
+      currentReturnInputs.forEach(input => input.disabled = true);
+
       if (activeType === 'outbound' && cargoHeader) {
         cargoHeader.classList.add('highlight-outbound');
         cargoHeader.textContent = 'Editing Departure Cargo (FCA Costs)';
         outboundList.classList.add('active');
-        outboundInputs.forEach(input => input.disabled = false);
+        currentOutboundInputs.forEach(input => input.disabled = false);
         updateOutboundCosts();
       } else if (activeType === 'return' && cargoHeader) {
         cargoHeader.classList.add('highlight-return');
         cargoHeader.textContent = 'Editing Return Cargo (Landed Costs)';
         returnList.classList.add('active');
-        returnInputs.forEach(input => input.disabled = false);
+        currentReturnInputs.forEach(input => input.disabled = false);
         updateReturnCosts();
       }
     }
@@ -993,8 +1002,11 @@ function updateShipmentSummaryRoutes() {
         addOutboundBtn.addEventListener('click', () => activateCargoSection('outbound'));
         addReturnBtn.addEventListener('click', () => activateCargoSection('return'));
     }
-    outboundInputs.forEach(input => input.addEventListener('input', updateOutboundCosts));
-    returnInputs.forEach(input => input.addEventListener('input', updateReturnCosts));
+
+    // Attach listeners directly inside initializeCargoSection to ensure they are set up
+    // after the product lists are confirmed to exist.
+    outboundList.querySelectorAll('input[name^="amount_"]').forEach(input => input.addEventListener('input', updateOutboundCosts));
+    returnList.querySelectorAll('input[name^="amount_"]').forEach(input => input.addEventListener('input', updateReturnCosts));
     shipperBranchSelect.addEventListener('change', updateOutboundCosts);
     consigneeBranchSelect.addEventListener('change', updateReturnCosts);
     if (exchangeRateInput) {
@@ -1023,8 +1035,8 @@ function updateShipmentSummaryRoutes() {
         reasons.push(name);
       }
     };
-
-    // Defensively check for element existence before accessing .value
+    
+    // Ensure all elements are checked for existence before accessing their .value
     check('Shipper', shipperBranchSelect && shipperBranchSelect.value);
     check('Consignee', consigneeBranchSelect && consigneeBranchSelect.value);
     check('Departure Route', firstLegRouteSelect && firstLegRouteSelect.value);
@@ -1032,6 +1044,7 @@ function updateShipmentSummaryRoutes() {
     check('Aircraft', availableAircraftSelect && availableAircraftSelect.value);
     check('Return Type', returnTypeSelect && returnTypeSelect.value);
 
+    // Safely get returnType value
     const returnType = returnTypeSelect ? returnTypeSelect.value : '';
     if (returnType === 'compensated' || returnType === 'full') {
       check('Outbound Target Load > 0%', outboundExtraInput && outboundExtraInput.value && parseFloat(outboundExtraInput.value) > 0);
@@ -1040,14 +1053,8 @@ function updateShipmentSummaryRoutes() {
       check('Return Target Load > 0%', returnExtraInput && returnExtraInput.value && parseFloat(returnExtraInput.value) > 0);
     }
 
-    // If the form becomes valid and we haven't set up the cargo logic yet, do it now.
-    if (isValid && !cargoLogicInitialized) {
-      initializeCargoSection();
-    }
-
     addOutboundBtn.disabled = !isValid;
     addReturnBtn.disabled = !isValid;
-
     if (!isValid) {
       addOutboundBtn.title = 'Please complete all required fields: ' + reasons.join(', ');
       addReturnBtn.title = addOutboundBtn.title;
@@ -1070,6 +1077,9 @@ function updateShipmentSummaryRoutes() {
     }
   });
   updateCargoButtonsState(); // Set initial button state
+
+  // Initialize the cargo section logic after the main DOM is parsed.
+  initializeCargoSection();
 
   function showRouteNotFound(show) {
     let msg = document.getElementById('route-not-found-msg');
@@ -1213,27 +1223,30 @@ function updateShipmentSummaryRoutes() {
   // Form submission handling
     if (form) {
     form.addEventListener('submit', function(e) {
-      // Defensively check for elements before accessing .value
-      if (!shipperBranchSelect || !shipperBranchSelect.value) {
+      const shipper = shipperBranchSelect.value;
+      const consignee = consigneeBranchSelect.value;
+      const firstLegRoute = firstLegRouteSelect.value;
+      if (!shipper) {
         alert('Please select a shipper.');
         e.preventDefault();
         return false;
       }
-      if (!consigneeBranchSelect || !consigneeBranchSelect.value) {
+      if (!consignee) {
         alert('Please select a consignee.');
         e.preventDefault();
         return false;
       }
-      if (shipperBranchSelect.value === consigneeBranchSelect.value) {
+      if (shipper === consignee) {
         alert('Shipper and consignee cannot be the same.');
         e.preventDefault();
         return false;
       }
-      if (!firstLegRouteSelect || !firstLegRouteSelect.value) {
+      if (!firstLegRoute) {
         alert('Please select a route for the first leg.');
         e.preventDefault();
         return false;
       }
+      // ...existing code...
     });
   }
-});
+}

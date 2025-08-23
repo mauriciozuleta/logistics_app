@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
+
+<div class="shipment-section" id="container-1">
+	<div class="section-title" style="color: #FF5C00;">Shipment Reference</div>
+	<input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
+</div>
+
+<div class="shipment-section" id="container-2">
+	<div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
+		<span>Trading Information</span>
+		<button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;">Toggle</button>
+	</div>
+	<div id="trading-info-content">
+		<div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
+			<div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
+				<span style="color: #00FFFF; font-weight: bold;">Shipper Information</span>
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="trading_region">Region</label>
+				<input type="text" id="trading_region" name="trading_region" class="form-control" placeholder="Region" style="border: 2px solid #00FFFF;">
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="trading_country">Country</label>
+				<input type="text" id="trading_country" name="trading_country" class="form-control" placeholder="Country" style="border: 2px solid #00FFFF;">
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="trading_branch">Branch</label>
+				<input type="text" id="trading_branch" name="trading_branch" class="form-control" placeholder="Branch" style="border: 2px solid #00FFFF;">
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="port_of_shipping">Port of Shipping</label>
+				<input type="text" id="port_of_shipping" name="port_of_shipping" class="form-control" placeholder="Port of Shipping" style="border: 2px solid #00FFFF;">
+			</div>
+		</div>
+		<div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
+			<div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
+				<span style="color: #00FF00; font-weight: bold;">Consignee Information</span>
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="consignee_region">Region</label>
+				<input type="text" id="consignee_region" name="consignee_region" class="form-control" placeholder="Region" style="border: 2px solid #00FF00;">
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="consignee_country">Country</label>
+				<input type="text" id="consignee_country" name="consignee_country" class="form-control" placeholder="Country" style="border: 2px solid #00FF00;">
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="consignee_branch">Branch</label>
+				<input type="text" id="consignee_branch" name="consignee_branch" class="form-control" placeholder="Branch" style="border: 2px solid #00FF00;">
+			</div>
+			<div class="form-group" style="min-width: 150px;">
+				<label for="consignee_port_of_shipping">Port of Shipping</label>
+				<input type="text" id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" placeholder="Port of Shipping" style="border: 2px solid #00FF00;">
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+function toggleTradingInfo() {
+	var content = document.getElementById('trading-info-content');
+	if (content.style.display === 'none') {
+		content.style.display = '';
+	} else {
+		content.style.display = 'none';
+	}
+}
+function toggleLogisticInfo() {
+    var content = document.getElementById('logistic-info-content');
+    if (content.style.display === 'none') {
+        content.style.display = '';
+    } else {
+        content.style.display = 'none';
+    }
+}
+
+function toggleSummaryInfo() {
+    var content = document.getElementById('summary-info-content');
+    if (content.style.display === 'none') {
+        content.style.display = '';
+    } else {
+        content.style.display = 'none';
+    }
+}
+</script>
+
+<div class="shipment-section" id="container-3">
+    <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
+        <span>Logistic Information</span>
+        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleLogisticInfo()" style="margin-left: 10px;">Toggle</button>
+    </div>
+    <div id="logistic-info-content">
+        <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
+            <div class="form-group" style="min-width: 150px;">
+                <span style="color: #00FFFF; font-weight: bold;">Departure Route</span>
+                <input type="text" class="form-control" placeholder="" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="route_cost">Route cost</label>
+                <input type="text" id="route_cost" name="route_cost" class="form-control" placeholder="Route cost" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="available_payload">Available Payload</label>
+                <input type="text" id="available_payload" name="available_payload" class="form-control" placeholder="Available Payload" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="type_of_return">Type of Return</label>
+                <input type="text" id="type_of_return" name="type_of_return" class="form-control" placeholder="Type of Return" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="outbound_cost_weight">Outbound cost Weight (%)</label>
+                <input type="text" id="outbound_cost_weight" name="outbound_cost_weight" class="form-control" placeholder="Outbound cost Weight (%)" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="target_cargo_load">Target Cargo Load (%)</label>
+                <input type="text" id="target_cargo_load" name="target_cargo_load" class="form-control" placeholder="Target Cargo Load (%)" style="border: 2px solid #00FFFF;">
+            </div>
+        </div>
+        <div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
+            <div class="form-group" style="min-width: 150px;">
+                <span style="color: #00FF00; font-weight: bold;">Departure Route</span>
+                <input type="text" class="form-control" placeholder="" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="route_cost_return">Route cost</label>
+                <input type="text" id="route_cost_return" name="route_cost_return" class="form-control" placeholder="Route cost" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="available_payload_return">Available Payload</label>
+                <input type="text" id="available_payload_return" name="available_payload_return" class="form-control" placeholder="Available Payload" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <!-- Empty cell for spacing below Type of Return -->
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="return_cost_weight">Return cost Weight (%)</label>
+                <input type="text" id="return_cost_weight" name="return_cost_weight" class="form-control" placeholder="Return cost Weight (%)" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="target_cargo_load_return">Target Cargo Load (%)</label>
+                <input type="text" id="target_cargo_load_return" name="target_cargo_load_return" class="form-control" placeholder="Target Cargo Load (%)" style="border: 2px solid #00FF00;">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="shipment-section" id="container-4">
+    <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
+        <span>Shipment summary</span>
+        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleSummaryInfo()" style="margin-left: 10px;">Toggle</button>
+    </div>
+    <div id="summary-info-content">
+        <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
+            <div class="form-group" style="min-width: 150px;">
+                <span style="color: #00FFFF; font-weight: bold;">Add cargo to:</span>
+                <input type="text" id="add_cargo_to_departure" name="add_cargo_departure" class="form-control" placeholder="" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="route_cost">Avg. Cost Kg.</label>
+                <input type="text" id="avg_cost_kg_departure" name="avg_cost_kg_departure" class="form-control" placeholder=" " style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="available_payload">Payload Used/Avail.</label>
+                <input type="text" id="payload_status_departure" name="payload_status_departure" class="form-control" placeholder="" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="type_of_return">FCA Cost</label>
+                <input type="text" id="fca_cost_departure" name="fca_cost_departure" class="form-control" placeholder="" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="outbound_cost_weight">FCA Profit</label>
+                <input type="text" id="fca_profit_departure" name="fca_profit_departure" class="form-control" placeholder="" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="dat_cost_departure">DAT Cost</label>
+                <input type="text" id="dat_cost_departure" name="dat_cost_departure" class="form-control" placeholder="" style="border: 2px solid #00FFFF;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="dat_profit_departure">DAT Profit</label>
+                <input type="text" id="dat_profit_departure" name="dat_profit_departure" class="form-control" placeholder="" style="border: 2px solid #00FFFF;">
+            </div>
+        </div>
+        <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
+            <div class="form-group" style="min-width: 150px;">
+                <span style="color: #00FF00; font-weight: bold;">Add cargo to:</span>
+                <input type="text" id="add_cargo_to_return" name="add_cargo_to_return" class="form-control" placeholder="" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="avg_cost_kg_return">Avg. Cost Kg.</label>
+                <input type="text" id="avg_cost_kg_return" name="avg_cost_kg_return" class="form-control" placeholder=" " style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="payload_status_return">Payload Used/Avail.</label>
+                <input type="text" id="payload_status_return" name="payload_status_return" class="form-control" placeholder="" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="fca_cost_return">FCA Cost</label>
+                <input type="text" id="fca_cost_return" name="fca_cost_return" class="form-control" placeholder="" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="fca_profit_return">FCA Profit</label>
+                <input type="text" id="fca_profit_return" name="fca_profit_return" class="form-control" placeholder="" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="dat_cost_return">DAT Cost</label>
+                <input type="text" id="dat_cost_return" name="dat_cost_return" class="form-control" placeholder="" style="border: 2px solid #00FF00;">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="dat_profit_return">DAT Profit</label>
+                <input type="text" id="dat_profit_return" name="dat_profit_return" class="form-control" placeholder="" style="border: 2px solid #00FF00;">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="shipment-section" id="container-4">
+	<div class="section-title" style="color: #FF5C00;">Shipment Summary</div>
+</div>
+
+<div class="shipment-section" id="container-5">
+	<div class="section-title" style="color: #FF5C00;">Products / Goods Information</div>
+</div>
+
+{% endblock %}

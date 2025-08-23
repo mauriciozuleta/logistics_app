@@ -16,6 +16,12 @@ def generate_product_code(product_type):
 operations = Blueprint("operations", __name__, template_folder="templates")
 operations_api = Blueprint("operations_api", __name__)
 
+# Add the shipment_management route after Blueprint definition
+@operations.route('/shipments', methods=['GET', 'POST'])
+def shipment_management():
+    """New shipment management form (clean, for new logic)"""
+    csrf_token = generate_csrf()
+    return render_template('operations/shippment_management.html', csrf_token=csrf_token)
 
 # Add the preview_shipment route after Blueprint definition
 @operations.route('/preview_shipment', methods=['GET', 'POST'])
@@ -78,47 +84,13 @@ def add_route():
             
             # Extract calculated route data from JavaScript
             route_data_json = request.form.get('route_data')
-            route_data = {}
-            if route_data_json:
-                route_data = json.loads(route_data_json)
-                print(f"Route data received: {len(route_data)} items")  # Debug log
-            else:
-                print("No route data received!")  # Debug log
-            
-            # Get aircraft and airport objects
-            print(f"Looking up aircraft with ID: {aircraft_id}")  # Debug log
-            aircraft = Aircraft.query.get(aircraft_id)
-            print(f"Aircraft found: {aircraft.short_name if aircraft else 'None'}")  # Debug log
-            
-            print(f"Looking up airports: from={from_airport_id}, to={to_airport_id}, finish={finish_airport_id}")  # Debug log
-            from_airport = Airport.query.get(from_airport_id)
-            to_airport = Airport.query.get(to_airport_id)
-            finish_airport = Airport.query.get(finish_airport_id) if finish_airport_id else None
-            
-            print(f"Airports found: from={from_airport.iata_code if from_airport else 'None'}, to={to_airport.iata_code if to_airport else 'None'}")  # Debug log
-            
-            if not aircraft or not from_airport or not to_airport:
-                print(f"ERROR: Missing required data - aircraft: {aircraft is not None}, from_airport: {from_airport is not None}, to_airport: {to_airport is not None}")  # Debug log
-                flash('Required aircraft or airport data missing', 'error')
-                return redirect(url_for('operations.add_route'))
-            
-            # Create route summary data
-            route_summary = f"{from_airport.iata_code} to {to_airport.iata_code}"
-            if route_type == 'multiple' and finish_airport:
-                route_summary += f" to {finish_airport.iata_code}"
-            
-            # Extract totals from route data
-            totals = route_data.get('totals', {})
-            legs = route_data.get('legs', [])
-            payload_data = route_data.get('payloadData', [])
-            print(f"Totals extracted: {totals}")  # Debug log
-            print(f"Legs extracted: {len(legs)} legs")  # Debug log
-            print(f"Payload data extracted: {len(payload_data)} payload entries")  # Debug log
-            
-            # Extract leg 1 data
-            leg1_data = legs[0] if len(legs) > 0 else {}
-            leg1_payload = payload_data[0] if len(payload_data) > 0 else {}
-            
+
+            # Add the new shipment management route after Blueprint definition
+            @operations.route('/shipments', methods=['GET', 'POST'])
+            def shipment_management():
+                """New shipment management form (clean, for new logic)"""
+                csrf_token = generate_csrf()
+                return render_template('operations/shippment_management.html', csrf_token=csrf_token)
             # Extract leg 2 data (for round-trip and multiple routes)
             leg2_data = legs[1] if len(legs) > 1 else {}
             leg2_payload = payload_data[1] if len(payload_data) > 1 else {}

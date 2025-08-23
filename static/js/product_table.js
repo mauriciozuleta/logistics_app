@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const header = document.getElementById('product-list-header');
   const depBtn = document.getElementById('add_cargo_departure_btn');
   const retBtn = document.getElementById('add_cargo_return_btn');
-  const amountInputs = document.querySelectorAll('input[type="number"][name^="amount_"]');
 
   // --- SHIPMENT DRAFT LOGIC ---
   const SHIPMENT_DRAFT_KEY = 'shipmentDraft';
@@ -70,19 +69,19 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   window.shipmentContext = { productData: productInputs, getCurrentContext: () => currentContext };
   let currentContext = null;
-
-  amountInputs.forEach(input => {
+  
+  // Initialize productInputs for all potential products
+  document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => {
     const productId = input.name.replace('amount_', '');
     productInputs.departure[productId] = 0;
     productInputs.return[productId] = 0;
   });
-  // Initialize both contexts with the current exchange rate value on the page
   const initialExchangeRate = parseFloat(exchangeRateInput?.value) || 0;
   productInputs.departure.exchangeRate = initialExchangeRate;
   productInputs.return.exchangeRate = initialExchangeRate;
 
   function restoreInputsForContext(context) {
-    amountInputs.forEach(input => {
+    document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => {
       const productId = input.name.replace('amount_', '');
       input.value = productInputs[context][productId] || 0;
     });
@@ -93,9 +92,15 @@ document.addEventListener('DOMContentLoaded', function() {
     recalcAll();
   }
 
-  function enableAmountInputs() { amountInputs.forEach(input => input.disabled = false); }
-  function disableAmountInputs() { amountInputs.forEach(input => input.disabled = true); }
-
+  // These functions are now managed by shipment_form.js
+  /*
+  function enableAmountInputs() {
+    document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => input.disabled = false);
+  }
+  function disableAmountInputs() {
+    document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => input.disabled = true);
+  }
+  */
   // --- CALCULATION FUNCTIONS ---
   function updateFcaCosts() {
     let amountEntered = false;
@@ -496,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  async function handleAddCargo(context) {
+  async function handleAddCargo(context) { // This function is called from shipment_form.js
     currentContext = context;
     setHeaderColor(context === 'departure' ? '#00bcd4' : '#4caf50', '#fff');
     restoreInputsForContext(context);
@@ -522,19 +527,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  if (retBtn) {
-    retBtn.addEventListener('click', function() {
-      handleAddCargo('return');
-    });
-  }
-
-  amountInputs.forEach(input => {
+  // Event listener for amount inputs - this was duplicated and should be here.
+  document.querySelectorAll('input[type="number"][name^="amount_"]').forEach(input => {
     input.addEventListener('input', function() {
       if (!currentContext) return;
       const productId = input.name.replace('amount_', '');
       productInputs[currentContext][productId] = parseFloat(input.value) || 0;
       recalcAll();
     });
+    // This mousedown listener is good for user feedback
     input.addEventListener('mousedown', function(e) {
       if (this.disabled) {
         alert('Please select "Add Cargo to" for Departure or Return before entering an amount.');
@@ -542,23 +543,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
-
-  function updateAddCargoButtons() {
-    const shipperBranch = document.getElementById('shipper_branch');
-    const consigneeBranch = document.getElementById('consignee_branch');
-    const enabled = !!(shipperBranch && shipperBranch.value) && !!(consigneeBranch && consigneeBranch.value);
-    if (depBtn) depBtn.disabled = !enabled;
-    if (retBtn) retBtn.disabled = !enabled;
-  }
-  const shipperBranch = document.getElementById('shipper_branch');
-  const consigneeBranch = document.getElementById('consignee_branch');
-  if (shipperBranch) shipperBranch.addEventListener('change', updateAddCargoButtons);
-  if (consigneeBranch) consigneeBranch.addEventListener('change', updateAddCargoButtons);
-
-  // --- INITIALIZATION ---
-  disableAmountInputs();
-  updateAddCargoButtons();
-  recalcAll();
 
   // --- FCA Cost Tooltip Logic ---
   const tooltip = document.createElement('div');
