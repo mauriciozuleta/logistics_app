@@ -2,6 +2,7 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
+<script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
 
 <div class="shipment-section" id="container-1">
 	<div class="section-title" style="color: #FF5C00;">Shipment Reference</div>
@@ -14,47 +15,87 @@
 		<button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;">Toggle</button>
 	</div>
 	<div id="trading-info-content">
-		<div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
-			<div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
-				<span style="color: #257777; font-weight: bold;">Shipper Information</span>
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="trading_region">Region</label>
-				<input type="text" id="trading_region" name="trading_region" class="form-control" placeholder="Region" style="border: 2px solid #257777;">
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="trading_country">Country</label>
-				<input type="text" id="trading_country" name="trading_country" class="form-control" placeholder="Country" style="border: 2px solid #257777;">
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="trading_branch">Branch</label>
-				<input type="text" id="trading_branch" name="trading_branch" class="form-control" placeholder="Branch" style="border: 2px solid #257777;">
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="port_of_shipping">Port of Shipping</label>
-				<input type="text" id="port_of_shipping" name="port_of_shipping" class="form-control" placeholder="Port of Shipping" style="border: 2px solid #257777;">
-			</div>
+        <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
+            <div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
+                <span style="color: #257777; font-weight: bold;">Shipper Information</span>
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="trading_region">Region</label>
+                                <select id="trading_region" name="trading_region" class="form-control" style="border: 2px solid #257777;">
+                                    <option value="">Select Region</option>
+                                    {% for region in region_list %}
+                                        <option value="{{ region }}">{{ region }}</option>
+                                    {% endfor %}
+                                </select>
+            </div>
+            <div class="form-group" style="width: 112px;">
+                <label for="trading_country">Country</label>
+                                <select id="trading_country" name="trading_country" class="form-control" style="border: 2px solid #257777;" disabled>
+                                    <option value="">Select Country</option>
+                                    {% for country in country_list %}
+                                        <option value="{{ country.code }}" data-region="{{ country.region }}">{{ country.name }}</option>
+                                    {% endfor %}
+                                </select>
+            </div>
+            <div class="form-group" style="width: 112px;">
+                <label for="trading_branch">Branch</label>
+                                <select id="trading_branch" name="trading_branch" class="form-control" style="border: 2px solid #257777;" disabled>
+                                    <option value="">Select Branch</option>
+                                    {% for branch in branch_list %}
+                                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}">{{ branch.name }} ({{ branch.city }})</option>
+                                    {% endfor %}
+                                </select>
+            </div>
+            <div class="form-group" style="width: 220px;">
+                <label for="port_of_shipping">Port of Shipping</label>
+                                <select id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" disabled>
+                                    <option value="">Select Port</option>
+                                    {% for airport in airport_list %}
+                                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.name }} ({{ airport.city }})</option>
+                                    {% endfor %}
+                                </select>
+            </div>
 		</div>
 		<div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
-			<div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
-				<span style="color: #2b792b; font-weight: bold;">Consignee Information</span>
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="consignee_region">Region</label>
-				<input type="text" id="consignee_region" name="consignee_region" class="form-control" placeholder="Region" style="border: 2px solid #2b792b;">
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="consignee_country">Country</label>
-				<input type="text" id="consignee_country" name="consignee_country" class="form-control" placeholder="Country" style="border: 2px solid #2b792b;">
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="consignee_branch">Branch</label>
-				<input type="text" id="consignee_branch" name="consignee_branch" class="form-control" placeholder="Branch" style="border: 2px solid #2b792b;">
-			</div>
-			<div class="form-group" style="min-width: 150px;">
-				<label for="consignee_port_of_shipping">Port of Shipping</label>
-				<input type="text" id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" placeholder="Port of Shipping" style="border: 2px solid #2b792b;">
-			</div>
+            <div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
+                <span style="color: #2b792b; font-weight: bold;">Consignee Information</span>
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="consignee_region">Region</label>
+                                <select id="consignee_region" name="consignee_region" class="form-control" style="border: 2px solid #2b792b;">
+                                    <option value="">Select Region</option>
+                                    {% for region in region_list %}
+                                        <option value="{{ region }}">{{ region }}</option>
+                                    {% endfor %}
+                                </select>
+            </div>
+            <div class="form-group" style="width: 112px;">
+                <label for="consignee_country">Country</label>
+                                <select id="consignee_country" name="consignee_country" class="form-control" style="border: 2px solid #2b792b;" disabled>
+                                    <option value="">Select Country</option>
+                                    {% for country in country_list %}
+                                        <option value="{{ country.code }}" data-region="{{ country.region }}">{{ country.name }}</option>
+                                    {% endfor %}
+                                </select>
+            </div>
+            <div class="form-group" style="width: 112px;">
+                <label for="consignee_branch">Branch</label>
+                                <select id="consignee_branch" name="consignee_branch" class="form-control" style="border: 2px solid #2b792b;" disabled>
+                                    <option value="">Select Branch</option>
+                                    {% for branch in branch_list %}
+                                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}">{{ branch.name }} ({{ branch.city }})</option>
+                                    {% endfor %}
+                                </select>
+            </div>
+            <div class="form-group" style="width: 220px;">
+                <label for="consignee_port_of_shipping">Port of Shipping</label>
+                                <select id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" disabled>
+                                    <option value="">Select Port</option>
+                                    {% for airport in airport_list %}
+                                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.name }} ({{ airport.city }})</option>
+                                    {% endfor %}
+                                </select>
+            </div>
 		</div>
 	</div>
 </div>

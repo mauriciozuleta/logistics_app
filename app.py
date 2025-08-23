@@ -9,7 +9,8 @@ def create_app():
     # Configuration
     # Use an environment variable for the secret key for better security
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a-default-fallback-key-for-development')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
+    db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance', 'your_database.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize extensions
