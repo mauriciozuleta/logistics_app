@@ -570,6 +570,42 @@ def check_route_exists():
 
     return jsonify({'exists': bool(existing_route)})
 
+@operations_api.route('/check-route', methods=['POST'])
+def check_route():
+    """
+    Checks if a route exists between two airports based on their IATA codes.
+    Accepts a JSON payload with 'departure_iata' and 'arrival_iata'.
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Missing JSON in request'}), 400
+
+    departure_iata = data.get('departure_iata')
+    arrival_iata = data.get('arrival_iata')
+
+    if not departure_iata or not arrival_iata:
+        return jsonify({'error': 'Missing departure or arrival IATA code'}), 400
+
+    # Find the corresponding airport IDs from the IATA codes
+    from models import Airport, Route
+    departure_airport = Airport.query.filter_by(iata_code=departure_iata).first()
+    arrival_airport = Airport.query.filter_by(iata_code=arrival_iata).first()
+
+    # If either airport doesn't exist, the route cannot exist.
+    if not departure_airport or not arrival_airport:
+        return jsonify({'exists': False})
+
+    # Query for the route using the airport IDs
+    route = Route.query.filter_by(from_airport_id=departure_airport.id, to_airport_id=arrival_airport.id).first()
+
+    if route:
+        route_data = {
+            'departure_route': f"{departure_airport.iata_code} - {arrival_airport.iata_code}"
+        }
+        return jsonify({'exists': True, 'route_data': route_data})
+    else:
+        return jsonify({'exists': False})
+
 @operations_api.route('/product_prices', methods=['GET'])
 def product_prices():
     """

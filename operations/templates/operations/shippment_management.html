@@ -4,12 +4,16 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
 
+<form method="POST" action="">
+    {# This hidden input is crucial for the JavaScript fetch request to work #}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
 <div class="shipment-section" id="container-1">
 	<div class="section-title" style="color: #FF5C00;">Shipment Reference</div>
 	<input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
 </div>
 
-<div class="shipment-section" id="container-2">
+<div class="shipment-section" id="container-2" data-check-route-url="{{ url_for('operations_api.check_route') }}">
 	<div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
 		<span>Trading Information</span>
 		<button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;">Toggle</button>
@@ -96,7 +100,7 @@
                 </select>
             </div>
             <div class="form-group" style="width: 250px;">
-                <label for="consignee_port_of_shipping">Port of Shipping</label>
+                <label for="consignee_port_of_shipping">Port of Arrival</label>
                 <select id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" disabled>
                     <option value="">Select Port</option>
                     {% for airport in airport_list %}
@@ -145,7 +149,7 @@ function toggleSummaryInfo() {
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
             <div class="form-group" style="min-width: 150px;">
                 <span style="color: #257777; font-weight: bold;">Departure Route</span>
-                <input type="text" class="form-control" placeholder="" style="border: 2px solid #257777;">
+                <input type="text" id="departure_route" name="departure_route" class="form-control" placeholder="" style="border: 2px solid #257777;" readonly>
             </div>
             <div class="form-group" style="min-width: 150px;">
                 <label for="route_cost">Route cost</label>
@@ -205,8 +209,8 @@ function toggleSummaryInfo() {
     <div id="summary-info-content">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
             <div class="form-group" style="min-width: 150px;">
-                <span style="color: #257777; font-weight: bold;">Add cargo to:</span>
-                <input type="text" id="add_cargo_to_departure" name="add_cargo_departure" class="form-control" placeholder="" style="border: 2px solid #257777;">
+                <label for="add_cargo_to_route" style="color: #257777; font-weight: bold;">Add cargo to:</label>
+                <input type="text" id="add_cargo_to_route" name="add_cargo_to_route" class="form-control" placeholder="" style="border: 2px solid #257777;" readonly>
             </div>
             <div class="form-group" style="min-width: 150px;">
                 <label for="route_cost">Avg. Cost Kg.</label>
@@ -318,5 +322,47 @@ function toggleSummaryInfo() {
         </table>
     </div>
 </div>
+
+<!-- Route Not Found Modal -->
+<style>
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 5px;
+        text-align: center;
+    }
+    .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+    .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
+    .modal-actions { margin-top: 20px; }
+</style>
+<div id="route-not-found-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="document.getElementById('route-not-found-modal').style.display='none'">&times;</span>
+        <h4>Route Not Found</h4>
+        <p>The selected route does not exist in the database. Please create it first or select different ports.</p>
+        <div class="modal-actions">
+            <a href="{{ url_for('operations.add_route') }}" class="btn btn-primary">Create New Route</a>
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('route-not-found-modal').style.display='none'">Change Ports</button>
+        </div>
+    </div>
+</div>
+
+<!-- Close the form tag -->
+</form>
 
 {% endblock %}
