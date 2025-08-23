@@ -20,36 +20,25 @@ operations_api = Blueprint("operations_api", __name__)
 @operations.route('/shipments', methods=['GET', 'POST'])
 def shipment_management():
     from models import RegionalManager, Trader, Country, Airport
+
+    # Eagerly load the regional_manager relationship to prevent N+1 queries
+    branches = Trader.query.options(joinedload(Trader.regional_manager)).order_by(Trader.city).all()
+
     regions = [r.region for r in RegionalManager.query.order_by(RegionalManager.region).distinct()]
     countries = Country.query.order_by(Country.country_name).all()
-    branches = Trader.query.order_by(Trader.city).all()
     airports = Airport.query.order_by(Airport.name).all()
 
     # Prepare lists for dropdowns
     region_list = regions
     country_list = [{"code": c.country_code, "name": c.country_name, "region": c.region} for c in countries]
-    branch_list = [{"id": b.id, "name": b.name or b.city, "city": b.city, "country_id": b.country_id, "regional_manager_id": b.regional_manager_id, "airport_iata": b.airport_iata} for b in branches]
+    branch_list = [{
+        "id": b.id, "name": b.name or b.city, "city": b.city, "country_id": b.country_id,
+        "regional_manager_id": b.regional_manager_id, "airport_iata": b.airport_iata,
+        "regional_manager_name": b.regional_manager.name if b.regional_manager else ''
+    } for b in branches]
     airport_list = [{"id": a.id, "name": a.name, "iata_code": a.iata_code, "city": a.city, "country_id": a.country_id} for a in airports]
 
-    print('region_list:', region_list)
-    print('country_list:', country_list)
-    print('branch_list:', branch_list)
-    print('airport_list:', airport_list)
-    """New shipment management form (clean, for new logic)"""
     csrf_token = generate_csrf()
-
-    from models import RegionalManager, Trader, Country, Airport
-
-    regions = [r.region for r in RegionalManager.query.order_by(RegionalManager.region).distinct()]
-    countries = Country.query.order_by(Country.country_name).all()
-    branches = Trader.query.order_by(Trader.city).all()
-    airports = Airport.query.order_by(Airport.name).all()
-
-    # Prepare lists for dropdowns
-    region_list = regions
-    country_list = [{"code": c.country_code, "name": c.country_name, "region": c.region} for c in countries]
-    branch_list = [{"id": b.id, "name": b.name or b.city, "city": b.city, "country_id": b.country_id, "regional_manager_id": b.regional_manager_id, "airport_iata": b.airport_iata} for b in branches]
-    airport_list = [{"id": a.id, "name": a.name, "iata_code": a.iata_code, "city": a.city, "country_id": a.country_id} for a in airports]
 
     return render_template(
         'operations/shippment_management.html',
@@ -122,12 +111,6 @@ def add_route():
             # Extract calculated route data from JavaScript
             route_data_json = request.form.get('route_data')
 
-            # Add the new shipment management route after Blueprint definition
-            @operations.route('/shipments', methods=['GET', 'POST'])
-            def shipment_management():
-                """New shipment management form (clean, for new logic)"""
-                csrf_token = generate_csrf()
-                return render_template('operations/shippment_management.html', csrf_token=csrf_token)
             # Extract leg 2 data (for round-trip and multiple routes)
             leg2_data = legs[1] if len(legs) > 1 else {}
             leg2_payload = payload_data[1] if len(payload_data) > 1 else {}

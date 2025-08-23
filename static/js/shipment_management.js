@@ -28,27 +28,30 @@ document.addEventListener('DOMContentLoaded', function() {
             countrySelect: document.getElementById('trading_country'),
             branchSelect: document.getElementById('trading_branch'),
             portSelect: document.getElementById('port_of_shipping'),
+            regionalManagerInput: document.getElementById('trading_regional_manager')
         },
         {
             regionSelect: document.getElementById('consignee_region'),
             countrySelect: document.getElementById('consignee_country'),
             branchSelect: document.getElementById('consignee_branch'),
             portSelect: document.getElementById('consignee_port_of_shipping'),
+            regionalManagerInput: document.getElementById('consignee_regional_manager')
         }
     ];
 
     setups.forEach((setup, index) => {
-        const { regionSelect, countrySelect, branchSelect, portSelect } = setup;
+        const { regionSelect, countrySelect, branchSelect, portSelect, regionalManagerInput } = setup;
 
         // --- Hardened Element Validation ---
         // This is the new, robust check. It verifies that all dropdown elements exist in the HTML.
         // If an element is not found, it prints a specific error to the browser's developer console.
-        const elements = { regionSelect, countrySelect, branchSelect, portSelect };
+        const elements = { regionSelect, countrySelect, branchSelect, portSelect, regionalManagerInput };
         const expectedIds = {
             regionSelect: index === 0 ? 'trading_region' : 'consignee_region',
             countrySelect: index === 0 ? 'trading_country' : 'consignee_country',
             branchSelect: index === 0 ? 'trading_branch' : 'consignee_branch',
             portSelect: index === 0 ? 'port_of_shipping' : 'consignee_port_of_shipping',
+            regionalManagerInput: index === 0 ? 'trading_regional_manager' : 'consignee_regional_manager'
         };
 
         let hasError = false;
@@ -68,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {object} setup - An object containing the DOM elements for the dropdowns.
      */
     function initializeCascadingDropdowns(setup) {
-        const { regionSelect, countrySelect, branchSelect, portSelect } = setup;
+        const { regionSelect, countrySelect, branchSelect, portSelect, regionalManagerInput } = setup;
 
         // Store original options from the pre-rendered HTML, excluding placeholders
         const originalCountryOptions = Array.from(countrySelect.querySelectorAll('option:not([value=""])'));
@@ -99,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reset dependent dropdowns
             updateDropdown(branchSelect, [], 'Select Branch...');
             updateDropdown(portSelect, [], 'Select Port...');
+            if (regionalManagerInput) regionalManagerInput.value = ''; // Clear manager field
         });
 
         // 2. Event Listener for Country selection
@@ -114,17 +118,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Reset port dropdown
             updateDropdown(portSelect, [], 'Select Port...');
+            if (regionalManagerInput) regionalManagerInput.value = ''; // Clear manager field
         });
 
         // 3. Event Listener for Branch selection
         branchSelect.addEventListener('change', function() {
             const selectedBranchOption = this.options[this.selectedIndex];
             const airportIata = selectedBranchOption ? selectedBranchOption.dataset.airportIata : null;
+            const managerName = selectedBranchOption ? selectedBranchOption.dataset.managerName || '' : ''; // Get manager name
 
             // Filter ports based on the selected branch's airport IATA code
             const filteredPorts = airportIata ? originalPortOptions.filter(opt =>
                 opt.value === airportIata
             ) : [];
+
+            // Populate the manager input field
+            if (regionalManagerInput) {
+                regionalManagerInput.value = managerName;
+            }
 
             updateDropdown(portSelect, filteredPorts, 'Select Port...');
 
