@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<script>
+window.regionManagerMap = {{ region_manager_map | tojson }};
+</script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
 
@@ -50,7 +53,7 @@
                 <select id="trading_branch" name="trading_branch" class="form-control" style="border: 2px solid #257777;" disabled>
                     <option value="">Select Branch</option>
                     {% for branch in branch_list %}
-                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.name }} ({{ branch.city }})</option>
+                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.airport_name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -59,9 +62,21 @@
                 <select id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" disabled>
                     <option value="">Select Port</option>
                     {% for airport in airport_list %}
-                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.iata_code }} - {{ airport.name }}</option>
+                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.iata_code }}</option>
                     {% endfor %}
                 </select>
+                <input type="hidden" id="port_of_shipping_iata" name="port_of_shipping_iata" value="">
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var portSelect = document.getElementById('port_of_shipping');
+                    var iataInput = document.getElementById('port_of_shipping_iata');
+                    if (portSelect && iataInput) {
+                        portSelect.addEventListener('change', function() {
+                            iataInput.value = portSelect.value;
+                        });
+                    }
+                });
+                </script>
             </div>
 		</div>
 		<div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
@@ -95,7 +110,7 @@
                 <select id="consignee_branch" name="consignee_branch" class="form-control" style="border: 2px solid #2b792b;" disabled>
                     <option value="">Select Branch</option>
                     {% for branch in branch_list %}
-                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.name }} ({{ branch.city }})</option>
+                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.airport_name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -104,9 +119,10 @@
                 <select id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" disabled>
                     <option value="">Select Port</option>
                     {% for airport in airport_list %}
-                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.iata_code }} - {{ airport.name }}</option>
+                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.iata_code }}</option>
                     {% endfor %}
                 </select>
+                <input type="hidden" id="consignee_port_of_shipping_iata" name="consignee_port_of_shipping_iata" value="">
             </div>
 		</div>
 	</div>

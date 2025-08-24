@@ -40,13 +40,17 @@ def shipment_management():
 
     csrf_token = generate_csrf()
 
+    # Build region_manager_map: {region: manager_name}
+    region_manager_map = {rm.region: rm.name for rm in RegionalManager.query.all()}
+
     return render_template(
         'operations/shippment_management.html',
         csrf_token=csrf_token,
         region_list=region_list,
         country_list=country_list,
         branch_list=branch_list,
-        airport_list=airport_list
+        airport_list=airport_list,
+        region_manager_map=region_manager_map
     )
 
 # Add the preview_shipment route after Blueprint definition

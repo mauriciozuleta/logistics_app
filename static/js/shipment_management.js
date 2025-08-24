@@ -85,6 +85,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Debug: Log the IATA codes being sent
+        console.log('Route check request:', {
+            departure_iata: selectedDeparturePort,
+            arrival_iata: selectedArrivalPort
+        });
         fetch(checkRouteUrl, {
             method: 'POST',
             headers: {
@@ -142,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         regionSelect.addEventListener('change', function() {
             const selectedRegion = this.value;
+            // Only countries in selected region with branches
             const countryCodesWithBranches = [...new Set(originalBranchOptions.map(opt => opt.dataset.country.toLowerCase()))];
             const filteredCountries = selectedRegion ? originalCountryOptions.filter(countryOpt => {
                 const regionMatch = countryOpt.dataset.region && countryOpt.dataset.region.trim().toLowerCase() === selectedRegion.trim().toLowerCase();
@@ -151,17 +157,26 @@ document.addEventListener('DOMContentLoaded', function() {
             updateDropdown(countrySelect, filteredCountries, 'Select Country...');
             updateDropdown(branchSelect, [], 'Select Branch...');
             updateDropdown(portSelect, [], 'Select Port...');
-            if (regionalManagerInput) regionalManagerInput.value = '';
+            // Immediately update Regional Manager field for selected region
+            if (regionalManagerInput) {
+                // regionManagerMap should be injected globally with region → manager mapping
+                if (window.regionManagerMap && selectedRegion && window.regionManagerMap[selectedRegion]) {
+                    regionalManagerInput.value = window.regionManagerMap[selectedRegion];
+                } else {
+                    regionalManagerInput.value = '';
+                }
+            }
         });
 
         countrySelect.addEventListener('change', function() {
             const selectedCountryCode = this.value;
+            // Only branches in selected country
             const filteredBranches = selectedCountryCode ? originalBranchOptions.filter(opt =>
                 opt.dataset.country && opt.dataset.country.toLowerCase() === selectedCountryCode.toLowerCase()
             ) : [];
             updateDropdown(branchSelect, filteredBranches, 'Select Branch...');
             updateDropdown(portSelect, [], 'Select Port...');
-            if (regionalManagerInput) regionalManagerInput.value = '';
+            // Do NOT clear the regional manager field here
         });
 
         branchSelect.addEventListener('change', function() {
@@ -169,20 +184,32 @@ document.addEventListener('DOMContentLoaded', function() {
             const airportIata = selectedBranchOption ? selectedBranchOption.dataset.airportIata : null;
             const managerName = selectedBranchOption ? selectedBranchOption.dataset.managerName || '' : '';
             if (regionalManagerInput) regionalManagerInput.value = managerName;
+            // Only ports for selected branch
             const filteredPorts = airportIata ? originalPortOptions.filter(opt => opt.value === airportIata) : [];
             updateDropdown(portSelect, filteredPorts, 'Select Port...');
             if (portSelect.options.length === 2) {
                 portSelect.selectedIndex = 1;
-                portSelect.dispatchEvent(new Event('change')); // Trigger change event for auto-selected port
+                portSelect.dispatchEvent(new Event('change'));
             }
         });
 
+        // Update hidden IATA input on port selection (for shipper row only)
+        if (index === 0) {
+            portSelect.addEventListener('change', function() {
+                const iataInput = document.getElementById('port_of_shipping_iata');
+                if (iataInput) iataInput.value = portSelect.value;
+            });
+        }
+
         // NEW: Integrated port selection listener
         portSelect.addEventListener('change', function() {
-            if (index === 0) { // This is the shipper/departure row
-                selectedDeparturePort = this.value;
-            } else { // This is the consignee/arrival row
-                selectedArrivalPort = this.value;
+            // Use hidden IATA code input if available
+            if (index === 0) { // shipper/departure
+                const iataInput = document.getElementById('port_of_shipping_iata');
+                selectedDeparturePort = iataInput ? iataInput.value : this.value;
+            } else { // consignee/arrival
+                const iataInput = document.getElementById('consignee_port_of_shipping_iata');
+                selectedArrivalPort = iataInput ? iataInput.value : this.value;
             }
             triggerRouteChangeCheck();
         });
