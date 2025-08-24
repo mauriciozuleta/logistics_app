@@ -61,13 +61,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Route Existence Check Logic ---
     function triggerRouteChangeCheck() {
-        const departureRouteField = document.getElementById('departure_route');
-        const addCargoToField = document.getElementById('add_cargo_to_route');
+        const departureRouteSelect = document.getElementById('departure_route');
+        const addCargoToSelect = document.getElementById('add_cargo_to_route');
 
         // Clear previous route info if a port is deselected
         if (!selectedDeparturePort || !selectedArrivalPort) {
-            if (departureRouteField) departureRouteField.value = '';
-            if (addCargoToField) addCargoToField.value = '';
+            if (departureRouteSelect) {
+                departureRouteSelect.innerHTML = '';
+                departureRouteSelect.disabled = true;
+            }
+            if (addCargoToSelect) {
+                addCargoToSelect.innerHTML = '';
+                addCargoToSelect.disabled = true;
+            }
             return;
         }
 

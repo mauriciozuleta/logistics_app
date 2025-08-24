@@ -164,6 +164,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
+  let calculatedRouteData = null; // Holds the raw calculated data for saving.
+
   var loadBtn = document.getElementById('load_finish_btn');
   var fromSelect = document.getElementById('from_airport');
   var toSelect = document.getElementById('to_airport');
@@ -173,7 +175,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Helper functions for formatting
   function formatNumber(num, decimals) {
-    if (isNaN(num)) return '';
+    // Use `num == null` to check for both null and undefined.
+    if (num == null || isNaN(num)) return '';
     return num.toLocaleString('en-US', {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals
@@ -181,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function formatCurrency(num) {
-    if (isNaN(num)) return '';
+    if (num == null || isNaN(num)) return '';
     return '$' + num.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -315,6 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     freezeLists();
     clearTables();
+    calculatedRouteData = null; // Reset data on new analysis
 
     try {
       // 2. Get legs and fetch data sequentially
@@ -348,8 +352,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function getIata(select) {
     var opt = select.options[select.selectedIndex];
     if (!opt || !opt.text) return '';
-    var match = opt.text.match(/\/\s*(\w{3})$/);
-    return match ? match[1] : opt.text.trim();
+    // Extract IATA code from option text (assumes format 'City / IATA')
+    var parts = opt.text.split('/');
+    return parts.length > 1 ? parts[1].trim() : opt.text.trim();
   }
 
   function freezeLists() {
@@ -409,6 +414,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Calculations for the single leg ---
     const dist = distances[0];
+
+    // If distance is null or invalid, the API call likely failed.
+    if (dist == null || isNaN(dist)) {
+      // Display an error directly in the table for better visibility.
+      dataRow.cells[0].innerText = `${getIata(fromSelect)} / ${getIata(toSelect)}`;
+      dataRow.cells[1].innerText = 'Error: Invalid Distance';
+      // Stop further execution for this leg.
+      throw new Error(`Invalid distance (${dist}) received. Check if IATA codes are being sent correctly to the API.`);
+    }
+
     const flightTime = dist / aircraftData.cruise_speed;
 
     // Calculate Adjusted Flight Time based on the custom rounding rule
@@ -438,8 +453,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const totalLegCost = bhCost + fuelCost;
 
+    // Store raw numbers in an object to avoid reading from the DOM later
+    const routeMetrics = {
+        fromIata: getIata(fromSelect),
+        dist: dist,
+        flightTime: flightTime,
+        adjustedFlightTime: adjustedFlightTime,
+        routeFuelLbs: routeFuelLbs,
+        routeFuelGal: routeFuelGal,
+        bhCost: bhCost,
+        fuelCost: fuelCost,
+        totalLegCost: totalLegCost
+    };
+
     // --- Populate Route Summary Table ---
-    dataRow.cells[0].innerText = `${getIata(fromSelect)} / ${getIata(toSelect)}`;
+    dataRow.cells[0].innerText = `${routeMetrics.fromIata} / ${getIata(toSelect)}`;
     dataRow.cells[1].innerText = formatNumber(dist, 0);
     dataRow.cells[2].innerText = flightTime.toFixed(2) + ' hr';
     dataRow.cells[3].innerText = adjustedFlightTime.toFixed(2) + ' hr';
@@ -450,39 +478,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Call subsequent functions ---
     calculateTotals();
-    await setPayloadData(aircraftData);
+    await setPayloadData(aircraftData, routeMetrics);
   }
 
-  async function setPayloadData(aircraftData) {
+  async function setPayloadData(aircraftData, routeMetrics) {
     console.log('Setting payload data:', aircraftData);
     var payloadTable = document.getElementById('payload-summary-table');
-    var routeTable = document.getElementById('route-summary-table');
-    if (!payloadTable || !aircraftData.empty_weight_lbs || !routeTable) return;
+    if (!payloadTable || !aircraftData.empty_weight_lbs) return;
 
-    var payloadRows = payloadTable.getElementsByTagName('tr');
-    var routeRows = routeTable.getElementsByTagName('tr');
-    
-    // Fuel conversion factor: gallons to pounds (Jet A fuel)
-    var galToLbsFactor = 6.7;
+    var payloadTbody = payloadTable.tBodies[0];
+    if (!payloadTbody) return;
+    var payloadRow = payloadTbody.rows[0];
 
-    // Only process row 1 (single leg)
-    var i = 1; // This corresponds to the first data row in the tbody
-    if (payloadRows[i] && payloadRows[i].cells[1]) {
+    // Set the leg name in the first column of the payload table for visual consistency.
+    payloadRow.cells[0].innerText = `${getIata(fromSelect)} / ${getIata(toSelect)}`;
+
+    if (payloadRow && payloadRow.cells[1]) {
       // Column 1 is OEW (Lbs.)
-      payloadRows[i].cells[1].innerText = aircraftData.empty_weight_lbs ? formatNumber(aircraftData.empty_weight_lbs, 0) : '';
+      payloadRow.cells[1].innerText = aircraftData.empty_weight_lbs ? formatNumber(aircraftData.empty_weight_lbs, 0) : '';
 
       // Column 2 is Fuel Weight (Lbs.) = Route Fuel (gls) * 6.7 + Min Land + Alt Fuel
-      if (payloadRows[i].cells[2] && routeRows[i] && routeRows[i].cells[3]) {
-        var routeFuelGls = parseFloat(routeRows[i].cells[4].innerText.replace(/,/g, '')) || 0;
-        var routeFuelLbs = routeFuelGls * galToLbsFactor;
+      if (payloadRow.cells[2]) {
+        // Use the raw numbers from routeMetrics instead of parsing from the DOM
+        var routeFuelLbs = routeMetrics.routeFuelLbs;
         var minLandingFuel = aircraftData.min_fuel_landed_lbs || 0;
         var altFuel = aircraftData.min_fuel_alternate_lbs || 0;
         var totalFuelWeight = routeFuelLbs + minLandingFuel + altFuel;
 
-        payloadRows[i].cells[2].innerText = formatNumber(totalFuelWeight, 0);
-
+        payloadRow.cells[2].innerText = formatNumber(totalFuelWeight, 0);
+        
+        // Add new metrics to the object to pass down the chain
+        routeMetrics.oew = aircraftData.empty_weight_lbs;
+        routeMetrics.totalFuelWeight = totalFuelWeight;
         // Calculate Max Payload (Column 3) and No-Tank T/O/W (Column 4)
-        await calculateMaxPayload(i, payloadRows[i], aircraftData, totalFuelWeight, routeFuelLbs);
+        await calculateMaxPayload(payloadRow, aircraftData, routeMetrics);
       }
     }
   }
@@ -499,12 +528,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Function to calculate max payload with all constraints
-  async function calculateMaxPayload(rowIndex, payloadRow, aircraftData, totalFuelWeight, routeFuelLbs) {
+  async function calculateMaxPayload(payloadRow, aircraftData, metrics) {
     try {
-      // Get departure airport IATA code from leg column
-      var routeTable = document.getElementById('route-summary-table');
-      var legText = routeTable.tBodies[0].rows[0].cells[0].innerText;
-      var departureIata = legText.split(' / ')[0];
+      // Get departure airport IATA from the metrics object for reliability.
+      var departureIata = metrics.fromIata;
       
       // Fetch airport altitude
       const altitudeResponse = await fetch('/api/airport-altitude', {
@@ -530,14 +557,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Base Max Payload calculation: Adjusted MTOW - (OEW + Fuel Weight)
-      var baseMaxPayload = adjustedMTOW - (aircraftData.empty_weight_lbs + totalFuelWeight);
+      var baseMaxPayload = adjustedMTOW - (metrics.oew + metrics.totalFuelWeight);
       
       // First constraint: Aircraft structural payload limit
       var maxPayload = Math.min(baseMaxPayload, aircraftData.max_payload_lbs || baseMaxPayload);
       
       // Second constraint: Landing weight limit
       // Leg Landing Weight = Aircraft Empty Weight + Fuel Weight - Route Fuel (lbs) + Max Payload
-      var legLandingWeight = aircraftData.empty_weight_lbs + totalFuelWeight - routeFuelLbs + maxPayload;
+      var legLandingWeight = metrics.oew + metrics.totalFuelWeight - metrics.routeFuelLbs + maxPayload;
       
       if (legLandingWeight > aircraftData.mldgw_lbs) {
         var excess = legLandingWeight - aircraftData.mldgw_lbs;
@@ -551,9 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
       payloadRow.cells[3].innerText = formatNumber(maxPayload, 0);
       
       // Calculate No-Tank T/O/W (Column 4) = OEW + Fuel Weight + Max Payload
-      var oew = parseFloat(payloadRow.cells[1].innerText.replace(/,/g, '')) || 0;
-      var fuelWeight = parseFloat(payloadRow.cells[2].innerText.replace(/,/g, '')) || 0;
-      var noTankTOW = oew + fuelWeight + maxPayload;
+      var noTankTOW = metrics.oew + metrics.totalFuelWeight + maxPayload;
       payloadRow.cells[4].innerText = formatNumber(noTankTOW, 0);
 
       // Calculate Available Extra Fuel (Column 5)
@@ -564,8 +589,8 @@ document.addEventListener('DOMContentLoaded', function() {
       // 2. Limit from MLDW: The landing weight cannot exceed the MLDGW.
       // Landing Weight = OEW + Reserves + Max Payload + Extra Fuel
       // Reserves = Total Fuel Weight - Route Fuel Burn
-      var reserves = totalFuelWeight - routeFuelLbs;
-      var landingWeightWithoutExtra = oew + reserves + maxPayload;
+      var reserves = metrics.totalFuelWeight - metrics.routeFuelLbs;
+      var landingWeightWithoutExtra = metrics.oew + reserves + maxPayload;
       var availExtraFuel_from_MLDW = aircraftData.mldgw_lbs - landingWeightWithoutExtra;
 
       // The actual available extra fuel is the minimum of the two constraints.
@@ -577,6 +602,31 @@ document.addEventListener('DOMContentLoaded', function() {
       var tankTOW = noTankTOW + availExtraFuel;
       payloadRow.cells[6].innerText = formatNumber(tankTOW, 0);
       
+      // --- Store all raw calculated data for saving ---
+      const routeLeg = `${getIata(fromSelect)} / ${getIata(toSelect)}`;
+      calculatedRouteData = {
+        legs: [{
+          route: routeLeg,
+          distance_nm: metrics.dist,
+          flight_time_hours: metrics.flightTime,
+          adjusted_flight_time_hours: metrics.adjustedFlightTime,
+          fuel_gallons: metrics.routeFuelGal,
+          block_hours_cost: metrics.bhCost,
+          fuel_cost: metrics.fuelCost,
+          total_leg_cost: metrics.totalLegCost
+        }],
+        payloads: [{
+          route: routeLeg,
+          empty_weight_lbs: metrics.oew,
+          fuel_weight_lbs: metrics.totalFuelWeight,
+          max_payload_lbs: maxPayload,
+          no_tank_tow_lbs: noTankTOW,
+          avail_extra_fuel_lbs: availExtraFuel,
+          tank_tow_lbs: tankTOW
+        }]
+      };
+      console.log('Final data for saving:', calculatedRouteData);
+
       console.log(`${departureIata} Altitude: ${airportAltitude} ft, Gradient: ${gradient * 100}%, Adjusted MTOW: ${formatNumber(adjustedMTOW, 0)}, Max Payload: ${formatNumber(maxPayload, 0)}, No-Tank T/O/W: ${formatNumber(noTankTOW, 0)}`);
       
     } catch (error) {
@@ -592,70 +642,24 @@ document.addEventListener('DOMContentLoaded', function() {
     var tbody = routeTable.tBodies[0];
     if (tbody.rows.length < 2) return; // Need data row and totals row
 
-    console.log('Calculating totals...');
-    
     const dataRow = tbody.rows[0];
-    const totalsRow = tbody.rows[1];
+    // The totals row is always the last one in this table's body.
+    const totalsRow = tbody.rows[tbody.rows.length - 1];
 
     // Since there's only one leg, totals are the same as the leg's data.
     // Copy values from data row to totals row, skipping the first "Leg" column.
     for (let i = 1; i < dataRow.cells.length; i++) {
+      if (dataRow.cells[i]) { // Check if the cell exists
         totalsRow.cells[i].innerText = dataRow.cells[i].innerText;
+      }
     }
   }
 
   // Function to extract calculated route data from tables
   function extractRouteData() {
-    const routeSummary = {};
-    const payloadSummary = {};
-
-    // Extract route summary data from the single data row
-    const routeTable = document.getElementById('route-summary-table');
-    if (routeTable) {
-      const dataRow = routeTable.tBodies[0].rows[0];
-      if (dataRow) {
-        const cells = dataRow.cells;
-        // The table now has 8 columns for route data
-        if (cells.length >= 8) {
-          Object.assign(routeSummary, {
-            route: cells[0].innerText,
-            distance_nm: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
-            flight_time_hours: parseFloat(cells[2].innerText.replace(' hr', '')) || 0,
-            adjusted_flight_time_hours: parseFloat(cells[3].innerText.replace(' hr', '')) || 0,
-            fuel_gallons: parseFloat(cells[4].innerText.replace(/,/g, '')) || 0,
-            block_hours_cost: parseFloat(cells[5].innerText.replace(/[$,]/g, '')) || 0,
-            fuel_cost: parseFloat(cells[6].innerText.replace(/[$,]/g, '')) || 0,
-            total_leg_cost: parseFloat(cells[7].innerText.replace(/[$,]/g, '')) || 0
-          });
-        }
-      }
-    }
-
-    // Extract payload data from the single data row
-    const payloadTable = document.getElementById('payload-summary-table');
-    if (payloadTable) {
-      const dataRow = payloadTable.tBodies[0].rows[0];
-      if (dataRow) {
-        const cells = dataRow.cells;
-        if (cells.length >= 7) {
-          Object.assign(payloadSummary, {
-            route: cells[0].innerText,
-            empty_weight_lbs: parseFloat(cells[1].innerText.replace(/,/g, '')) || 0,
-            fuel_weight_lbs: parseFloat(cells[2].innerText.replace(/,/g, '')) || 0,
-            max_payload_lbs: parseFloat(cells[3].innerText.replace(/,/g, '')) || 0,
-            no_tank_tow_lbs: parseFloat(cells[4].innerText.replace(/,/g, '')) || 0,
-            avail_extra_fuel_lbs: parseFloat(cells[5].innerText.replace(/,/g, '')) || 0,
-            tank_tow_lbs: parseFloat(cells[6].innerText.replace(/,/g, '')) || 0
-          });
-        }
-      }
-    }
-
-    // Return data in the format expected by the backend
-    return {
-      legs: [routeSummary],
-      payloadData: [payloadSummary]
-    };
+    // This function now simply returns the data object that was built
+    // during the calculation phase. This avoids all DOM parsing errors.
+    return calculatedRouteData;
   }
 
   // Handle Save Route button click
@@ -665,12 +669,8 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault(); // Prevent default form submission
       
       // Check if route has been analyzed
-      const routeTable = document.getElementById('route-summary-table');
-      const firstDataCell = routeTable.tBodies[0].rows[0].cells[1];
-      const hasData = firstDataCell && firstDataCell.innerText.trim() !== '' && firstDataCell.innerText.trim() !== '&nbsp;';
-      
-      if (!hasData) {
-        alert('Please analyze the route first by clicking "Load" before saving.');
+      if (!calculatedRouteData) {
+        alert('Please analyze the route by clicking "Load" before saving.');
         return;
       }
 
@@ -708,4 +708,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+
 {% endblock %}

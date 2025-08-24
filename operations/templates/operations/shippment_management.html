@@ -148,8 +148,8 @@ function toggleSummaryInfo() {
     <div id="logistic-info-content">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
             <div class="form-group" style="min-width: 150px;">
-                <span style="color: #257777; font-weight: bold;">Departure Route</span>
-                <input type="text" id="departure_route" name="departure_route" class="form-control" placeholder="" style="border: 2px solid #257777;" readonly>
+                <label for="departure_route" style="color: #257777; font-weight: bold;">Departure Route</label>
+                <select id="departure_route" name="departure_route" class="form-control" style="border: 2px solid #257777;" disabled></select>
             </div>
             <div class="form-group" style="min-width: 150px;">
                 <label for="route_cost">Route cost</label>
@@ -210,7 +210,7 @@ function toggleSummaryInfo() {
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
             <div class="form-group" style="min-width: 150px;">
                 <label for="add_cargo_to_route" style="color: #257777; font-weight: bold;">Add cargo to:</label>
-                <input type="text" id="add_cargo_to_route" name="add_cargo_to_route" class="form-control" placeholder="" style="border: 2px solid #257777;" readonly>
+                <select id="add_cargo_to_route" name="add_cargo_to_route" class="form-control" style="border: 2px solid #257777;" disabled></select>
             </div>
             <div class="form-group" style="min-width: 150px;">
                 <label for="route_cost">Avg. Cost Kg.</label>
