@@ -199,9 +199,20 @@ document.addEventListener('DOMContentLoaded', function() {
                                         if (selectedRoute) {
                                             populateReturnRouteFields(selectedRoute);
                                             createTypeOfReturnDropdown(parent);
+                                            // Populate the second 'add cargo to' field (green) with the selected return route, without aircraft type
+                                            const addCargoToReturnField = document.getElementById('add_cargo_to_return');
+                                            if (addCargoToReturnField) {
+                                                // Extract route base (e.g., 'MDE → MIA') from summary
+                                                const routeBase = selectedRoute.summary.split('(')[0].trim();
+                                                addCargoToReturnField.value = routeBase;
+                                            }
                                         } else {
                                             document.getElementById('route_cost_return').value = '';
                                             document.getElementById('available_payload_return').value = '';
+                                            const addCargoToReturnField = document.getElementById('add_cargo_to_return');
+                                            if (addCargoToReturnField) {
+                                                addCargoToReturnField.value = '';
+                                            }
                                         }
                                     });
                                 }
