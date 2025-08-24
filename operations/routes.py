@@ -43,6 +43,46 @@ def shipment_management():
     # Build region_manager_map: {region: manager_name}
     region_manager_map = {rm.region: rm.name for rm in RegionalManager.query.all()}
 
+    # Build route_data for JS (same logic as add_shipment)
+    routes = Route.query.options(
+        joinedload(Route.aircraft),
+        joinedload(Route.from_airport),
+        joinedload(Route.to_airport)
+    ).order_by(Route.route_name).all()
+    def safe_val(val, default=''):
+        if val is None:
+            return default
+        if type(val).__name__ == 'Undefined':
+            return default
+        return val
+    route_data = {}
+    for r in routes:
+        from_airport = r.from_airport
+        to_airport = r.to_airport
+        distance_display = f"{safe_val(r.total_distance_nm, 0):.1f} NM" if safe_val(r.total_distance_nm, 0) else "N/A"
+        flight_time_display = f"{safe_val(r.total_flight_time_hours, 0):.2f} hrs" if safe_val(r.total_flight_time_hours, 0) else "N/A"
+        payload_display = "N/A"
+        if safe_val(r.leg1_max_payload_lbs, 0):
+            payload_kg = safe_val(r.leg1_max_payload_lbs, 0) * 0.453592
+            payload_display = f"{payload_kg:.0f} kg"
+        elif r.aircraft and hasattr(r.aircraft, 'max_payload_kg') and safe_val(r.aircraft.max_payload_kg, 0):
+            payload_display = f"{safe_val(r.aircraft.max_payload_kg, 0)} kg"
+        elif r.aircraft and hasattr(r.aircraft, 'payload_capacity') and safe_val(r.aircraft.payload_capacity, 0):
+            payload_display = f"{safe_val(r.aircraft.payload_capacity, 0)} kg"
+        aircraft_suffix = f" ({safe_val(r.aircraft.short_name, '')})" if r.aircraft and safe_val(r.aircraft.short_name, '') else ""
+        summary_text = safe_val(r.route_summary, '') or safe_val(r.route_name, '') or (f"{safe_val(from_airport.iata_code, '')} → {safe_val(to_airport.iata_code, '')}")
+        route_data[str(r.id)] = {
+            'fromCity': safe_val(from_airport.city, '') if from_airport else '',
+            'toCity': safe_val(to_airport.city, '') if to_airport else '',
+            'fromAirport': safe_val(from_airport.iata_code, '') if from_airport else '',
+            'toAirport': safe_val(to_airport.iata_code, '') if to_airport else '',
+            'summary': f"{summary_text}{aircraft_suffix}",
+            'aircraft': [safe_val(r.aircraft.short_name, '')] if r.aircraft and safe_val(r.aircraft.short_name, '') else [],
+            'distance': distance_display,
+            'flight_time': flight_time_display,
+            'cost': safe_val(r.total_cost, 0),
+            'payload': payload_display
+        }
     return render_template(
         'operations/shippment_management.html',
         csrf_token=csrf_token,
@@ -50,7 +90,8 @@ def shipment_management():
         country_list=country_list,
         branch_list=branch_list,
         airport_list=airport_list,
-        region_manager_map=region_manager_map
+        region_manager_map=region_manager_map,
+        route_data=route_data
     )
 
 # Add the preview_shipment route after Blueprint definition
@@ -707,36 +748,43 @@ def add_shipment(shipment_id=None):
 
     } for t in traders}
 
+    def safe_val(val, default=''):
+        if val is None:
+            return default
+        if type(val).__name__ == 'Undefined':
+            return default
+        return val
+
     route_data = {}
     for r in routes:
         from_airport = r.from_airport
         to_airport = r.to_airport
 
-        distance_display = f"{r.total_distance_nm:.1f} NM" if r.total_distance_nm else "N/A"
-        flight_time_display = f"{r.total_flight_time_hours:.2f} hrs" if r.total_flight_time_hours else "N/A"
+        distance_display = f"{safe_val(r.total_distance_nm, 0):.1f} NM" if safe_val(r.total_distance_nm, 0) else "N/A"
+        flight_time_display = f"{safe_val(r.total_flight_time_hours, 0):.2f} hrs" if safe_val(r.total_flight_time_hours, 0) else "N/A"
 
         payload_display = "N/A"
-        if r.leg1_max_payload_lbs:
-            payload_kg = r.leg1_max_payload_lbs * 0.453592
+        if safe_val(r.leg1_max_payload_lbs, 0):
+            payload_kg = safe_val(r.leg1_max_payload_lbs, 0) * 0.453592
             payload_display = f"{payload_kg:.0f} kg"
-        elif r.aircraft and hasattr(r.aircraft, 'max_payload_kg'):
-            payload_display = f"{r.aircraft.max_payload_kg} kg"
-        elif r.aircraft and hasattr(r.aircraft, 'payload_capacity'):
-            payload_display = f"{r.aircraft.payload_capacity} kg"
+        elif r.aircraft and hasattr(r.aircraft, 'max_payload_kg') and safe_val(r.aircraft.max_payload_kg, 0):
+            payload_display = f"{safe_val(r.aircraft.max_payload_kg, 0)} kg"
+        elif r.aircraft and hasattr(r.aircraft, 'payload_capacity') and safe_val(r.aircraft.payload_capacity, 0):
+            payload_display = f"{safe_val(r.aircraft.payload_capacity, 0)} kg"
 
-        aircraft_suffix = f" ({r.aircraft.short_name})" if r.aircraft else ""
-        summary_text = r.route_summary or r.route_name or f"{from_airport.iata_code} → {to_airport.iata_code}"
+        aircraft_suffix = f" ({safe_val(r.aircraft.short_name, '')})" if r.aircraft and safe_val(r.aircraft.short_name, '') else ""
+        summary_text = safe_val(r.route_summary, '') or safe_val(r.route_name, '') or (f"{safe_val(from_airport.iata_code, '')} → {safe_val(to_airport.iata_code, '')}")
 
         route_data[str(r.id)] = {
-            'fromCity': from_airport.city if from_airport else '',
-            'toCity': to_airport.city if to_airport else '',
-            'fromAirport': from_airport.iata_code if from_airport else '',
-            'toAirport': to_airport.iata_code if to_airport else '',
+            'fromCity': safe_val(from_airport.city, '') if from_airport else '',
+            'toCity': safe_val(to_airport.city, '') if to_airport else '',
+            'fromAirport': safe_val(from_airport.iata_code, '') if from_airport else '',
+            'toAirport': safe_val(to_airport.iata_code, '') if to_airport else '',
             'summary': f"{summary_text}{aircraft_suffix}",
-            'aircraft': [r.aircraft.short_name] if r.aircraft and r.aircraft.short_name else [],
+            'aircraft': [safe_val(r.aircraft.short_name, '')] if r.aircraft and safe_val(r.aircraft.short_name, '') else [],
             'distance': distance_display,
             'flight_time': flight_time_display,
-            'cost': r.total_cost,
+            'cost': safe_val(r.total_cost, 0),
             'payload': payload_display
         }
 

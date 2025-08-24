@@ -6,6 +6,9 @@ window.regionManagerMap = {{ region_manager_map | tojson }};
 </script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
+<script>
+window.routeData = {{ route_data | tojson }};
+</script>
 
 <form method="POST" action="">
     {# This hidden input is crucial for the JavaScript fetch request to work #}
@@ -190,8 +193,8 @@ function toggleSummaryInfo() {
         </div>
         <div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
             <div class="form-group" style="min-width: 150px;">
-                <span style="color: #2b792b; font-weight: bold;">Departure Route</span>
-                <input type="text" class="form-control" placeholder="" style="border: 2px solid #2b792b;">
+                <span style="color: #2b792b; font-weight: bold;">Return Route</span>
+                <input type="text" id="return_route" class="form-control" placeholder="" style="border: 2px solid #2b792b;">
             </div>
             <div class="form-group" style="min-width: 150px;">
                 <label for="route_cost_return">Route cost</label>

@@ -148,9 +148,63 @@ document.addEventListener('DOMContentLoaded', function() {
                         const payloadKg = payloadLb ? Math.round(payloadLb * 0.453592) : 0;
                         const formattedPayload = `${payloadLb.toLocaleString('en-US')} Lb. / ${payloadKg.toLocaleString('en-US')} Kg`;
                         document.getElementById('available_payload').value = formattedPayload;
+
+                        // --- Populate Return Route field ---
+                        const returnRouteField = document.getElementById('return_route');
+                        if (returnRouteField) {
+                            // Find available return routes for selected aircraft departing from port of arrival
+                            // Assume window.routeData is injected and contains all routes
+                            const arrivalIataInput = document.getElementById('consignee_port_of_shipping_iata');
+                            const arrivalIata = arrivalIataInput ? arrivalIataInput.value : null;
+                            const aircraftShortName = selectedRoute.display_name.split('(')[1]?.replace(')','').trim();
+                            let availableReturnRoutes = [];
+                            if (window.routeData && arrivalIata && aircraftShortName) {
+                                availableReturnRoutes = Object.values(window.routeData).filter(r =>
+                                    r.fromAirport === arrivalIata && r.aircraft.includes(aircraftShortName)
+                                );
+                            }
+                            if (availableReturnRoutes.length > 0) {
+                                // Populate as a dropdown if more than one route
+                                returnRouteField.style.color = '';
+                                returnRouteField.style.fontWeight = '';
+                                if (availableReturnRoutes.length === 1) {
+                                    returnRouteField.value = availableReturnRoutes[0].summary;
+                                } else {
+                                    // Replace input with a select dropdown
+                                    const parent = returnRouteField.parentNode;
+                                    const select = document.createElement('select');
+                                    select.id = 'return_route';
+                                    select.className = 'form-control';
+                                    select.style.border = '2px solid #2b792b';
+                                    // Add top option
+                                    const topOpt = document.createElement('option');
+                                    topOpt.value = '';
+                                    topOpt.textContent = 'Select Return Destination:';
+                                    select.appendChild(topOpt);
+                                    availableReturnRoutes.forEach(r => {
+                                        const opt = document.createElement('option');
+                                        opt.value = r.summary;
+                                        opt.textContent = r.summary;
+                                        select.appendChild(opt);
+                                    });
+                                    parent.replaceChild(select, returnRouteField);
+                                }
+                            } else {
+                                // Show message in red bold font
+                                returnRouteField.style.color = 'red';
+                                returnRouteField.style.fontWeight = 'bold';
+                                returnRouteField.value = 'NEED TO CREATE A RETURN ROUTE';
+                            }
+                        }
                     } else {
                         document.getElementById('route_cost').value = '';
                         document.getElementById('available_payload').value = '';
+                        const returnRouteField = document.getElementById('return_route');
+                        if (returnRouteField) {
+                            returnRouteField.value = '';
+                            returnRouteField.style.color = '';
+                            returnRouteField.style.fontWeight = '';
+                        }
                     }
                 };
             }
