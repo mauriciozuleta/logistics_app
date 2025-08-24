@@ -121,6 +121,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // If more than one route, populate dropdowns with all options
             if (departureRouteField && departureRouteField.tagName === 'SELECT') {
                 departureRouteField.innerHTML = '';
+                // Add default option
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = '';
+                defaultOpt.textContent = 'Select aircraft';
+                departureRouteField.appendChild(defaultOpt);
+                // Add route options
                 data.routes.forEach(route => {
                     const opt = document.createElement('option');
                     opt.value = route.id;
@@ -128,10 +134,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     departureRouteField.appendChild(opt);
                 });
                 departureRouteField.disabled = false;
+                departureRouteField.onchange = function() {
+                    const selectedId = this.value;
+                    const selectedRoute = data.routes.find(r => r.id == selectedId);
+                    if (selectedRoute) {
+                        const totalCost = (selectedRoute.total_cost || 0) + (selectedRoute.airport_fee || 0) + (selectedRoute.turnaround_cost || 0);
+                        document.getElementById('route_cost').value = totalCost;
+                        document.getElementById('available_payload').value = selectedRoute.available_payload || '';
+                    } else {
+                        document.getElementById('route_cost').value = '';
+                        document.getElementById('available_payload').value = '';
+                    }
+                };
             }
             if (addCargoToField && addCargoToField.tagName === 'SELECT') {
                 addCargoToField.innerHTML = '';
-                // Only show the constructed route (e.g. MDE - MIA), not aircraft
                 const routeBase = data.routes[0].display_name.split('(')[0].trim();
                 const opt = document.createElement('option');
                 opt.value = routeBase;
@@ -154,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             showRouteNotFoundModal();
         }
+    // ...existing code...
     }
 
     function showRouteNotFoundModal() {

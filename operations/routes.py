@@ -478,14 +478,28 @@ def check_route():
     print(f"[DEBUG] Found {len(routes)} matching routes.")
 
     if routes:
-        # Build a list of routes with their display names
-        routes_data = [
-            {
+        # Build a list of routes with their display names and required data
+        routes_data = []
+        for route in routes:
+            # Get available payload (prefer leg1_max_payload_lbs, fallback to aircraft.max_payload_lbs)
+            try:
+                payload_details = json.loads(route.payload_details)[0] if route.payload_details else {}
+                available_payload = payload_details.get('max_payload_lbs', None) or getattr(route.aircraft, 'max_payload_lbs', None)
+            except Exception:
+                available_payload = getattr(route.aircraft, 'max_payload_lbs', None)
+
+            # Get airport fees and turnaround cost from arrival airport
+            airport_fee = getattr(arrival_airport, 'airport_fee', 0) or 0
+            turnaround_cost = getattr(arrival_airport, 'turnaround_cost', 0) or 0
+
+            routes_data.append({
                 'id': route.id,
-                'display_name': f"{departure_airport.iata_code} - {arrival_airport.iata_code} ({route.aircraft.short_name if route.aircraft else 'N/A'})"
-            }
-            for route in routes
-        ]
+                'display_name': f"{departure_airport.iata_code} - {arrival_airport.iata_code} ({route.aircraft.short_name if route.aircraft else 'N/A'})",
+                'total_cost': route.total_cost or 0,
+                'airport_fee': airport_fee,
+                'turnaround_cost': turnaround_cost,
+                'available_payload': available_payload
+            })
         print(f"[DEBUG] Routes data: {routes_data}")
         return jsonify({'exists': True, 'routes': routes_data})
     else:
