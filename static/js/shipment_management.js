@@ -64,8 +64,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const departureRouteSelect = document.getElementById('departure_route');
         const addCargoToSelect = document.getElementById('add_cargo_to_route');
 
-        // Clear previous route info if a port is deselected
-        if (!selectedDeparturePort || !selectedArrivalPort) {
+        // Use hidden IATA code inputs for route check
+        const departureIataInput = document.getElementById('port_of_shipping_iata');
+        const arrivalIataInput = document.getElementById('consignee_port_of_shipping_iata');
+        const departureIata = departureIataInput ? departureIataInput.value : selectedDeparturePort;
+        const arrivalIata = arrivalIataInput ? arrivalIataInput.value : selectedArrivalPort;
+
+        if (!departureIata || !arrivalIata) {
             if (departureRouteSelect) {
                 departureRouteSelect.innerHTML = '';
                 departureRouteSelect.disabled = true;
@@ -87,8 +92,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Debug: Log the IATA codes being sent
         console.log('Route check request:', {
-            departure_iata: selectedDeparturePort,
-            arrival_iata: selectedArrivalPort
+            departure_iata: departureIata,
+            arrival_iata: arrivalIata
         });
         fetch(checkRouteUrl, {
             method: 'POST',
@@ -97,8 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRFToken': csrfTokenInput.value
             },
             body: JSON.stringify({
-                departure_iata: selectedDeparturePort,
-                arrival_iata: selectedArrivalPort
+                departure_iata: departureIata,
+                arrival_iata: arrivalIata
             })
         })
         .then(response => response.json())
@@ -112,12 +117,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const departureRouteField = document.getElementById('departure_route');
         const addCargoToField = document.getElementById('add_cargo_to_route');
 
-        if (data.exists && data.route_data) {
-            if (departureRouteField) departureRouteField.value = data.route_data.departure_route;
-            if (addCargoToField) addCargoToField.value = data.route_data.departure_route;
+        if (data.exists && data.routes && data.routes.length > 0) {
+            // If more than one route, populate dropdowns with all options
+            if (departureRouteField && departureRouteField.tagName === 'SELECT') {
+                departureRouteField.innerHTML = '';
+                data.routes.forEach(route => {
+                    const opt = document.createElement('option');
+                    opt.value = route.id;
+                    opt.textContent = route.display_name;
+                    departureRouteField.appendChild(opt);
+                });
+                departureRouteField.disabled = false;
+            }
+            if (addCargoToField && addCargoToField.tagName === 'SELECT') {
+                addCargoToField.innerHTML = '';
+                // Only show the constructed route (e.g. MDE - MIA), not aircraft
+                const routeBase = data.routes[0].display_name.split('(')[0].trim();
+                const opt = document.createElement('option');
+                opt.value = routeBase;
+                opt.textContent = routeBase;
+                addCargoToField.appendChild(opt);
+                addCargoToField.disabled = false;
+            }
         } else {
-            if (departureRouteField) departureRouteField.value = '';
-            if (addCargoToField) addCargoToField.value = '';
+            if (departureRouteField && departureRouteField.tagName === 'SELECT') {
+                departureRouteField.innerHTML = '';
+                departureRouteField.disabled = true;
+            } else if (departureRouteField) {
+                departureRouteField.value = '';
+            }
+            if (addCargoToField && addCargoToField.tagName === 'SELECT') {
+                addCargoToField.innerHTML = '';
+                addCargoToField.disabled = true;
+            } else if (addCargoToField) {
+                addCargoToField.value = '';
+            }
             showRouteNotFoundModal();
         }
     }
@@ -197,6 +231,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (index === 0) {
             portSelect.addEventListener('change', function() {
                 const iataInput = document.getElementById('port_of_shipping_iata');
+                if (iataInput) iataInput.value = portSelect.value;
+            });
+        } else {
+            portSelect.addEventListener('change', function() {
+                const iataInput = document.getElementById('consignee_port_of_shipping_iata');
                 if (iataInput) iataInput.value = portSelect.value;
             });
         }

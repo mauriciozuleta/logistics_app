@@ -451,7 +451,10 @@ def check_route():
     departure_iata = data.get('departure_iata')
     arrival_iata = data.get('arrival_iata')
 
+    print(f"[DEBUG] Route check requested: departure_iata={departure_iata}, arrival_iata={arrival_iata}")
+
     if not departure_iata or not arrival_iata:
+        print("[DEBUG] Missing departure or arrival IATA code")
         return jsonify({'error': 'Missing departure or arrival IATA code'}), 400
 
     # Find the corresponding airport IDs from the IATA codes
@@ -459,8 +462,11 @@ def check_route():
     departure_airport = Airport.query.filter_by(iata_code=departure_iata).first()
     arrival_airport = Airport.query.filter_by(iata_code=arrival_iata).first()
 
+    print(f"[DEBUG] Found airports: departure_airport={departure_airport}, arrival_airport={arrival_airport}")
+
     # If either airport doesn't exist, the route cannot exist.
     if not departure_airport or not arrival_airport:
+        print("[DEBUG] One or both airports not found.")
         return jsonify({'exists': False, 'routes': []})
 
     # Query for all routes using the airport IDs, and eager load the aircraft info
@@ -468,6 +474,8 @@ def check_route():
         from_airport_id=departure_airport.id,
         to_airport_id=arrival_airport.id
     ).all()
+
+    print(f"[DEBUG] Found {len(routes)} matching routes.")
 
     if routes:
         # Build a list of routes with their display names
@@ -478,8 +486,10 @@ def check_route():
             }
             for route in routes
         ]
+        print(f"[DEBUG] Routes data: {routes_data}")
         return jsonify({'exists': True, 'routes': routes_data})
     else:
+        print("[DEBUG] No routes found.")
         return jsonify({'exists': False, 'routes': []})
 
 @operations_api.route('/product_prices', methods=['GET'])
