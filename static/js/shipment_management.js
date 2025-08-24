@@ -169,6 +169,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 returnRouteField.style.fontWeight = '';
                                 if (availableReturnRoutes.length === 1) {
                                     returnRouteField.value = availableReturnRoutes[0].summary;
+                                    // Also create type of return dropdown
+                                    createTypeOfReturnDropdown(returnRouteField.parentNode);
+                                    // Populate cost/payload for single route
+                                    populateReturnRouteFields(availableReturnRoutes[0]);
                                 } else {
                                     // Replace input with a select dropdown
                                     const parent = returnRouteField.parentNode;
@@ -188,6 +192,92 @@ document.addEventListener('DOMContentLoaded', function() {
                                         select.appendChild(opt);
                                     });
                                     parent.replaceChild(select, returnRouteField);
+                                    // Create type of return dropdown
+                                    createTypeOfReturnDropdown(parent);
+                                    // Add event listener to populate cost/payload on selection
+                                    select.addEventListener('change', function() {
+                                        const selectedSummary = this.value;
+                                        const selectedRoute = availableReturnRoutes.find(r => r.summary === selectedSummary);
+                                        if (selectedRoute) {
+                                            populateReturnRouteFields(selectedRoute);
+                                        } else {
+                                            document.getElementById('route_cost_return').value = '';
+                                            document.getElementById('available_payload_return').value = '';
+                                        }
+                                    });
+                                }
+
+                                // Helper: populate cost/payload for return route
+                                function populateReturnRouteFields(route) {
+                                    // Always use destination airport's fees and turnaround cost
+                                    let totalCost = route.cost || route.total_cost || 0;
+                                    let airportFee = 0;
+                                    let turnaroundCost = 0;
+                                    // Find destination airport data
+                                    if (window.airportData && route.toAirport) {
+                                        const destAirport = window.airportData[route.toAirport];
+                                        if (destAirport) {
+                                            airportFee = destAirport.airport_fee || 0;
+                                            turnaroundCost = destAirport.turnaround_cost || 0;
+                                        }
+                                    } else if (window.routeData && route.toAirport) {
+                                        // Fallback: find any route with fromAirport = toAirport and get its fees
+                                        const destRoute = Object.values(window.routeData).find(r => r.fromAirport === route.toAirport);
+                                        if (destRoute) {
+                                            airportFee = destRoute.airport_fee || 0;
+                                            turnaroundCost = destRoute.turnaround_cost || 0;
+                                        }
+                                    }
+                                    totalCost += airportFee + turnaroundCost;
+                                    const formattedCost = `$${totalCost.toLocaleString('en-US')}`;
+                                    document.getElementById('route_cost_return').value = formattedCost;
+                                    let payloadLb = route.payload || route.available_payload || 0;
+                                    let payloadKg = 0;
+                                    if (typeof payloadLb === 'string' && payloadLb.includes('kg')) {
+                                        payloadKg = parseInt(payloadLb.replace(/[^\d]/g, ''));
+                                        payloadLb = Math.round(payloadKg / 0.453592);
+                                    } else {
+                                        payloadLb = typeof payloadLb === 'string' ? parseInt(payloadLb.replace(/[^\d]/g, '')) : payloadLb;
+                                        payloadKg = payloadLb ? Math.round(payloadLb * 0.453592) : 0;
+                                    }
+                                    const formattedPayload = `${payloadLb.toLocaleString('en-US')} Lb. / ${payloadKg.toLocaleString('en-US')} Kg`;
+                                    document.getElementById('available_payload_return').value = formattedPayload;
+                                }
+
+                                // Helper: create type of return dropdown
+                                function createTypeOfReturnDropdown(parent) {
+                                    // Always create or replace the dropdown in the original form-group
+                                    let typeInput = document.getElementById('type_of_return');
+                                    if (typeInput) {
+                                        // Replace input with select dropdown
+                                        const formGroup = typeInput.parentNode;
+                                        const label = formGroup.querySelector('label[for="type_of_return"]');
+                                        // Remove old input
+                                        typeInput.remove();
+                                        // Create select dropdown
+                                        const typeDropdown = document.createElement('select');
+                                        typeDropdown.id = 'type_of_return';
+                                        typeDropdown.className = 'form-control';
+                                        typeDropdown.style.border = '2px solid #2b792b';
+                                        const opt1 = document.createElement('option');
+                                        opt1.value = '';
+                                        opt1.textContent = 'Select Type of Return';
+                                        typeDropdown.appendChild(opt1);
+                                        const opt2 = document.createElement('option');
+                                        opt2.value = 'Compensated';
+                                        opt2.textContent = 'Compensated';
+                                        typeDropdown.appendChild(opt2);
+                                        const opt3 = document.createElement('option');
+                                        opt3.value = 'Full';
+                                        opt3.textContent = 'Full';
+                                        typeDropdown.appendChild(opt3);
+                                        // Insert dropdown after label in form-group
+                                        if (label && label.nextSibling) {
+                                            formGroup.insertBefore(typeDropdown, label.nextSibling);
+                                        } else {
+                                            formGroup.appendChild(typeDropdown);
+                                        }
+                                    }
                                 }
                             } else {
                                 // Show message in red bold font

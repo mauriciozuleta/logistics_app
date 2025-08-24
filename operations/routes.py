@@ -81,7 +81,9 @@ def shipment_management():
             'distance': distance_display,
             'flight_time': flight_time_display,
             'cost': safe_val(r.total_cost, 0),
-            'payload': payload_display
+            'payload': payload_display,
+            'airport_fee': safe_val(to_airport.airport_fee, 0) if to_airport else 0,
+            'turnaround_cost': safe_val(to_airport.turnaround_cost, 0) if to_airport else 0
         }
     return render_template(
         'operations/shippment_management.html',
