@@ -138,9 +138,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     const selectedId = this.value;
                     const selectedRoute = data.routes.find(r => r.id == selectedId);
                     if (selectedRoute) {
+                        // Format cost as $ and thousand separators (en-US)
                         const totalCost = (selectedRoute.total_cost || 0) + (selectedRoute.airport_fee || 0) + (selectedRoute.turnaround_cost || 0);
-                        document.getElementById('route_cost').value = totalCost;
-                        document.getElementById('available_payload').value = selectedRoute.available_payload || '';
+                        const formattedCost = `$${totalCost.toLocaleString('en-US')}`;
+                        document.getElementById('route_cost').value = formattedCost;
+
+                        // Format available payload as "xx,xxx Lb. / yy,yyy Kg"
+                        const payloadLb = selectedRoute.available_payload || 0;
+                        const payloadKg = payloadLb ? Math.round(payloadLb * 0.453592) : 0;
+                        const formattedPayload = `${payloadLb.toLocaleString('en-US')} Lb. / ${payloadKg.toLocaleString('en-US')} Kg`;
+                        document.getElementById('available_payload').value = formattedPayload;
                     } else {
                         document.getElementById('route_cost').value = '';
                         document.getElementById('available_payload').value = '';
