@@ -169,10 +169,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 returnRouteField.style.fontWeight = '';
                                 if (availableReturnRoutes.length === 1) {
                                     returnRouteField.value = availableReturnRoutes[0].summary;
-                                    // Also create type of return dropdown
-                                    createTypeOfReturnDropdown(returnRouteField.parentNode);
                                     // Populate cost/payload for single route
                                     populateReturnRouteFields(availableReturnRoutes[0]);
+                                    // Create type of return dropdown after return route selection
+                                    createTypeOfReturnDropdown(returnRouteField.parentNode);
                                 } else {
                                     // Replace input with a select dropdown
                                     const parent = returnRouteField.parentNode;
@@ -192,14 +192,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                         select.appendChild(opt);
                                     });
                                     parent.replaceChild(select, returnRouteField);
-                                    // Create type of return dropdown
-                                    createTypeOfReturnDropdown(parent);
-                                    // Add event listener to populate cost/payload on selection
+                                    // Add event listener to populate cost/payload and create type of return dropdown on selection
                                     select.addEventListener('change', function() {
                                         const selectedSummary = this.value;
                                         const selectedRoute = availableReturnRoutes.find(r => r.summary === selectedSummary);
                                         if (selectedRoute) {
                                             populateReturnRouteFields(selectedRoute);
+                                            createTypeOfReturnDropdown(parent);
                                         } else {
                                             document.getElementById('route_cost_return').value = '';
                                             document.getElementById('available_payload_return').value = '';
