@@ -356,26 +356,29 @@ document.addEventListener('DOMContentLoaded', function() {
                                             const outboundCostWeight = document.getElementById('outbound_cost_weight');
                                             const targetCargoLoad = document.getElementById('target_cargo_load');
                                             if (this.value === 'Full') {
-                                                // Enable outbound, disable and clear return
+                                                // Disable all cells, no background
                                                 if (outboundCostWeight) {
-                                                    outboundCostWeight.disabled = false;
-                                                    outboundCostWeight.readOnly = false;
-                                                    outboundCostWeight.style.background = '';
+                                                    outboundCostWeight.disabled = true;
+                                                    outboundCostWeight.style.background = 'none';
+                                                    outboundCostWeight.value = 100;
                                                 }
                                                 if (targetCargoLoad) {
-                                                    targetCargoLoad.disabled = false;
-                                                    targetCargoLoad.readOnly = false;
-                                                    targetCargoLoad.style.background = '';
+                                                    targetCargoLoad.disabled = true;
+                                                    targetCargoLoad.style.background = 'none';
+                                                    targetCargoLoad.value = 100;
                                                 }
+                                                // Ensure calculations are updated
+                                                calculateOutboundFields();
+                                                // Return route cells remain disabled
                                                 if (returnCostWeight) {
                                                     returnCostWeight.disabled = true;
-                                                    returnCostWeight.value = '';
                                                     returnCostWeight.style.background = 'none';
+                                                    returnCostWeight.value = '';
                                                 }
                                                 if (targetCargoLoadReturn) {
                                                     targetCargoLoadReturn.disabled = true;
-                                                    targetCargoLoadReturn.value = '';
                                                     targetCargoLoadReturn.style.background = 'none';
+                                                    targetCargoLoadReturn.value = '';
                                                 }
                                             } else if (this.value === 'Compensated') {
                                                 // Enable return, disable outbound
