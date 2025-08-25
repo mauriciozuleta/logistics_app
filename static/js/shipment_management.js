@@ -259,7 +259,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     // Always create or replace the dropdown in the original form-group
                                     let typeInput = document.getElementById('type_of_return');
                                     if (typeInput) {
-                                        // Replace input with select dropdown
                                         const formGroup = typeInput.parentNode;
                                         const label = formGroup.querySelector('label[for="type_of_return"]');
                                         // Remove old input
@@ -281,12 +280,68 @@ document.addEventListener('DOMContentLoaded', function() {
                                         opt3.value = 'Full';
                                         opt3.textContent = 'Full';
                                         typeDropdown.appendChild(opt3);
-                                        // Insert dropdown after label in form-group
                                         if (label && label.nextSibling) {
                                             formGroup.insertBefore(typeDropdown, label.nextSibling);
                                         } else {
                                             formGroup.appendChild(typeDropdown);
                                         }
+                                        // Add live event listener for type of return
+                                        typeDropdown.addEventListener('change', function() {
+                                            // 1. Display Total Flight Cost in the empty cell between available payload and return cost weight
+                                            let totalCostDiv = document.getElementById('total_flight_cost_display');
+                                            // Find the empty form-group after available_payload_return
+                                            const formGroups = document.querySelectorAll('#logistic-info-content .shipment-form-row:nth-of-type(2) .form-group');
+                                            if (formGroups.length >= 4) {
+                                                if (!totalCostDiv) {
+                                                    totalCostDiv = document.createElement('div');
+                                                    totalCostDiv.id = 'total_flight_cost_display';
+                                                    totalCostDiv.style.marginTop = '0px';
+                                                    totalCostDiv.style.fontWeight = 'bold';
+                                                    totalCostDiv.style.color = '#FFD600'; // yellow
+                                                    totalCostDiv.style.textAlign = 'center';
+                                                    formGroups[3].appendChild(totalCostDiv);
+                                                }
+                                            }
+                                            // Get both route costs
+                                            const depCost = parseFloat((document.getElementById('route_cost').value || '').replace(/[^\d\.]/g, '')) || 0;
+                                            const retCost = parseFloat((document.getElementById('route_cost_return').value || '').replace(/[^\d\.]/g, '')) || 0;
+                                            const totalCost = depCost + retCost;
+                                            if (totalCostDiv) {
+                                                totalCostDiv.textContent = `Total Flight Cost: $${totalCost.toLocaleString('en-US')}`;
+                                            }
+                                            // 2. Enable/disable lower row fields
+                                            const returnCostWeight = document.getElementById('return_cost_weight');
+                                            const targetCargoLoad = document.getElementById('target_cargo_load_return');
+                                            if (this.value === 'Compensated') {
+                                                if (returnCostWeight) {
+                                                    returnCostWeight.disabled = false;
+                                                    returnCostWeight.style.background = '';
+                                                }
+                                                if (targetCargoLoad) {
+                                                    targetCargoLoad.disabled = false;
+                                                    targetCargoLoad.style.background = '';
+                                                }
+                                            } else if (this.value === 'Full') {
+                                                if (returnCostWeight) {
+                                                    returnCostWeight.disabled = true;
+                                                    returnCostWeight.style.background = 'none';
+                                                }
+                                                if (targetCargoLoad) {
+                                                    targetCargoLoad.disabled = true;
+                                                    targetCargoLoad.style.background = 'none';
+                                                }
+                                            }
+                                        });
+                                        // Add live update for cost fields
+                                        ['route_cost', 'route_cost_return'].forEach(function(id) {
+                                            const el = document.getElementById(id);
+                                            if (el) {
+                                                el.addEventListener('input', function() {
+                                                    const typeDropdown = document.getElementById('type_of_return');
+                                                    if (typeDropdown) typeDropdown.dispatchEvent(new Event('change'));
+                                                });
+                                            }
+                                        });
                                     }
                                 }
                             } else {
@@ -432,4 +487,33 @@ document.addEventListener('DOMContentLoaded', function() {
             triggerRouteChangeCheck();
         });
     }
+
+    // Disable departure route cost and available payload fields by default
+    const routeCostField = document.getElementById('route_cost');
+    if (routeCostField) routeCostField.readOnly = true;
+    const availablePayloadField = document.getElementById('available_payload');
+    if (availablePayloadField) availablePayloadField.readOnly = true;
+    // Disable return route cost and available payload fields by default
+    const routeCostReturnField = document.getElementById('route_cost_return');
+    if (routeCostReturnField) routeCostReturnField.readOnly = true;
+    const availablePayloadReturnField = document.getElementById('available_payload_return');
+    if (availablePayloadReturnField) availablePayloadReturnField.readOnly = true;
+    // Disable type of return dropdown until a return route is selected
+    const typeOfReturnDropdown = document.getElementById('type_of_return');
+    if (typeOfReturnDropdown) typeOfReturnDropdown.disabled = true;
+    // Remove white background for type of return before cell is enabled
+    if (typeOfReturnDropdown) typeOfReturnDropdown.style.background = 'none';
+    // Make all left split cells (percentage inputs) accept only values between 0 and 100
+    function enforcePercentInput(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function() {
+                let val = parseInt(this.value);
+                if (isNaN(val) || val < 0) val = 0;
+                if (val > 100) val = 100;
+                this.value = val;
+            });
+        }
+    }
+    ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return'].forEach(enforcePercentInput);
 });
