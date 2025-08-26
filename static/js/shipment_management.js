@@ -2,42 +2,138 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // Helper: calculation for outbound cost weight and cargo load
-    function calculateOutboundFields() {
-        const typeOfReturnDropdown = document.getElementById('type_of_return');
-        if (!typeOfReturnDropdown || typeOfReturnDropdown.value !== 'Full') return;
-        const outboundCostWeight = document.getElementById('outbound_cost_weight');
-        const outboundCostWeightValue = document.getElementById('outbound_cost_weight_value');
-        const targetCargoLoad = document.getElementById('target_cargo_load');
-        const targetCargoLoadValue = document.getElementById('target_cargo_load_departure_value');
-        const routeCost = parseFloat((document.getElementById('route_cost').value || '').replace(/[^\d\.]/g, '')) || 0;
-        const routeCostReturn = parseFloat((document.getElementById('route_cost_return').value || '').replace(/[^\d\.]/g, '')) || 0;
-        const totalFlightCost = routeCost + routeCostReturn;
-        // Extract available payload in kg from the formatted string
-        let availablePayloadKg = 0;
-        const availablePayloadField = document.getElementById('available_payload');
-        if (availablePayloadField && availablePayloadField.value) {
-            // Expect format: "xx,xxx Lb. / yy,yyy Kg"
-            const match = availablePayloadField.value.match(/([\d,]+)\s*Kg/);
-            if (match && match[1]) {
-                availablePayloadKg = parseInt(match[1].replace(/,/g, ''));
+    // --- Refactored Calculation and State Management ---
+
+    /**
+     * A generic function to get a clean numeric value from a field.
+     * @param {string} elementId - The ID of the input element.
+     * @param {boolean} isPayload - True if parsing a payload field ("... Kg"), false for currency.
+     * @returns {number} The parsed numeric value.
+     */
+    function getNumericValue(elementId, isPayload = false) {
+        const element = document.getElementById(elementId);
+        if (!element || !element.value) return 0;
+
+        if (isPayload) {
+            const match = element.value.match(/([\d,]+)\s*Kg/);
+            return match && match[1] ? parseInt(match[1].replace(/,/g, '')) : 0;
+        } else {
+            return parseFloat(element.value.replace(/[^\d\.]/g, '')) || 0;
+        }
+    }
+
+    /**
+     * A generic function to calculate and update a derived value field.
+     * @param {string} percentInputId - The ID of the percentage input field.
+     * @param {number} baseValue - The total value (e.g., total flight cost or payload).
+     * @param {string} outputId - The ID of the field to display the result.
+     * @param {boolean} isCost - True to format as currency, false to format as weight.
+     */
+    function updateCalculatedField(percentInputId, baseValue, outputId, isCost) {
+        const percentInput = document.getElementById(percentInputId);
+        const outputField = document.getElementById(outputId);
+        if (!percentInput || !outputField) return;
+
+        const percent = parseInt(percentInput.value) || 0;
+        const calculatedValue = Math.round(baseValue * (percent / 100));
+
+        if (isCost) {
+            outputField.value = `${percent}% / $${calculatedValue.toLocaleString('en-US')}`;
+        } else {
+            outputField.value = `${percent}% / ${calculatedValue.toLocaleString('en-US')} Kg.`;
+        }
+
+        // Special case: Update AVG cost for departure cargo
+        if (percentInputId === 'target_cargo_load') {
+            const avgCostKgField = document.getElementById('avg_cost_kg_departure');
+            const outboundCostValue = getNumericValue('outbound_cost_weight_value');
+            if (avgCostKgField) {
+                avgCostKgField.value = calculatedValue > 0 ? (outboundCostValue / calculatedValue).toFixed(2) : '';
             }
         }
-        // Calculate outbound cost weight value
-        let percentCost = parseInt(outboundCostWeight.value) || 0;
-        if (percentCost < 0) percentCost = 0;
-        if (percentCost > 100) percentCost = 100;
-        const costValue = Math.round(totalFlightCost * (percentCost / 100));
-        if (outboundCostWeightValue) outboundCostWeightValue.value = `${percentCost}% / $${costValue.toLocaleString('en-US')}`;
-        // Calculate target cargo load value
-        let percentCargo = parseInt(targetCargoLoad.value) || 0;
-        if (percentCargo < 0) percentCargo = 0;
-        if (percentCargo > 100) percentCargo = 100;
-    const cargoValue = Math.round(availablePayloadKg * (percentCargo / 100));
-        if (targetCargoLoadValue) targetCargoLoadValue.value = `${percentCargo}% / ${cargoValue.toLocaleString('en-US')} Kg.`;
-        // Calculate AVG. Cost Kg. in shipment summary
-        const avgCostKgField = document.getElementById('avg_cost_kg_departure');
-        if (avgCostKgField) {
-            avgCostKgField.value = cargoValue > 0 ? (costValue / cargoValue).toFixed(2) : '';
+    }
+
+    /**
+     * Manages the UI state and event listeners for the Type of Return selection.
+     * @param {string} returnType - The selected value from the dropdown ('Full', 'Compensated', etc.).
+     */
+    function manageReturnTypeState(returnType) {
+        // Get all relevant elements
+        const fields = {
+            outboundCost: { percent: document.getElementById('outbound_cost_weight'), value: document.getElementById('outbound_cost_weight_value') },
+            outboundCargo: { percent: document.getElementById('target_cargo_load'), value: document.getElementById('target_cargo_load_departure_value') },
+            returnCost: { percent: document.getElementById('return_cost_weight'), value: document.getElementById('return_cost_weight_value') },
+            returnCargo: { percent: document.getElementById('target_cargo_load_return_percentage'), value: document.getElementById('target_cargo_load_value_kilogram') }
+        };
+
+        // --- Reset all fields to a default state ---
+        Object.values(fields).forEach(field => {
+            if (field.percent) {
+                field.percent.disabled = true;
+                field.percent.value = '';
+                field.percent.classList.remove('input-required-style');
+                field.percent.style.color = ''; // Reset inline color style
+                // Clear any old listeners by replacing the element with a clone
+                const newEl = field.percent.cloneNode(true);
+                field.percent.parentNode.replaceChild(newEl, field.percent);
+                field.percent = newEl; // Update reference to the new element
+            }
+            if (field.value) field.value.value = '';
+        });
+
+        // Re-attach the 0-100 enforcement to all fields
+        ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
+
+        // Get base values for calculations
+        const totalFlightCost = getNumericValue('route_cost') + getNumericValue('route_cost_return');
+        const departurePayload = getNumericValue('available_payload', true);
+        const returnPayload = getNumericValue('available_payload_return', true);
+
+        // --- Apply logic for the selected type ---
+        if (returnType === 'Full') {
+            // Outbound Cost: Disabled, set to 100, and calculated
+            fields.outboundCost.percent.disabled = true;
+            fields.outboundCost.percent.value = 100;
+            updateCalculatedField('outbound_cost_weight', totalFlightCost, 'outbound_cost_weight_value', true);
+
+            // Outbound Cargo: Enabled for user input
+            fields.outboundCargo.percent.disabled = false;
+            fields.outboundCargo.percent.classList.add('input-required-style');
+            fields.outboundCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            fields.outboundCargo.percent.addEventListener('input', () => {
+                updateCalculatedField('target_cargo_load', departurePayload, 'target_cargo_load_departure_value', false);
+            });
+
+        } else if (returnType === 'Compensated') {
+            // Outbound Cost: Enabled for user input, triggers return cost calculation
+            fields.outboundCost.percent.disabled = false;
+            fields.outboundCost.percent.classList.add('input-required-style');
+            fields.outboundCost.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            fields.outboundCost.percent.addEventListener('input', () => {
+                const outboundPercent = parseInt(fields.outboundCost.percent.value) || 0;
+                fields.returnCost.percent.value = 100 - outboundPercent;
+                updateCalculatedField('outbound_cost_weight', totalFlightCost, 'outbound_cost_weight_value', true);
+                updateCalculatedField('return_cost_weight', totalFlightCost, 'return_cost_weight_value', true);
+            });
+
+            // Outbound Cargo: Enabled for user input
+            fields.outboundCargo.percent.disabled = false;
+            fields.outboundCargo.percent.classList.add('input-required-style');
+            fields.outboundCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            fields.outboundCargo.percent.addEventListener('input', () => {
+                updateCalculatedField('target_cargo_load', departurePayload, 'target_cargo_load_departure_value', false);
+            });
+
+            // Return Cost: Disabled, value is derived from outbound
+            fields.returnCost.percent.disabled = true;
+
+            // Return Cargo: Enabled for user input
+            fields.returnCargo.percent.disabled = false;
+            fields.returnCargo.percent.classList.add('input-required-style');
+            fields.returnCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            fields.returnCargo.percent.addEventListener('input', () => {
+                updateCalculatedField('target_cargo_load_return_percentage', returnPayload, 'target_cargo_load_value_kilogram', false);
+            });
         }
     }
     // --- Utility Function to update dropdowns ---
@@ -350,59 +446,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                         }
                                         // Add live event listener for type of return
                                         typeDropdown.addEventListener('change', function() {
-                                            // Always trigger calculation for outbound fields when 'Full' is selected
-                                            calculateOutboundFields();
-                                            // 2. Enable/disable split cells for 'Full' option
-                                            const returnCostWeight = document.getElementById('return_cost_weight');
-                                            const targetCargoLoadReturn = document.getElementById('target_cargo_load_return_percentage');
-                                            const outboundCostWeight = document.getElementById('outbound_cost_weight');
-                                            const targetCargoLoad = document.getElementById('target_cargo_load');
-                                            if (this.value === 'Full') {
-                                                // Disable all cells, no background
-                                                if (outboundCostWeight) {
-                                                    outboundCostWeight.disabled = true;
-                                                    outboundCostWeight.style.background = 'none';
-                                                    outboundCostWeight.value = 100;
-                                                }
-                                                if (targetCargoLoad) {
-                                                    targetCargoLoad.disabled = true;
-                                                    targetCargoLoad.style.background = 'none';
-                                                    targetCargoLoad.value = 100;
-                                                }
-                                                // Ensure calculations are updated
-                                                calculateOutboundFields();
-                                                // Return route cells remain disabled
-                                                if (returnCostWeight) {
-                                                    returnCostWeight.disabled = true;
-                                                    returnCostWeight.style.background = 'none';
-                                                    returnCostWeight.value = '';
-                                                }
-                                                if (targetCargoLoadReturn) {
-                                                    targetCargoLoadReturn.disabled = true;
-                                                    targetCargoLoadReturn.style.background = 'none';
-                                                    targetCargoLoadReturn.value = '';
-                                                }
-                                            } else {
-                                                // Disable all
-                                                if (outboundCostWeight) {
-                                                    outboundCostWeight.disabled = true;
-                                                    outboundCostWeight.value = '';
-                                                }
-                                                if (targetCargoLoad) {
-                                                    targetCargoLoad.disabled = true;
-                                                    targetCargoLoad.value = '';
-                                                }
-                                                if (returnCostWeight) {
-                                                    returnCostWeight.disabled = true;
-                                                    returnCostWeight.value = '';
-                                                    returnCostWeight.style.background = 'none';
-                                                }
-                                                if (targetCargoLoadReturn) {
-                                                    targetCargoLoadReturn.disabled = true;
-                                                    targetCargoLoadReturn.value = '';
-                                                    targetCargoLoadReturn.style.background = 'none';
-                                                }
-                                            }
+                                            // Call the new state manager
+                                            manageReturnTypeState(this.value);
                                         });
                                     }
                                 }
@@ -578,12 +623,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
-    // Add calculation triggers for outbound fields
-    ['outbound_cost_weight', 'target_cargo_load'].forEach(function(id) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', calculateOutboundFields);
-            el.addEventListener('change', calculateOutboundFields);
-        }
-    });
 });
