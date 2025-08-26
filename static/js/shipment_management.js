@@ -56,6 +56,30 @@ document.addEventListener('DOMContentLoaded', function() {
         avgCostKgField.value = cargoValue > 0 ? `$${(returnCostValue / cargoValue).toFixed(2)}` : '';
     }
 
+    /**
+     * Adds interactive highlighting to an input field.
+     * The highlight is removed when the user enters data and blurs the field.
+     * @param {HTMLElement} inputElement - The input element to apply highlighting to.
+     */
+    function addInteractiveHighlighting(inputElement) {
+        if (!inputElement) return;
+
+        // Apply highlight styles directly to override any stylesheet rules
+        inputElement.style.setProperty('background-color', 'white', 'important');
+        inputElement.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+
+        inputElement.addEventListener('blur', function() {
+            if (this.value.trim() !== '') {
+                // Remove highlight styles by reverting to stylesheet defaults
+                this.style.backgroundColor = '';
+                this.style.color = '';
+            } else {
+                // Re-apply highlight styles
+                this.style.setProperty('background-color', 'white', 'important');
+                this.style.setProperty('color', '#FFD600', 'important');
+            }
+        });
+    }
 
     /**
      * A generic function to calculate and update a derived value field.
@@ -97,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (field.percent) {
                 field.percent.disabled = true;
                 field.percent.value = '';
-                field.percent.classList.remove('input-required-style');
+                field.percent.style.backgroundColor = ''; // Reset inline background
                 field.percent.style.color = ''; // Reset inline color style
                 // Clear any old listeners by replacing the element with a clone
                 const newEl = field.percent.cloneNode(true);
@@ -130,8 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Outbound Cargo: Enabled for user input
             fields.outboundCargo.percent.disabled = false;
-            fields.outboundCargo.percent.classList.add('input-required-style');
-            fields.outboundCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            addInteractiveHighlighting(fields.outboundCargo.percent);
             fields.outboundCargo.percent.addEventListener('input', () => {
                 updateCalculatedField('target_cargo_load', departurePayload, 'target_cargo_load_departure_value', false);
                 updateDepartureAvgCost();
@@ -140,8 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (returnType === 'Compensated') {
             // Outbound Cost: Enabled for user input, triggers return cost calculation
             fields.outboundCost.percent.disabled = false;
-            fields.outboundCost.percent.classList.add('input-required-style');
-            fields.outboundCost.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            addInteractiveHighlighting(fields.outboundCost.percent);
             fields.outboundCost.percent.addEventListener('input', () => {
                 const outboundPercent = parseInt(fields.outboundCost.percent.value) || 0;
                 fields.returnCost.percent.value = 100 - outboundPercent;
@@ -153,8 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Outbound Cargo: Enabled for user input
             fields.outboundCargo.percent.disabled = false;
-            fields.outboundCargo.percent.classList.add('input-required-style');
-            fields.outboundCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            addInteractiveHighlighting(fields.outboundCargo.percent);
             fields.outboundCargo.percent.addEventListener('input', () => {
                 updateCalculatedField('target_cargo_load', departurePayload, 'target_cargo_load_departure_value', false);
                 updateDepartureAvgCost();
@@ -165,8 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Return Cargo: Enabled for user input
             fields.returnCargo.percent.disabled = false;
-            fields.returnCargo.percent.classList.add('input-required-style');
-            fields.returnCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+            addInteractiveHighlighting(fields.returnCargo.percent);
             fields.returnCargo.percent.addEventListener('input', () => {
                 updateCalculatedField('target_cargo_load_return_percentage', returnPayload, 'target_cargo_load_value_kilogram', false);
                 updateReturnAvgCost();
