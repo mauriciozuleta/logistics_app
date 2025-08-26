@@ -1,3 +1,10 @@
+/* Override gray background for shipment management input cells */
+input.form-control,
+input[type="text"].form-control,
+input[type="number"].form-control {
+  background-color: transparent !important;
+  color: #e0e0e0;
+}
 /* Blinking and red border for invalid inputs */
 @keyframes inputBlink {
   0% { box-shadow: 0 0 0 0 #ff4444; }
@@ -7,6 +14,12 @@
 .input-invalid {
   border: 2px solid #ff4444 !important;
   animation: inputBlink 1s infinite;
+}
+
+/* Style for inputs that require user data */
+.input-required-style {
+  background-color: white !important;
+  color: black !important;
 }
 
   .shipment-form-row {
