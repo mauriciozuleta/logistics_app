@@ -57,6 +57,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * Applies one-time UI enhancements to the products table.
+     */
+    function enhanceProductsTableUI() {
+        const table = document.querySelector('#products-table');
+        if (!table) return;
+
+        // Make table scrollable after 8 rows
+        const tableWrapper = table.parentNode;
+        if (tableWrapper) {
+            tableWrapper.style.maxHeight = '450px'; // Approx height for 8 rows + header/footer
+            tableWrapper.style.overflowY = 'auto';
+        }
+
+        // Set "Name" column width
+        const nameHeader = table.querySelector('thead th:nth-child(2)');
+        if (nameHeader) {
+            nameHeader.style.width = '200px';
+            nameHeader.style.minWidth = '200px';
+            nameHeader.style.maxWidth = '200px';
+        }
+
+        // Inject styles for borders and sticky footer
+        const style = document.createElement('style');
+        style.textContent = `
+            #products-table {
+                border-collapse: collapse;
+            }
+            #products-table th, #products-table td {
+                border: 1px solid darkblue;
+            }
+            #products-table tfoot {
+                position: sticky;
+                bottom: -1px; /* Prevents gap */
+                background-color: #fff8e1; /* Match header color */
+                z-index: 1;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Create the sticky totals footer if it doesn't exist
+        if (!table.querySelector('tfoot')) {
+            const tfoot = table.createTFoot();
+            const totalsRow = tfoot.insertRow();
+            totalsRow.innerHTML = `
+                <td colspan="8" style="text-align: right; font-weight: bold; color: #FF5C00; padding-right: 10px;">Totals:</td>
+                <td class="totals-row-weight" style="font-weight: bold; text-align: center; vertical-align: middle;"></td>
+                <td class="totals-row-cost" style="font-weight: bold; text-align: center; vertical-align: middle;"></td>
+                <td colspan="11"></td>
+            `;
+        }
+    }
+
+    /**
+     * Calculates and updates the values in the table's "Totals" footer row.
+     */
+    function updateTableTotals() {
+        // This function is ready to be expanded with calculation logic
+        // when the per-row calculations are implemented.
+    }
+
+    /**
      * Adds interactive highlighting to an input field.
      * The highlight is removed when the user enters data and blurs the field.
      * @param {HTMLElement} inputElement - The input element to apply highlighting to.
@@ -681,6 +742,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
 
+    // Apply one-time UI enhancements to the products table
+    enhanceProductsTableUI();
+
     // --- Product Table Population ---
     const tradingCountrySelect = document.getElementById('trading_country');
     const productsTableBody = document.querySelector('#products-table tbody');
@@ -721,6 +785,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         row.dataset.productType = product.product_type || '';
                         row.dataset.unitsPerPack = product.units_per_pack || 0;
 
+                        const formattedPackCost = product.packaging_cost ? `$${parseFloat(product.packaging_cost).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '';
+
                         // The order of cells must match the table headers in the HTML
                         row.innerHTML = `
                             <td style="text-align: center; vertical-align: middle;">${product.product_code || ''}</td>
@@ -728,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td style="text-align: center; vertical-align: middle;">${product.trade_unit || ''}</td>
                             <td style="text-align: center; vertical-align: middle;">${product.packaging || ''}</td>
                             <td style="text-align: center; vertical-align: middle;">${product.packaging_weight || ''}</td>
-                            <td style="text-align: center; vertical-align: middle;">${product.packaging_cost || ''}</td>
+                            <td style="text-align: center; vertical-align: middle;">${formattedPackCost}</td>
                             <td style="text-align: center; vertical-align: middle;">${product.currency || ''}</td>
                             <td><input type="number" class="form-control product-input amount-input" style="width: 100%;"></td>
                             <td class="total-weight" style="text-align: center; vertical-align: middle;"></td>
@@ -747,6 +813,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         `;
                         productsTableBody.appendChild(row);
                     });
+
+                    // Update totals after populating the table
+                    updateTableTotals();
                 })
                 .catch(error => {
                     console.error('Error fetching products:', error);
