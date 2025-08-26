@@ -23,6 +23,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * A helper to get the calculated value (the part after the '/') from a display field.
+     * @param {string} elementId - The ID of the display element.
+     * @returns {number} The parsed numeric value.
+     */
+    function getCalculatedValueFromField(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element || !element.value) return 0;
+        const parts = element.value.split('/');
+        if (parts.length < 2) return 0;
+        const valueStr = parts[1].trim();
+        return parseFloat(valueStr.replace(/[^\d\.]/g, '')) || 0;
+    }
+
+    function updateDepartureAvgCost() {
+        const avgCostKgField = document.getElementById('avg_cost_kg_departure');
+        if (!avgCostKgField) return;
+
+        const outboundCostValue = getCalculatedValueFromField('outbound_cost_weight_value');
+        const cargoValue = getCalculatedValueFromField('target_cargo_load_departure_value');
+
+        avgCostKgField.value = cargoValue > 0 ? `$${(outboundCostValue / cargoValue).toFixed(2)}` : '';
+    }
+
+    function updateReturnAvgCost() {
+        const avgCostKgField = document.getElementById('avg_cost_kg_return');
+        if (!avgCostKgField) return;
+
+        const returnCostValue = getCalculatedValueFromField('return_cost_weight_value');
+        const cargoValue = getCalculatedValueFromField('target_cargo_load_value_kilogram');
+
+        avgCostKgField.value = cargoValue > 0 ? `$${(returnCostValue / cargoValue).toFixed(2)}` : '';
+    }
+
+
+    /**
      * A generic function to calculate and update a derived value field.
      * @param {string} percentInputId - The ID of the percentage input field.
      * @param {number} baseValue - The total value (e.g., total flight cost or payload).
@@ -41,15 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
             outputField.value = `${percent}% / $${calculatedValue.toLocaleString('en-US')}`;
         } else {
             outputField.value = `${percent}% / ${calculatedValue.toLocaleString('en-US')} Kg.`;
-        }
-
-        // Special case: Update AVG cost for departure cargo
-        if (percentInputId === 'target_cargo_load') {
-            const avgCostKgField = document.getElementById('avg_cost_kg_departure');
-            const outboundCostValue = getNumericValue('outbound_cost_weight_value');
-            if (avgCostKgField) {
-                avgCostKgField.value = calculatedValue > 0 ? (outboundCostValue / calculatedValue).toFixed(2) : '';
-            }
         }
     }
 
@@ -81,6 +107,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (field.value) field.value.value = '';
         });
 
+        // Also reset the AVG cost fields
+        const avgCostDeparture = document.getElementById('avg_cost_kg_departure');
+        const avgCostReturn = document.getElementById('avg_cost_kg_return');
+        if (avgCostDeparture) avgCostDeparture.value = '';
+        if (avgCostReturn) avgCostReturn.value = '';
+
         // Re-attach the 0-100 enforcement to all fields
         ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
 
@@ -102,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fields.outboundCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
             fields.outboundCargo.percent.addEventListener('input', () => {
                 updateCalculatedField('target_cargo_load', departurePayload, 'target_cargo_load_departure_value', false);
+                updateDepartureAvgCost();
             });
 
         } else if (returnType === 'Compensated') {
@@ -114,6 +147,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 fields.returnCost.percent.value = 100 - outboundPercent;
                 updateCalculatedField('outbound_cost_weight', totalFlightCost, 'outbound_cost_weight_value', true);
                 updateCalculatedField('return_cost_weight', totalFlightCost, 'return_cost_weight_value', true);
+                updateDepartureAvgCost();
+                updateReturnAvgCost();
             });
 
             // Outbound Cargo: Enabled for user input
@@ -122,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fields.outboundCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
             fields.outboundCargo.percent.addEventListener('input', () => {
                 updateCalculatedField('target_cargo_load', departurePayload, 'target_cargo_load_departure_value', false);
+                updateDepartureAvgCost();
             });
 
             // Return Cost: Disabled, value is derived from outbound
@@ -133,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fields.returnCargo.percent.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
             fields.returnCargo.percent.addEventListener('input', () => {
                 updateCalculatedField('target_cargo_load_return_percentage', returnPayload, 'target_cargo_load_value_kilogram', false);
+                updateReturnAvgCost();
             });
         }
     }
