@@ -47,7 +47,7 @@ window.routeData = {{ route_data | tojson }};
                 <select id="trading_country" name="trading_country" class="form-control" style="border: 2px solid #257777;" disabled>
                     <option value="">Select Country</option>
                     {% for country in country_list %}
-                        <option value="{{ country.code }}" data-region="{{ country.region }}">{{ country.name }}</option>
+                        <option value="{{ country.code }}" data-region="{{ country.region }}" data-currency="{{ country.currency_code }}">{{ country.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -316,7 +316,7 @@ function toggleSummaryInfo() {
         </div>
         <div class="form-group" style="min-width: 100px; max-width: 300px; width: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
             <label style="visibility: hidden; height: 20px;">&nbsp;</label>
-            <button type="button" class="btn" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; font-weight: bold; width: 100%; max-width: 300px;">Check current Exchange Rate</button>
+            <a href="https://www.google.com/search?q=currency+converter" target="_blank" id="check_exchange_rate_btn" class="btn" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; font-weight: bold; width: 100%; max-width: 300px; text-align: center; padding-top: 6px;">Check current Exchange Rate</a>
         </div>
     </div>
     <hr style="border: none; border-top: 2px solid #FF5C00; margin: 20px 0 0 0; width: 100%;">
