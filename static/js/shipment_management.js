@@ -66,17 +66,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Apply highlight styles directly to override any stylesheet rules
         inputElement.style.setProperty('background-color', 'white', 'important');
-        inputElement.style.setProperty('color', '#FFD600', 'important'); // Keep theme color
+        inputElement.style.setProperty('color', 'black', 'important'); // Use black for visibility
 
         inputElement.addEventListener('blur', function() {
             if (this.value.trim() !== '') {
                 // Remove highlight styles by reverting to stylesheet defaults
                 this.style.backgroundColor = '';
-                this.style.color = '';
+                this.style.color = ''; // Reverts to stylesheet default (yellow)
             } else {
                 // Re-apply highlight styles
                 this.style.setProperty('background-color', 'white', 'important');
-                this.style.setProperty('color', '#FFD600', 'important');
+                this.style.setProperty('color', 'black', 'important');
             }
         });
     }
