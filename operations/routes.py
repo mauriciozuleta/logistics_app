@@ -1,7 +1,7 @@
 import json
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_wtf.csrf import generate_csrf
-from models import Airport, Aircraft, Route, Shipment
+from models import Airport, Aircraft, Route, Shipment, Product
 from operations.flight_distances_db import calculate_distance_db
 from sqlalchemy.orm import joinedload
 from extensions import db
@@ -548,6 +548,35 @@ def check_route():
     else:
         print("[DEBUG] No routes found.")
         return jsonify({'exists': False, 'routes': []})
+
+@operations_api.route('/get-products-by-country/<string:country_code>')
+def get_products_by_country(country_code):
+    """
+    Fetches all products for a given country code and returns them as JSON.
+    """
+    try:
+        # Query the database for products matching the selected country
+        products = Product.query.filter_by(country_id=country_code).all()
+        
+        # Serialize the product data into a list of dictionaries
+        product_list = [
+            {
+                'product_code': p.product_code,
+                'product_type': p.product_type,
+                'name': p.name,
+                'trade_unit': p.trade_unit,
+                'packaging': p.packaging,
+                'packaging_weight': p.packaging_weight,
+                'units_per_pack': p.units_per_pack,
+                'packaging_cost': p.packaging_cost,
+                'currency': p.currency,
+            }
+            for p in products
+        ]
+        return jsonify(product_list)
+    except Exception as e:
+        # Handle potential database errors
+        return jsonify({'error': str(e)}), 500
 
 @operations_api.route('/product_prices', methods=['GET'])
 def product_prices():
