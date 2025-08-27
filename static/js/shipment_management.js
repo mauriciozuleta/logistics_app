@@ -437,6 +437,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Update total cost display
                         updateTotalFlightCost();
 
+                        // Minimal addition: Populate products/goods outbound route field
+                        var addCargoOutbound = document.getElementById('add_cargo_outbound');
+                        if (addCargoOutbound && selectedRoute && selectedRoute.display_name) {
+                            var routeBase = selectedRoute.display_name.split('(')[0].trim();
+                            addCargoOutbound.value = routeBase;
+                        }
+
                         // --- Populate Return Route field ---
                         const returnRouteField = document.getElementById('return_route');
                         if (returnRouteField) {
@@ -487,12 +494,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                         if (selectedRoute) {
                                             populateReturnRouteFields(selectedRoute);
                                             createTypeOfReturnDropdown(parent);
-                                            // Populate the second 'add cargo to' field (green) with the selected return route, without aircraft type
-                                            const addCargoToReturnField = document.getElementById('add_cargo_to_return');
+                                            // Populate shipment summary and products/goods return route fields
+                                            var routeBaseReturn = selectedRoute.summary.split('(')[0].trim();
+                                            var addCargoToReturnField = document.getElementById('add_cargo_to_return');
                                             if (addCargoToReturnField) {
-                                                // Extract route base (e.g., 'MDE → MIA') from summary
-                                                const routeBase = selectedRoute.summary.split('(')[0].trim();
-                                                addCargoToReturnField.value = routeBase;
+                                                addCargoToReturnField.value = routeBaseReturn;
+                                            }
+                                            var addCargoReturn = document.getElementById('add_cargo_return');
+                                            if (addCargoReturn) {
+                                                addCargoReturn.value = routeBaseReturn;
                                             }
                                         } else {
                                             document.getElementById('route_cost_return').value = '';
