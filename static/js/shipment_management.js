@@ -100,12 +100,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!table.querySelector('tfoot')) {
             const tfoot = table.createTFoot();
             const totalsRow = tfoot.insertRow();
-            totalsRow.innerHTML = `
-                <td colspan="8" style="text-align: right; font-weight: bold; color: #FF5C00; padding-right: 10px;">Totals:</td>
-                <td class="totals-row-weight" style="font-weight: bold; text-align: center; vertical-align: middle;"></td>
-                <td class="totals-row-cost" style="font-weight: bold; text-align: center; vertical-align: middle;"></td>
-                <td colspan="11"></td>
-            `;
+            // Dynamically determine the number of columns from the header
+            const headerCells = table.querySelectorAll('thead th');
+            const colCount = headerCells.length;
+            // Place "Totals:" in the first cell, then fill the rest
+            let rowHtml = `<td style="text-align: right; font-weight: bold; color: #FF5C00; padding-right: 10px;">Totals:</td>`;
+            // Add empty cells for the rest of the columns
+            for (let i = 1; i < colCount; i++) {
+                rowHtml += `<td class="totals-row-cell"></td>`;
+            }
+            totalsRow.innerHTML = rowHtml;
         }
     }
 
@@ -566,6 +570,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                         typeDropdown.addEventListener('change', function() {
                                             // Call the new state manager
                                             manageReturnTypeState(this.value);
+                                            // Expand shipment summary section and enable its toggle button
+                                            var summaryInfo = document.getElementById('summary-info-content');
+                                            var summaryToggle = document.getElementById('toggle-summary-btn');
+                                            if (summaryInfo) summaryInfo.style.display = '';
+                                            if (summaryToggle) summaryToggle.disabled = false;
                                         });
                                     }
                                 }
@@ -742,85 +751,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
 
-    // Apply one-time UI enhancements to the products table
-    enhanceProductsTableUI();
-
-    // --- Product Table Population ---
-    const tradingCountrySelect = document.getElementById('trading_country');
-    const productsTableBody = document.querySelector('#products-table tbody');
-    const productsContainer = document.getElementById('container-5');
-    const getProductsUrlTemplate = productsContainer ? productsContainer.dataset.getProductsUrl : null;
-
-    if (tradingCountrySelect && productsTableBody && getProductsUrlTemplate) {
-        tradingCountrySelect.addEventListener('change', function() {
-            const countryCode = this.value;
-            productsTableBody.innerHTML = ''; // Clear table on new selection
-
-            if (!countryCode) {
-                return; // Do nothing if no country is selected
-            }
-
-            // Show a loading state in the table
-            productsTableBody.innerHTML = '<tr><td colspan="21" style="text-align: center;">Loading products...</td></tr>';
-
-            const fetchUrl = getProductsUrlTemplate.replace('__COUNTRY_CODE__', countryCode);
-
-            fetch(fetchUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(products => {
-                    productsTableBody.innerHTML = ''; // Clear loading message
-                    if (products.length === 0) {
-                        productsTableBody.innerHTML = '<tr><td colspan="21" style="text-align: center;">No products found for this country.</td></tr>';
-                        return;
-                    }
-
-                    products.forEach(product => {
-                        const row = document.createElement('tr');
-                        // Store hidden data in data-* attributes for later use
-                        row.dataset.productType = product.product_type || '';
-                        row.dataset.unitsPerPack = product.units_per_pack || 0;
-
-                        const formattedPackCost = product.packaging_cost ? `$${parseFloat(product.packaging_cost).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '';
-
-                        // The order of cells must match the table headers in the HTML
-                        row.innerHTML = `
-                            <td style="text-align: center; vertical-align: middle;">${product.product_code || ''}</td>
-                            <td style="text-align: center; vertical-align: middle;">${product.name || ''}</td>
-                            <td style="text-align: center; vertical-align: middle;">${product.trade_unit || ''}</td>
-                            <td style="text-align: center; vertical-align: middle;">${product.packaging || ''}</td>
-                            <td style="text-align: center; vertical-align: middle;">${product.packaging_weight || ''}</td>
-                            <td style="text-align: center; vertical-align: middle;">${formattedPackCost}</td>
-                            <td style="text-align: center; vertical-align: middle;">${product.currency || ''}</td>
-                            <td><input type="number" class="form-control product-input amount-input" style="width: 100%;"></td>
-                            <td class="total-weight" style="text-align: center; vertical-align: middle;"></td>
-                            <td class="total-cost" style="text-align: center; vertical-align: middle;"></td>
-                            <td><input type="number" class="form-control product-input taxes-input" style="width: 100%;"></td>
-                            <td><input type="number" class="form-control product-input profit-input" style="width: 100%;"></td>
-                            <td class="fca-cost" style="text-align: center; vertical-align: middle;"></td>
-                            <td class="cip-cost" style="text-align: center; vertical-align: middle;"></td>
-                            <td class="dat-cost" style="text-align: center; vertical-align: middle;"></td>
-                            <td class="dat-kg-usd" style="text-align: center; vertical-align: middle;"></td>
-                            <td class="dat-ea-usd" style="text-align: center; vertical-align: middle;"></td>
-                            <td class="local-ea-usd" style="text-align: center; vertical-align: middle;"></td>
-                            <td><input type="number" class="form-control product-input" style="width: 100%;"></td>
-                            <td><input type="number" class="form-control product-input" style="width: 100%;"></td>
-                            <td class="final-dat" style="text-align: center; vertical-align: middle;"></td>
-                        `;
-                        productsTableBody.appendChild(row);
-                    });
-
-                    // Update totals after populating the table
-                    updateTableTotals();
-                })
-                .catch(error => {
-                    console.error('Error fetching products:', error);
-                    productsTableBody.innerHTML = '<tr><td colspan="21" style="text-align: center; color: red;">Error loading products.</td></tr>';
-                });
-        });
-    }
+    // ...existing code...
 });

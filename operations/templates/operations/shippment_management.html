@@ -4,6 +4,44 @@
 <script>
 window.regionManagerMap = {{ region_manager_map | tojson }};
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tradingInfo = document.getElementById('trading-info-content');
+    var logisticInfo = document.getElementById('logistic-info-content');
+    var summaryInfo = document.getElementById('summary-info-content');
+    var startBtn = document.getElementById('start-shipment-btn');
+    var tradingToggle = document.getElementById('toggle-trading-btn');
+    var logisticToggle = document.getElementById('toggle-logistic-btn');
+    var summaryToggle = document.getElementById('toggle-summary-btn');
+    var consigneeBranch = document.getElementById('consignee_branch');
+    var typeOfReturn = document.getElementById('type_of_return');
+
+    if (tradingInfo) tradingInfo.style.display = 'none';
+    if (logisticInfo) logisticInfo.style.display = 'none';
+    if (summaryInfo) summaryInfo.style.display = 'none';
+
+    if (startBtn && tradingInfo && tradingToggle && logisticToggle && summaryToggle) {
+        startBtn.addEventListener('click', function() {
+            tradingInfo.style.display = '';
+            tradingToggle.disabled = false;
+            logisticToggle.disabled = true;
+            summaryToggle.disabled = true;
+        });
+    }
+    if (consigneeBranch && logisticInfo && logisticToggle) {
+        consigneeBranch.addEventListener('change', function() {
+            logisticInfo.style.display = '';
+            logisticToggle.disabled = false;
+        });
+    }
+    if (typeOfReturn && summaryInfo && summaryToggle) {
+        typeOfReturn.addEventListener('change', function() {
+            summaryInfo.style.display = '';
+            summaryToggle.disabled = false;
+        });
+    }
+});
+</script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
 <script>
@@ -15,14 +53,17 @@ window.routeData = {{ route_data | tojson }};
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
 <div class="shipment-section" id="container-1">
-	<div class="section-title" style="color: #FF5C00;">Shipment Reference</div>
-	<input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
+    <div class="section-title" style="color: #FF5C00; text-align: left;">Shipment Reference</div>
+    <div style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px;">
+    <button type="button" class="btn btn-primary" id="start-shipment-btn">Start New Shipment</button>
+        <input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
+    </div>
 </div>
 
 <div class="shipment-section" id="container-2" data-check-route-url="{{ url_for('operations_api.check_route') }}">
 	<div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
 		<span>Trading Information</span>
-		<button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;">Toggle</button>
+    <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;" id="toggle-trading-btn" disabled>Toggle</button>
 	</div>
 	<div id="trading-info-content">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
@@ -162,7 +203,7 @@ function toggleSummaryInfo() {
 <div class="shipment-section" id="container-3">
     <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
         <span>Logistic Information</span>
-        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleLogisticInfo()" style="margin-left: 10px;">Toggle</button>
+    <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleLogisticInfo()" style="margin-left: 10px;" id="toggle-logistic-btn" disabled>Toggle</button>
     </div>
     <div id="logistic-info-content">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
@@ -236,7 +277,7 @@ function toggleSummaryInfo() {
 <div class="shipment-section" id="container-4">
     <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
         <span>Shipment summary</span>
-        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleSummaryInfo()" style="margin-left: 10px;">Toggle</button>
+    <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleSummaryInfo()" style="margin-left: 10px;" id="toggle-summary-btn" disabled>Toggle</button>
     </div>
     <div id="summary-info-content">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
@@ -304,54 +345,7 @@ function toggleSummaryInfo() {
 
 
 <div class="shipment-section" id="container-5" data-get-products-url="{{ url_for('operations_api.get_products_by_country', country_code='__COUNTRY_CODE__') }}">
-    <div class="section-title" style="color: #FF5C00;">Products / Goods Information</div>
-    <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start;">
-        <div class="form-group" style="min-width: 100px; max-width: 300px; width: 100%;">
-            <label for="filter_product_type" style="color: #8f7d16; font-weight: bold;">Filter by product type</label>
-            <input type="text" id="filter_product_type" name="filter_product_type" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
-        </div>
-        <div class="form-group" style="min-width: 100px; max-width: 300px; width: 100%;">
-            <label for="exchange_rate" style="color: #8f7d16; font-weight: bold;">Exchange Rate</label>
-            <input type="text" id="exchange_rate" name="exchange_rate" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
-        </div>
-        <div class="form-group" style="min-width: 100px; max-width: 300px; width: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
-            <label style="visibility: hidden; height: 20px;">&nbsp;</label>
-            <a href="https://www.google.com/search?q=currency+converter" target="_blank" id="check_exchange_rate_btn" class="btn" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; font-weight: bold; width: 100%; max-width: 300px; text-align: center; padding-top: 6px;">Check current Exchange Rate</a>
-        </div>
-    </div>
-    <hr style="border: none; border-top: 2px solid #FF5C00; margin: 20px 0 0 0; width: 100%;">
-    <div class="table-responsive" style="margin-top: 20px;">
-        <table id="products-table" class="table table-bordered" style="width: 100%; border-color: #FF5C00;">
-            <thead>
-                <tr style="background: #fff8e1; color: #FF5C00;">
-                    <th style="width: 80px; min-width:80px; max-width:80px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Code</th>
-                    <th style="width: 150px; min-width:120px; max-width:120px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Name</th>
-                    <th style="width: 60px; min-width:60px; max-width:60px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Trade Unit</th>
-                    <th style="width: 100px; min-width:100px; max-width:100px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Packaging</th>
-                    <th style="width: 80px; min-width:80px; max-width:80px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Pack Weight</th>
-                    <th style="width: 120px; min-width:120px; max-width:120px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Pack Cost</th>
-                    <th style="width: 80px; min-width:80px; max-width:80px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Currency</th>
-                    <th style="width: 100px; min-width:100px; max-width:100px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Amount</th>
-                    <th style="width: 110px; min-width:110px; max-width:110px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Total Product Weight (Kg)</th>
-                    <th style="width: 160px; min-width:160px; max-width:160px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;" class="fca-tooltip-column">Total Product Cost</th>
-                    <th style="width: 110px; min-width:110px; max-width:110px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;" class="fca-tooltip-column">Taxes ($Local)</th>
-                    <th style="width: 110px; min-width:110px; max-width:110px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;" class="fca-tooltip-column">Profit ($Local)</th>
-                    <th style="width: 200px; min-width:200px; max-width:200px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">FCA Cost ($Local)</th>
-                    <th style="width: 145px; min-width:145px; max-width:145px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;" class="cip-tooltip-trigger">CIP Cost</th>
-                    <th style="width: 145px; min-width:145px; max-width:145px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;" class="dat-tooltip-trigger">DAT Cost</th>
-                    <th style="width: 145px; min-width:145px; max-width:145px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">DAT Kg/$</th>
-                    <th style="width: 145px; min-width:145px; max-width:145px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">DAT Ea/$</th>
-                    <th style="width: 145px; min-width:145px; max-width:145px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Local Ea/$</th>
-                    <th style="width: 120px; min-width:120px; max-width:120px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Sug. Imp. Profit %</th>
-                    <th style="width: 120px; min-width:120px; max-width:120px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Imp. Profit %</th>
-                    <th style="width: 140px; min-width:140px; max-width:140px; padding: 6px; text-align: center; vertical-align: middle; font-weight: normal;">Final DAT $</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dynamic rows will be added here -->
-            </tbody>
-        </table>
-    </div>
+    <!-- Product list and table removed. Ready for new implementation. -->
 </div>
 
 <!-- Route Not Found Modal -->
