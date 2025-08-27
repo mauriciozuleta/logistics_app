@@ -344,9 +344,6 @@ function toggleSummaryInfo() {
 </div>
 
 
-<div class="shipment-section" id="container-5" data-get-products-url="{{ url_for('operations_api.get_products_by_country', country_code='__COUNTRY_CODE__') }}">
-    <!-- Product list and table removed. Ready for new implementation. -->
-</div>
 
 <!-- Route Not Found Modal -->
 <style>
@@ -389,5 +386,30 @@ function toggleSummaryInfo() {
 
 <!-- Close the form tag -->
 </form>
+<div class="shipment-section" id="container-5">
+    <div class="section-title" style="color: #FF5C00;">Products / Goods Selection</div>
+    <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+            <label for="filter_category" style="color: #8f7d16; font-weight: bold;">Filter by Category</label>
+            <input type="text" id="filter_category" name="filter_category" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+        </div>
+        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+            <label for="add_cargo_outbound" style="color: #8f7d16; font-weight: bold;">Add cargo to Outbound Route</label>
+            <input type="text" id="add_cargo_outbound" name="add_cargo_outbound" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+        </div>
+        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+            <label for="add_cargo_return" style="color: #8f7d16; font-weight: bold;">Add cargo to Return Route</label>
+            <input type="text" id="add_cargo_return" name="add_cargo_return" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+        </div>
+        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+            <label for="exchange_rate" style="color: #8f7d16; font-weight: bold;">Exchange Rate</label>
+            <input type="text" id="exchange_rate" name="exchange_rate" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+        </div>
+        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
+            <label style="visibility: hidden; height: 20px;">&nbsp;</label>
+            <a href="https://www.google.com/search?q=currency+converter" target="_blank" id="search_exchange_rate_btn" class="btn" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; font-weight: bold; width: 100%; max-width: 300px; text-align: center; padding-top: 6px;">Search Exchange Rate</a>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
