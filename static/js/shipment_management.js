@@ -314,6 +314,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (hasError) return;
 
         initializeCascadingDropdowns(setup, index);
+
+        // Robustly re-attach event listener for consignee port selection after any DOM changes
+        if (index === 1) {
+            const portSelect = document.getElementById('consignee_port_of_shipping');
+            if (portSelect) {
+                portSelect.addEventListener('change', function() {
+                    triggerRouteChangeCheck();
+                });
+            }
+        }
     });
 
     // --- Route Existence Check Logic ---
