@@ -870,7 +870,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             columnStyles.forEach((style, index) => {
                 const cellDiv = document.createElement('div');
-                
                 // Apply all mirrored styles for perfect alignment
                 cellDiv.style.boxSizing = style.boxSizing;
                 cellDiv.style.width = style.width;
@@ -895,6 +894,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.style.padding = style.padding; // Use header's padding
                     input.style.boxSizing = 'border-box';
                     cellDiv.appendChild(input);
+
+                    // Add event listener for live calculations
+                    input.addEventListener('input', function() {
+                        // Find the parent row and its cells
+                        const parentRow = cellDiv.parentNode;
+                        const amount = parseFloat(input.value) || 0;
+                        // Pack weight is index 6, Packaging cost is index 8
+                        const packWeightCell = parentRow.children[6];
+                        const packagingCostCell = parentRow.children[8];
+                        const totalWeightCell = parentRow.children[11];
+                        const totalCostCell = parentRow.children[12];
+
+                        // Get numeric values
+                        const packWeight = parseFloat(packWeightCell.textContent) || 0;
+                        // Remove $ and commas for packaging cost
+                        let packagingCost = packagingCostCell.textContent.replace(/[^\d\.]/g, '');
+                        packagingCost = parseFloat(packagingCost) || 0;
+
+                        // Calculate and update
+                        if (totalWeightCell) {
+                            const totalWeight = packWeight * amount;
+                            totalWeightCell.textContent = totalWeight ? totalWeight.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+                        }
+                        if (totalCostCell) {
+                            const totalCost = packagingCost * amount;
+                            totalCostCell.textContent = totalCost ? `$${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+                        }
+                    });
                 } else {
                     // Add styles to prevent content from breaking the layout (truncation)
                     cellDiv.style.flexShrink = '0';
