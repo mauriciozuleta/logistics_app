@@ -1,3 +1,24 @@
+/* Product Table and Totals Row Styles */
+#product-list-totals {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: #2a2a2a;
+}
+.product-list-totals-row {
+  display: flex;
+  align-items: center;
+  min-width: 2400px;
+  border-top: 2px solid #ff5c00;
+  font-weight: bold;
+  color: #FFC107;
+  height: 45px;
+}
+.product-list-totals-row > div {
+  padding: 0 8px;
+  flex-shrink: 0;
+  /* No right border for cleaner UI */
+}
 /* Override gray background for shipment management input cells */
 input.form-control,
 input[type="text"].form-control,

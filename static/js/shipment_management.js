@@ -771,16 +771,59 @@ document.addEventListener('DOMContentLoaded', function() {
     ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
 
     // Shipper's country click event
+    function renderTotalsRow(columnStyles, totalMinWidth) {
+        const totalsContainer = document.getElementById('product-list-totals');
+        if (!totalsContainer) return;
+
+        totalsContainer.innerHTML = ''; // Clear previous totals
+
+        const row = document.createElement('div');
+        row.className = 'product-list-totals-row';
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.minWidth = totalMinWidth;
+        row.style.fontWeight = 'bold';
+        row.style.borderTop = '2px solid #ff5c00';
+        row.style.height = '45px';
+        row.style.background = '#2a2a2a'; // A slightly different background for footer
+
+        columnStyles.forEach((style, index) => {
+            const cellDiv = document.createElement('div');
+            // Apply mirrored styles for perfect alignment
+            cellDiv.style.boxSizing = style.boxSizing;
+            cellDiv.style.width = style.width;
+            cellDiv.style.padding = style.padding;
+            cellDiv.style.textAlign = style.textAlign;
+            cellDiv.style.borderRight = style.borderRight;
+            cellDiv.style.color = '#FFC107'; // Amber color for totals
+            cellDiv.style.flexShrink = '0';
+
+            if (index === 0) {
+                cellDiv.textContent = 'Totals';
+            } else {
+                cellDiv.textContent = ''; // Placeholder for future calculations
+            }
+            row.appendChild(cellDiv);
+        });
+
+        if (row.lastChild) {
+            row.lastChild.style.borderRight = 'none';
+        }
+
+        totalsContainer.appendChild(row);
+    }
     function renderProductRows(products, country) {
         const headerRow = document.querySelector('.product-list-header');
         const dataContainer = document.getElementById('product-table-container');
-        if (!headerRow || !dataContainer) {
-            console.error("Header or data container not found for product table.");
+        const totalsContainer = document.getElementById('product-list-totals');
+        if (!headerRow || !dataContainer || !totalsContainer) {
+            console.error("Header, data, or totals container not found for product table.");
             return;
         }
 
         // Clear any previous product rows from the data container
         dataContainer.innerHTML = '';
+        totalsContainer.innerHTML = '';
 
         // Get the computed styles from each header cell
         const headerCells = headerRow.querySelectorAll('div[id^="product-header-"]');
@@ -881,6 +924,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             dataContainer.appendChild(row);
         });
+
+        // Render the sticky totals row at the bottom
+        renderTotalsRow(columnStyles, totalMinWidth);
     }
 
     function fetchProductNamesForCountry(country) {
