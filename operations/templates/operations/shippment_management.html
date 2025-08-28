@@ -450,8 +450,21 @@ function toggleSummaryInfo() {
         <div id="product-header-dat-final" style="min-width: 120px; flex: 1; color: #8f7d16;">Product final DAT Price (EA)</div>
         <div id="product-header-total-dat-final" style="min-width: 120px; flex: 1; color: #8f7d16;">Total Product Cost DAT</div>
         <div id="product-header-total-dat-profit-" style="min-width: 120px; flex: 1; color: #8f7d16;">Total DAT Profit</div>
+    </div>
+    <!-- Product Table Container for JS population -->
+    <div id="product-table-container" style="width:100%;"></div>
             </div>
         </div>
+        <!-- Inject mock window.products for debugging -->
+        <script>
+        window.products = [
+            { code: 'P001', name: 'Apples', country: 'US', category: 'Fruit', unit: 'Kg', price: 2.5 },
+            { code: 'P002', name: 'Bananas', country: 'CO', category: 'Fruit', unit: 'Kg', price: 1.8 },
+            { code: 'P003', name: 'Coffee', country: 'CO', category: 'Beverage', unit: 'Kg', price: 5.0 },
+            { code: 'P004', name: 'Oranges', country: 'US', category: 'Fruit', unit: 'Kg', price: 2.2 },
+            { code: 'P005', name: 'Avocado', country: 'MX', category: 'Fruit', unit: 'Kg', price: 3.0 }
+        ];
+        </script>
 </div>
 
 {% endblock %}

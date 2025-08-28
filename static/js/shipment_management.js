@@ -778,9 +778,9 @@ document.addEventListener('DOMContentLoaded', function() {
             var countrySelect = document.getElementById('trading_country');
             var country = countrySelect ? countrySelect.value : null;
             console.log('Shipper country:', country);
-            // Change product table header color to blue
             var header = document.querySelector('.product-list-header');
             if (header) header.style.background = '#2766b8'; // Nice blue
+            fetchProductNamesForCountry(country);
         });
     }
     var returnLabel = document.querySelector('label[for="add_cargo_return"]');
@@ -792,6 +792,113 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Consignee country:', country);
             var header = document.querySelector('.product-list-header');
             if (header) header.style.background = '#b64545'; // Distinct red
+            populateProductTable(country);
+        });
+    }
+
+    // Function to fetch product names for a given country from the backend
+    function fetchProductNamesForCountry(country) {
+        if (!country) {
+            console.warn('No country code provided.');
+            return;
+        }
+    fetch(`/api/get-products-by-country/${country}`)
+            .then(response => response.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    const names = data.map(p => p.name);
+                    console.log('Product names for country', country + ':', names);
+                    injectProductsBelowNameColumn(data);
+                } else {
+                    console.error('Error fetching products:', data.error || data);
+                }
+            })
+            .catch(error => console.error('Fetch error:', error));
+    }
+
+    // Function to inject product rows below the Name column
+    function injectProductsBelowNameColumn(products) {
+        const headerRow = document.querySelector('.product-list-header');
+        if (!headerRow) return;
+        // Remove any previous product rows
+        let existingRows = document.querySelectorAll('.product-list-product-row');
+        existingRows.forEach(row => row.remove());
+        // Insert each product as a flex row below the header
+        products.forEach(product => {
+            const row = document.createElement('div');
+            row.className = 'product-list-product-row';
+            row.style.display = 'flex';
+            row.style.flexDirection = 'row';
+            row.style.alignItems = 'center';
+            row.style.gap = '8px';
+            row.style.minWidth = '2400px';
+            row.style.background = '#fff';
+            row.style.borderBottom = '1px solid #eee';
+            row.style.padding = '8px 0';
+            // Code
+            const codeDiv = document.createElement('div');
+            codeDiv.style.minWidth = '120px'; codeDiv.style.flex = '1';
+            codeDiv.textContent = product.product_code || '';
+            row.appendChild(codeDiv);
+            // Name
+            const nameDiv = document.createElement('div');
+            nameDiv.style.minWidth = '120px'; nameDiv.style.flex = '1';
+            nameDiv.textContent = product.name || '';
+            row.appendChild(nameDiv);
+            // Category
+            const categoryDiv = document.createElement('div');
+            categoryDiv.style.minWidth = '120px'; categoryDiv.style.flex = '1';
+            categoryDiv.textContent = product.product_type || '';
+            row.appendChild(categoryDiv);
+            // Country ID
+            const countryDiv = document.createElement('div');
+            countryDiv.style.minWidth = '120px'; countryDiv.style.flex = '1';
+            countryDiv.textContent = product.country_id || '';
+            row.appendChild(countryDiv);
+            // Trade Unit
+            const unitDiv = document.createElement('div');
+            unitDiv.style.minWidth = '120px'; unitDiv.style.flex = '1';
+            unitDiv.textContent = product.trade_unit || '';
+            row.appendChild(unitDiv);
+            // Packaging
+            const packagingDiv = document.createElement('div');
+            packagingDiv.style.minWidth = '120px'; packagingDiv.style.flex = '1';
+            packagingDiv.textContent = product.packaging || '';
+            row.appendChild(packagingDiv);
+            // Pack Weight
+            const weightDiv = document.createElement('div');
+            weightDiv.style.minWidth = '120px'; weightDiv.style.flex = '1';
+            weightDiv.textContent = product.packaging_weight || '';
+            row.appendChild(weightDiv);
+            // Units/Pack
+            const unitsPackDiv = document.createElement('div');
+            unitsPackDiv.style.minWidth = '120px'; unitsPackDiv.style.flex = '1';
+            unitsPackDiv.textContent = product.units_per_pack || '';
+            row.appendChild(unitsPackDiv);
+            // Packaging Cost
+            const packagingCostDiv = document.createElement('div');
+            packagingCostDiv.style.minWidth = '120px'; packagingCostDiv.style.flex = '1';
+            packagingCostDiv.textContent = product.packaging_cost || '';
+            row.appendChild(packagingCostDiv);
+            // Currency
+            const currencyDiv = document.createElement('div');
+            currencyDiv.style.minWidth = '120px'; currencyDiv.style.flex = '1';
+            currencyDiv.textContent = product.currency || '';
+            row.appendChild(currencyDiv);
+            // Amount (leave blank for now)
+            const amountDiv = document.createElement('div');
+            amountDiv.style.minWidth = '100px'; amountDiv.style.flex = '1';
+            amountDiv.textContent = '';
+            row.appendChild(amountDiv);
+            // FCA/Total/Export/Profit/Other columns (leave blank for now)
+            for (let i = 0; i < 18; i++) {
+                const blankDiv = document.createElement('div');
+                blankDiv.style.minWidth = '120px'; blankDiv.style.flex = '1';
+                blankDiv.textContent = '';
+                row.appendChild(blankDiv);
+            }
+            // Insert after header
+            headerRow.parentNode.insertBefore(row, headerRow.nextSibling);
         });
     }
 });
