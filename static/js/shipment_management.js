@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
 
     // Shipper's country click event
-    function renderProductRows(products) {
+    function renderProductRows(products, country) {
         const headerRow = document.querySelector('.product-list-header');
         const dataContainer = document.getElementById('product-table-container');
         if (!headerRow || !dataContainer) {
@@ -815,7 +815,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const productData = [
                 product.product_code, product.name, product.product_type,
-                product.country_id, product.trade_unit, product.packaging,
+                country, product.trade_unit, product.packaging,
                 product.packaging_weight, product.units_per_pack, product.packaging_cost,
                 product.currency, '' // Amount - leave blank for now
             ];
@@ -892,7 +892,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    renderProductRows(data);
+                    console.log('Fetched products:', data);
+                    renderProductRows(data, country);
                 } else {
                     console.error('Error fetching products:', data.error || data);
                 }
