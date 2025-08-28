@@ -808,16 +808,15 @@ document.addEventListener('DOMContentLoaded', function() {
             row.style.minWidth = totalMinWidth;
             row.style.background = 'transparent';
             row.style.borderBottom = '1px solid #eee';
-            row.style.padding = window.getComputedStyle(headerRow).padding; // Match header's padding
-
-            const formattedPackagingCost = (typeof product.packaging_cost === 'number' && !isNaN(product.packaging_cost))
-                ? `$${product.packaging_cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                : (product.packaging_cost ? `$${Number(product.packaging_cost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '');
+ 
+            // Set a fixed height for the row, making it independent of the header.
+            // This creates a more compact and uniform list.
+            row.style.height = '45px';
 
             const productData = [
                 product.product_code, product.name, product.product_type,
                 product.country_id, product.trade_unit, product.packaging,
-                product.packaging_weight, product.units_per_pack, formattedPackagingCost,
+                product.packaging_weight, product.units_per_pack, product.packaging_cost,
                 product.currency, '' // Amount - leave blank for now
             ];
             
@@ -837,27 +836,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 cellDiv.style.borderRight = style.borderRight;
                 cellDiv.style.color = '#e7e5d5';
 
-                // Add styles to prevent content from breaking the layout (truncation)
-                cellDiv.style.flexShrink = '0';
-                cellDiv.style.overflow = 'hidden';
-                cellDiv.style.textOverflow = 'ellipsis';
-                cellDiv.style.whiteSpace = 'nowrap';
-
-                if (index === 10) { // Amount column
+                // Amount column (index 10) should be an input field
+                if (index === 10) {
+                    cellDiv.style.border = '1px solid #FFC107'; // Highlight the editable cell
+                    cellDiv.style.padding = '0'; // Let input handle padding
                     const input = document.createElement('input');
-                    input.type = 'number';
-                    input.className = 'form-control product-amount-input';
+                    input.type = 'text';
+                    input.className = 'product-amount-input';
                     input.style.width = '100%';
+                    input.style.height = '100%';
+                    input.style.border = 'none';
                     input.style.background = 'transparent';
                     input.style.color = '#e7e5d5';
-                    input.style.border = '1px solid #2196f3';
-                    input.style.borderRadius = '4px';
                     input.style.textAlign = style.textAlign;
-                    input.style.fontSize = 'inherit';
-                    input.placeholder = 'Amount';
+                    input.style.padding = style.padding; // Use header's padding
+                    input.style.boxSizing = 'border-box';
                     cellDiv.appendChild(input);
                 } else {
-                    cellDiv.textContent = productData[index] || '';
+                    // Add styles to prevent content from breaking the layout (truncation)
+                    cellDiv.style.flexShrink = '0';
+                    cellDiv.style.overflow = 'hidden';
+                    cellDiv.style.textOverflow = 'ellipsis';
+                    cellDiv.style.whiteSpace = 'nowrap';
+
+                    let cellContent = productData[index] || '';
+
+                    // Specifically format the 'Packaging Cost' column (index 8)
+                    if (index === 8 && cellContent) {
+                        const numericValue = parseFloat(cellContent);
+                        if (!isNaN(numericValue)) {
+                            // Format as currency with $ and thousand separators, ensuring 2 decimal places
+                            cellContent = `$${numericValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                        }
+                    }
+                    cellDiv.textContent = cellContent;
                 }
                 row.appendChild(cellDiv);
             });
