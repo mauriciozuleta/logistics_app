@@ -416,40 +416,52 @@ function toggleSummaryInfo() {
         <!-- Product List Header Row -->
         <!-- Product List imported data from products #2766b8-->
         <div class="product-list-scroll" style="overflow-x: auto; width: 100%;">
-            <div class="product-list-header" style="display: flex; flex-direction: row; align-items: center; gap: 8px; min-width: 2400px; margin-top: 24px; font-weight: bold; background: #1c1c1d; border-bottom: 2px solid #ff5c00; padding: 8px 0;">
-       <div id="product-header-code" style="min-width: 120px; flex: 1; color: #e7e5d5;">Code</div>
-       <div id="product-header-name" style="min-width: 120px; flex: 1; color: #e7e5d5;">Name</div>
-        <div id="product-header-category" style="min-width: 120px; flex: 1; color: #e7e5d5;">Category</div>
-        <div id="product-header-country" style="min-width: 120px; flex: 1; color: #e7e5d5;">Country ID</div>
-        <div id="product-header-trade-unit" style="min-width: 120px; flex: 1; color: #e7e5d5;">Trade Unit</div>
-        <div id="product-header-packaging" style="min-width: 120px; flex: 1; color: #e7e5d5;">Packaging</div>
-        <div id="product-header-weight" style="min-width: 120px; flex: 1; color: #e7e5d5;">Pack Weight</div>
-        <div id="product-header-units-pack" style="min-width: 120px; flex: 1; color: #e7e5d5;">Units/Pack</div>
-        <div id="product-header-packaging-cost" style="min-width: 120px; flex: 1; color: #e7e5d5;">Packaging Cost</div>
-        <div id="product-header-currency" style="min-width: 120px; flex: 1; color: #e7e5d5;">Currency</div>
-        <div id="product-header-amount" style="min-width: 100px; flex: 1; color: #e7e5d5;">Amount</div>
+        <div class="product-list-header" style="display: flex; flex-direction: row; align-items: center; gap: 0; min-width: 2400px; margin-top: 24px; font-weight: bold; background: transparent; border-bottom: 2px solid #ff5c00; padding: 8px 0;">
+        <style>
+        .product-list-header > div {
+            border-right: 1px solid #ff5c00;
+            padding: 0 8px;
+        }
+        .product-list-header > div:last-child {
+            border-right: none;
+        }
+        label[for="add_cargo_outbound"] {
+            cursor: pointer;
+        }
+        </style>
+       <div id="product-header-code" style="width: 120px; text-align: left; color: #e7e5d5;">Code</div>
+       <div id="product-header-name" style="width: 400px; text-align: left; color: #e7e5d5;">Name</div>
+        <div id="product-header-category" style="width: 150px; text-align: left; color: #e7e5d5;">Category</div>
+        <div id="product-header-country" style="width: 100px; text-align: center; color: #e7e5d5;">Country ID</div>
+        <div id="product-header-trade-unit" style="width: 100px; text-align: center; color: #e7e5d5;">Trade Unit</div>
+        <div id="product-header-packaging" style="width: 120px; text-align: left; color: #e7e5d5;">Packaging</div>
+        <div id="product-header-weight" style="width: 100px; text-align: right; color: #e7e5d5;">Pack Weight</div>
+        <div id="product-header-units-pack" style="width: 100px; text-align: right; color: #e7e5d5;">Units / Pack</div>
+        <div id="product-header-packaging-cost" style="width: 150px; text-align: right; color: #e7e5d5;">Packaging Cost</div>
+        <div id="product-header-currency" style="width: 80px; text-align: center; color: #e7e5d5;">Currency</div>
+        <div id="product-header-amount" style="width: 120px; text-align: right; color: #e7e5d5;">Amount</div>
         <!-- Product List calculations column fca calculations-->
-        <div id="product-header-total-weight" style="min-width: 120px; flex: 1; color: #b64545;">Total Product Weight</div>
-        <div id="product-header-total-cost" style="min-width: 120px; flex: 1; color: #b64545;">Total Product Cost</div>
-        <div id="product-header-export-taxes" style="min-width: 120px; flex: 1; color: #b64545;">Export Taxes</div>
-        <div id="product-header-exporter-profit" style="min-width: 120px; flex: 1; color: #b64545;">Exporter Profit</div>
-        <div id="product-header-fca-cost" style="min-width: 120px; flex: 1; color: #b64545;">FCA Cost</div>
+        <div id="product-header-total-weight" style="width: 120px; text-align: right; color: #b64545;">Total Product Weight</div>
+        <div id="product-header-total-cost" style="width: 120px; text-align: right; color: #b64545;">Total Product Cost</div>
+        <div id="product-header-export-taxes" style="width: 120px; text-align: right; color: #b64545;">Export Taxes</div>
+        <div id="product-header-exporter-profit" style="width: 120px; text-align: right; color: #b64545;">Exporter Profit</div>
+        <div id="product-header-fca-cost" style="width: 120px; text-align: right; color: #b64545;">FCA Cost</div>
         <!-- Product List calculations column cip calculations-->
-        <div id="product-header-fca-usd" style="min-width: 120px; flex: 1; color: #8f7d16;">FCA USD</div>
-        <div id="product-header-load-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">Cargo Load cost</div>
-        <div id="product-header-freight-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">Air Freight cost</div>
-        <div id="product-header-unload-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">Cargo Unload cost</div>
-        <div id="product-header-cip-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">CIP Cost</div>
+        <div id="product-header-fca-usd" style="width: 120px; text-align: right; color: #8f7d16;">FCA USD</div>
+        <div id="product-header-load-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Load cost</div>
+        <div id="product-header-freight-cost" style="width: 120px; text-align: right; color: #8f7d16;">Air Freight cost</div>
+        <div id="product-header-unload-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Unload cost</div>
+        <div id="product-header-cip-cost" style="width: 120px; text-align: right; color: #8f7d16;">CIP Cost</div>
         <!-- Product List calculations column dat calculations-->
-        <div id="product-header-import-taxes" style="min-width: 120px; flex: 1; color: #8f7d16;">Import Taxes</div>
-        <div id="product-header-dat-cost-arrival" style="min-width: 120px; flex: 1; color: #8f7d16;">DAT Kg. Cost</div>
-        <div id="product-header-dat-ea-cost-arrival" style="min-width: 120px; flex: 1; color: #8f7d16;">DAT EA. cost</div>
-        <div id="product-header-comparative-price" style="min-width: 120px; flex: 1; color: #8f7d16;">Comparative Price</div>
-        <div id="product-header-suggested-profit-ea" style="min-width: 120px; flex: 1; color: #8f7d16;">Sug. Product Profit (EA)</div>
-        <div id="product-header-profit-ea" style="min-width: 120px; flex: 1; color: #8f7d16;">Product Profit (EA)</div>
-        <div id="product-header-dat-final" style="min-width: 120px; flex: 1; color: #8f7d16;">Product final DAT Price (EA)</div>
-        <div id="product-header-total-dat-final" style="min-width: 120px; flex: 1; color: #8f7d16;">Total Product Cost DAT</div>
-        <div id="product-header-total-dat-profit-" style="min-width: 120px; flex: 1; color: #8f7d16;">Total DAT Profit</div>
+        <div id="product-header-import-taxes" style="width: 120px; text-align: right; color: #8f7d16;">Import Taxes</div>
+        <div id="product-header-dat-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT Kg. Cost</div>
+        <div id="product-header-dat-ea-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT EA. cost</div>
+        <div id="product-header-comparative-price" style="width: 120px; text-align: right; color: #8f7d16;">Comparative Price</div>
+        <div id="product-header-suggested-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Sug. Product Profit (EA)</div>
+        <div id="product-header-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Product Profit (EA)</div>
+        <div id="product-header-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Product final DAT Price (EA)</div>
+        <div id="product-header-total-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Total Product Cost DAT</div>
+        <div id="product-header-total-dat-profit-" style="width: 120px; text-align: right; color: #8f7d16;">Total DAT Profit</div>
     </div>
     <!-- Product Table Container for JS population -->
     <div id="product-table-container" style="width:100%;"></div>

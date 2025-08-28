@@ -771,134 +771,130 @@ document.addEventListener('DOMContentLoaded', function() {
     ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
 
     // Shipper's country click event
-    var outboundLabel = document.querySelector('label[for="add_cargo_outbound"]');
-    if (outboundLabel) {
-        outboundLabel.style.cursor = 'pointer';
-        outboundLabel.addEventListener('click', function() {
-            var countrySelect = document.getElementById('trading_country');
-            var country = countrySelect ? countrySelect.value : null;
-            console.log('Shipper country:', country);
-            var header = document.querySelector('.product-list-header');
-            if (header) header.style.background = '#2766b8'; // Nice blue
-            fetchProductNamesForCountry(country);
+    function renderProductRows(products) {
+        const headerRow = document.querySelector('.product-list-header');
+        const dataContainer = document.getElementById('product-table-container');
+        if (!headerRow || !dataContainer) {
+            console.error("Header or data container not found for product table.");
+            return;
+        }
+
+        // Clear any previous product rows from the data container
+        dataContainer.innerHTML = '';
+
+        // Get the computed styles from each header cell
+        const headerCells = headerRow.querySelectorAll('div[id^="product-header-"]');
+        const columnStyles = Array.from(headerCells).map(cell => {
+            const style = window.getComputedStyle(cell);
+            return {
+                width: style.width,
+                padding: style.padding,
+                textAlign: style.textAlign,
+                boxSizing: style.boxSizing,
+                borderRight: style.borderRight,
+            };
         });
-    }
-    var returnLabel = document.querySelector('label[for="add_cargo_return"]');
-    if (returnLabel) {
-        returnLabel.style.cursor = 'pointer';
-        returnLabel.addEventListener('click', function() {
-            var countrySelect = document.getElementById('consignee_country');
-            var country = countrySelect ? countrySelect.value : null;
-            console.log('Consignee country:', country);
-            var header = document.querySelector('.product-list-header');
-            if (header) header.style.background = '#b64545'; // Distinct red
-            populateProductTable(country);
+
+        // Get the total min-width from the header row itself to ensure data rows don't wrap
+        const totalMinWidth = window.getComputedStyle(headerRow).minWidth;
+
+        // Insert each product as a new row
+        products.forEach(product => {
+            const row = document.createElement('div');
+            row.className = 'product-list-product-row';
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '0px'; // Match header's gap
+            row.style.minWidth = totalMinWidth;
+            row.style.background = 'transparent';
+            row.style.borderBottom = '1px solid #eee';
+            row.style.padding = window.getComputedStyle(headerRow).padding; // Match header's padding
+
+            const formattedPackagingCost = (typeof product.packaging_cost === 'number' && !isNaN(product.packaging_cost))
+                ? `$${product.packaging_cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : (product.packaging_cost ? `$${Number(product.packaging_cost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '');
+
+            const productData = [
+                product.product_code, product.name, product.product_type,
+                product.country_id, product.trade_unit, product.packaging,
+                product.packaging_weight, product.units_per_pack, formattedPackagingCost,
+                product.currency, '' // Amount - leave blank for now
+            ];
+            
+            // Ensure productData has an entry for every column to avoid errors
+            while (productData.length < columnStyles.length) {
+                productData.push('');
+            }
+
+            columnStyles.forEach((style, index) => {
+                const cellDiv = document.createElement('div');
+                
+                // Apply all mirrored styles for perfect alignment
+                cellDiv.style.boxSizing = style.boxSizing;
+                cellDiv.style.width = style.width;
+                cellDiv.style.padding = style.padding;
+                cellDiv.style.textAlign = style.textAlign;
+                cellDiv.style.borderRight = style.borderRight;
+                cellDiv.style.color = '#e7e5d5';
+
+                // Add styles to prevent content from breaking the layout (truncation)
+                cellDiv.style.flexShrink = '0';
+                cellDiv.style.overflow = 'hidden';
+                cellDiv.style.textOverflow = 'ellipsis';
+                cellDiv.style.whiteSpace = 'nowrap';
+
+                if (index === 10) { // Amount column
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'form-control product-amount-input';
+                    input.style.width = '100%';
+                    input.style.background = 'transparent';
+                    input.style.color = '#e7e5d5';
+                    input.style.border = '1px solid #2196f3';
+                    input.style.borderRadius = '4px';
+                    input.style.textAlign = style.textAlign;
+                    input.style.fontSize = 'inherit';
+                    input.placeholder = 'Amount';
+                    cellDiv.appendChild(input);
+                } else {
+                    cellDiv.textContent = productData[index] || '';
+                }
+                row.appendChild(cellDiv);
+            });
+
+            // The last header cell has no right border, so mirror that
+            if (row.lastChild) {
+                row.lastChild.style.borderRight = 'none';
+            }
+
+            dataContainer.appendChild(row);
         });
     }
 
-    // Function to fetch product names for a given country from the backend
     function fetchProductNamesForCountry(country) {
         if (!country) {
             console.warn('No country code provided.');
             return;
         }
-    fetch(`/api/get-products-by-country/${country}`)
+        fetch(`/api/get-products-by-country/${country}`)
             .then(response => response.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    const names = data.map(p => p.name);
-                    console.log('Product names for country', country + ':', names);
-                    injectProductsBelowNameColumn(data);
+                    renderProductRows(data);
                 } else {
                     console.error('Error fetching products:', data.error || data);
                 }
             })
             .catch(error => console.error('Fetch error:', error));
     }
+    
+    document.querySelector('label[for="add_cargo_outbound"]')?.addEventListener('click', () => {
+        const country = document.getElementById('trading_country')?.value;
+        fetchProductNamesForCountry(country);
+    });
 
-    // Function to inject product rows below the Name column
-    function injectProductsBelowNameColumn(products) {
-        const headerRow = document.querySelector('.product-list-header');
-        if (!headerRow) return;
-        // Remove any previous product rows
-        let existingRows = document.querySelectorAll('.product-list-product-row');
-        existingRows.forEach(row => row.remove());
-        // Insert each product as a flex row below the header
-        products.forEach(product => {
-            const row = document.createElement('div');
-            row.className = 'product-list-product-row';
-            row.style.display = 'flex';
-            row.style.flexDirection = 'row';
-            row.style.alignItems = 'center';
-            row.style.gap = '8px';
-            row.style.minWidth = '2400px';
-            row.style.background = '#fff';
-            row.style.borderBottom = '1px solid #eee';
-            row.style.padding = '8px 0';
-            // Code
-            const codeDiv = document.createElement('div');
-            codeDiv.style.minWidth = '120px'; codeDiv.style.flex = '1';
-            codeDiv.textContent = product.product_code || '';
-            row.appendChild(codeDiv);
-            // Name
-            const nameDiv = document.createElement('div');
-            nameDiv.style.minWidth = '120px'; nameDiv.style.flex = '1';
-            nameDiv.textContent = product.name || '';
-            row.appendChild(nameDiv);
-            // Category
-            const categoryDiv = document.createElement('div');
-            categoryDiv.style.minWidth = '120px'; categoryDiv.style.flex = '1';
-            categoryDiv.textContent = product.product_type || '';
-            row.appendChild(categoryDiv);
-            // Country ID
-            const countryDiv = document.createElement('div');
-            countryDiv.style.minWidth = '120px'; countryDiv.style.flex = '1';
-            countryDiv.textContent = product.country_id || '';
-            row.appendChild(countryDiv);
-            // Trade Unit
-            const unitDiv = document.createElement('div');
-            unitDiv.style.minWidth = '120px'; unitDiv.style.flex = '1';
-            unitDiv.textContent = product.trade_unit || '';
-            row.appendChild(unitDiv);
-            // Packaging
-            const packagingDiv = document.createElement('div');
-            packagingDiv.style.minWidth = '120px'; packagingDiv.style.flex = '1';
-            packagingDiv.textContent = product.packaging || '';
-            row.appendChild(packagingDiv);
-            // Pack Weight
-            const weightDiv = document.createElement('div');
-            weightDiv.style.minWidth = '120px'; weightDiv.style.flex = '1';
-            weightDiv.textContent = product.packaging_weight || '';
-            row.appendChild(weightDiv);
-            // Units/Pack
-            const unitsPackDiv = document.createElement('div');
-            unitsPackDiv.style.minWidth = '120px'; unitsPackDiv.style.flex = '1';
-            unitsPackDiv.textContent = product.units_per_pack || '';
-            row.appendChild(unitsPackDiv);
-            // Packaging Cost
-            const packagingCostDiv = document.createElement('div');
-            packagingCostDiv.style.minWidth = '120px'; packagingCostDiv.style.flex = '1';
-            packagingCostDiv.textContent = product.packaging_cost || '';
-            row.appendChild(packagingCostDiv);
-            // Currency
-            const currencyDiv = document.createElement('div');
-            currencyDiv.style.minWidth = '120px'; currencyDiv.style.flex = '1';
-            currencyDiv.textContent = product.currency || '';
-            row.appendChild(currencyDiv);
-            // Amount (leave blank for now)
-            const amountDiv = document.createElement('div');
-            amountDiv.style.minWidth = '100px'; amountDiv.style.flex = '1';
-            amountDiv.textContent = '';
-            row.appendChild(amountDiv);
-            // FCA/Total/Export/Profit/Other columns (leave blank for now)
-            for (let i = 0; i < 18; i++) {
-                const blankDiv = document.createElement('div');
-                blankDiv.style.minWidth = '120px'; blankDiv.style.flex = '1';
-                blankDiv.textContent = '';
-                row.appendChild(blankDiv);
-            }
-            // Insert after header
-            headerRow.parentNode.insertBefore(row, headerRow.nextSibling);
-        });
-    }
+    document.querySelector('label[for="add_cargo_return"]')?.addEventListener('click', () => {
+        const country = document.getElementById('consignee_country')?.value;
+        fetchProductNamesForCountry(country);
+    });
 });
