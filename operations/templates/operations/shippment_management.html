@@ -395,11 +395,11 @@ function toggleSummaryInfo() {
         </div>
         <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
             <label for="add_cargo_outbound" style="color: #8f7d16; font-weight: bold;">Add cargo to Outbound Route</label>
-            <input type="text" id="add_cargo_outbound" name="add_cargo_outbound" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+            <input type="text" id="add_cargo_outbound" name="add_cargo_outbound" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;" readonly disabled>
         </div>
         <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
             <label for="add_cargo_return" style="color: #8f7d16; font-weight: bold;">Add cargo to Return Route</label>
-            <input type="text" id="add_cargo_return" name="add_cargo_return" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+            <input type="text" id="add_cargo_return" name="add_cargo_return" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;" readonly disabled>
         </div>
         <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
             <label for="exchange_rate" style="color: #8f7d16; font-weight: bold;">Exchange Rate</label>
@@ -410,6 +410,45 @@ function toggleSummaryInfo() {
             <a href="https://www.google.com/search?q=currency+converter" target="_blank" id="search_exchange_rate_btn" class="btn" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; font-weight: bold; width: 100%; max-width: 300px; text-align: center; padding-top: 6px;">Search Exchange Rate</a>
         </div>
     </div>
+        <!-- Product List Header Row -->
+        <!-- Product List imported data from products #2766b8-->
+        <div class="product-list-scroll" style="overflow-x: auto; width: 100%;">
+            <div class="product-list-header" style="display: flex; flex-direction: row; align-items: center; gap: 8px; min-width: 2400px; margin-top: 24px; font-weight: bold; background: #1c1c1d; border-bottom: 2px solid #ff5c00; padding: 8px 0;">
+       <div id="product-header-code" style="min-width: 120px; flex: 1; color: #e7e5d5;">Code</div>
+       <div id="product-header-name" style="min-width: 120px; flex: 1; color: #e7e5d5;">Name</div>
+        <div id="product-header-category" style="min-width: 120px; flex: 1; color: #e7e5d5;">Category</div>
+        <div id="product-header-country" style="min-width: 120px; flex: 1; color: #e7e5d5;">Country ID</div>
+        <div id="product-header-trade-unit" style="min-width: 120px; flex: 1; color: #e7e5d5;">Trade Unit</div>
+        <div id="product-header-packaging" style="min-width: 120px; flex: 1; color: #e7e5d5;">Packaging</div>
+        <div id="product-header-weight" style="min-width: 120px; flex: 1; color: #e7e5d5;">Pack Weight</div>
+        <div id="product-header-units-pack" style="min-width: 120px; flex: 1; color: #e7e5d5;">Units/Pack</div>
+        <div id="product-header-packaging-cost" style="min-width: 120px; flex: 1; color: #e7e5d5;">Packaging Cost</div>
+        <div id="product-header-currency" style="min-width: 120px; flex: 1; color: #e7e5d5;">Currency</div>
+        <div id="product-header-amount" style="min-width: 100px; flex: 1; color: #e7e5d5;">Amount</div>
+        <!-- Product List calculations column fca calculations-->
+        <div id="product-header-total-weight" style="min-width: 120px; flex: 1; color: #b64545;">Total Product Weight</div>
+        <div id="product-header-total-cost" style="min-width: 120px; flex: 1; color: #b64545;">Total Product Cost</div>
+        <div id="product-header-export-taxes" style="min-width: 120px; flex: 1; color: #b64545;">Export Taxes</div>
+        <div id="product-header-exporter-profit" style="min-width: 120px; flex: 1; color: #b64545;">Exporter Profit</div>
+        <div id="product-header-fca-cost" style="min-width: 120px; flex: 1; color: #b64545;">FCA Cost</div>
+        <!-- Product List calculations column cip calculations-->
+        <div id="product-header-fca-usd" style="min-width: 120px; flex: 1; color: #8f7d16;">FCA USD</div>
+        <div id="product-header-load-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">Cargo Load cost</div>
+        <div id="product-header-freight-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">Air Freight cost</div>
+        <div id="product-header-unload-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">Cargo Unload cost</div>
+        <div id="product-header-cip-cost" style="min-width: 120px; flex: 1; color: #8f7d16;">CIP Cost</div>
+        <!-- Product List calculations column dat calculations-->
+        <div id="product-header-import-taxes" style="min-width: 120px; flex: 1; color: #8f7d16;">Import Taxes</div>
+        <div id="product-header-dat-cost-arrival" style="min-width: 120px; flex: 1; color: #8f7d16;">DAT Kg. Cost</div>
+        <div id="product-header-dat-ea-cost-arrival" style="min-width: 120px; flex: 1; color: #8f7d16;">DAT EA. cost</div>
+        <div id="product-header-comparative-price" style="min-width: 120px; flex: 1; color: #8f7d16;">Comparative Price</div>
+        <div id="product-header-suggested-profit-ea" style="min-width: 120px; flex: 1; color: #8f7d16;">Sug. Product Profit (EA)</div>
+        <div id="product-header-profit-ea" style="min-width: 120px; flex: 1; color: #8f7d16;">Product Profit (EA)</div>
+        <div id="product-header-dat-final" style="min-width: 120px; flex: 1; color: #8f7d16;">Product final DAT Price (EA)</div>
+        <div id="product-header-total-dat-final" style="min-width: 120px; flex: 1; color: #8f7d16;">Total Product Cost DAT</div>
+        <div id="product-header-total-dat-profit-" style="min-width: 120px; flex: 1; color: #8f7d16;">Total DAT Profit</div>
+            </div>
+        </div>
 </div>
 
 {% endblock %}
