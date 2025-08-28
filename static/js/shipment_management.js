@@ -641,7 +641,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             showRouteNotFoundModal();
         }
-    // ...existing code...
     }
 
     function showRouteNotFoundModal() {
@@ -771,5 +770,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     ['outbound_cost_weight', 'target_cargo_load', 'return_cost_weight', 'target_cargo_load_return_percentage'].forEach(enforcePercentInput);
 
-    // ...existing code...
+    // Shipper's country click event
+    var outboundLabel = document.querySelector('label[for="add_cargo_outbound"]');
+    if (outboundLabel) {
+        outboundLabel.style.cursor = 'pointer';
+        outboundLabel.addEventListener('click', function() {
+            var countrySelect = document.getElementById('trading_country');
+            var country = countrySelect ? countrySelect.value : null;
+            console.log('Shipper country:', country);
+            // Change product table header color to blue
+            var header = document.querySelector('.product-list-header');
+            if (header) header.style.background = '#2766b8'; // Nice blue
+        });
+    }
+    var returnLabel = document.querySelector('label[for="add_cargo_return"]');
+    if (returnLabel) {
+        returnLabel.style.cursor = 'pointer';
+        returnLabel.addEventListener('click', function() {
+            var countrySelect = document.getElementById('consignee_country');
+            var country = countrySelect ? countrySelect.value : null;
+            console.log('Consignee country:', country);
+            var header = document.querySelector('.product-list-header');
+            if (header) header.style.background = '#b64545'; // Distinct red
+        });
+    }
 });

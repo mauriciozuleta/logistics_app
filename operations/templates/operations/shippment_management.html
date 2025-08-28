@@ -387,7 +387,10 @@ function toggleSummaryInfo() {
 <!-- Close the form tag -->
 </form>
 <div class="shipment-section" id="container-5">
-    <div class="section-title" style="color: #FF5C00;">Products / Goods Selection</div>
+    <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
+        <span>Products / Goods Selection</span>
+        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleProductsInfo()" style="margin-left: 10px;" id="toggle-products-btn" disabled>Toggle</button>
+    </div>
     <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
         <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
             <label for="filter_category" style="color: #8f7d16; font-weight: bold;">Filter by Category</label>
@@ -452,3 +455,15 @@ function toggleSummaryInfo() {
 </div>
 
 {% endblock %}
+<script>
+function toggleProductsInfo() {
+    var content = document.getElementById('products-info-content');
+    if (content) {
+        if (content.style.display === 'none') {
+            content.style.display = '';
+        } else {
+            content.style.display = 'none';
+        }
+    }
+}
+</script>
