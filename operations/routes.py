@@ -762,85 +762,7 @@ def add_shipment(shipment_id=None):
             'turnaround_cost': a.turnaround_cost
         } for a in airports}
 
-    trader_data = {str(t.id): {
-        'code': t.trader_code,
-        'name': t.name,
-        'city': t.city,
-        'country': t.country_id,
-        'airport_iata': t.airport_iata,
-        'export_sales_tax': t.export_sales_tax,
-        'export_profit_pct': t.export_profit_pct,
-        'export_other_taxes': t.export_other_taxes,
-        'import_profit_pct': t.import_profit_pct,
-        'import_other_taxes': t.import_other_taxes,
-        'import_taxes': t.import_taxes,
-        'import_other_cost': t.import_other_cost
-
-
-    } for t in traders}
-
-    def safe_val(val, default=''):
-        if val is None:
-            return default
-        if type(val).__name__ == 'Undefined':
-            return default
-        return val
-
-    route_data = {}
-    for r in routes:
-        from_airport = r.from_airport
-        to_airport = r.to_airport
-
-        distance_display = f"{safe_val(r.total_distance_nm, 0):.1f} NM" if safe_val(r.total_distance_nm, 0) else "N/A"
-        flight_time_display = f"{safe_val(r.total_flight_time_hours, 0):.2f} hrs" if safe_val(r.total_flight_time_hours, 0) else "N/A"
-
-        payload_display = "N/A"
-        if safe_val(r.leg1_max_payload_lbs, 0):
-            payload_kg = safe_val(r.leg1_max_payload_lbs, 0) * 0.453592
-            payload_display = f"{payload_kg:.0f} kg"
-        elif r.aircraft and hasattr(r.aircraft, 'max_payload_kg') and safe_val(r.aircraft.max_payload_kg, 0):
-            payload_display = f"{safe_val(r.aircraft.max_payload_kg, 0)} kg"
-        elif r.aircraft and hasattr(r.aircraft, 'payload_capacity') and safe_val(r.aircraft.payload_capacity, 0):
-            payload_display = f"{safe_val(r.aircraft.payload_capacity, 0)} kg"
-
-        aircraft_suffix = f" ({safe_val(r.aircraft.short_name, '')})" if r.aircraft and safe_val(r.aircraft.short_name, '') else ""
-        summary_text = safe_val(r.route_summary, '') or safe_val(r.route_name, '') or (f"{safe_val(from_airport.iata_code, '')} → {safe_val(to_airport.iata_code, '')}")
-
-        route_data[str(r.id)] = {
-            'fromCity': safe_val(from_airport.city, '') if from_airport else '',
-            'toCity': safe_val(to_airport.city, '') if to_airport else '',
-            'fromAirport': safe_val(from_airport.iata_code, '') if from_airport else '',
-            'toAirport': safe_val(to_airport.iata_code, '') if to_airport else '',
-            'summary': f"{summary_text}{aircraft_suffix}",
-            'aircraft': [safe_val(r.aircraft.short_name, '')] if r.aircraft and safe_val(r.aircraft.short_name, '') else [],
-            'distance': distance_display,
-            'flight_time': flight_time_display,
-            'cost': safe_val(r.total_cost, 0),
-            'payload': payload_display
-        }
-
-    # Ensure all variables are defined and JSON serializable
-    regions_with_branches = regions_with_branches if regions_with_branches is not None else {}
-    route_data = route_data if route_data is not None else {}
-    airport_data = airport_data if airport_data is not None else {}
-    trader_data = trader_data if trader_data is not None else {}
-    products_dicts = products_dicts if products_dicts is not None else []
-
-    return render_template(
-        'operations/add_shipment.html',
-        shipment_to_edit=shipment_to_edit,
-        trader_choices=trader_choices,
-        product_choices=product_choices,
-        route_choices=route_choices,
-        traders=traders,
-        routes=routes,
-        airports=airports,
-        airport_data=airport_data, 
-        trader_data=trader_data,
-        route_data=route_data,
-        products=products_dicts,
-        regions_with_branches=regions_with_branches
-    )
+    # ...existing code...
 
 @operations.route('/view-shipments')
 def view_shipments():
@@ -875,3 +797,15 @@ def delete_shipment(shipment_id):
 def schedule():
     """Renders the schedule calendar page."""
     return render_template('operations/schedule.html')
+
+@operations_api.route('/trader-city-taxes/<int:branch_id>')
+def trader_city_taxes(branch_id):
+    from models import Trader  # Import here to avoid circular import
+    trader = Trader.query.filter_by(id=branch_id).first()
+    if not trader:
+        return jsonify({'error': 'Branch not found'}), 404
+    return jsonify({
+        'exportSalesTax': trader.export_sales_tax or 0,
+        'exportOtherTaxes': trader.export_other_taxes or 0,
+        'exportProfitPct': trader.export_profit_pct or 0
+    })
