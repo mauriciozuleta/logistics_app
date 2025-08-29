@@ -787,21 +787,41 @@ document.addEventListener('DOMContentLoaded', function() {
         row.style.height = '45px';
         row.style.background = '#2a2a2a'; // A slightly different background for footer
 
+        // Find all product rows
+        const dataContainer = document.getElementById('product-table-container');
+        const productRows = dataContainer ? dataContainer.querySelectorAll('.product-list-product-row') : [];
+
         columnStyles.forEach((style, index) => {
             const cellDiv = document.createElement('div');
-            // Apply mirrored styles for perfect alignment
             cellDiv.style.boxSizing = style.boxSizing;
             cellDiv.style.width = style.width;
             cellDiv.style.padding = style.padding;
             cellDiv.style.textAlign = style.textAlign;
             cellDiv.style.borderRight = style.borderRight;
-            cellDiv.style.color = '#FFC107'; // Amber color for totals
+            cellDiv.style.color = '#FFC107';
             cellDiv.style.flexShrink = '0';
 
             if (index === 0) {
                 cellDiv.textContent = 'Totals';
+            } else if (index > 10) { // Columns after 'Amount' (index 10)
+                // Sum all values in this column
+                let sum = 0;
+                productRows.forEach(row => {
+                    const cell = row.children[index];
+                    if (cell) {
+                        let val = cell.textContent.replace(/[^\d\.\-]/g, '');
+                        val = val ? parseFloat(val) : 0;
+                        sum += val;
+                    }
+                });
+                // Format as currency for cost columns, otherwise as number
+                if (columnStyles[index].textAlign === 'right' || columnStyles[index].width.includes('cost') || index === 12) {
+                    cellDiv.textContent = sum ? `$${sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+                } else {
+                    cellDiv.textContent = sum ? sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+                }
             } else {
-                cellDiv.textContent = ''; // Placeholder for future calculations
+                cellDiv.textContent = '';
             }
             row.appendChild(cellDiv);
         });
@@ -921,6 +941,20 @@ document.addEventListener('DOMContentLoaded', function() {
                             const totalCost = packagingCost * amount;
                             totalCostCell.textContent = totalCost ? `$${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
                         }
+                        // Update totals row after every input change
+                        const headerRow = document.querySelector('.product-list-header');
+                        const columnStyles = Array.from(headerRow.querySelectorAll('div[id^="product-header-"]')).map(cell => {
+                            const style = window.getComputedStyle(cell);
+                            return {
+                                width: style.width,
+                                padding: style.padding,
+                                textAlign: style.textAlign,
+                                boxSizing: style.boxSizing,
+                                borderRight: style.borderRight,
+                            };
+                        });
+                        const totalMinWidth = window.getComputedStyle(headerRow).minWidth;
+                        renderTotalsRow(columnStyles, totalMinWidth);
                     });
                 } else {
                     // Add styles to prevent content from breaking the layout (truncation)

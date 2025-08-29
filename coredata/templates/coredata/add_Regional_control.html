@@ -452,7 +452,6 @@
 
                   function setManagerFieldsDisabled(disabled) {
                       if (managerNameInput) managerNameInput.disabled = disabled;
-                      if (regionSelect) regionSelect.disabled = disabled;
                       if (managerOperationalCostInput) managerOperationalCostInput.disabled = disabled;
                   }
 
@@ -544,7 +543,14 @@
                           header.className = 'accordion-header d-flex justify-content-between align-items-center';
                           
                            const headerText = document.createElement('span');
-                          headerText.textContent = `${countryName} (${branches.length} Branches)`;
+                          // Display country code and name in the header
+              // Gather taxes info from the first branch (assuming all branches in a country share the same tax context)
+              let taxesInfo = '';
+              if (branches.length > 0) {
+                const b = branches[0];
+                taxesInfo = ` | Taxes: Revenue ${b.revenue || 'N/A'}, Export ${b.exportSalesTax || 'N/A'}, Import ${b.importTaxes || 'N/A'}, Other ${b.otherTaxes || 'N/A'}`;
+              }
+              headerText.textContent = `${countryCode ? countryCode + ' - ' : ''}${countryName} (${branches.length} Branches)${taxesInfo}`;
 
                           const competitivePricesButton = document.createElement('a');
                           competitivePricesButton.href = `{{ url_for('coredata.competitive_prices') }}?country=${encodeURIComponent(countryName)}`;
