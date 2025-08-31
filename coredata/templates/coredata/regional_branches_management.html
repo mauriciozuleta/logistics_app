@@ -23,83 +23,77 @@
                     <div class="col-md-6" id="manager-info-container"></div>
                   </div>
                   <div class="row mt-3">
-                    <div class="col-md-7 d-flex align-items-end" id="country-dropdown-container"></div>
+                    <div class="col-md-7 d-flex flex-column align-items-start" id="country-form-section">
+                      <label for="country" class="form-label" style="color:#fff;font-weight:500;margin-bottom:4px;">Country</label>
+                      <div class="d-flex align-items-center mb-3">
+                        <select id="country" name="country" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:auto;">
+                          <option value="">Select Country</option>
+                          <!-- Add country options here as needed -->
+                        </select>
+                        <button type="button" class="btn btn-info btn-sm" id="add-country-info-btn" style="margin-left:10px;background:none;border:2px solid #2196f3;color:#2196f3;font-weight:bold;">Add country Information</button>
+                        <button type="button" class="btn btn-success btn-sm" id="add-country-branch-btn" style="margin-left:10px;background:none;border:2px solid #FF5C00;color:#FF5C00;font-weight:bold;">Add country Branch</button>
+                      </div>
+                      <div class="mt-3" id="country-extra-fields" style="display:flex;gap:12px;flex-wrap:nowrap;">
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                          <label for="export-sales-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Export Sales Tax</label>
+                          <input type="text" class="form-control mb-2" id="export-sales-tax" placeholder="Export Sales Tax" style="width:150px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                          <label for="export-other-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Export Other Tax</label>
+                          <input type="text" class="form-control mb-2" id="export-other-tax" placeholder="Export Other Tax" style="width:150px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                          <label for="country-profit" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Profit (%)</label>
+                          <input type="text" class="form-control mb-2" id="country-profit" placeholder="Country Profit (%)" style="width:150px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                          <label for="country-revenue-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Revenue Tax</label>
+                          <input type="text" class="form-control mb-2" id="country-revenue-tax" placeholder="Country Revenue Tax" style="width:150px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                          <label for="import-taxes" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Import Taxes</label>
+                          <input type="text" class="form-control mb-2" id="import-taxes" placeholder="Import Taxes" style="width:150px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                          <label for="other-taxes" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Other Taxes</label>
+                          <input type="text" class="form-control mb-2" id="other-taxes" placeholder="Other Taxes" style="width:150px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                          <label for="country-import-profit" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Import Profit (%)</label>
+                          <input type="text" class="form-control mb-2" id="country-import-profit" placeholder="Country Import Profit (%)" style="width:150px;">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- New container for additional fields -->
+                  <div class="mt-4 p-3" style="background-color:#23272e;border:1px solid #FF5C00;border-radius:8px;">
+                    <div style="display:flex;gap:12px;flex-wrap:nowrap;">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="freight-type" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Type of Freight</label>
+                        <input type="text" class="form-control mb-2" id="freight-type" placeholder="Type of Freight" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="terminal" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Terminal</label>
+                        <input type="text" class="form-control mb-2" id="terminal" placeholder="Terminal" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="port-name" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Port Name</label>
+                        <input type="text" class="form-control mb-2" id="port-name" placeholder="Port Name" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="city" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">City</label>
+                        <input type="text" class="form-control mb-2" id="city" placeholder="City" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="year-operation-cost" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Year Operation Cost</label>
+                        <input type="text" class="form-control mb-2" id="year-operation-cost" placeholder="Year Operation Cost" style="width:150px;">
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </form>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              const regionDropdown = document.getElementById('region');
-              const managerInfoContainer = document.getElementById('manager-info-container');
-              const countryDropdownContainer = document.getElementById('country-dropdown-container');
-
-              regionDropdown.addEventListener('change', function() {
-                const selectedRegion = regionDropdown.value;
-                managerInfoContainer.innerHTML = '';
-                countryDropdownContainer.innerHTML = '';
-                if (!selectedRegion) return;
-                fetch(`/coredata/api/regional_manager_by_region?region=${encodeURIComponent(selectedRegion)}`)
-                  .then(res => res.json())
-                  .then(data => {
-                    if (data && data.manager_name) {
-                      managerInfoContainer.innerHTML = `<div style='margin-bottom:8px;'><span style='color:#4caf50;font-weight:bold;'>Regional manager exists</span></div><span style='color:#4caf50;font-weight:bold;'>Manager: ${data.manager_name}</span><br><button class='btn btn-primary btn-sm mt-2' id='edit-manager-btn'>Edit</button>`;
-                      // Fetch countries for the region
-                      fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(selectedRegion)}`)
-                        .then(res => res.json())
-                        .then(countries => {
-                          if (countries && countries.length > 0) {
-                            let options = countries.map(c => `<option value='${c.code}'>${c.name}</option>`).join('');
-                            countryDropdownContainer.innerHTML = `
-                              <div class='d-flex flex-column'>
-                                <label for='country' style='color:#fff;font-weight:500;margin-bottom:4px;'>Country</label>
-                                <div class='d-flex align-items-center'>
-                                  <select id='country' name='country' class='form-control' style='background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:auto;'>${options}</select>
-                                  <button type='button' class='btn btn-info btn-sm' id='add-country-info-btn' style='margin-left:10px;'>Add country Information</button>
-                                </div>
-                              </div>
-                            `;
-                          }
-                        });
-                    } else {
-                      managerInfoContainer.innerHTML = `
-                        <div style='margin-bottom:8px;'><span style='color:#FF5C00;font-weight:bold;'>Regional manager not created</span></div>
-                        <input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:300px;display:inline-block;margin-right:10px;' placeholder='Enter manager name'>
-                        <button type='button' class='btn btn-success btn-sm' id='save-manager-btn' disabled>Continue to Branch Creation</button>
-                        <button class='btn btn-primary btn-sm' id='edit-manager-btn'>Edit</button>
-                      `;
-                      // Enable/disable button based on input
-                      setTimeout(function() {
-                        const input = document.getElementById('new-manager-name');
-                        const saveBtn = document.getElementById('save-manager-btn');
-                        input.addEventListener('input', function() {
-                          saveBtn.disabled = input.value.trim() === '';
-                        });
-                        // On click, show country dropdown
-                        saveBtn.addEventListener('click', function() {
-                          fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(selectedRegion)}`)
-                            .then(res => res.json())
-                            .then(countries => {
-                              if (countries && countries.length > 0) {
-                                let options = countries.map(c => `<option value='${c.code}'>${c.name}</option>`).join('');
-                                countryDropdownContainer.innerHTML = `
-                                  <div class='d-flex flex-column'>
-                                    <label for='country' style='color:#fff;font-weight:500;margin-bottom:4px;'>Country</label>
-                                    <div class='d-flex align-items-center'>
-                                      <select id='country' name='country' class='form-control' style='background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:auto;'>${options}</select>
-                                      <button type='button' class='btn btn-info btn-sm' id='add-country-info-btn' style='margin-left:10px;'>Add country Information</button>
-                                    </div>
-                                  </div>
-                                `;
-                              }
-                            });
-                        });
-                      }, 0);
-                    }
-                  });
-              });
-            });
           </script>
         </div>
       </div>

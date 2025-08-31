@@ -11,6 +11,7 @@ class TraderForm(FlaskForm):
     country_id = SelectField('Country', coerce=str, validators=[Optional()])
     city = StringField('City', validators=[Optional()])
     name = StringField('Trader Name', validators=[Optional()])
+    region = SelectField('Region', validators=[Optional()])
     revenue_taxes = FloatField('Revenue Taxes (%)', validators=[Optional()])
     operational_cost_year = FloatField('Operational Cost/Year (USD)', validators=[Optional()])
 
