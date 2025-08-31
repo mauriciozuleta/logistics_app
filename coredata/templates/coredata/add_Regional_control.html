@@ -198,6 +198,34 @@
             </div>
             <script>
               document.addEventListener('DOMContentLoaded', function() {
+                // Prefill branch form fields when edit button is clicked
+                function prefillBranchForm(branch) {
+                  document.getElementById('branch_country_id').value = branch.country_id || '';
+                  document.getElementById('branch_revenue_taxes').value = branch.revenue_taxes ?? '';
+                  document.getElementById('branch_export_sales_tax').value = branch.export_sales_tax ?? '';
+                  document.getElementById('branch_import_taxes').value = branch.import_taxes ?? '';
+                  document.getElementById('branch_other_taxes').value = branch.other_taxes ?? '';
+                  document.getElementById('branch_city').value = branch.city || '';
+                  document.getElementById('iata_code_input').value = branch.airport_iata || '';
+                  document.getElementById('branch_op_cost').value = branch.operational_cost_year ?? '';
+                  document.getElementById('branch_other_costs').value = branch.other_costs ?? '';
+                  document.getElementById('branch_additional_info').value = branch.additional_info || '';
+                  // Extra fields
+                  if (document.getElementById('branch_export_profit_pct')) document.getElementById('branch_export_profit_pct').value = branch.export_profit_pct ?? '';
+                  if (document.getElementById('branch_export_other_taxes')) document.getElementById('branch_export_other_taxes').value = branch.export_other_taxes ?? '';
+                  if (document.getElementById('branch_export_other_cost')) document.getElementById('branch_export_other_cost').value = branch.export_other_cost ?? '';
+                  if (document.getElementById('branch_import_profit_pct')) document.getElementById('branch_import_profit_pct').value = branch.import_profit_pct ?? '';
+                  if (document.getElementById('branch_import_other_taxes')) document.getElementById('branch_import_other_taxes').value = branch.import_other_taxes ?? '';
+                  if (document.getElementById('branch_import_other_cost')) document.getElementById('branch_import_other_cost').value = branch.import_other_cost ?? '';
+                }
+                // Example: attach to edit buttons (update selector as needed)
+                document.querySelectorAll('.edit-branch-btn').forEach(function(btn) {
+                  btn.addEventListener('click', function() {
+                    const branch = JSON.parse(this.getAttribute('data-branch'));
+                    prefillBranchForm(branch);
+                    document.getElementById('branch-info-container').style.display = 'block';
+                  });
+                });
                   // --- State ---
                   let branchesByCountry = {};
                   let isExistingManager = false; // Flag to track if we're editing an existing manager
@@ -581,48 +609,134 @@
                   }
 
                   branchDisplayContainer.addEventListener('click', async function(e) {
-                      const header = e.target.closest('.accordion-header');
-                      if (header) {
-                          header.classList.toggle('active');
-                          const body = header.nextElementSibling;
-                          body.style.display = body.style.display === 'block' ? 'none' : 'block';
-                      }
-                      if (e.target.closest('.delete-branch-btn')) {
-                          const branchId = e.target.dataset.branchId;
-                          const country = e.target.dataset.country;
-                          const index = parseInt(e.target.dataset.index, 10);
+            const header = e.target.closest('.accordion-header');
+            if (header) {
+              header.classList.toggle('active');
+              const body = header.nextElementSibling;
+              body.style.display = body.style.display === 'block' ? 'none' : 'block';
+            }
 
-                          if (!branchId) {
-                              alert('Cannot delete a branch without an ID.');
-                              return;
-                          }
+            // Edit branch logic
+            const editBtn = e.target.closest('.edit-branch-btn');
+            if (editBtn) {
+              const branchId = editBtn.dataset.branchId;
+              let branchToEdit = null;
+              let countryKey = null;
+              let branchIndex = null;
+              for (const country in branchesByCountry) {
+                const idx = branchesByCountry[country].findIndex(b => b.id == branchId);
+                if (idx !== -1) {
+                  branchToEdit = branchesByCountry[country][idx];
+                  countryKey = country;
+                  branchIndex = idx;
+                  break;
+                }
+              }
+              if (!branchToEdit) {
+                alert('Branch data not found.');
+                return;
+              }
+              console.log('Editing branch:', branchToEdit);
 
-                          if (confirm('Are you sure you want to permanently delete this branch?')) {
-                              try {
-                                  const response = await fetch(`/coredata/api/branch/${branchId}`, {
-                                      method: 'DELETE',
-                                      headers: {
-                                          'X-CSRFToken': '{{ manager_form.csrf_token._value() }}'
-                                      }
-                                  });
-                                  const result = await response.json();
-                                  if (response.ok && result.success) {
-                                      // Remove from local state and re-render
-                                      branchesByCountry[country].splice(index, 1);
-                                      if (branchesByCountry[country].length === 0) {
-                                          delete branchesByCountry[country];
-                                      }
-                                      renderAccordion();
-                                  } else {
-                                      alert(`Error deleting branch: ${result.error || 'Unknown error'}`);
-                                  }
-                              } catch (error) {
-                                  console.error('Fetch error:', error);
-                                  alert('A network error occurred while deleting the branch.');
-                              }
-                          }
+              // Show the branch form and preload data
+              branchDetailsSections.style.display = 'block';
+              branchInfoContainer.style.display = 'block';
+
+
+              // Robustly preload country and all branch info fields
+
+              function setCountryAndFields(retries = 20) {
+                if (countrySelect && branchToEdit.countryCode) {
+                  let found = false;
+                  for (let opt of countrySelect.options) {
+                    if (opt.value === branchToEdit.countryCode) {
+                      countrySelect.value = opt.value;
+                      found = true;
+                      break;
+                    }
+                  }
+                  if (!found && branchToEdit.countryName) {
+                    for (let opt of countrySelect.options) {
+                      if (opt.text === branchToEdit.countryName) {
+                        countrySelect.value = opt.value;
+                        found = true;
+                        break;
                       }
+                    }
+                  }
+                  if (!found && retries > 0) {
+                    setTimeout(() => setCountryAndFields(retries - 1), 100);
+                    return;
+                  }
+                } else if (retries > 0) {
+                  setTimeout(() => setCountryAndFields(retries - 1), 100);
+                  return;
+                }
+                cityInput.value = branchToEdit.city || '';
+                document.getElementById('branch_revenue_taxes').value = branchToEdit.revenue || '';
+                document.getElementById('branch_op_cost').value = branchToEdit.opCost || '';
+                document.getElementById('branch_other_costs').value = branchToEdit.otherCosts || '';
+                document.getElementById('branch_export_sales_tax').value = branchToEdit.exportSalesTax || '';
+                document.getElementById('branch_import_taxes').value = branchToEdit.importTaxes || '';
+                document.getElementById('branch_other_taxes').value = branchToEdit.otherTaxes || '';
+                document.getElementById('branch_additional_info').value = branchToEdit.additionalInfo || '';
+                if (document.getElementById('branch_export_profit_pct')) {
+                  document.getElementById('branch_export_profit_pct').value = branchToEdit.exportProfitPct || '';
+                }
+                if (document.getElementById('iata_code_input')) {
+                  document.getElementById('iata_code_input').value = branchToEdit.airport || '';
+                }
+                if (document.getElementById('avail_airports')) {
+                  document.getElementById('avail_airports').value = branchToEdit.airport || '';
+                }
+              }
+              setCountryAndFields();
+
+              branchInfoContainer.dataset.editing = 'true';
+              branchInfoContainer.dataset.branchId = branchId;
+              branchInfoContainer.dataset.countryKey = countryKey;
+              branchInfoContainer.dataset.branchIndex = branchIndex;
+
+              saveBranchBtn.textContent = 'Update Branch';
+              return;
+            }
+
+            // Delete branch logic
+            if (e.target.closest('.delete-branch-btn')) {
+              const branchId = e.target.dataset.branchId;
+              const country = e.target.dataset.country;
+              const index = parseInt(e.target.dataset.index, 10);
+
+              if (!branchId) {
+                alert('Cannot delete a branch without an ID.');
+                return;
+              }
+
+              if (confirm('Are you sure you want to permanently delete this branch?')) {
+                try {
+                  const response = await fetch(`/coredata/api/branch/${branchId}`, {
+                    method: 'DELETE',
+                    headers: {
+                      'X-CSRFToken': '{{ manager_form.csrf_token._value() }}'
+                    }
                   });
+                  const result = await response.json();
+                  if (response.ok && result.success) {
+                    branchesByCountry[country].splice(index, 1);
+                    if (branchesByCountry[country].length === 0) {
+                      delete branchesByCountry[country];
+                    }
+                    renderAccordion();
+                  } else {
+                    alert(`Error deleting branch: ${result.error || 'Unknown error'}`);
+                  }
+                } catch (error) {
+                  console.error('Fetch error:', error);
+                  alert('A network error occurred while deleting the branch.');
+                }
+              }
+            }
+          });
 
                   addBranchBtn.addEventListener('click', () => {
                       // This button should be disabled if conditions aren't met,

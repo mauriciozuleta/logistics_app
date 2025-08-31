@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid" style="background-color: #181c22; min-height: 100vh; padding: 2rem;">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+      <div class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px;">
+        <div class="card-body" style="color: #fff;">
+          <h2 class="mb-4" style="color: #2196f3; text-align: center;">Regional Trade Management</h2>
+          <form>
+            <div class="mb-4">
+              <div id="regional-info-card" class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 1rem;">
+                <div class="card-body">
+                  <div class="row align-items-center">
+                    <div class="col-md-4">
+                      <label for="region" class="form-label" style="color: #fff; font-weight: 500;">Region</label>
+                      <select id="region" name="region" class="form-control" style="background-color: #23272e; color: #fff; border: 1px solid #2196f3;">
+                        <option value="">Select Region</option>
+                        {% for region in region_choices %}
+                          <option value="{{ region }}">{{ region }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-6" id="manager-info-container"></div>
+                  </div>
+                  <div class="row mt-3">
+                    <div class="col-md-7 d-flex align-items-end" id="country-dropdown-container"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const regionDropdown = document.getElementById('region');
+              const managerInfoContainer = document.getElementById('manager-info-container');
+              const countryDropdownContainer = document.getElementById('country-dropdown-container');
+
+              regionDropdown.addEventListener('change', function() {
+                const selectedRegion = regionDropdown.value;
+                managerInfoContainer.innerHTML = '';
+                countryDropdownContainer.innerHTML = '';
+                if (!selectedRegion) return;
+                fetch(`/coredata/api/regional_manager_by_region?region=${encodeURIComponent(selectedRegion)}`)
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data && data.manager_name) {
+                      managerInfoContainer.innerHTML = `<div style='margin-bottom:8px;'><span style='color:#4caf50;font-weight:bold;'>Regional manager exists</span></div><span style='color:#4caf50;font-weight:bold;'>Manager: ${data.manager_name}</span><br><button class='btn btn-primary btn-sm mt-2' id='edit-manager-btn'>Edit</button>`;
+                      // Fetch countries for the region
+                      fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(selectedRegion)}`)
+                        .then(res => res.json())
+                        .then(countries => {
+                          if (countries && countries.length > 0) {
+                            let options = countries.map(c => `<option value='${c.code}'>${c.name}</option>`).join('');
+                            countryDropdownContainer.innerHTML = `
+                              <div class='d-flex flex-column'>
+                                <label for='country' style='color:#fff;font-weight:500;margin-bottom:4px;'>Country</label>
+                                <div class='d-flex align-items-center'>
+                                  <select id='country' name='country' class='form-control' style='background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:auto;'>${options}</select>
+                                  <button type='button' class='btn btn-info btn-sm' id='add-country-info-btn' style='margin-left:10px;'>Add country Information</button>
+                                </div>
+                              </div>
+                            `;
+                          }
+                        });
+                    } else {
+                      managerInfoContainer.innerHTML = `
+                        <div style='margin-bottom:8px;'><span style='color:#FF5C00;font-weight:bold;'>Regional manager not created</span></div>
+                        <input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:300px;display:inline-block;margin-right:10px;' placeholder='Enter manager name'>
+                        <button type='button' class='btn btn-success btn-sm' id='save-manager-btn' disabled>Continue to Branch Creation</button>
+                        <button class='btn btn-primary btn-sm' id='edit-manager-btn'>Edit</button>
+                      `;
+                      // Enable/disable button based on input
+                      setTimeout(function() {
+                        const input = document.getElementById('new-manager-name');
+                        const saveBtn = document.getElementById('save-manager-btn');
+                        input.addEventListener('input', function() {
+                          saveBtn.disabled = input.value.trim() === '';
+                        });
+                        // On click, show country dropdown
+                        saveBtn.addEventListener('click', function() {
+                          fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(selectedRegion)}`)
+                            .then(res => res.json())
+                            .then(countries => {
+                              if (countries && countries.length > 0) {
+                                let options = countries.map(c => `<option value='${c.code}'>${c.name}</option>`).join('');
+                                countryDropdownContainer.innerHTML = `
+                                  <div class='d-flex flex-column'>
+                                    <label for='country' style='color:#fff;font-weight:500;margin-bottom:4px;'>Country</label>
+                                    <div class='d-flex align-items-center'>
+                                      <select id='country' name='country' class='form-control' style='background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:auto;'>${options}</select>
+                                      <button type='button' class='btn btn-info btn-sm' id='add-country-info-btn' style='margin-left:10px;'>Add country Information</button>
+                                    </div>
+                                  </div>
+                                `;
+                              }
+                            });
+                        });
+                      }, 0);
+                    }
+                  });
+              });
+            });
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

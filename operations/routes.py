@@ -32,9 +32,26 @@ def shipment_management():
     region_list = regions
     country_list = [{"code": c.country_code, "name": c.country_name, "region": c.region} for c in countries]
     branch_list = [{
-        "id": b.id, "name": b.name or b.city, "city": b.city, "country_id": b.country_id,
-        "regional_manager_id": b.regional_manager_id, "airport_iata": b.airport_iata,
-        "regional_manager_name": b.regional_manager.name if b.regional_manager else ''
+        "id": b.id,
+        "name": b.name or b.city,
+        "city": b.city,
+        "country_id": b.country_id,
+        "regional_manager_id": b.regional_manager_id,
+        "airport_iata": b.airport_iata,
+        "regional_manager_name": b.regional_manager.name if b.regional_manager else '',
+        "revenue_taxes": getattr(b, "revenue_taxes", None),
+        "operational_cost_year": getattr(b, "operational_cost_year", None),
+        "export_profit_pct": getattr(b, "export_profit_pct", None),
+        "export_sales_tax": getattr(b, "export_sales_tax", None),
+        "export_other_taxes": getattr(b, "export_other_taxes", None),
+        "export_other_cost": getattr(b, "export_other_cost", None),
+        "import_profit_pct": getattr(b, "import_profit_pct", None),
+        "import_taxes": getattr(b, "import_taxes", None),
+        "import_other_taxes": getattr(b, "import_other_taxes", None),
+        "import_other_cost": getattr(b, "import_other_cost", None),
+        "other_taxes": getattr(b, "other_taxes", None),
+        "other_costs": getattr(b, "other_costs", None),
+        "additional_info": getattr(b, "additional_info", None)
     } for b in branches]
     airport_list = [{"id": a.id, "name": a.name, "iata_code": a.iata_code, "city": a.city, "country_id": a.country_id} for a in airports]
 

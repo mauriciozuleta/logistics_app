@@ -1,13 +1,23 @@
+
+# Run seeding if executed directly
+if __name__ == "__main__":
+    seed_all()
+import csv
 import csv
 import os
+import sys
 from datetime import datetime
 
-from app import app
+# Ensure project root is in sys.path for imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from app import create_app
+app = create_app()
 from extensions import db
 from models import Airport, Country, Aircraft, Trader, Route, Product, Shipment
 
 def seed_table_from_csv(model, csv_file, field_map=None, skip_duplicates_field=None, required_csv_fields=None):
     # Add a check to ensure the seed file exists before trying to open it.
+    print(f"Seeding table: {model.__tablename__} from {csv_file}")
     if not os.path.exists(csv_file):
         print(f"⚠️  Warning: Seed file not found for '{model.__tablename__}', skipping. Expected at: {os.path.basename(csv_file)}")
         return
@@ -17,7 +27,9 @@ def seed_table_from_csv(model, csv_file, field_map=None, skip_duplicates_field=N
         records = []
         seen = set()
         skipped = []
+        row_count = 0
         for i, row in enumerate(reader, start=2):
+            row_count += 1
             # New: Check for required fields before processing
             if required_csv_fields:
                 missing = [f for f in required_csv_fields if not row.get(f)]
@@ -55,10 +67,14 @@ def seed_table_from_csv(model, csv_file, field_map=None, skip_duplicates_field=N
                         print(f"⚠️  Warning: Could not parse date '{v}' for column '{k}' in {os.path.basename(csv_file)}. Setting to None.")
                         data[k] = None
             records.append(model(**data))
-        db.session.query(model).delete(synchronize_session=False)
-        db.session.bulk_save_objects(records)
-        db.session.commit()
-        print(f"Inserted {len(records)} records into {model.__tablename__} from {os.path.basename(csv_file)}.")
+        print(f"Read {row_count} rows from {csv_file}. Prepared {len(records)} records for {model.__tablename__}.")
+        try:
+            db.session.query(model).delete(synchronize_session=False)
+            db.session.bulk_save_objects(records)
+            db.session.commit()
+            print(f"Inserted {len(records)} records into {model.__tablename__} from {os.path.basename(csv_file)}.")
+        except Exception as e:
+            print(f"❌ Error inserting records into {model.__tablename__}: {e}")
         if skipped:
             print(f"Skipped {len(skipped)} rows in {csv_file}:")
             for line, reason in skipped:
@@ -80,7 +96,7 @@ def seed_all():
             required_csv_fields=['CountryCode', 'Country', 'Code', 'Region']
         )
         seed_table_from_csv(Aircraft, os.path.join(base_dir, 'aircraft_export.csv'))
-        seed_table_from_csv(Trader, os.path.join(base_dir, 'traders_export.csv'))
+    # seed_table_from_csv(Trader, os.path.join(base_dir, 'traders_export.csv'))  # Disabled: traders CSV is outdated
         # The user will create routes manually, so we skip seeding this table.
         # seed_table_from_csv(Route, os.path.join(base_dir, 'routes_export.csv'))
         seed_table_from_csv(Product, os.path.join(base_dir, 'products_export.csv'))
