@@ -91,6 +91,7 @@
                       </div>
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
                         <label for="terminal" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Terminal</label>
+                        <!-- JS moved to bottom of page for safety -->
                         <input type="text" class="form-control mb-2" id="terminal" placeholder="Terminal" style="width:150px;">
                       </div>
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
@@ -123,6 +124,31 @@
             </div>
           </form>
           <script>
+// --- IATA lookup for port name and city ---
+document.addEventListener('DOMContentLoaded', function() {
+  var iataInput = document.getElementById('terminal'); // Use terminal as IATA input
+  var portNameInput = document.getElementById('port-name');
+  var cityInput = document.getElementById('city');
+  var countrySelect = document.getElementById('country');
+  if (iataInput && portNameInput && cityInput && countrySelect) {
+    iataInput.addEventListener('blur', async function() {
+      const iataCode = iataInput.value.trim().toUpperCase();
+      if (!iataCode || iataCode.length !== 3) return;
+      const countryCode = countrySelect.value;
+      try {
+        const response = await fetch(`/coredata/api/find_airports_for_city?iata=${encodeURIComponent(iataCode)}&country_code=${encodeURIComponent(countryCode)}`);
+        const airports = await response.json();
+        if (airports.length > 0) {
+          const airport = airports[0];
+          portNameInput.value = airport.name || '';
+          cityInput.value = airport.city || '';
+        }
+      } catch (error) {
+        console.error('Error fetching airport by IATA:', error);
+      }
+    });
+  }
+});
             document.getElementById('save-branch-btn').addEventListener('click', function() {
               const payload = {
                 region: document.getElementById('region').value,
@@ -155,6 +181,18 @@
               });
             });
             document.addEventListener('DOMContentLoaded', function() {
+              // Change font color of label as type of return selection changes
+              var typeOfReturnSelect = document.getElementById('return-type');
+              var typeOfReturnLabel = document.querySelector('label[for="return-type"]');
+              if (typeOfReturnSelect && typeOfReturnLabel) {
+                typeOfReturnSelect.addEventListener('change', function() {
+                  if (typeOfReturnSelect.value) {
+                    typeOfReturnLabel.style.color = '#4caf50'; // green
+                  } else {
+                    typeOfReturnLabel.style.color = '#fff';
+                  }
+                });
+              }
               // Helper to show/hide country warning
               function showCountryWarning(msg) {
                 const warningDiv = document.getElementById('country-warning');
@@ -258,6 +296,18 @@
                   } else {
                     hideCountryWarning();
                   }
+
+                  // Check required fields for warning
+                  const profit = document.getElementById('country-profit').value.trim();
+                  const revenueTax = document.getElementById('country-revenue-tax').value.trim();
+                  const importTaxes = document.getElementById('import-taxes').value.trim();
+                  if (!profit || !revenueTax || !importTaxes) {
+                    showCountryWarning('Please enter Country Profit, Country Revenue Tax, and Import Taxes before adding a branch.');
+                    return;
+                  } else {
+                    hideCountryWarning();
+                  }
+
                   // Unhide branch info section
                   if (branchInfoContainer) {
                     const wrapper = Array.from(branchInfoContainer.children).find(child =>
@@ -504,4 +554,31 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var freightType = document.getElementById('freight-type');
+  var terminalLabel = document.querySelector('label[for="terminal"]');
+  if (freightType && terminalLabel) {
+    freightType.addEventListener('change', function() {
+      switch (freightType.value) {
+        case 'Air':
+          terminalLabel.textContent = 'Enter IATA code';
+          terminalLabel.style.color = '#4caf50'; // green
+          break;
+        case 'Sea':
+          terminalLabel.textContent = 'Enter Port Code';
+          terminalLabel.style.color = '#4caf50'; // green
+          break;
+        case 'Ground':
+          terminalLabel.textContent = 'Enter terminal code';
+          terminalLabel.style.color = '#4caf50'; // green
+          break;
+        default:
+          terminalLabel.textContent = 'Terminal';
+          terminalLabel.style.color = '#fff';
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

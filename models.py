@@ -94,7 +94,8 @@ class Trader(BaseModel):
     name = db.Column(db.String(128), nullable=True)  # Port Name
     type_of_freight = db.Column(db.String(64), nullable=True)
     airport_iata = db.Column(db.String(3), nullable=True)
-    terminal = db.Column(db.String(64), nullable=True)  # Added terminal field
+    ground_terminal_code = db.Column(db.String(64), nullable=True)  # Renamed from terminal
+    port_code = db.Column(db.String(64), nullable=True)  # New field
 
     # Manager/Branch distinction
     is_manager = db.Column(db.Boolean, default=False)  # Added field for manager/branch distinction
