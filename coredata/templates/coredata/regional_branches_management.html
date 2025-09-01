@@ -7,6 +7,18 @@
         <div class="card-body" style="color: #fff;">
           <h2 class="mb-4" style="color: #2196f3; text-align: center;">Regional Trade Management</h2>
           <form>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const form = document.querySelector('form');
+              if (form) {
+                form.addEventListener('keydown', function(e) {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                });
+              }
+            });
+          </script>
             <div class="mb-4">
               <div id="regional-info-card" class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 1rem;">
                 <div class="card-body">
@@ -32,7 +44,7 @@
                     </div>
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
                       <label for="country" class="form-label" style="color:#fff;font-weight:500;margin-bottom:0;">Country</label>
-                      <select id="country" name="country" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:250px;" disabled>
+                        <select id="country" name="country" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:250px;">
                         <option value="">Select Country</option>
                         <!-- Add country options here as needed -->
                       </select>
@@ -162,6 +174,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 other_taxes: document.getElementById('other-taxes').value,
                 country_import_profit: document.getElementById('country-import-profit').value,
                 type_of_freight: document.getElementById('freight-type').value,
+                ground_terminal_code: document.getElementById('terminal').value,
+                port_code: document.getElementById('port-code') ? document.getElementById('port-code').value : '',
                 port_name: document.getElementById('port-name').value,
                 city: document.getElementById('city').value,
                 year_operation_cost: document.getElementById('year-operation-cost').value

@@ -1,48 +1,41 @@
+
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
 from extensions import db
-from models import Product, Country, Aircraft, Airport, Trader
+from models import Product, Country, Aircraft, Airport, Trader, CompetitivePrice
 from sqlalchemy.orm import joinedload
-from models import CompetitivePrice
 from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
+
+def _generate_next_code(model, field_name, prefix):
+    """Generates the next sequential code for a given model and prefix."""
+    prefix_len = len(prefix)
+    field = getattr(model, field_name)
+    
+    last_item = model.query.filter(field.like(f'{prefix}%')).order_by(field.desc()).first()
+    last_code = getattr(last_item, field_name) if last_item else None
+    
+    if last_code and last_code[prefix_len:].isdigit():
+        next_num = int(last_code[prefix_len:]) + 1
+    else:
+        next_num = 1
+        
+    padding = 2 if prefix == "ACFT" else 3
+    return f"{prefix}{next_num:0{padding}d}"
 # ...existing code...
 
-@coredata_bp.route('/coredata/save_branch', methods=['POST'])
-def save_branch():
-    data = request.json
-    try:
-        trader = Trader(
-            region=data.get('region'),
-            manager_name=data.get('manager_name'),
-            country_id=data.get('country_id'),
-            export_sales_tax=data.get('export_sales_tax'),
-            export_other_taxes=data.get('export_other_tax'),
-            export_profit_pct=data.get('country_profit'),
-            revenue_taxes=data.get('country_revenue_tax'),
-            import_taxes=data.get('import_taxes'),
-            other_taxes=data.get('other_taxes'),
-            import_profit_pct=data.get('country_import_profit'),
-            type_of_freight=data.get('type_of_freight'),
-            name=data.get('port_name'),
-            city=data.get('city'),
-            operational_cost_year=data.get('year_operation_cost')
-        )
-        db.session.add(trader)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Branch saved'})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
-from extensions import db
-from models import Product, Country, Aircraft, Airport, Trader
-from sqlalchemy.orm import joinedload
-from models import CompetitivePrice
-from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
-
-coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+# This route was lost due to file duplication. Adding it back as it's being called by the frontend.
+@coredata_bp.route('/api/country_branch_info')
+def country_branch_info():
+    country_code = request.args.get('country_code')
+    # Example logic: check if a branch exists for this country
+    exists = False
+    # Only check for non-manager traders (branches)
+    branch = Trader.query.filter_by(country_id=country_code, is_manager=False).first()
+    if branch:
+        exists = True
+    return jsonify({'exists': exists})
 
 # ...existing code...
 
@@ -65,6 +58,50 @@ def regional_management():
     region_choices = [r[0] for r in regions if r[0]]
     return render_template('coredata/add_Regional_control.html', branch_form=branch_form, region_choices=region_choices)
 
+# This route handles the save_branch functionality for the regional branches management page
+@coredata_bp.route('/save_branch', methods=['POST'])
+def save_branch():
+    data = request.get_json()
+    print("Received data:", data)  # Debug print to see what's being received
+    
+    try:
+        # Helper function to convert values to float or None if empty/invalid
+        def to_float_or_none(value):
+            if value is None or value == '':
+                return None
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return None
+        
+        # Create trader/branch directly from the data sent by frontend
+        trader = Trader(
+            region=data.get('region'),
+            manager_name=data.get('manager_name'),
+            country_id=data.get('country_id'),
+            export_sales_tax=to_float_or_none(data.get('export_sales_tax')),
+            export_other_taxes=to_float_or_none(data.get('export_other_tax')),
+            export_profit_pct=to_float_or_none(data.get('country_profit')),
+            revenue_taxes=to_float_or_none(data.get('country_revenue_tax')),
+            import_taxes=to_float_or_none(data.get('import_taxes')),
+            other_taxes=to_float_or_none(data.get('other_taxes')),
+            import_profit_pct=to_float_or_none(data.get('country_import_profit')),
+            type_of_freight=data.get('type_of_freight'),
+            ground_terminal_code=data.get('ground_terminal_code'),
+            port_code=data.get('port_code'),
+            name=data.get('port_name'),
+            city=data.get('city'),
+            operational_cost_year=to_float_or_none(data.get('year_operation_cost')),
+            trader_code=_generate_next_code(Trader, 'trader_code', 'BR')
+        )
+        db.session.add(trader)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Branch saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# This route handles the save_branch functionality for the add_Regional_control page
 @coredata_bp.route('/api/save_branch', methods=['POST'])
 def api_save_branch():
     data = request.get_json()
@@ -75,6 +112,15 @@ def api_save_branch():
         return jsonify({'success': False, 'error': 'Missing manager or branch data'}), 400
 
     try:
+        # Helper function to convert values to float or None if empty/invalid
+        def to_float_or_none(value):
+            if value is None or value == '':
+                return None
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return None
+                
         # Find or create the manager (Trader with is_manager=True)
         manager = Trader.query.filter_by(region=manager_data['region'], is_manager=True).first()
         if not manager:
@@ -84,11 +130,11 @@ def api_save_branch():
                 is_manager=True,
                 manager_name=manager_data['manager_name'],
                 region=manager_data['region'],
-                operational_cost_year=manager_data.get('operational_cost_year')
+                operational_cost_year=to_float_or_none(manager_data.get('operational_cost_year'))
             )
             db.session.add(manager)
         else:
-            manager.operational_cost_year = manager_data.get('operational_cost_year')
+            manager.operational_cost_year = to_float_or_none(manager_data.get('operational_cost_year'))
 
         # Create the new branch (Trader with is_manager=False)
         new_branch = Trader(
@@ -98,19 +144,17 @@ def api_save_branch():
             country_id=branch_data.get('countryCode'),
             city=branch_data.get('city'),
             airport_iata=branch_data.get('airport'),
-            revenue_taxes=branch_data.get('revenue'),
-            operational_cost_year=branch_data.get('opCost'),
-            export_sales_tax=branch_data.get('exportSalesTax'),
-            import_taxes=branch_data.get('importTaxes'),
-            other_taxes=branch_data.get('otherTaxes'),
-            other_costs=branch_data.get('otherCosts'),
-            additional_info=branch_data.get('additionalInfo'),
+            revenue_taxes=to_float_or_none(branch_data.get('revenue')),
+            operational_cost_year=to_float_or_none(branch_data.get('opCost')),
+            export_sales_tax=to_float_or_none(branch_data.get('exportSalesTax')),
+            import_taxes=to_float_or_none(branch_data.get('importTaxes')),
+            other_taxes=to_float_or_none(branch_data.get('otherTaxes')),
             region=manager.region,
             manager_name=manager.manager_name
         )
         db.session.add(new_branch)
         db.session.commit()
-
+        
         return jsonify({
             'success': True, 
             'message': 'Branch saved successfully!',
@@ -122,6 +166,10 @@ def api_save_branch():
                 'countryName': new_branch.country.country_name if new_branch.country else ''
             }
         })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving branch: {e}") # for debugging
+        return jsonify({'success': False, 'error': str(e)}), 500
     except Exception as e:
         db.session.rollback()
         print(f"Error saving branch: {e}") # for debugging
@@ -188,6 +236,9 @@ def find_airports_for_city():
     Finds airport IATA codes for a given city or IATA code using the OpenFlights database.
     Checks which of those airports already exist in the local database.
     """
+    # NOTE: This function makes a live web request on every call, which can be slow and unreliable.
+    # For a production environment, this data should be cached or stored locally and updated periodically.
+
     city = request.args.get('city', type=str)
     country_code = request.args.get('country_code', type=str)
     iata_code_arg = request.args.get('iata', type=str)
@@ -338,21 +389,6 @@ def save_competitive_prices():
         print('DEBUG: Errors:', errors)
         return jsonify({'message': 'Some prices failed to save.', 'errors': errors}), 400
     return jsonify({'message': 'Competitive prices saved successfully.'})
-def _generate_next_code(model, field_name, prefix):
-    """Generates the next sequential code for a given model and prefix."""
-    prefix_len = len(prefix)
-    field = getattr(model, field_name)
-    
-    last_item = model.query.filter(field.like(f'{prefix}%')).order_by(field.desc()).first()
-    last_code = getattr(last_item, field_name) if last_item else None
-    
-    if last_code and last_code[prefix_len:].isdigit():
-        next_num = int(last_code[prefix_len:]) + 1
-    else:
-        next_num = 1
-        
-    padding = 2 if prefix == "ACFT" else 3
-    return f"{prefix}{next_num:0{padding}d}"
 
 # Add Trader
 @coredata_bp.route('/add-trader', methods=['GET', 'POST'])

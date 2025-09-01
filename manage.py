@@ -3,13 +3,12 @@ import csv
 import click
 from flask.cli import with_appcontext
 
-from app import create_app
+from app import app, create_app
 from data.seed_all_from_csv import seed_all
 from models import Aircraft, Country, Trader, Route, Product, Airport, Shipment
 
 
-# Create an app instance for the CLI
-app = create_app()
+# The app instance from app.py is now exposed for Flask run and CLI
 
 @click.group(name='db-cli')
 def db_cli():
