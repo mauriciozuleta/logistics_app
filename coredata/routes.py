@@ -9,6 +9,43 @@ coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
 # ...existing code...
 
+@coredata_bp.route('/coredata/save_branch', methods=['POST'])
+def save_branch():
+    data = request.json
+    try:
+        trader = Trader(
+            region=data.get('region'),
+            manager_name=data.get('manager_name'),
+            country_id=data.get('country_id'),
+            export_sales_tax=data.get('export_sales_tax'),
+            export_other_taxes=data.get('export_other_tax'),
+            export_profit_pct=data.get('country_profit'),
+            revenue_taxes=data.get('country_revenue_tax'),
+            import_taxes=data.get('import_taxes'),
+            other_taxes=data.get('other_taxes'),
+            import_profit_pct=data.get('country_import_profit'),
+            type_of_freight=data.get('type_of_freight'),
+            name=data.get('port_name'),
+            city=data.get('city'),
+            operational_cost_year=data.get('year_operation_cost')
+        )
+        db.session.add(trader)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Branch saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
+from extensions import db
+from models import Product, Country, Aircraft, Airport, Trader
+from sqlalchemy.orm import joinedload
+from models import CompetitivePrice
+from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
+
+coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+
+# ...existing code...
+
 @coredata_bp.route('/country_branch', methods=['GET', 'POST'])
 def country_branch():
     # This route seems to be a duplicate or older version of regional_management.

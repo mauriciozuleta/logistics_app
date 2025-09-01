@@ -91,11 +91,13 @@ class Trader(BaseModel):
     trader_code = db.Column(db.String(10), unique=True, nullable=True)  # Custom ID like TR001
     country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=True)
     city = db.Column(db.String(100), nullable=True)
-    name = db.Column(db.String(128), nullable=True)
+    name = db.Column(db.String(128), nullable=True)  # Port Name
+    type_of_freight = db.Column(db.String(64), nullable=True)
     airport_iata = db.Column(db.String(3), nullable=True)
+    terminal = db.Column(db.String(64), nullable=True)  # Added terminal field
 
     # Manager/Branch distinction
-    is_manager = db.Column(db.Boolean, default=False)
+    is_manager = db.Column(db.Boolean, default=False)  # Added field for manager/branch distinction
     region = db.Column(db.String(64), nullable=True)
     manager_name = db.Column(db.String(128), nullable=True)
     operational_cost_year = db.Column(db.Float)
@@ -107,23 +109,19 @@ class Trader(BaseModel):
     export_profit_pct = db.Column(db.Float)
     export_sales_tax = db.Column(db.Float)
     export_other_taxes = db.Column(db.Float)
-    export_other_cost = db.Column(db.Float)
 
     # Section 3: Import Costs
     import_profit_pct = db.Column(db.Float)
     import_taxes = db.Column(db.Float)
-    import_other_taxes = db.Column(db.Float)
-    import_other_cost = db.Column(db.Float)
+
 
     # Additional fields
     other_taxes = db.Column(db.Float)
-    other_costs = db.Column(db.Float)
-    additional_info = db.Column(db.Text)
 
     country = db.relationship('Country', backref='traders')
 
     def __repr__(self):
-        if self.is_manager:
+        if hasattr(self, 'is_manager') and self.is_manager:
             return f"<Manager {self.manager_name} ({self.region})>"
         return f"<Trader {self.name} ({self.city}, {self.country_id})>"
 

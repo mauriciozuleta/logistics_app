@@ -21,8 +21,10 @@
                       </select>
                     </div>
                     <div class="col-md-6" id="manager-info-container"></div>
+                  <div id="manager-warning" style="display:none;color:#FF5C00;font-weight:bold;margin-top:8px;"></div>
                   </div>
                   <div class="mt-3 p-3 w-100" style="background-color:#23272e;border:2px solid #4caf50;border-radius:8px;width:100%;box-sizing:border-box;">
+                    <div id="country-warning" style="display:none;color:#FF5C00;font-weight:bold;margin-bottom:8px;"></div>
                     <div style="margin-bottom:8px;">
                       <span style="color:#FF5C00;font-size:1.2rem;font-weight:bold;">Country Information</span>
                       <button type="button" class="btn btn-outline-warning btn-sm float-end" id="toggle-country-info" style="margin-left:10px;">Hide</button>
@@ -65,7 +67,7 @@
                         <input type="text" class="form-control mb-2" id="country-import-profit" placeholder="Country Import Profit (%)" style="width:150px;">
                       </div>
                       <div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;">
-                        <button type="button" class="btn btn-success btn-sm mb-2" id="add-country-branch-btn" style="width: 150px; background: none; border: 2px solid #FF5C00; color: #FF5C00; font-weight: bold;">Add country Branch</button>
+                        <button type="button" class="btn btn-success btn-sm mb-2" id="add-country-branch-btn" style="width: 250px; background: none; border: 2px solid #FF5C00; color: #FF5C00; font-weight: bold;">Add country Branch</button>
                       </div>
                     </div>
                   </div>
@@ -79,7 +81,13 @@
                     <div class="branch-row-fields" style="display:flex;gap:12px;flex-wrap:nowrap;align-items:flex-end;">
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
                         <label for="freight-type" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Type of Freight</label>
-                        <input type="text" class="form-control mb-2" id="freight-type" placeholder="Type of Freight" style="width:150px;">
+                        <select class="form-control mb-2" id="freight-type" style="width:150px;">
+                          <option value="">Select Type</option>
+                          <option value="Air">Air</option>
+                          <option value="Sea">Sea</option>
+                          <option value="Ground">Ground</option>
+                          <option value="Multi-modal">Multi-modal</option>
+                        </select>
                       </div>
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
                         <label for="terminal" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Terminal</label>
@@ -100,6 +108,9 @@
                     </div>
                   </div>
                   <!-- Empty yellow bordered container -->
+                  <div style="width:100%;display:flex;justify-content:center;margin:24px 0;">
+                    <button type="button" class="btn btn-primary btn-lg" id="save-branch-btn" style="font-weight:bold;min-width:200px;">Save</button>
+                  </div>
                   <div class="mt-3 p-3 w-100" style="background-color:#23272e;border:2px solid yellow;border-radius:8px;min-height:60px;width:100%;box-sizing:border-box;">
                     <div style="margin-bottom:8px;">
                       <span style="color:yellow;font-size:1.2rem;font-weight:bold;">Branches</span>
@@ -112,7 +123,70 @@
             </div>
           </form>
           <script>
+            document.getElementById('save-branch-btn').addEventListener('click', function() {
+              const payload = {
+                region: document.getElementById('region').value,
+                manager_name: document.getElementById('new-manager-name') ? document.getElementById('new-manager-name').value : '',
+                country_id: document.getElementById('country').value,
+                export_sales_tax: document.getElementById('export-sales-tax').value,
+                export_other_tax: document.getElementById('export-other-tax').value,
+                country_profit: document.getElementById('country-profit').value,
+                country_revenue_tax: document.getElementById('country-revenue-tax').value,
+                import_taxes: document.getElementById('import-taxes').value,
+                other_taxes: document.getElementById('other-taxes').value,
+                country_import_profit: document.getElementById('country-import-profit').value,
+                type_of_freight: document.getElementById('freight-type').value,
+                port_name: document.getElementById('port-name').value,
+                city: document.getElementById('city').value,
+                year_operation_cost: document.getElementById('year-operation-cost').value
+              };
+              fetch('/coredata/save_branch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  alert('Branch saved!');
+                } else {
+                  alert('Error saving branch: ' + (data.error || 'Unknown error'));
+                }
+              });
+            });
             document.addEventListener('DOMContentLoaded', function() {
+              // Helper to show/hide country warning
+              function showCountryWarning(msg) {
+                const warningDiv = document.getElementById('country-warning');
+                warningDiv.textContent = msg;
+                warningDiv.style.display = 'block';
+              }
+              function hideCountryWarning() {
+                const warningDiv = document.getElementById('country-warning');
+                warningDiv.textContent = '';
+                warningDiv.style.display = 'none';
+              }
+              // Helper to show/hide manager warning
+              function showManagerWarning(msg) {
+                const warningDiv = document.getElementById('manager-warning');
+                warningDiv.textContent = msg;
+                warningDiv.style.display = 'block';
+              }
+              function hideManagerWarning() {
+                const warningDiv = document.getElementById('manager-warning');
+                warningDiv.textContent = '';
+                warningDiv.style.display = 'none';
+              }
+              // Enable branch info fields helper
+              function enableBranchFields() {
+                const branchFields = [
+                  'freight-type', 'terminal', 'port-name', 'city', 'year-operation-cost'
+                ];
+                branchFields.forEach(id => {
+                  const field = document.getElementById(id);
+                  if (field) field.disabled = false;
+                });
+              }
               // Hide all toggleable sections at page launch
               const countryInfoContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]');
               const branchInfoContainer = document.querySelector('.mt-4.p-3.w-100[style*="border:1px solid #FF5C00"]');
@@ -173,9 +247,54 @@
                 });
               }
               setupToggle('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]', 'toggle-country-info', 'country-divider');
+              // Unhide branch info section and enable fields when 'Add country Branch' is clicked
+              document.addEventListener('click', function(e) {
+                if (e.target && e.target.id === 'add-country-branch-btn') {
+                  // Check if a country is selected
+                  const countryDropdown = document.getElementById('country');
+                  if (!countryDropdown || !countryDropdown.value) {
+                    showCountryWarning('Please select a country before adding a branch.');
+                    return;
+                  } else {
+                    hideCountryWarning();
+                  }
+                  // Unhide branch info section
+                  if (branchInfoContainer) {
+                    const wrapper = Array.from(branchInfoContainer.children).find(child =>
+                      child.querySelector && child.querySelector('.section-divider')
+                    );
+                    if (wrapper) {
+                      let found = false;
+                      Array.from(branchInfoContainer.children).forEach(el => {
+                        if (found) {
+                          // Restore flex layout for known row containers
+                          if (el.classList.contains('branch-row-fields')) {
+                            el.style.display = 'flex';
+                            el.style.alignItems = 'flex-end';
+                            el.style.gap = '12px';
+                            el.style.flexWrap = 'nowrap';
+                          } else {
+                            el.style.display = '';
+                          }
+                        }
+                        if (el === wrapper) found = true;
+                      });
+                    }
+                  }
+                  enableBranchFields();
+                }
+              });
               // Unhide country info section when 'Continue to Country / Branch' is clicked
               document.addEventListener('click', function(e) {
                 if (e.target && e.target.id === 'continue-country-btn') {
+                  // Check if manager input exists and is empty
+                  const managerInput = document.getElementById('new-manager-name');
+                  if (managerInput && managerInput.value.trim() === '') {
+                    showManagerWarning('Please enter a Regional Manager name before continuing.');
+                    return;
+                  } else {
+                    hideManagerWarning();
+                  }
                   // Unhide country info section
                   if (countryInfoContainer) {
                     const wrapper = Array.from(countryInfoContainer.children).find(child =>
@@ -219,6 +338,33 @@
               countryFields.forEach(id => {
                 const field = document.getElementById(id);
                 field.disabled = true;
+                // ...existing code...
+                // Add dropdown for type_of_freight and Terminal input field
+                if (id === 'type-of-freight') {
+                  // Remove any previous dropdown
+                  let oldDropdown = document.getElementById('type-of-freight-dropdown');
+                  if (oldDropdown) oldDropdown.remove();
+                  let dropdown = document.createElement('select');
+                  dropdown.id = 'type-of-freight-dropdown';
+                  dropdown.className = 'form-control';
+                  dropdown.style.marginBottom = '10px';
+                  ['Air', 'Sea', 'Ground', 'Multi-modal'].forEach(opt => {
+                    let option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    dropdown.appendChild(option);
+                  });
+                  field.parentNode.insertBefore(dropdown, field);
+                  field.style.display = 'none';
+                  // Terminal input field
+                  let terminalInput = document.createElement('input');
+                  terminalInput.type = 'text';
+                  terminalInput.id = 'terminal';
+                  terminalInput.className = 'form-control';
+                  terminalInput.placeholder = 'Terminal';
+                  terminalInput.style.marginBottom = '10px';
+                  dropdown.parentNode.insertBefore(terminalInput, dropdown.nextSibling);
+                }
               });
 
               function fetchRegionalManager(region) {
@@ -245,8 +391,10 @@
                 let managerData = await fetchRegionalManager(selectedRegion);
                 let managerLabel = '<label style="color:#fff;font-weight:500;display:block;margin-bottom:4px;">Regional Manager</label>';
                 let managerContent = '';
-                if (managerData && managerData.manager_name) {
-                  managerContent = `<span style='color:#4caf50;font-weight:bold;'>${managerData.manager_name}</span>`;
+                // Patch: Use correct field name from backend response
+                if (managerData && (managerData.manager_name || managerData.name)) {
+                  // Support both manager_name and name for compatibility
+                  managerContent = `<span style='color:#4caf50;font-weight:bold;'>${managerData.manager_name || managerData.name}</span>`;
                 } else {
                   managerContent = `<input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:200px;display:inline-block;margin-right:10px;background-color:#fff;color:#000;' placeholder='Enter manager name'>`;
                 }
@@ -256,9 +404,10 @@
                 let countries = await fetchCountries(selectedRegion);
                 if (countries && countries.length > 0) {
                   countries.forEach(c => {
+                    // Patch: Use correct field names from backend response
                     let opt = document.createElement('option');
-                    opt.value = c.code;
-                    opt.textContent = c.name;
+                    opt.value = c.code || c.country_code;
+                    opt.textContent = c.name || c.country_name;
                     countryDropdown.appendChild(opt);
                   });
                 }
