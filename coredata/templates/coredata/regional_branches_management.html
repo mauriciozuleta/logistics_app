@@ -22,54 +22,61 @@
                     </div>
                     <div class="col-md-6" id="manager-info-container"></div>
                   </div>
-                  <div class="row mt-3">
-                    <div class="col-md-7 d-flex flex-column align-items-start" id="country-form-section">
-                      <label for="country" class="form-label" style="color:#fff;font-weight:500;margin-bottom:4px;">Country</label>
-                      <div class="d-flex align-items-center mb-3">
-                        <select id="country" name="country" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:250px;">
-                          <option value="">Select Country</option>
-                          <!-- Add country options here as needed -->
-                        </select>
-                        <button type="button" class="btn btn-info btn-sm" id="add-country-info-btn" style="margin-left:10px;background:none;border:2px solid #2196f3;color:#2196f3;font-weight:bold;">Add country Information</button>
-                        <button type="button" class="btn btn-success btn-sm" id="add-country-branch-btn" style="margin-left:10px;background:none;border:2px solid #FF5C00;color:#FF5C00;font-weight:bold;">Add country Branch</button>
+                  <div class="mt-3 p-3 w-100" style="background-color:#23272e;border:2px solid #4caf50;border-radius:8px;width:100%;box-sizing:border-box;">
+                    <div style="margin-bottom:8px;">
+                      <span style="color:#FF5C00;font-size:1.2rem;font-weight:bold;">Country Information</span>
+                      <button type="button" class="btn btn-outline-warning btn-sm float-end" id="toggle-country-info" style="margin-left:10px;">Hide</button>
+                      <div class="section-divider country-divider" style="height:1px;background-color:#FF5C00;margin-top:4px;margin-bottom:12px;clear:both;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                      <label for="country" class="form-label" style="color:#fff;font-weight:500;margin-bottom:0;">Country</label>
+                      <select id="country" name="country" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:250px;" disabled>
+                        <option value="">Select Country</option>
+                        <!-- Add country options here as needed -->
+                      </select>
+                    </div>
+                    <div id="country-extra-fields" style="display:flex;gap:12px;flex-wrap:nowrap;align-items:flex-end;">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="export-sales-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Export Sales Tax</label>
+                        <input type="text" class="form-control mb-2" id="export-sales-tax" placeholder="Export Sales Tax" style="width:150px;">
                       </div>
-                      <div class="mt-3 p-3" style="background-color:#23272e;border:2px solid #4caf50;border-radius:8px;">
-                        <div id="country-extra-fields" style="display:flex;gap:12px;flex-wrap:nowrap;">
-                          <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <label for="export-sales-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Export Sales Tax</label>
-                            <input type="text" class="form-control mb-2" id="export-sales-tax" placeholder="Export Sales Tax" style="width:150px;">
-                          </div>
-                          <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <label for="export-other-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Export Other Tax</label>
-                            <input type="text" class="form-control mb-2" id="export-other-tax" placeholder="Export Other Tax" style="width:150px;">
-                          </div>
-                          <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <label for="country-profit" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Profit (%)</label>
-                            <input type="text" class="form-control mb-2" id="country-profit" placeholder="Country Profit (%)" style="width:150px;">
-                          </div>
-                          <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <label for="country-revenue-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Revenue Tax</label>
-                            <input type="text" class="form-control mb-2" id="country-revenue-tax" placeholder="Country Revenue Tax" style="width:150px;">
-                          </div>
-                          <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <label for="import-taxes" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Import Taxes</label>
-                            <input type="text" class="form-control mb-2" id="import-taxes" placeholder="Import Taxes" style="width:150px;">
-                          </div>
-                          <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <label for="other-taxes" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Other Taxes</label>
-                            <input type="text" class="form-control mb-2" id="other-taxes" placeholder="Other Taxes" style="width:150px;">
-                          </div>
-                          <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <label for="country-import-profit" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Import Profit (%)</label>
-                            <input type="text" class="form-control mb-2" id="country-import-profit" placeholder="Country Import Profit (%)" style="width:150px;">
-                          </div>
-                        </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="export-other-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Export Other Tax</label>
+                        <input type="text" class="form-control mb-2" id="export-other-tax" placeholder="Export Other Tax" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="country-profit" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Profit (%)</label>
+                        <input type="text" class="form-control mb-2" id="country-profit" placeholder="Country Profit (%)" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="country-revenue-tax" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Revenue Tax</label>
+                        <input type="text" class="form-control mb-2" id="country-revenue-tax" placeholder="Country Revenue Tax" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="import-taxes" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Import Taxes</label>
+                        <input type="text" class="form-control mb-2" id="import-taxes" placeholder="Import Taxes" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="other-taxes" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Other Taxes</label>
+                        <input type="text" class="form-control mb-2" id="other-taxes" placeholder="Other Taxes" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <label for="country-import-profit" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Import Profit (%)</label>
+                        <input type="text" class="form-control mb-2" id="country-import-profit" placeholder="Country Import Profit (%)" style="width:150px;">
+                      </div>
+                      <div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;">
+                        <button type="button" class="btn btn-success btn-sm mb-2" id="add-country-branch-btn" style="width: 150px; background: none; border: 2px solid #FF5C00; color: #FF5C00; font-weight: bold;">Add country Branch</button>
                       </div>
                     </div>
                   </div>
                   <!-- New container for additional fields -->
-                  <div class="mt-4 p-3" style="background-color:#23272e;border:1px solid #FF5C00;border-radius:8px;">
-                    <div style="display:flex;gap:12px;flex-wrap:nowrap;">
+                  <div class="mt-4 p-3 w-100" style="background-color:#23272e;border:1px solid #FF5C00;border-radius:8px;width:100%;box-sizing:border-box;">
+                    <div style="margin-bottom:8px;">
+                      <span style="color:#FF5C00;font-size:1.2rem;font-weight:bold;">Branch Information</span>
+                      <button type="button" class="btn btn-outline-warning btn-sm float-end" id="toggle-branch-info" style="margin-left:10px;">Hide</button>
+                      <div class="section-divider branch-divider" style="height:1px;background-color:#FF5C00;margin-top:4px;margin-bottom:12px;clear:both;"></div>
+                    </div>
+                    <div class="branch-row-fields" style="display:flex;gap:12px;flex-wrap:nowrap;align-items:flex-end;">
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
                         <label for="freight-type" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Type of Freight</label>
                         <input type="text" class="form-control mb-2" id="freight-type" placeholder="Type of Freight" style="width:150px;">
@@ -93,26 +100,137 @@
                     </div>
                   </div>
                   <!-- Empty yellow bordered container -->
-                  <div class="mt-3 p-3" style="background-color:#23272e;border:2px solid yellow;border-radius:8px;min-height:60px;"></div>
+                  <div class="mt-3 p-3 w-100" style="background-color:#23272e;border:2px solid yellow;border-radius:8px;min-height:60px;width:100%;box-sizing:border-box;">
+                    <div style="margin-bottom:8px;">
+                      <span style="color:yellow;font-size:1.2rem;font-weight:bold;">Branches</span>
+                      <button type="button" class="btn btn-outline-warning btn-sm float-end" id="toggle-branches" style="margin-left:10px;">Hide</button>
+                      <div class="section-divider branches-divider" style="height:1px;background-color:yellow;margin-top:4px;margin-bottom:12px;clear:both;"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </form>
           <script>
             document.addEventListener('DOMContentLoaded', function() {
+              // Hide all toggleable sections at page launch
+              const countryInfoContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]');
+              const branchInfoContainer = document.querySelector('.mt-4.p-3.w-100[style*="border:1px solid #FF5C00"]');
+              const branchesContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid yellow"]');
+              function hideSection(container) {
+                if (!container) return;
+                // Find the wrapper div containing the divider
+                const wrapper = Array.from(container.children).find(child =>
+                  child.querySelector && child.querySelector('.section-divider')
+                );
+                if (!wrapper) return;
+                // All siblings after the wrapper
+                let found = false;
+                Array.from(container.children).forEach(el => {
+                  if (found) el.style.display = 'none';
+                  if (el === wrapper) found = true;
+                });
+              }
+              hideSection(countryInfoContainer);
+              hideSection(branchInfoContainer);
+              hideSection(branchesContainer);
+              // Toggle buttons for containers
+              function setupToggle(containerSelector, toggleBtnId, dividerClass) {
+                const container = document.querySelector(containerSelector);
+                const toggleBtn = document.getElementById(toggleBtnId);
+                if (!container || !toggleBtn) return;
+                // Find the wrapper div containing the divider
+                const wrapper = Array.from(container.children).find(child =>
+                  child.querySelector && child.querySelector('.' + dividerClass)
+                );
+                if (!wrapper) return;
+                // All siblings after the wrapper
+                const contentEls = [];
+                let found = false;
+                Array.from(container.children).forEach(el => {
+                  if (found) contentEls.push(el);
+                  if (el === wrapper) found = true;
+                });
+                let hidden = false;
+                toggleBtn.addEventListener('click', function() {
+                  hidden = !hidden;
+                  contentEls.forEach(function(el) {
+                    if (!hidden) {
+                      // Restore flex layout for known row containers
+                      if (el.id === 'country-extra-fields' || el.classList.contains('branch-row-fields')) {
+                        el.style.display = 'flex';
+                        el.style.alignItems = 'flex-end';
+                        el.style.gap = '12px';
+                        el.style.flexWrap = 'nowrap';
+                      } else {
+                        el.style.display = '';
+                      }
+                    } else {
+                      el.style.display = 'none';
+                    }
+                  });
+                  toggleBtn.textContent = hidden ? 'Show' : 'Hide';
+                });
+              }
+              setupToggle('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]', 'toggle-country-info', 'country-divider');
+              // Unhide country info section when 'Continue to Country / Branch' is clicked
+              document.addEventListener('click', function(e) {
+                if (e.target && e.target.id === 'continue-country-btn') {
+                  // Unhide country info section
+                  if (countryInfoContainer) {
+                    const wrapper = Array.from(countryInfoContainer.children).find(child =>
+                      child.querySelector && child.querySelector('.section-divider')
+                    );
+                    if (wrapper) {
+                      let found = false;
+                      Array.from(countryInfoContainer.children).forEach(el => {
+                        if (found) {
+                          // Restore flex layout for known row containers
+                          if (el.id === 'country-extra-fields') {
+                            el.style.display = 'flex';
+                            el.style.alignItems = 'flex-end';
+                            el.style.gap = '12px';
+                            el.style.flexWrap = 'nowrap';
+                          } else {
+                            el.style.display = '';
+                          }
+                        }
+                        if (el === wrapper) found = true;
+                      });
+                    }
+                  }
+                }
+              });
+              setupToggle('.mt-4.p-3.w-100[style*="border:1px solid #FF5C00"]', 'toggle-branch-info', 'branch-divider');
+              setupToggle('.mt-3.p-3.w-100[style*="border:2px solid yellow"]', 'toggle-branches', 'branches-divider');
               const regionDropdown = document.getElementById('region');
               const managerInfoContainer = document.getElementById('manager-info-container');
               const countryDropdown = document.getElementById('country');
+              const addCountryInfoBtn = document.getElementById('add-country-branch-btn');
+              // Input fields in green container
+              const countryFields = [
+                'export-sales-tax', 'export-other-tax', 'country-profit', 'country-revenue-tax',
+                'import-taxes', 'other-taxes', 'country-import-profit'
+              ];
+              const fieldHandlers = {}; // To store event handlers for removal
 
-              // Helper: fetch regional manager by region
+              // Disable fields initially
+              addCountryInfoBtn.disabled = true;
+              countryFields.forEach(id => {
+                const field = document.getElementById(id);
+                field.disabled = true;
+              });
+
               function fetchRegionalManager(region) {
                 return fetch(`/coredata/api/regional_manager_by_region?region=${encodeURIComponent(region)}`)
                   .then(res => res.json());
               }
-
-              // Helper: fetch countries by region
               function fetchCountries(region) {
                 return fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(region)}`)
+                  .then(res => res.json());
+              }
+              function fetchCountryBranch(countryCode) {
+                return fetch(`/coredata/api/country_branch_info?country_code=${encodeURIComponent(countryCode)}`)
                   .then(res => res.json());
               }
 
@@ -120,22 +238,21 @@
                 const selectedRegion = regionDropdown.value;
                 managerInfoContainer.innerHTML = '';
                 countryDropdown.innerHTML = '<option value="">Select Country</option>';
+                document.getElementById('country').disabled = true;
+                addCountryInfoBtn.disabled = true;
                 if (!selectedRegion) return;
 
-                // Show manager info or input
                 let managerData = await fetchRegionalManager(selectedRegion);
                 let managerLabel = '<label style="color:#fff;font-weight:500;display:block;margin-bottom:4px;">Regional Manager</label>';
                 let managerContent = '';
                 if (managerData && managerData.manager_name) {
                   managerContent = `<span style='color:#4caf50;font-weight:bold;'>${managerData.manager_name}</span>`;
                 } else {
-                  managerContent = `<input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:200px;display:inline-block;margin-right:10px;' placeholder='Enter manager name'>`;
+                  managerContent = `<input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:200px;display:inline-block;margin-right:10px;background-color:#fff;color:#000;' placeholder='Enter manager name'>`;
                 }
-                // Continue button
                 let continueBtn = `<button type='button' class='btn btn-primary btn-sm' id='continue-country-btn' style='margin-left:10px;'>Continue to Country / Branch</button>`;
                 managerInfoContainer.innerHTML = managerLabel + '<div style="display:flex;align-items:center;gap:10px;">' + managerContent + continueBtn + '</div>';
 
-                // Filter countries for region
                 let countries = await fetchCountries(selectedRegion);
                 if (countries && countries.length > 0) {
                   countries.forEach(c => {
@@ -145,6 +262,91 @@
                     countryDropdown.appendChild(opt);
                   });
                 }
+
+                setTimeout(function() {
+                  const continueBtn = document.getElementById('continue-country-btn');
+                  const managerInput = document.getElementById('new-manager-name');
+                  if (managerInput) {
+                    managerInput.addEventListener('input', function() {
+                      if (managerInput.value.trim() !== '') {
+                        managerInput.style.setProperty('background-color', 'transparent', 'important');
+                        managerInput.style.setProperty('color', '#fff', 'important');
+                      } else {
+                        managerInput.style.setProperty('background-color', '#fff', 'important');
+                        managerInput.style.setProperty('color', '#000', 'important');
+                      }
+                    });
+                  }
+                  if (continueBtn) {
+                    continueBtn.onclick = function() {
+                      countryDropdown.disabled = false;
+                      addCountryInfoBtn.disabled = false;
+                    };
+                  }
+                }, 0);
+              });
+
+              countryDropdown.addEventListener('change', async function() {
+                const selectedCountry = countryDropdown.value;
+                // Reset all fields and remove old listeners
+                countryFields.forEach(id => {
+                  const field = document.getElementById(id);
+                  field.value = '';
+                  field.style.backgroundColor = 'transparent';
+                  field.style.color = '#fff';
+                  field.disabled = true;
+                  if (fieldHandlers[id]) {
+                    field.removeEventListener('input', fieldHandlers[id]);
+                    delete fieldHandlers[id];
+                  }
+                });
+                if (!selectedCountry) return;
+
+                // Enable all country info fields when a country is selected
+                countryFields.forEach(id => {
+                  const field = document.getElementById(id);
+                  field.disabled = false;
+                });
+
+                let branchInfo = await fetchCountryBranch(selectedCountry);
+
+                if (branchInfo && branchInfo.exists) {
+                  // Populate fields for existing branch
+                  countryFields.forEach(id => {
+                    const field = document.getElementById(id);
+                    if (branchInfo[id] !== undefined && branchInfo[id] !== null) {
+                      field.value = branchInfo[id];
+                    }
+                    field.style.backgroundColor = 'transparent';
+                    field.style.color = '#fff';
+                  });
+                } else {
+                  // No branch: highlight fields and add listeners for input
+                  countryFields.forEach(id => {
+                    const field = document.getElementById(id);
+                    field.style.setProperty('background-color', '#fff', 'important');
+                    field.style.setProperty('color', '#000', 'important');
+
+                    const handleInput = function() {
+                      if (field.value.trim() !== '') {
+                        field.style.setProperty('background-color', 'transparent', 'important');
+                        field.style.setProperty('color', '#fff', 'important');
+                      } else {
+                        field.style.setProperty('background-color', '#fff', 'important');
+                        field.style.setProperty('color', '#000', 'important');
+                      }
+                    };
+                    field.addEventListener('input', handleInput);
+                    fieldHandlers[id] = handleInput; // Store handler for removal
+                  });
+                }
+              });
+
+              addCountryInfoBtn.addEventListener('click', function() {
+                countryFields.forEach(id => {
+                  const field = document.getElementById(id);
+                  field.disabled = false;
+                });
               });
             });
           </script>
@@ -154,4 +356,3 @@
   </div>
 </div>
 {% endblock %}
-
