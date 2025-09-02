@@ -7,6 +7,19 @@ from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
+@coredata_bp.route('/api/branches_by_country')
+def branches_by_country():
+    country_code = request.args.get('country_code')
+    branches = Trader.query.filter_by(country_id=country_code).all()
+    result = []
+    for b in branches:
+        result.append({
+            'city': b.city,
+            'port_name': b.name,  # 'name' is used for port_name in your model
+            'airport_iata': b.airport_iata
+        })
+    return jsonify(result)
+
 
 def _generate_next_code(model, field_name, prefix):
     """Generates the next sequential code for a given model and prefix."""
@@ -29,13 +42,30 @@ def _generate_next_code(model, field_name, prefix):
 @coredata_bp.route('/api/country_branch_info')
 def country_branch_info():
     country_code = request.args.get('country_code')
-    # Example logic: check if a branch exists for this country
-    exists = False
-    # Only check for non-manager traders (branches)
-    branch = Trader.query.filter_by(country_id=country_code, is_manager=False).first()
-    if branch:
-        exists = True
-    return jsonify({'exists': exists})
+    # Find any record for this country
+    record = Trader.query.filter_by(country_id=country_code).first()
+    if record:
+        return jsonify({
+            'exists': True,
+            'export_sales_tax': record.export_sales_tax or 0,
+            'export_other_taxes': record.export_other_taxes or 0,
+            'export_profit_pct': record.export_profit_pct or 0,
+            'revenue_taxes': record.revenue_taxes or 0,
+            'import_taxes': record.import_taxes or 0,
+            'other_taxes': record.other_taxes or 0,
+            'import_profit_pct': record.import_profit_pct or 0
+        })
+    else:
+        return jsonify({
+            'exists': False,
+            'export_sales_tax': 0,
+            'export_other_taxes': 0,
+            'export_profit_pct': 0,
+            'revenue_taxes': 0,
+            'import_taxes': 0,
+            'other_taxes': 0,
+            'import_profit_pct': 0
+        })
 
 # ...existing code...
 
@@ -75,25 +105,32 @@ def save_branch():
                 return None
         
         # Create trader/branch directly from the data sent by frontend
+        # Check if a manager exists for this region
+        existing_manager = Trader.query.filter_by(region=data.get('region'), is_manager=True).first()
+        is_manager = False
+        if not existing_manager:
+            is_manager = True
+
         trader = Trader(
             region=data.get('region'),
             manager_name=data.get('manager_name'),
             country_id=data.get('country_id'),
             export_sales_tax=to_float_or_none(data.get('export_sales_tax')),
-            export_other_taxes=to_float_or_none(data.get('export_other_tax')),
-            export_profit_pct=to_float_or_none(data.get('country_profit')),
-            revenue_taxes=to_float_or_none(data.get('country_revenue_tax')),
+            export_other_taxes=to_float_or_none(data.get('export_other_taxes')),
+            export_profit_pct=to_float_or_none(data.get('export_profit_pct')),
+            revenue_taxes=to_float_or_none(data.get('revenue_taxes')),
             import_taxes=to_float_or_none(data.get('import_taxes')),
             other_taxes=to_float_or_none(data.get('other_taxes')),
-            import_profit_pct=to_float_or_none(data.get('country_import_profit')),
+            import_profit_pct=to_float_or_none(data.get('import_profit_pct')),
             type_of_freight=data.get('type_of_freight'),
+            airport_iata=data.get('airport_iata'),
             ground_terminal_code=data.get('ground_terminal_code'),
             port_code=data.get('port_code'),
             name=data.get('port_name'),
             city=data.get('city'),
             operational_cost_year=to_float_or_none(data.get('year_operation_cost')),
             trader_code=_generate_next_code(Trader, 'trader_code', 'BR'),
-            is_manager=True if data.get('is_manager') else False
+            is_manager=is_manager
         )
         db.session.add(trader)
         db.session.commit()
