@@ -92,7 +92,8 @@ def save_branch():
             name=data.get('port_name'),
             city=data.get('city'),
             operational_cost_year=to_float_or_none(data.get('year_operation_cost')),
-            trader_code=_generate_next_code(Trader, 'trader_code', 'BR')
+            trader_code=_generate_next_code(Trader, 'trader_code', 'BR'),
+            is_manager=True if data.get('is_manager') else False
         )
         db.session.add(trader)
         db.session.commit()
@@ -200,25 +201,36 @@ def api_branch_defaults_by_country():
 def api_regional_manager_by_region():
     region = request.args.get('region', type=str)
     if not region:
-        return jsonify(None)
+        return jsonify({'manager_name': '', 'name': ''})
 
-    manager = Trader.query.filter_by(region=region, is_manager=True).first()
-    if manager:
-        branches = Trader.query.filter_by(region=region, is_manager=False).all()
-        branches_by_country = {}
-        for branch in branches:
-            country_name = branch.country.country_name if branch.country else 'Unknown'
-            if country_name not in branches_by_country:
-                branches_by_country[country_name] = []
-            branches_by_country[country_name].append({
-                'id': branch.id,
-                'city': branch.city,
-                'airport': branch.airport_iata,
-                'countryCode': branch.country_id,
-                'countryName': country_name
+    try:
+        # First, try to find a manager with is_manager=True
+        manager = Trader.query.filter_by(region=region, is_manager=True).first()
+        if manager:
+            # Use manager_name column for both fields
+            return jsonify({
+                'id': manager.id,
+                'manager_name': manager.manager_name or '',
+                'name': manager.manager_name or '',
+                'operational_cost_year': manager.operational_cost_year
             })
-        return jsonify({'id': manager.id, 'manager_name': manager.manager_name, 'operational_cost_year': manager.operational_cost_year, 'branches': branches_by_country})
-    return jsonify(None)
+        else:
+            # If no manager found, return empty values
+            return jsonify({
+                'id': None,
+                'manager_name': '',
+                'name': '',
+                'operational_cost_year': None
+            })
+    except Exception as e:
+        print(f"Error finding manager: {str(e)}")
+        return jsonify({
+            'id': None,
+            'manager_name': '',
+            'name': '',
+            'operational_cost_year': None,
+            'error': str(e)
+        }), 500
 
 @coredata_bp.route('/api/countries_by_region')
 def api_countries_by_region():

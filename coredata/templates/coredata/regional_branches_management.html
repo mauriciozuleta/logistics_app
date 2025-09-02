@@ -433,7 +433,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
               function fetchRegionalManager(region) {
                 return fetch(`/coredata/api/regional_manager_by_region?region=${encodeURIComponent(region)}`)
-                  .then(res => res.json());
+                  .then(res => {
+                    if (!res.ok) {
+                      console.error('Error fetching manager:', res.status, res.statusText);
+                      return {};
+                    }
+                    return res.json();
+                  })
+                  .catch(err => {
+                    console.error('Fetch error:', err);
+                    return {};
+                  });
               }
               function fetchCountries(region) {
                 return fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(region)}`)
@@ -453,13 +463,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!selectedRegion) return;
 
                 let managerData = await fetchRegionalManager(selectedRegion);
+                console.log('Manager data received:', managerData); // Debug: log manager data
                 let managerLabel = '<label style="color:#fff;font-weight:500;display:block;margin-bottom:4px;">Regional Manager</label>';
                 let managerContent = '';
-                // Patch: Use correct field name from backend response
-                if (managerData && (managerData.manager_name || managerData.name)) {
-                  // Support both manager_name and name for compatibility
-                  managerContent = `<span style='color:#4caf50;font-weight:bold;'>${managerData.manager_name || managerData.name}</span>`;
+                
+                // More flexible check for manager name in various formats
+                const managerName = managerData && (
+                  managerData.manager_name || 
+                  managerData.name || 
+                  (managerData.manager && managerData.manager.name) || 
+                  ''
+                );
+                
+                if (managerName) {
+                  // Show existing manager name
+                  managerContent = `<span style='color:#4caf50;font-weight:bold;'>${managerName}</span>`;
                 } else {
+                  // Show input for new manager
                   managerContent = `<input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:200px;display:inline-block;margin-right:10px;background-color:#fff;color:#000;' placeholder='Enter manager name'>`;
                 }
                 let continueBtn = `<button type='button' class='btn btn-primary btn-sm' id='continue-country-btn' style='margin-left:10px;'>Continue to Country / Branch</button>`;
