@@ -19,12 +19,16 @@ operations_api = Blueprint("operations_api", __name__)
 # Add the shipment_management route after Blueprint definition
 @operations.route('/shipments', methods=['GET', 'POST'])
 def shipment_management():
-    from models import RegionalManager, Trader, Country, Airport
+    from models import Trader, Country, Airport
 
-    # Eagerly load the regional_manager relationship to prevent N+1 queries
-    branches = Trader.query.options(joinedload(Trader.regional_manager)).order_by(Trader.city).all()
-
-    regions = [r.region for r in RegionalManager.query.order_by(RegionalManager.region).distinct()]
+    # Get all traders - both managers and branches
+    managers = Trader.query.filter_by(is_manager=True).order_by(Trader.region).all()
+    branches = Trader.query.filter_by(is_manager=False).order_by(Trader.city).all()
+    
+    # Get distinct regions from traders who are managers
+    regions = [m.region for m in managers if m.region]
+    regions = sorted(list(set(regions)))  # Remove duplicates and sort
+    
     countries = Country.query.order_by(Country.country_name).all()
     airports = Airport.query.order_by(Airport.name).all()
 
@@ -36,9 +40,9 @@ def shipment_management():
         "name": b.name or b.city,
         "city": b.city,
         "country_id": b.country_id,
-        "regional_manager_id": b.regional_manager_id,
         "airport_iata": b.airport_iata,
-        "regional_manager_name": b.regional_manager.name if b.regional_manager else '',
+        "region": b.region,  # Added region
+        "regional_manager_name": next((m.manager_name for m in managers if m.region == b.region), ''),
         "revenue_taxes": getattr(b, "revenue_taxes", None),
         "operational_cost_year": getattr(b, "operational_cost_year", None),
         "export_profit_pct": getattr(b, "export_profit_pct", None),
@@ -51,14 +55,13 @@ def shipment_management():
         "import_other_cost": getattr(b, "import_other_cost", None),
         "other_taxes": getattr(b, "other_taxes", None),
         "other_costs": getattr(b, "other_costs", None),
-        "additional_info": getattr(b, "additional_info", None)
     } for b in branches]
     airport_list = [{"id": a.id, "name": a.name, "iata_code": a.iata_code, "city": a.city, "country_id": a.country_id} for a in airports]
 
     csrf_token = generate_csrf()
 
-    # Build region_manager_map: {region: manager_name}
-    region_manager_map = {rm.region: rm.name for rm in RegionalManager.query.all()}
+    # Build region_manager_map: {region: manager_name} using Trader model with is_manager=True
+    region_manager_map = {manager.region: manager.manager_name for manager in managers if manager.region and manager.manager_name}
 
     # Build route_data for JS (same logic as add_shipment)
     routes = Route.query.options(

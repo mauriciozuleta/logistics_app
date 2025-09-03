@@ -1,5 +1,5 @@
 id,name,iata_code,city,country_id,fuel_cost_gl,cargo_handling_cost_kg,airport_fee,turnaround_cost,latitude,longitude,altitude_ft
-1,"MDE - Jose Maria Cordoba",MDE,Medellin,CO,3.5,0.2,5000,2500,6.1645,-75.4231,7027
-2,"BOG - El dorado",BOG,Bogota,CO,3.2,0.25,6000,3000,4.7016,-74.1469,8360
+1,"MDE - Jose Maria Cordoba",MDE,Medellin,CO,3.5,0.08,1200,150,6.1645,-75.4231,7027
+2,"BOG - El dorado",BOG,Bogota,CO,3.2,0.07,1200,150,4.7016,-74.1469,8360
 3,"MIA - Miami International",MIA,Miami,US,2.8,0.3,7000,3500,25.7959,-80.2871,8
-4,"CLO - Bonilla Aragon",CLO,Cali,CO,3.6,0.22,4500,2200,3.5432,-76.3815,3162
+4,"CLO - Bonilla Aragon",CLO,Cali,CO,3.6,0.09,1200,150,3.5432,-76.3815,3162

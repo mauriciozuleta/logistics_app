@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
+<script src="{{ url_for('static', filename='js/shipment_management_update.js') }}"></script>
 <script>
 window.routeData = {{ route_data | tojson }};
 </script>
@@ -97,7 +98,7 @@ window.routeData = {{ route_data | tojson }};
                 <select id="trading_branch" name="trading_branch" class="form-control" style="border: 2px solid #257777;" disabled>
                     <option value="">Select Branch</option>
                     {% for branch in branch_list %}
-                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.airport_name }}</option>
+                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.region }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -154,7 +155,7 @@ window.routeData = {{ route_data | tojson }};
                 <select id="consignee_branch" name="consignee_branch" class="form-control" style="border: 2px solid #2b792b;" disabled>
                     <option value="">Select Branch</option>
                     {% for branch in branch_list %}
-                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.regional_manager_id }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.airport_name }}</option>
+                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.region }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.name }}</option>
                     {% endfor %}
                 </select>
             </div>
