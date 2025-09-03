@@ -111,6 +111,11 @@ def save_branch():
         if not existing_manager:
             is_manager = True
 
+        # Check for duplicate branch (same city and airport_iata)
+        duplicate_branch = Trader.query.filter_by(city=data.get('city'), airport_iata=data.get('airport_iata')).first()
+        if duplicate_branch:
+            return jsonify({'success': False, 'error': 'Branch with this city and airport already exists.'}), 200
+
         trader = Trader(
             region=data.get('region'),
             manager_name=data.get('manager_name'),

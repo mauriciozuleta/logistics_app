@@ -70,16 +70,31 @@ function setupRegionCountryBranchSelects(setup, index) {
         if (portSelect) portSelect.disabled = true;
 
         if (selectedRegion) {
-            // Filter countries by region and that have branches
-            const countryCodesWithBranches = [...new Set(originalBranchOptions.map(opt => opt.dataset.country.toLowerCase()))];
+            // Safely get a unique list of country codes that have branches.
+            // This prevents errors if a branch option is missing its `data-country` attribute,
+            // which could cause the entire filtering process to fail or produce incorrect results.
+            const countryCodesWithBranches = [...new Set(
+                originalBranchOptions
+                    .map(opt => opt.dataset.country) // Get the country code, which might be undefined
+                    .filter(Boolean) // Filter out any undefined/null/empty values
+                    .map(code => code.toLowerCase()) // Convert valid codes to lowercase
+            )];
             
+            // Filter countries by region and ensure they have associated branches.
             const filteredCountries = originalCountryOptions.filter(countryOpt => {
-                const regionMatch = countryOpt.dataset.region === selectedRegion;
+                // Safely check the region and that the country has a branch.
+                const regionMatch = countryOpt.dataset.region && countryOpt.dataset.region === selectedRegion;
                 const hasBranch = countryCodesWithBranches.includes(countryOpt.value.toLowerCase());
                 return regionMatch && hasBranch;
             });
             
-            updateDropdown(countrySelect, filteredCountries);
+            updateDropdown(countrySelect, filteredCountries, 'Select Country...');
+            // If only one country is found, auto-select it to trigger the cascade to the branch level.
+            // This improves UX by not forcing a selection when there's only one choice.
+            if (filteredCountries.length === 1) {
+                countrySelect.selectedIndex = 1;
+                countrySelect.dispatchEvent(new Event('change'));
+            }
         } else {
             updateDropdown(countrySelect, [], 'Select Country...');
             updateDropdown(branchSelect, [], 'Select Branch...');
@@ -89,17 +104,58 @@ function setupRegionCountryBranchSelects(setup, index) {
 
     // When country changes
     countrySelect.addEventListener('change', function() {
+        // --- Restore product list population for trading section ---
+        if (index === 0 && selectedCountry) {
+            // Fetch products for selected country (AJAX or from window.productData)
+            if (window.productData && window.productData[selectedCountry]) {
+                populateProductList(window.productData[selectedCountry]);
+            } else {
+                // Example AJAX fetch (adjust endpoint as needed)
+                fetch(`/api/products_by_country?country_code=${selectedCountry}`)
+                    .then(res => res.json())
+                    .then(products => {
+                        populateProductList(products);
+                    });
+            }
+        }
+    // --- Restore 'add cargo to return route' population ---
+    var addCargoToReturnField = document.getElementById('add_cargo_to_return');
+    if (addCargoToReturnField && route && route.summary) {
+        var routeBaseReturn = route.summary.split('(')[0].trim();
+        addCargoToReturnField.value = routeBaseReturn;
+    }
         const selectedCountry = countrySelect.value;
         branchSelect.disabled = !selectedCountry;
         if (portSelect) portSelect.disabled = true;
 
         if (selectedCountry) {
-            // Filter branches by country
-            const filteredBranches = originalBranchOptions.filter(branchOpt => 
-                branchOpt.dataset.country.toLowerCase() === selectedCountry.toLowerCase()
-            );
-            
-            updateDropdown(branchSelect, filteredBranches);
+            // Debug: log all branch options and their data-country
+            console.log('All branch options:', originalBranchOptions.map(opt => ({
+                value: opt.value,
+                text: opt.textContent,
+                dataCountry: opt.dataset.country
+            })));
+
+            // Filter branches by country, safely handling potentially missing `data-country` attributes.
+            const filteredBranches = originalBranchOptions.filter(branchOpt => {
+                const branchCountry = branchOpt.dataset.country;
+                return branchCountry && branchCountry.trim().toLowerCase() === selectedCountry.trim().toLowerCase();
+            });
+
+            // Debug: log filtered branches
+            console.log('Filtered branches for country', selectedCountry, ':', filteredBranches.map(opt => ({
+                value: opt.value,
+                text: opt.textContent,
+                dataCountry: opt.dataset.country
+            })));
+
+            updateDropdown(branchSelect, filteredBranches, 'Select Branch...');
+
+            // If there's only one branch for the selected country, auto-select it.
+            if (filteredBranches.length === 1) {
+                branchSelect.selectedIndex = 1; // The first actual option
+                branchSelect.dispatchEvent(new Event('change'));
+            }
         } else {
             updateDropdown(branchSelect, [], 'Select Branch...');
             if (portSelect) updateDropdown(portSelect, [], 'Select Port...');
@@ -153,24 +209,23 @@ function updateDropdown(select, options, placeholderText = null) {
     const placeholder = document.createElement('option');
     placeholder.value = '';
     placeholder.textContent = placeholderText || select.dataset.placeholder || 'Select...';
-    placeholder.disabled = true;
-    placeholder.hidden = true;
+    placeholder.disabled = false;
     select.appendChild(placeholder);
 
-    // Add new options
-    options.forEach(option => {
-        select.appendChild(option.cloneNode(true));
+    // Add all filtered options
+    options.forEach(originalOption => {
+        const newOption = document.createElement('option');
+        newOption.value = originalOption.value;
+        newOption.textContent = originalOption.textContent;
+        Object.assign(newOption.dataset, originalOption.dataset);
+        select.appendChild(newOption);
     });
 
-    // Enable/disable based on options available
+    // Enable dropdown if there are options
     select.disabled = options.length === 0;
 
-    // If there are options, select the first real option and trigger change event
-    if (options.length > 0) {
-        select.selectedIndex = 1;
-        const event = new Event('change');
-        select.dispatchEvent(event);
-    }
+    // Always set selected index to placeholder
+    select.selectedIndex = 0;
 }
 
 // Other existing functions...

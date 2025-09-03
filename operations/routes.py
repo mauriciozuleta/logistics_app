@@ -21,14 +21,15 @@ operations_api = Blueprint("operations_api", __name__)
 def shipment_management():
     from models import Trader, Country, Airport
 
-    # Get all traders - both managers and branches
-    managers = Trader.query.filter_by(is_manager=True).order_by(Trader.region).all()
-    branches = Trader.query.filter_by(is_manager=False).order_by(Trader.city).all()
-    
+    # Get all traders
+    all_traders = Trader.query.order_by(Trader.city).all()
+    managers = [t for t in all_traders if t.is_manager]
+    branches = all_traders  # All traders are selectable as branches
+
     # Get distinct regions from traders who are managers
     regions = [m.region for m in managers if m.region]
     regions = sorted(list(set(regions)))  # Remove duplicates and sort
-    
+
     countries = Country.query.order_by(Country.country_name).all()
     airports = Airport.query.order_by(Airport.name).all()
 
