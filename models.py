@@ -1,5 +1,6 @@
 from datetime import datetime
 from extensions import db
+
 # Then define your models like normal
 
 # Optional BaseModel for shared fields

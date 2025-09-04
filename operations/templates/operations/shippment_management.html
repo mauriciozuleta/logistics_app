@@ -2,6 +2,7 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shipment.css') }}">
+<script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
 <!-- All JS references removed. Only HTML structure and CSS remain. -->
 
 <form method="POST" action="">
@@ -22,13 +23,22 @@
     <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;" id="toggle-trading-btn" disabled>Toggle</button>
 	</div>
 	<div id="trading-info-content">
+		<div class="shipment-form-row" style="margin-top: 15px; align-items: left;">
+                    <div class="form-group" style="width: 150px; max-width: 150px;">
+				<label for="type_of_freight">Type of Freight</label>
+				<select id="type_of_freight" name="type_of_freight" class="form-control" style="border: 2px solid #257777;">
+					<option value="">Select Type</option>
+					<option value="Air">Air</option>
+                        <option value="Sea">Sea</option>
+                        <option value="Ground">Ground</option>
+                    </select>
+                </div>
+            </div>
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
+                
                 <div class="form-group" style="width: 250px;">
                     <label for="port_of_shipping">Port of Shipping</label>
-                    <select id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" disabled>
-                        <option value="">Select Port</option>
-                            <!-- Port options will be added here -->
-                    </select>
+                    <input type="text" id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" placeholder="Enter Port Code">
                     <input type="hidden" id="port_of_shipping_iata" name="port_of_shipping_iata" value="">
                 </div>
                 
@@ -60,10 +70,7 @@
 		<div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
                 <div class="form-group" style="width: 250px;">
                     <label for="consignee_port_of_shipping">Port of Arrival</label>
-                    <select id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" disabled>
-                        <option value="">Select Port</option>
-                            <!-- Port options will be added here -->
-                    </select>
+                    <input type="text" id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" placeholder="Enter Port Code">
                     <input type="hidden" id="consignee_port_of_shipping_iata" name="consignee_port_of_shipping_iata" value="">
                 </div>
                 <div class="form-group" style="min-width: 150px;">

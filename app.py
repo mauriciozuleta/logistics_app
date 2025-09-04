@@ -38,10 +38,10 @@ def create_app():
     app.register_blueprint(financial, url_prefix='/financial')
     app.register_blueprint(users, url_prefix='/users')
     app.register_blueprint(operations, url_prefix='/operations')
+    app.register_blueprint(operations_api_new, url_prefix='/api')
     app.register_blueprint(operations_api, url_prefix='/api')
     app.register_blueprint(ops, url_prefix='/ops')
     app.register_blueprint(exchange_api, url_prefix='/api/exchange')
-    app.register_blueprint(operations_api_new)
     app.register_blueprint(operations_diagnostic, url_prefix='/diagnostic')
 
     # Exempt API routes from CSRF protection
