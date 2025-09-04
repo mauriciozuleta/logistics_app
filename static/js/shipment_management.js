@@ -228,4 +228,119 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error fetching trader info:', error);
             });
     });
+
+    // Listen for changes in both port fields to populate departure route
+    const departureRouteSelect = document.getElementById('departure_route');
+    function updateDepartureRouteOptions() {
+        let fromCode = portOfShipping.value.toUpperCase();
+        let toCode = portOfArrival.value.toUpperCase();
+        // Only trigger when both codes are 3 characters
+        departureRouteSelect.innerHTML = '';
+        let defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = 'Select Route';
+        departureRouteSelect.appendChild(defaultOption);
+        if (fromCode.length !== 3 || toCode.length !== 3) {
+            departureRouteSelect.setAttribute('disabled', 'disabled');
+            return;
+        }
+        fetch(`/api/find-routes?from_airport=${encodeURIComponent(fromCode)}&to_airport=${encodeURIComponent(toCode)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.routes && data.routes.length > 0) {
+                    data.routes.forEach(route => {
+                        let option = document.createElement('option');
+                        option.value = route.id;
+                        option.text = route.name;
+                        departureRouteSelect.appendChild(option);
+                    });
+                    departureRouteSelect.removeAttribute('disabled');
+                } else {
+                    let option = document.createElement('option');
+                    option.value = '';
+                    option.text = 'No routes found';
+                    departureRouteSelect.appendChild(option);
+                    departureRouteSelect.setAttribute('disabled', 'disabled');
+                }
+            })
+            .catch(error => {
+                departureRouteSelect.innerHTML = '';
+                let errorOption = document.createElement('option');
+                errorOption.value = '';
+                errorOption.text = 'Error loading routes';
+                departureRouteSelect.appendChild(errorOption);
+                departureRouteSelect.setAttribute('disabled', 'disabled');
+                console.error('Error fetching routes:', error);
+            });
+    }
+    portOfShipping.addEventListener('input', updateDepartureRouteOptions);
+    portOfArrival.addEventListener('input', updateDepartureRouteOptions);
+
+    // Listen for route selection and populate payload, route cost, and return routes
+    const availablePayloadField = document.getElementById('available_payload');
+    const routeCostField = document.getElementById('route_cost');
+    const returnRouteField = document.getElementById('return_route');
+    departureRouteSelect.addEventListener('change', function() {
+        const selectedRouteId = departureRouteSelect.value;
+        if (!selectedRouteId) {
+            availablePayloadField.value = '';
+            routeCostField.value = '';
+            returnRouteField.value = '';
+            return;
+        }
+        // Get port of arrival code (should be used for return route search)
+        const arrivalIata = portOfArrival.value.toUpperCase();
+        // Fetch route details and airport costs
+        fetch(`/api/route-details?route_id=${encodeURIComponent(selectedRouteId)}&arrival_iata=${encodeURIComponent(arrivalIata)}`)
+            .then(response => response.json())
+            .then(data => {
+                availablePayloadField.value = data.payload_kg || '';
+                routeCostField.value = data.route_cost || '';
+            });
+        // Get selected aircraft type from route name
+        const selectedOption = departureRouteSelect.options[departureRouteSelect.selectedIndex];
+        let selectedAircraft = '';
+        if (selectedOption && selectedOption.text) {
+            // Example route name: MDE-MIA-A321F
+            const parts = selectedOption.text.split('-');
+            if (parts.length >= 3) {
+                selectedAircraft = parts[2];
+                console.log('Extracted aircraft type:', selectedAircraft);
+            } else {
+                console.warn('Could not extract aircraft type from route name:', selectedOption.text);
+            }
+        }
+        // Fetch return routes using port of arrival IATA code
+        console.log(`Fetching return routes for departure_iata=${arrivalIata}, aircraft_type=${selectedAircraft}`);
+        fetch(`/api/return-routes?departure_iata=${encodeURIComponent(arrivalIata)}&aircraft_type=${encodeURIComponent(selectedAircraft)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Return routes response:', data);
+                if (data.routes && data.routes.length > 0) {
+                    // Populate as comma-separated destinations
+                    // Clear existing options
+                    returnRouteField.innerHTML = '';
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.text = 'Select Return Route';
+                    returnRouteField.appendChild(defaultOption);
+                    // Add route options
+                    data.routes.forEach(route => {
+                        const option = document.createElement('option');
+                        option.value = route.id;
+                        option.text = route.name;
+                        returnRouteField.appendChild(option);
+                    });
+                    console.log('Set return routes to:', data.routes.map(r => r.name));
+                } else {
+                    returnRouteField.value = '';
+                    console.log('No return routes found');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching return routes:', error);
+                returnRouteField.value = '';
+            });
+    });
 });

@@ -5,9 +5,111 @@ from extensions import db
 # Minimal placeholder blueprint for operations API
 operations_api_new = Blueprint('operations_api_new', __name__)
 
+@operations_api_new.route('/find-routes')
+def find_routes():
+    from_airport = request.args.get('from_airport', '').upper()
+    to_airport = request.args.get('to_airport', '').upper()
+    if not from_airport or not to_airport or len(from_airport) != 3 or len(to_airport) != 3:
+        return jsonify({'error': 'Invalid airport codes'}), 400
+
+    # Route name format: MDE-MIA-A321F, MDE-MIA-B737, etc.
+    # Find all routes that start with 'MDE-MIA-'
+    search_prefix = f"{from_airport}-{to_airport}-"
+    from models import Route
+    matching_routes = Route.query.filter(Route.route_name.like(f"{search_prefix}%")).all()
+
+    route_options = []
+    for route in matching_routes:
+        route_options.append({
+            'id': route.id,
+            'name': route.route_name,
+            'aircraft': getattr(route, 'aircraft_type', ''),
+            'summary': getattr(route, 'route_summary', ''),
+        })
+
+    return jsonify({'routes': route_options})
+
+@operations_api_new.route('/route-details')
+def route_details():
+    route_id = request.args.get('route_id')
+    arrival_iata = request.args.get('arrival_iata', '').upper()
+    if not route_id or not arrival_iata:
+        return jsonify({'error': 'Missing route_id or arrival_iata'}), 400
+
+    from models import Route, Airport
+    route = Route.query.filter_by(id=route_id).first()
+    airport = Airport.query.filter_by(iata_code=arrival_iata).first()
+    if not route or not airport:
+        return jsonify({'error': 'Route or airport not found'}), 404
+
+    # Convert payload to kg
+    payload_kg = None
+    if route.leg1_max_payload_lbs is not None:
+        payload_kg = round(route.leg1_max_payload_lbs / 2.2, 2)
+
+    # Calculate route cost
+    route_cost = None
+    if route.leg1_total_cost_usd is not None and airport.airport_fee is not None and airport.turnaround_cost is not None:
+        route_cost = round(route.leg1_total_cost_usd + airport.airport_fee + airport.turnaround_cost, 2)
+
+    return jsonify({
+        'payload_kg': payload_kg,
+        'route_cost': route_cost,
+        'cargo_handling_cost': airport.cargo_handling_cost_kg,
+        'airport_fee': airport.airport_fee,
+        'turnaround_cost': airport.turnaround_cost,
+        'leg1_total_cost_usd': route.leg1_total_cost_usd
+    })
+
+@operations_api_new.route('/return-routes')
+def return_routes():
+    departure_iata = request.args.get('departure_iata', '').upper()
+    aircraft_type = request.args.get('aircraft_type', '')
+    print(f"[RETURN ROUTES] Received: departure_iata={departure_iata}, aircraft_type={aircraft_type}")
+    
+    if not departure_iata or not aircraft_type:
+        print("DEBUG: Missing departure_iata or aircraft_type")
+        return jsonify({'error': 'Missing departure_iata or aircraft_type'}), 400
+    
+    from models import Route, Airport
+    # Find airport id for the given IATA code (port of arrival)
+    airport = Airport.query.filter_by(iata_code=departure_iata).first()
+    if not airport:
+        print(f"DEBUG: Airport not found for IATA {departure_iata}")
+        return jsonify({'error': 'Airport not found'}), 404
+    
+    print(f"DEBUG: Found airport ID {airport.id} for IATA {departure_iata}")
+    
+    # Enhanced query for matching routes:
+    # 1. Must start from the specified airport (from_airport_id)
+    # 2. Must use the same aircraft type (route_name like %AIRCRAFT_TYPE)
+    matching_routes = Route.query.filter(
+        Route.from_airport_id == airport.id,
+        Route.route_name.like(f"%-%-{aircraft_type}")
+    ).all()
+    
+    print(f"DEBUG: Found {len(matching_routes)} matching routes from airport {departure_iata} with aircraft {aircraft_type}")
+    
+    return_options = []
+    for route in matching_routes:
+        # Extract destination IATA from to_airport_id
+        dest_airport = Airport.query.filter_by(id=route.to_airport_id).first()
+        dest_iata = dest_airport.iata_code if dest_airport else ''
+        
+        print(f"DEBUG: Return route found: {route.route_name}, destination: {dest_iata}")
+        
+        return_options.append({
+            'id': route.id,
+            'name': route.route_name,
+            'destination': dest_iata,
+        })
+    
+    print(f"[RETURN ROUTES] Returning {len(return_options)} return routes: {return_options}")
+    return jsonify({'routes': return_options})
+
 @operations_api_new.route('/ping-test')
 def ping():
-	return jsonify({'message': 'operations_api_new is alive'})
+    return jsonify({'message': 'operations_api_new is alive'})
 
 @operations_api_new.route('/trader-info')
 def trader_info():

@@ -33,20 +33,21 @@ def create_app():
     from operations.api import operations_api_new
     from operations.diagnostic_routes import operations_diagnostic
 
+    # Register blueprints in proper order
     app.register_blueprint(coredata_bp, url_prefix='/coredata')
     csrf.exempt(coredata_bp)
     app.register_blueprint(financial, url_prefix='/financial')
     app.register_blueprint(users, url_prefix='/users')
+    app.register_blueprint(ops, url_prefix='/ops')
     app.register_blueprint(operations, url_prefix='/operations')
+    
+    # Register both API blueprints under /api
     app.register_blueprint(operations_api_new, url_prefix='/api')
     app.register_blueprint(operations_api, url_prefix='/api')
-    app.register_blueprint(ops, url_prefix='/ops')
+    csrf.exempt(operations_api_new)
+    csrf.exempt(operations_api)
     app.register_blueprint(exchange_api, url_prefix='/api/exchange')
     app.register_blueprint(operations_diagnostic, url_prefix='/diagnostic')
-
-    # Exempt API routes from CSRF protection
-    csrf.exempt(operations_api)
-    csrf.exempt(operations_api_new)
 
     # Homepage route
     @app.route('/')
