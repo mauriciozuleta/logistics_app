@@ -84,47 +84,63 @@ class Aircraft(BaseModel):
 
 # Trader model
 
-class Trader(BaseModel):
-    __tablename__ = 'traders'
+
+# Region model
+class Region(BaseModel):
+    __tablename__ = 'regions'
 
     id = db.Column(db.Integer, primary_key=True)
-    trader_code = db.Column(db.String(10), unique=True, nullable=True)  # Custom ID like TR001
-    country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=True)
-    city = db.Column(db.String(100), nullable=True)
-    name = db.Column(db.String(128), nullable=True)  # Port Name
-    type_of_freight = db.Column(db.String(64), nullable=True)
-    airport_iata = db.Column(db.String(3), nullable=True)
-    ground_terminal_code = db.Column(db.String(64), nullable=True)  # Renamed from terminal
-    port_code = db.Column(db.String(64), nullable=True)  # New field
-
-    # Manager/Branch distinction
-    is_manager = db.Column(db.Boolean, default=False)  # Added field for manager/branch distinction
-    region = db.Column(db.String(64), nullable=True)
+    name = db.Column(db.String(64), unique=True, nullable=False)
     manager_name = db.Column(db.String(128), nullable=True)
-    operational_cost_year = db.Column(db.Float)
 
-    # Section 1: Trader/Branch Information
-    revenue_taxes = db.Column(db.Float)
-
-    # Section 2: Export Costs
-    export_profit_pct = db.Column(db.Float)
-    export_sales_tax = db.Column(db.Float)
-    export_other_taxes = db.Column(db.Float)
-
-    # Section 3: Import Costs
-    import_profit_pct = db.Column(db.Float)
-    import_taxes = db.Column(db.Float)
-
-
-    # Additional fields
-    other_taxes = db.Column(db.Float)
-
-    country = db.relationship('Country', backref='traders')
+    countries = db.relationship('CountryTradeInfo', backref='region', lazy=True)
 
     def __repr__(self):
-        if hasattr(self, 'is_manager') and self.is_manager:
-            return f"<Manager {self.manager_name} ({self.region})>"
-        return f"<Trader {self.name} ({self.city}, {self.country_id})>"
+        return f"<Region {self.name} (Manager: {self.manager_name})>"
+
+# CountryTradeInfo model
+class CountryTradeInfo(BaseModel):
+    __tablename__ = 'country_trade_info'
+
+    id = db.Column(db.Integer, primary_key=True)
+    country_id = db.Column(db.String(10), db.ForeignKey('countries.country_code'), nullable=False)
+    region_id = db.Column(db.Integer, db.ForeignKey('regions.id'), nullable=False)
+
+    operational_cost_year = db.Column(db.Float, nullable=True)
+    revenue_taxes = db.Column(db.Float, nullable=True)
+    export_profit_pct = db.Column(db.Float, nullable=True)
+    export_sales_tax = db.Column(db.Float, nullable=True)
+    export_other_taxes = db.Column(db.Float, nullable=True)
+    export_other_cost = db.Column(db.Float, nullable=True)
+    import_profit_pct = db.Column(db.Float, nullable=True)
+    import_taxes = db.Column(db.Float, nullable=True)
+    import_other_taxes = db.Column(db.Float, nullable=True)
+    import_other_cost = db.Column(db.Float, nullable=True)
+    other_taxes = db.Column(db.Float, nullable=True)
+    other_costs = db.Column(db.Float, nullable=True)
+    additional_info = db.Column(db.String(500), nullable=True)
+
+    branches = db.relationship('Branch', backref='country_trade_info', lazy=True)
+    country = db.relationship('Country', backref='country_trade_info')
+
+    def __repr__(self):
+        return f"<CountryTradeInfo {self.country_id} (Region: {self.region_id})>"
+
+# Branch model
+class Branch(BaseModel):
+    __tablename__ = 'branches'
+
+    id = db.Column(db.Integer, primary_key=True)
+    branch_code = db.Column(db.String(10), unique=True, nullable=True)
+    country_trade_info_id = db.Column(db.Integer, db.ForeignKey('country_trade_info.id'), nullable=False)
+    city = db.Column(db.String(100), nullable=True)
+    name = db.Column(db.String(128), nullable=True)
+    type_of_freight = db.Column(db.String(64), nullable=True)
+    airport_iata = db.Column(db.String(3), nullable=True)
+    ground_terminal_code = db.Column(db.String(64), nullable=True)
+
+    def __repr__(self):
+        return f"<Branch {self.name} ({self.city})>"
 
 
 class Airport(BaseModel):
@@ -251,8 +267,8 @@ class Shipment(BaseModel):
     shipment_reference = db.Column(db.String(64), unique=True, nullable=False)
 
     # Relationships to other models for data integrity
-    shipper_id = db.Column(db.Integer, db.ForeignKey('traders.id'), nullable=False)
-    consignee_id = db.Column(db.Integer, db.ForeignKey('traders.id'), nullable=False)
+    # shipper_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
+    # consignee_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
     departure_route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), nullable=False)
     return_route_id = db.Column(db.Integer, db.ForeignKey('routes.id'))
 
@@ -278,8 +294,8 @@ class Shipment(BaseModel):
     return_kg_cost = db.Column(db.Float)
 
     # Relationships for easy access to related objects
-    shipper = db.relationship('Trader', foreign_keys=[shipper_id], backref='shipments_as_shipper')
-    consignee = db.relationship('Trader', foreign_keys=[consignee_id], backref='shipments_as_consignee')
+    # shipper = db.relationship('Branch', foreign_keys=[shipper_id], backref='shipments_as_shipper')
+    # consignee = db.relationship('Branch', foreign_keys=[consignee_id], backref='shipments_as_consignee')
     departure_route = db.relationship('Route', foreign_keys=[departure_route_id], backref='shipments_departing')
     return_route = db.relationship('Route', foreign_keys=[return_route_id], backref='shipments_returning')
 

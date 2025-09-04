@@ -1,8 +1,3 @@
-
-# Run seeding if executed directly
-if __name__ == "__main__":
-    seed_all()
-import csv
 import csv
 import os
 import sys
@@ -13,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import create_app
 app = create_app()
 from extensions import db
-from models import Airport, Country, Aircraft, Trader, Route, Product, Shipment
+from models import Airport, Country, Aircraft, Route, Product, Shipment
 
 def seed_table_from_csv(model, csv_file, field_map=None, skip_duplicates_field=None, required_csv_fields=None):
     # Add a check to ensure the seed file exists before trying to open it.
@@ -81,26 +76,62 @@ def seed_table_from_csv(model, csv_file, field_map=None, skip_duplicates_field=N
                 print(f"  - Line {line}: {reason}")
 
 def seed_all():
-    base_dir = os.path.dirname(__file__)
+    # Seed Countries
+    seed_table_from_csv(
+        Country,
+        os.path.join('data', 'country-code-to-currency-code-mapping.csv'),
+        field_map={
+            'CountryCode': 'country_code',
+            'Country': 'country_name',
+            'Code': 'currency_code',
+            'Region': 'region',
+        },
+        skip_duplicates_field='CountryCode',
+        required_csv_fields=['CountryCode', 'Country', 'Code']
+    )
+
+    # Seed Products
+    seed_table_from_csv(
+        Product,
+        os.path.join('data', 'products_export.csv'),
+        field_map={
+            'product_code': 'product_code',
+            'product_type': 'product_type',
+            'name': 'name',
+            'country_id': 'country_id',
+            'trade_unit': 'trade_unit',
+            'fca_cost_per_wu': 'fca_cost_per_wu',
+            'packaging': 'packaging',
+            'packaging_weight': 'packaging_weight',
+            'units_per_pack': 'units_per_pack',
+            'packaging_cost': 'packaging_cost',
+            'other_info': 'other_info',
+            'currency': 'currency',
+        },
+        skip_duplicates_field='product_code',
+        required_csv_fields=['product_code', 'name', 'country_id']
+    )
+
+    # Seed Aircraft
+    seed_table_from_csv(
+        Aircraft,
+        os.path.join('data', 'aircraft_export.csv'),
+        skip_duplicates_field='id',
+        required_csv_fields=['id', 'manufacturer', 'model']
+    )
+
+    # Seed Airports
+    seed_table_from_csv(
+        Airport,
+        os.path.join('data', 'airports_export.csv'),
+        skip_duplicates_field='iata_code',
+        required_csv_fields=['iata_code', 'name', 'city', 'country_id']
+    )
+
+    # You can add more seeding calls for other tables as needed
+    print('Seeding complete.')
+
+# Run seeding if executed directly
+if __name__ == "__main__":
     with app.app_context():
-        seed_table_from_csv(
-            Country,
-            os.path.join(base_dir, 'country-code-to-currency-code-mapping.csv'),
-            field_map={
-                'CountryCode': 'country_code',
-                'Country': 'country_name',
-                'Code': 'currency_code',
-                'Region': 'region'
-            },
-            skip_duplicates_field='CountryCode',
-            required_csv_fields=['CountryCode', 'Country', 'Code', 'Region']
-        )
-        seed_table_from_csv(Aircraft, os.path.join(base_dir, 'aircraft_export.csv'))
-    # seed_table_from_csv(Trader, os.path.join(base_dir, 'traders_export.csv'))  # Disabled: traders CSV is outdated
-        # The user will create routes manually, so we skip seeding this table.
-        # seed_table_from_csv(Route, os.path.join(base_dir, 'routes_export.csv'))
-        seed_table_from_csv(Product, os.path.join(base_dir, 'products_export.csv'))
-        # Add seeding for Airports, which is crucial for route creation
-        seed_table_from_csv(Airport, os.path.join(base_dir, 'airports_export.csv'))
-        # Note: Shipments are typically transactional and may not need a default seed file.
-        # seed_table_from_csv(Shipment, os.path.join(base_dir, 'shipments_export.csv'))
+        seed_all()

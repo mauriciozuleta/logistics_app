@@ -1,10 +1,17 @@
 import json
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_wtf.csrf import generate_csrf
-from models import Airport, Aircraft, Route, Shipment, Product
+from models import Airport, Aircraft, Route, Shipment, Product, Country, Region, CountryTradeInfo, Branch
 from operations.flight_distances_db import calculate_distance_db
 from sqlalchemy.orm import joinedload
 from extensions import db
+
+# Try to import the mapping function for dropdown compatibility
+try:
+    from region_country_mapping import generate_region_country_mapping
+except ImportError:
+    # If not available, we'll use our existing method
+    generate_region_country_mapping = None
 
 def generate_product_code(product_type):
     prefix = product_type[:2].upper()
@@ -19,50 +26,98 @@ operations_api = Blueprint("operations_api", __name__)
 # Add the shipment_management route after Blueprint definition
 @operations.route('/shipments', methods=['GET', 'POST'])
 def shipment_management():
-    from models import Trader, Country, Airport
+    from models import Region, CountryTradeInfo, Branch, Country, Airport
 
-    # Get all traders
-    all_traders = Trader.query.order_by(Trader.city).all()
-    managers = [t for t in all_traders if t.is_manager]
-    branches = all_traders  # All traders are selectable as branches
+    # Get all regions
+    regions = Region.query.order_by(Region.name).all()
+    region_list = [{
+        "id": r.id,
+        "name": r.name,
+        "manager_name": r.manager_name
+    } for r in regions]
 
-    # Get distinct regions from traders who are managers
-    regions = [m.region for m in managers if m.region]
-    regions = sorted(list(set(regions)))  # Remove duplicates and sort
-
+    # Create a mapping of region IDs to manager names for the frontend
+    region_manager_map = {r.id: r.manager_name for r in regions}
+    
+    # Get all countries and their trade info
     countries = Country.query.order_by(Country.country_name).all()
-    airports = Airport.query.order_by(Airport.name).all()
+    country_trade_infos = CountryTradeInfo.query.order_by(CountryTradeInfo.country_id).all()
+    country_list = []
+    for c in countries:
+        trade_info = next((cti for cti in country_trade_infos if cti.country_id == c.country_code), None)
+        country_dict = {
+            "code": c.country_code,
+            "name": c.country_name,
+            "region": trade_info.region_id if trade_info else None,  # Use region_id from trade_info
+            "currency_code": getattr(c, "currency_code", None),
+            "operational_cost_year": trade_info.operational_cost_year if trade_info else None,
+            # Include original geographic region for reference
+            "geographic_region": c.region
+        }
+        country_list.append(country_dict)
+    
+    # Debug output for troubleshooting
+    print(f"Region list: {region_list}")
+    print(f"Region manager map: {region_manager_map}")
+    print(f"Sample countries with their regions:")
+    for c in country_list[:5]:
+        print(f"  {c['name']}: region={c['region']}, geographic_region={c.get('geographic_region')}")
+    
+    # Print countries that have null regions for debugging
+    null_region_countries = [c for c in country_list if c['region'] is None]
+    print(f"Countries with null regions: {len(null_region_countries)}")
+    for c in null_region_countries[:5]:
+        print(f"  {c['name']}: null region, geographic_region={c.get('geographic_region')}")
 
-    # Prepare lists for dropdowns
-    region_list = regions
-    country_list = [{"code": c.country_code, "name": c.country_name, "region": c.region} for c in countries]
-    branch_list = [{
-        "id": b.id,
-        "name": b.name or b.city,
-        "city": b.city,
-        "country_id": b.country_id,
-        "airport_iata": b.airport_iata,
-        "region": b.region,  # Added region
-        "regional_manager_name": next((m.manager_name for m in managers if m.region == b.region), ''),
-        "revenue_taxes": getattr(b, "revenue_taxes", None),
-        "operational_cost_year": getattr(b, "operational_cost_year", None),
-        "export_profit_pct": getattr(b, "export_profit_pct", None),
-        "export_sales_tax": getattr(b, "export_sales_tax", None),
-        "export_other_taxes": getattr(b, "export_other_taxes", None),
-        "export_other_cost": getattr(b, "export_other_cost", None),
-        "import_profit_pct": getattr(b, "import_profit_pct", None),
-        "import_taxes": getattr(b, "import_taxes", None),
-        "import_other_taxes": getattr(b, "import_other_taxes", None),
-        "import_other_cost": getattr(b, "import_other_cost", None),
-        "other_taxes": getattr(b, "other_taxes", None),
-        "other_costs": getattr(b, "other_costs", None),
-    } for b in branches]
+    # Get all branches
+    branches = Branch.query.order_by(Branch.city).all()
+    airports = Airport.query.order_by(Airport.name).all()
+    branch_list = []
+    for b in branches:
+        branch_ports = []
+        # If branch has airport_iata, find matching airport
+        if b.airport_iata:
+            branch_ports += [
+                {"id": a.id, "name": a.name, "iata_code": a.iata_code, "city": a.city}
+                for a in airports if a.iata_code == b.airport_iata
+            ]
+        # If branch has ground_terminal_code, add as a port
+        if b.ground_terminal_code:
+            branch_ports.append({"id": f"gt_{b.ground_terminal_code}", "name": b.ground_terminal_code, "iata_code": None, "city": b.city})
+        branch_list.append({
+            "id": b.id,
+            "name": b.name or b.city,
+            "city": b.city,
+            "country_trade_info_id": b.country_trade_info_id,
+            "country_code": b.country_trade_info.country_id if b.country_trade_info else None,
+            "region_id": b.country_trade_info.region_id if b.country_trade_info else None,
+            "type_of_freight": b.type_of_freight,
+            "airport_iata": b.airport_iata,
+            "ground_terminal_code": b.ground_terminal_code,
+            "region": b.country_trade_info.region.name if b.country_trade_info and b.country_trade_info.region else None,
+            "regional_manager_name": b.country_trade_info.region.manager_name if b.country_trade_info and b.country_trade_info.region else None,
+            "revenue_taxes": b.country_trade_info.revenue_taxes if b.country_trade_info else None,
+            "operational_cost_year": b.country_trade_info.operational_cost_year if b.country_trade_info else None,
+            "export_profit_pct": b.country_trade_info.export_profit_pct if b.country_trade_info else None,
+            "export_sales_tax": b.country_trade_info.export_sales_tax if b.country_trade_info else None,
+            "export_other_taxes": b.country_trade_info.export_other_taxes if b.country_trade_info else None,
+            "export_other_cost": b.country_trade_info.export_other_cost if b.country_trade_info else None,
+            "import_profit_pct": b.country_trade_info.import_profit_pct if b.country_trade_info else None,
+            "import_taxes": b.country_trade_info.import_taxes if b.country_trade_info else None,
+            "import_other_taxes": b.country_trade_info.import_other_taxes if b.country_trade_info else None,
+            "import_other_cost": b.country_trade_info.import_other_cost if b.country_trade_info else None,
+            "other_taxes": b.country_trade_info.other_taxes if b.country_trade_info else None,
+            "other_costs": b.country_trade_info.other_costs if b.country_trade_info else None,
+            "ports": branch_ports
+        })
+
+    airports = Airport.query.order_by(Airport.name).all()
     airport_list = [{"id": a.id, "name": a.name, "iata_code": a.iata_code, "city": a.city, "country_id": a.country_id} for a in airports]
 
     csrf_token = generate_csrf()
 
-    # Build region_manager_map: {region: manager_name} using Trader model with is_manager=True
-    region_manager_map = {manager.region: manager.manager_name for manager in managers if manager.region and manager.manager_name}
+    # Build region_manager_map: {region_id: manager_name} using Region model
+    region_manager_map = {r.id: r.manager_name for r in regions}
 
     # Build route_data for JS (same logic as add_shipment)
     routes = Route.query.options(
@@ -604,18 +659,14 @@ def product_prices():
     """
     API endpoint to fetch competitive prices for a given consignee's country.
     """
-    from models import Trader, CompetitivePrice, Country
-    consignee_id = request.args.get('consignee_id')
-    if not consignee_id:
-        return jsonify({'error': 'Missing consignee_id parameter'}), 400
+    from models import CompetitivePrice, Country
+    consignee_country_code = request.args.get('consignee_country_code')
+    if not consignee_country_code:
+        return jsonify({'error': 'Missing consignee_country_code parameter'}), 400
 
-    consignee = Trader.query.get(consignee_id)
-    if not consignee or not consignee.country_id:
-        return jsonify({'error': 'Consignee or consignee country not found'}), 404
-
-    country_obj = Country.query.get(consignee.country_id)
+    country_obj = Country.query.get(consignee_country_code)
     if not country_obj:
-        return jsonify({'error': 'Country for consignee not found'}), 404
+        return jsonify({'error': 'Country not found'}), 404
     consignee_country_name = country_obj.country_name
 
     prices = CompetitivePrice.query.filter_by(country=consignee_country_name).all()

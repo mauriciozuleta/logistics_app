@@ -1,53 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<script>
-window.regionManagerMap = {{ region_manager_map | tojson }};
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var tradingInfo = document.getElementById('trading-info-content');
-    var logisticInfo = document.getElementById('logistic-info-content');
-    var summaryInfo = document.getElementById('summary-info-content');
-    var startBtn = document.getElementById('start-shipment-btn');
-    var tradingToggle = document.getElementById('toggle-trading-btn');
-    var logisticToggle = document.getElementById('toggle-logistic-btn');
-    var summaryToggle = document.getElementById('toggle-summary-btn');
-    var consigneeBranch = document.getElementById('consignee_branch');
-    var typeOfReturn = document.getElementById('type_of_return');
-
-    if (tradingInfo) tradingInfo.style.display = 'none';
-    if (logisticInfo) logisticInfo.style.display = 'none';
-    if (summaryInfo) summaryInfo.style.display = 'none';
-
-    if (startBtn && tradingInfo && tradingToggle && logisticToggle && summaryToggle) {
-        startBtn.addEventListener('click', function() {
-            tradingInfo.style.display = '';
-            tradingToggle.disabled = false;
-            logisticToggle.disabled = true;
-            summaryToggle.disabled = true;
-        });
-    }
-    if (consigneeBranch && logisticInfo && logisticToggle) {
-        consigneeBranch.addEventListener('change', function() {
-            logisticInfo.style.display = '';
-            logisticToggle.disabled = false;
-        });
-    }
-    if (typeOfReturn && summaryInfo && summaryToggle) {
-        typeOfReturn.addEventListener('change', function() {
-            summaryInfo.style.display = '';
-            summaryToggle.disabled = false;
-        });
-    }
-});
-</script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/add_shipment_css.css') }}">
-<script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
-<script src="{{ url_for('static', filename='js/shipment_management_update.js') }}"></script>
-<script>
-window.routeData = {{ route_data | tojson }};
-</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shipment.css') }}">
+<!-- All JS references removed. Only HTML structure and CSS remain. -->
 
 <form method="POST" action="">
     {# This hidden input is crucial for the JavaScript fetch request to work #}
@@ -68,138 +23,77 @@ window.routeData = {{ route_data | tojson }};
 	</div>
 	<div id="trading-info-content">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
-            <div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
-                <span style="color: #257777; font-weight: bold;">Shipper Information</span>
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="trading_region">Region</label>
-                <select id="trading_region" name="trading_region" class="form-control" style="border: 2px solid #257777;">
-                    <option value="">Select Region</option>
-                    {% for region in region_list %}
-                        <option value="{{ region }}">{{ region }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="trading_regional_manager">Regional Manager</label>
-                <input type="text" id="trading_regional_manager" name="trading_regional_manager" class="form-control" style="border: 2px solid #257777;" readonly>
-            </div>
-            <div class="form-group" style="width: 100px;">
-                <label for="trading_country">Country</label>
-                <select id="trading_country" name="trading_country" class="form-control" style="border: 2px solid #257777;" disabled>
-                    <option value="">Select Country</option>
-                    {% for country in country_list %}
-                        <option value="{{ country.code }}" data-region="{{ country.region }}" data-currency="{{ country.currency_code }}">{{ country.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group" style="width: 100px;">
-                <label for="trading_branch">Branch</label>
-                <select id="trading_branch" name="trading_branch" class="form-control" style="border: 2px solid #257777;" disabled>
-                    <option value="">Select Branch</option>
-                    {% for branch in branch_list %}
-                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.region }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group" style="width: 250px;">
-                <label for="port_of_shipping">Port of Shipping</label>
-                <select id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" disabled>
-                    <option value="">Select Port</option>
-                    {% for airport in airport_list %}
-                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.iata_code }}</option>
-                    {% endfor %}
-                </select>
-                <input type="hidden" id="port_of_shipping_iata" name="port_of_shipping_iata" value="">
-                <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    var portSelect = document.getElementById('port_of_shipping');
-                    var iataInput = document.getElementById('port_of_shipping_iata');
-                    if (portSelect && iataInput) {
-                        portSelect.addEventListener('change', function() {
-                            iataInput.value = portSelect.value;
-                        });
-                    }
-                });
-                </script>
-            </div>
+                <div class="form-group" style="width: 250px;">
+                    <label for="port_of_shipping">Port of Shipping</label>
+                    <select id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" disabled>
+                        <option value="">Select Port</option>
+                            <!-- Port options will be added here -->
+                    </select>
+                    <input type="hidden" id="port_of_shipping_iata" name="port_of_shipping_iata" value="">
+                </div>
+                
+                <div class="form-group" style="min-width: 150px;">
+                    <label for="trading_region">Region</label>
+                    <select id="trading_region" name="trading_region" class="form-control" style="border: 2px solid #257777;">
+                        <option value="">Select Region</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="trading_regional_manager">Regional Manager</label>
+                    <input type="text" id="trading_regional_manager" name="trading_regional_manager" class="form-control" style="border: 2px solid #257777;" readonly>
+                </div>
+                <div class="form-group" style="width: 100px;">
+                    <label for="trading_country">Country</label>
+                    <select id="trading_country" name="trading_country" class="form-control" style="border: 2px solid #257777;">
+                        <option value="">Select Country</option>
+                            <!-- Country options will be added here -->
+                    </select>
+                </div>
+                <div class="form-group" style="width: 100px;">
+                    <label for="trading_branch">Branch</label>
+                    <select id="trading_branch" name="trading_branch" class="form-control" style="border: 2px solid #257777;" disabled>
+                        <option value="">Select Branch</option>
+                            <!-- Branch options will be added here -->
+                    </select>
+                </div>
 		</div>
 		<div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
-            <div class="form-group" style="min-width: 150px; display: flex; align-items: center; height: 38px;">
-                <span style="color: #2b792b; font-weight: bold;">Consignee Information</span>
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="consignee_region">Region</label>
-                <select id="consignee_region" name="consignee_region" class="form-control" style="border: 2px solid #2b792b;">
-                    <option value="">Select Region</option>
-                    {% for region in region_list %}
-                        <option value="{{ region }}">{{ region }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="consignee_regional_manager">Regional Manager</label>
-                <input type="text" id="consignee_regional_manager" name="consignee_regional_manager" class="form-control" style="border: 2px solid #2b792b;" readonly>
-            </div>
-            <div class="form-group" style="width: 100px;">
-                <label for="consignee_country">Country</label>
-                <select id="consignee_country" name="consignee_country" class="form-control" style="border: 2px solid #2b792b;" disabled>
-                    <option value="">Select Country</option>
-                    {% for country in country_list %}
-                        <option value="{{ country.code }}" data-region="{{ country.region }}">{{ country.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group" style="width: 100px;">
-                <label for="consignee_branch">Branch</label>
-                <select id="consignee_branch" name="consignee_branch" class="form-control" style="border: 2px solid #2b792b;" disabled>
-                    <option value="">Select Branch</option>
-                    {% for branch in branch_list %}
-                        <option value="{{ branch.id }}" data-country="{{ branch.country_id }}" data-region="{{ branch.region }}" data-airport-iata="{{ branch.airport_iata }}" data-manager-name="{{ branch.regional_manager_name }}">{{ branch.city }} - {{ branch.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group" style="width: 250px;">
-                <label for="consignee_port_of_shipping">Port of Arrival</label>
-                <select id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" disabled>
-                    <option value="">Select Port</option>
-                    {% for airport in airport_list %}
-                        <option value="{{ airport.iata_code }}" data-country="{{ airport.country_id }}">{{ airport.iata_code }}</option>
-                    {% endfor %}
-                </select>
-                <input type="hidden" id="consignee_port_of_shipping_iata" name="consignee_port_of_shipping_iata" value="">
-            </div>
+                <div class="form-group" style="width: 250px;">
+                    <label for="consignee_port_of_shipping">Port of Arrival</label>
+                    <select id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" disabled>
+                        <option value="">Select Port</option>
+                            <!-- Port options will be added here -->
+                    </select>
+                    <input type="hidden" id="consignee_port_of_shipping_iata" name="consignee_port_of_shipping_iata" value="">
+                </div>
+                <div class="form-group" style="min-width: 150px;">
+                    <label for="consignee_region">Region</label>
+                    <select id="consignee_region" name="consignee_region" class="form-control" style="border: 2px solid #2b792b;">
+                        <option value="">Select Region</option>
+                            <!-- Region options will be added here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="consignee_regional_manager">Regional Manager</label>
+                    <input type="text" id="consignee_regional_manager" name="consignee_regional_manager" class="form-control" style="border: 2px solid #2b792b;" readonly>
+                </div>
+                <div class="form-group" style="width: 100px;">
+                    <label for="consignee_country">Country</label>
+                    <select id="consignee_country" name="consignee_country" class="form-control" style="border: 2px solid #2b792b;" disabled>
+                        <option value="">Select Country</option>
+                            <!-- Country options will be added here -->
+                    </select>
+                </div>
+                <div class="form-group" style="width: 100px;">
+                    <label for="consignee_branch">Branch</label>
+                    <select id="consignee_branch" name="consignee_branch" class="form-control" style="border: 2px solid #2b792b;" disabled>
+                        <option value="">Select Branch</option>
+                            <!-- Branch options will be added here -->
+                    </select>
+                </div>
 		</div>
 	</div>
 </div>
-
-<script>
-function toggleTradingInfo() {
-	var content = document.getElementById('trading-info-content');
-	if (content.style.display === 'none') {
-		content.style.display = '';
-	} else {
-		content.style.display = 'none';
-	}
-}
-function toggleLogisticInfo() {
-    var content = document.getElementById('logistic-info-content');
-    if (content.style.display === 'none') {
-        content.style.display = '';
-    } else {
-        content.style.display = 'none';
-    }
-}
-
-function toggleSummaryInfo() {
-    var content = document.getElementById('summary-info-content');
-    if (content.style.display === 'none') {
-        content.style.display = '';
-    } else {
-        content.style.display = 'none';
-    }
-}
-</script>
 
 <div class="shipment-section" id="container-3">
     <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
@@ -280,98 +174,6 @@ function toggleSummaryInfo() {
         <span>Shipment summary</span>
     <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleSummaryInfo()" style="margin-left: 10px;" id="toggle-summary-btn" disabled>Toggle</button>
     </div>
-    <div id="summary-info-content">
-        <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
-            <div class="form-group" style="min-width: 150px;">
-                <label for="add_cargo_to_route" style="color: #257777; font-weight: bold;">Add cargo to:</label>
-                <select id="add_cargo_to_route" name="add_cargo_to_route" class="form-control" style="border: 2px solid #257777;" disabled></select>
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="route_cost">Avg. Cost Kg.</label>
-                <input type="text" id="avg_cost_kg_departure" name="avg_cost_kg_departure" class="form-control" placeholder=" " style="border: 2px solid #257777;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="available_payload">Payload Used/Avail.</label>
-                <input type="text" id="payload_status_departure" name="payload_status_departure" class="form-control" placeholder="" style="border: 2px solid #257777;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="type_of_return">FCA Cost</label>
-                <input type="text" id="fca_cost_departure" name="fca_cost_departure" class="form-control" placeholder="" style="border: 2px solid #257777;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="outbound_cost_weight">FCA Profit</label>
-                <input type="text" id="fca_profit_departure" name="fca_profit_departure" class="form-control" placeholder="" style="border: 2px solid #257777;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="dat_cost_departure">DAT Cost</label>
-                <input type="text" id="dat_cost_departure" name="dat_cost_departure" class="form-control" placeholder="" style="border: 2px solid #257777;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="dat_profit_departure">DAT Profit</label>
-                <input type="text" id="dat_profit_departure" name="dat_profit_departure" class="form-control" placeholder="" style="border: 2px solid #257777;">
-            </div>
-        </div>
-        <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
-            <div class="form-group" style="min-width: 150px;">
-                <span style="color: #2b792b; font-weight: bold;">Add cargo to:</span>
-                <input type="text" id="add_cargo_to_return" name="add_cargo_to_return" class="form-control" placeholder="" style="border: 2px solid #2b792b;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="avg_cost_kg_return">Avg. Cost Kg.</label>
-                <input type="text" id="avg_cost_kg_return" name="avg_cost_kg_return" class="form-control" placeholder=" " style="border: 2px solid #2b792b;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="payload_status_return">Payload Used/Avail.</label>
-                <input type="text" id="payload_status_return" name="payload_status_return" class="form-control" placeholder="" style="border: 2px solid #225f22;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="fca_cost_return">FCA Cost</label>
-                <input type="text" id="fca_cost_return" name="fca_cost_return" class="form-control" placeholder="" style="border: 2px solid #2b792b;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="fca_profit_return">FCA Profit</label>
-                <input type="text" id="fca_profit_return" name="fca_profit_return" class="form-control" placeholder="" style="border: 2px solid #2b792b;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="dat_cost_return">DAT Cost</label>
-                <input type="text" id="dat_cost_return" name="dat_cost_return" class="form-control" placeholder="" style="border: 2px solid #2b792b;">
-            </div>
-            <div class="form-group" style="min-width: 150px;">
-                <label for="dat_profit_return">DAT Profit</label>
-                <input type="text" id="dat_profit_return" name="dat_profit_return" class="form-control" placeholder="" style="border: 2px solid #2b792b;">
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<!-- Route Not Found Modal -->
-<style>
-    .modal {
-        display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1000; /* Sit on top */
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-    }
-    .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto; /* 15% from the top and centered */
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 5px;
-        text-align: center;
-    }
-    .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-    .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
-    .modal-actions { margin-top: 20px; }
 </style>
 <div id="route-not-found-modal" class="modal">
     <div class="modal-content">
@@ -471,27 +273,6 @@ function toggleSummaryInfo() {
     </div>
 </div>
         <!-- Inject mock window.products for debugging -->
-        <script>
-        window.products = [
-            { code: 'P001', name: 'Apples', country: 'US', category: 'Fruit', unit: 'Kg', price: 2.5 },
-            { code: 'P002', name: 'Bananas', country: 'CO', category: 'Fruit', unit: 'Kg', price: 1.8 },
-            { code: 'P003', name: 'Coffee', country: 'CO', category: 'Beverage', unit: 'Kg', price: 5.0 },
-            { code: 'P004', name: 'Oranges', country: 'US', category: 'Fruit', unit: 'Kg', price: 2.2 },
-            { code: 'P005', name: 'Avocado', country: 'MX', category: 'Fruit', unit: 'Kg', price: 3.0 }
-        ];
-        </script>
 </div>
 
 {% endblock %}
-<script>
-function toggleProductsInfo() {
-    var content = document.getElementById('products-info-content');
-    if (content) {
-        if (content.style.display === 'none') {
-            content.style.display = '';
-        } else {
-            content.style.display = 'none';
-        }
-    }
-}
-</script>

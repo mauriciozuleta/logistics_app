@@ -3,42 +3,31 @@ from wtforms.validators import DataRequired, Optional, Length
 from flask_wtf import FlaskForm
 from wtforms import FormField
 
-class TraderForm(FlaskForm):
-    # Section 0: Trader Code
-    trader_code = StringField('Trader Code', validators=[Optional()])
-    
-    # Section 1: Trader Information
-    country_id = SelectField('Country', coerce=str, validators=[Optional()])
-    city = StringField('City', validators=[Optional()])
-    name = StringField('Trader Name', validators=[Optional()])
-    region = SelectField('Region', validators=[Optional()])
-    revenue_taxes = FloatField('Revenue Taxes (%)', validators=[Optional()])
-    operational_cost_year = FloatField('Operational Cost/Year (USD)', validators=[Optional()])
-
-    # Section 2: Export Costs
-    export_profit_pct = FloatField('Export Profit (%)', validators=[Optional()])
-    export_sales_tax = FloatField('Sales Tax (%)', validators=[Optional()])
-    export_other_taxes = FloatField('Other Taxes (%)', validators=[Optional()])
-    export_other_cost = FloatField('Other Cost (USD)', validators=[Optional()])
-
-    # Section 3: Import Costs
-    import_profit_pct = FloatField('Import Profit (%)', validators=[Optional()])
-    import_taxes = FloatField('Import Taxes (%)', validators=[Optional()])
-    import_other_taxes = FloatField('Other Taxes (%)', validators=[Optional()])
-    import_other_cost = FloatField('Other Cost (USD)', validators=[Optional()])
-
-    # New fields for regional management branches
-    other_taxes = FloatField('Other Taxes', validators=[Optional()])
-    other_costs = FloatField('Other Costs (USD)', validators=[Optional()])
-    additional_info = TextAreaField('Additional Information', validators=[Optional(), Length(max=500)])
-
-    submit = SubmitField('Add Trader')
+# Removed TraderForm class as per the request
 
 class RegionalManagerForm(FlaskForm):
     name = StringField('Manager Name', validators=[DataRequired(), Length(min=3, max=128)])
     region = SelectField('Region', validators=[DataRequired()])
-    operational_cost_year = FloatField('Operational Cost/Year (USD)', validators=[Optional()])
     submit = SubmitField('Save Regional Manager')
+
+# CountryTradeInfoForm for country-level trade info
+class CountryTradeInfoForm(FlaskForm):
+    country_id = SelectField('Country', coerce=str, validators=[DataRequired()])
+    region_id = SelectField('Region', coerce=int, validators=[DataRequired()])
+    operational_cost_year = FloatField('Operational Cost/Year (USD)', validators=[Optional()])
+    revenue_taxes = FloatField('Revenue Taxes (%)', validators=[Optional()])
+    export_profit_pct = FloatField('Export Profit (%)', validators=[Optional()])
+    export_sales_tax = FloatField('Sales Tax (%)', validators=[Optional()])
+    export_other_taxes = FloatField('Other Taxes (%)', validators=[Optional()])
+    export_other_cost = FloatField('Other Cost (USD)', validators=[Optional()])
+    import_profit_pct = FloatField('Import Profit (%)', validators=[Optional()])
+    import_taxes = FloatField('Import Taxes (%)', validators=[Optional()])
+    import_other_taxes = FloatField('Other Taxes (%)', validators=[Optional()])
+    import_other_cost = FloatField('Other Cost (USD)', validators=[Optional()])
+    other_taxes = FloatField('Other Taxes', validators=[Optional()])
+    other_costs = FloatField('Other Costs (USD)', validators=[Optional()])
+    additional_info = TextAreaField('Additional Information', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Save Country Trade Info')
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, IntegerField, SubmitField, SelectField

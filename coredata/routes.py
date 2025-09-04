@@ -1,23 +1,25 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
 from extensions import db
-from models import Product, Country, Aircraft, Airport, Trader, CompetitivePrice
+from models import Product, Country, Aircraft, Airport, Branch, Region, CountryTradeInfo, CompetitivePrice
 from sqlalchemy.orm import joinedload
-from coredata.forms import AircraftForm, AirportForm, TraderForm, ProductForm
+from coredata.forms import AircraftForm, AirportForm, ProductForm, CountryTradeInfoForm
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
 @coredata_bp.route('/api/branches_by_country')
 def branches_by_country():
     country_code = request.args.get('country_code')
-    branches = Trader.query.filter_by(country_id=country_code).all()
+    # Find CountryTradeInfo for this country
+    cti = CountryTradeInfo.query.filter_by(country_id=country_code).first()
     result = []
-    for b in branches:
-        result.append({
-            'city': b.city,
-            'port_name': b.name,  # 'name' is used for port_name in your model
-            'airport_iata': b.airport_iata
-        })
+    if cti:
+        for b in cti.branches:
+            result.append({
+                'city': b.city,
+                'port_name': b.name,
+                'airport_iata': b.airport_iata
+            })
     return jsonify(result)
 
 
@@ -42,18 +44,17 @@ def _generate_next_code(model, field_name, prefix):
 @coredata_bp.route('/api/country_branch_info')
 def country_branch_info():
     country_code = request.args.get('country_code')
-    # Find any record for this country
-    record = Trader.query.filter_by(country_id=country_code).first()
-    if record:
+    cti = CountryTradeInfo.query.filter_by(country_id=country_code).first()
+    if cti:
         return jsonify({
             'exists': True,
-            'export_sales_tax': record.export_sales_tax or 0,
-            'export_other_taxes': record.export_other_taxes or 0,
-            'export_profit_pct': record.export_profit_pct or 0,
-            'revenue_taxes': record.revenue_taxes or 0,
-            'import_taxes': record.import_taxes or 0,
-            'other_taxes': record.other_taxes or 0,
-            'import_profit_pct': record.import_profit_pct or 0
+            'export_sales_tax': cti.export_sales_tax or 0,
+            'export_other_taxes': cti.export_other_taxes or 0,
+            'export_profit_pct': cti.export_profit_pct or 0,
+            'revenue_taxes': cti.revenue_taxes or 0,
+            'import_taxes': cti.import_taxes or 0,
+            'other_taxes': cti.other_taxes or 0,
+            'import_profit_pct': cti.import_profit_pct or 0
         })
     else:
         return jsonify({
@@ -73,20 +74,17 @@ def country_branch_info():
 def country_branch():
     # This route seems to be a duplicate or older version of regional_management.
     # Let's keep it simple for now.
-    form = TraderForm()
-    # Get distinct regions from the Country model to populate the dropdown
+    # TraderForm removed. Update to use CountryTradeInfoForm or other form as needed.
     regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
-    # Flatten the list of tuples and filter out None/empty values
     region_choices = [r[0] for r in regions if r[0]]
-    # The rest of your view logic...
-    return render_template('coredata/country_branch.html', form=form, edit_id=None, regions=region_choices)
+    return render_template('coredata/country_branch.html', edit_id=None, regions=region_choices)
 
 @coredata_bp.route('/traders/Regional_Management', methods=['GET', 'POST'])
 def regional_management():
-    branch_form = TraderForm()
+    # TraderForm removed. Update to use CountryTradeInfoForm or other form as needed.
     regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
     region_choices = [r[0] for r in regions if r[0]]
-    return render_template('coredata/add_Regional_control.html', branch_form=branch_form, region_choices=region_choices)
+    return render_template('coredata/add_Regional_control.html', region_choices=region_choices)
 
 # This route handles the save_branch functionality for the regional branches management page
 @coredata_bp.route('/save_branch', methods=['POST'])
@@ -106,38 +104,48 @@ def save_branch():
         
         # Create trader/branch directly from the data sent by frontend
         # Check if a manager exists for this region
-        existing_manager = Trader.query.filter_by(region=data.get('region'), is_manager=True).first()
-        is_manager = False
-        if not existing_manager:
-            is_manager = True
+        # Find or create Region
+        region_name = data.get('region')
+        manager_name = data.get('manager_name')
+        region = Region.query.filter_by(name=region_name).first()
+        if not region:
+            region = Region(name=region_name, manager_name=manager_name)
+            db.session.add(region)
+            db.session.commit()
+
+        # Find or create CountryTradeInfo
+        country_id = data.get('country_id')
+        cti = CountryTradeInfo.query.filter_by(country_id=country_id, region_id=region.id).first()
+        if not cti:
+            cti = CountryTradeInfo(
+                country_id=country_id,
+                region_id=region.id,
+                export_sales_tax=to_float_or_none(data.get('export_sales_tax')),
+                export_other_taxes=to_float_or_none(data.get('export_other_taxes')),
+                export_profit_pct=to_float_or_none(data.get('export_profit_pct')),
+                revenue_taxes=to_float_or_none(data.get('revenue_taxes')),
+                import_taxes=to_float_or_none(data.get('import_taxes')),
+                other_taxes=to_float_or_none(data.get('other_taxes')),
+                import_profit_pct=to_float_or_none(data.get('import_profit_pct')),
+                operational_cost_year=to_float_or_none(data.get('year_operation_cost'))
+            )
+            db.session.add(cti)
+            db.session.commit()
 
         # Check for duplicate branch (same city and airport_iata)
-        duplicate_branch = Trader.query.filter_by(city=data.get('city'), airport_iata=data.get('airport_iata')).first()
+        duplicate_branch = Branch.query.filter_by(city=data.get('city'), airport_iata=data.get('airport_iata'), country_trade_info_id=cti.id).first()
         if duplicate_branch:
             return jsonify({'success': False, 'error': 'Branch with this city and airport already exists.'}), 200
 
-        trader = Trader(
-            region=data.get('region'),
-            manager_name=data.get('manager_name'),
-            country_id=data.get('country_id'),
-            export_sales_tax=to_float_or_none(data.get('export_sales_tax')),
-            export_other_taxes=to_float_or_none(data.get('export_other_taxes')),
-            export_profit_pct=to_float_or_none(data.get('export_profit_pct')),
-            revenue_taxes=to_float_or_none(data.get('revenue_taxes')),
-            import_taxes=to_float_or_none(data.get('import_taxes')),
-            other_taxes=to_float_or_none(data.get('other_taxes')),
-            import_profit_pct=to_float_or_none(data.get('import_profit_pct')),
+        branch = Branch(
+            country_trade_info_id=cti.id,
             type_of_freight=data.get('type_of_freight'),
             airport_iata=data.get('airport_iata'),
             ground_terminal_code=data.get('ground_terminal_code'),
-            port_code=data.get('port_code'),
             name=data.get('port_name'),
-            city=data.get('city'),
-            operational_cost_year=to_float_or_none(data.get('year_operation_cost')),
-            trader_code=_generate_next_code(Trader, 'trader_code', 'BR'),
-            is_manager=is_manager
+            city=data.get('city')
         )
-        db.session.add(trader)
+        db.session.add(branch)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Branch saved'})
     except Exception as e:
@@ -165,48 +173,54 @@ def api_save_branch():
                 return None
                 
         # Find or create the manager (Trader with is_manager=True)
-        manager = Trader.query.filter_by(region=manager_data['region'], is_manager=True).first()
-        if not manager:
-            if not manager_data.get('manager_name'):
-                return jsonify({'success': False, 'error': 'Manager name is required for a new region'}), 400
-            manager = Trader(
-                is_manager=True,
-                manager_name=manager_data['manager_name'],
-                region=manager_data['region'],
-                operational_cost_year=to_float_or_none(manager_data.get('operational_cost_year'))
-            )
-            db.session.add(manager)
+        # Find or create Region
+        region_name = manager_data.get('region')
+        manager_name = manager_data.get('manager_name')
+        region = Region.query.filter_by(name=region_name).first()
+        if not region:
+            region = Region(name=region_name, manager_name=manager_name)
+            db.session.add(region)
+            db.session.commit()
         else:
-            manager.operational_cost_year = to_float_or_none(manager_data.get('operational_cost_year'))
+            region.manager_name = manager_name
+            db.session.commit()
 
-        # Create the new branch (Trader with is_manager=False)
-        new_branch = Trader(
-            is_manager=False,
+        # Find or create CountryTradeInfo
+        country_id = branch_data.get('countryCode')
+        cti = CountryTradeInfo.query.filter_by(country_id=country_id, region_id=region.id).first()
+        if not cti:
+            cti = CountryTradeInfo(
+                country_id=country_id,
+                region_id=region.id,
+                revenue_taxes=to_float_or_none(branch_data.get('revenue')),
+                operational_cost_year=to_float_or_none(branch_data.get('opCost')),
+                export_sales_tax=to_float_or_none(branch_data.get('exportSalesTax')),
+                import_taxes=to_float_or_none(branch_data.get('importTaxes')),
+                other_taxes=to_float_or_none(branch_data.get('otherTaxes'))
+            )
+            db.session.add(cti)
+            db.session.commit()
+
+        # Create the new branch
+        branch = Branch(
+            country_trade_info_id=cti.id,
             name=branch_data.get('city'),
-            trader_code=_generate_next_code(Trader, 'trader_code', 'BR'),
-            country_id=branch_data.get('countryCode'),
             city=branch_data.get('city'),
             airport_iata=branch_data.get('airport'),
-            revenue_taxes=to_float_or_none(branch_data.get('revenue')),
-            operational_cost_year=to_float_or_none(branch_data.get('opCost')),
-            export_sales_tax=to_float_or_none(branch_data.get('exportSalesTax')),
-            import_taxes=to_float_or_none(branch_data.get('importTaxes')),
-            other_taxes=to_float_or_none(branch_data.get('otherTaxes')),
-            region=manager.region,
-            manager_name=manager.manager_name
+            type_of_freight=branch_data.get('type_of_freight')
         )
-        db.session.add(new_branch)
+        db.session.add(branch)
         db.session.commit()
-        
+
         return jsonify({
             'success': True, 
             'message': 'Branch saved successfully!',
             'branch': {
-                'id': new_branch.id,
-                'city': new_branch.city,
-                'airport': new_branch.airport_iata,
-                'countryCode': new_branch.country_id,
-                'countryName': new_branch.country.country_name if new_branch.country else ''
+                'id': branch.id,
+                'city': branch.city,
+                'airport': branch.airport_iata,
+                'countryCode': country_id,
+                'countryName': branch.city
             }
         })
     except Exception as e:
@@ -224,14 +238,13 @@ def api_branch_defaults_by_country():
             return jsonify(None)
 
         # Find the most recently created trader in that country to use as a default
-        last_branch_in_country = Trader.query.filter_by(country_id=country_code).order_by(Trader.created_at.desc()).first()
-
-        if last_branch_in_country:
+        cti = CountryTradeInfo.query.filter_by(country_id=country_code).order_by(CountryTradeInfo.created_at.desc()).first()
+        if cti:
             return jsonify({
-                'revenue_taxes': last_branch_in_country.revenue_taxes,
-                'export_sales_tax': last_branch_in_country.export_sales_tax,
-                'import_taxes': last_branch_in_country.import_taxes,
-                'other_taxes': last_branch_in_country.other_taxes,
+                'revenue_taxes': cti.revenue_taxes,
+                'export_sales_tax': cti.export_sales_tax,
+                'import_taxes': cti.import_taxes,
+                'other_taxes': cti.other_taxes,
             })
         return jsonify(None)
     except Exception as e:
@@ -247,17 +260,15 @@ def api_regional_manager_by_region():
 
     try:
         # First, try to find a manager with is_manager=True
-        manager = Trader.query.filter_by(region=region, is_manager=True).first()
-        if manager:
-            # Use manager_name column for both fields
+        region_obj = Region.query.filter_by(name=region).first()
+        if region_obj:
             return jsonify({
-                'id': manager.id,
-                'manager_name': manager.manager_name or '',
-                'name': manager.manager_name or '',
-                'operational_cost_year': manager.operational_cost_year
+                'id': region_obj.id,
+                'manager_name': region_obj.manager_name or '',
+                'name': region_obj.manager_name or '',
+                'operational_cost_year': None
             })
         else:
-            # If no manager found, return empty values
             return jsonify({
                 'id': None,
                 'manager_name': '',
@@ -444,57 +455,8 @@ def save_competitive_prices():
         return jsonify({'message': 'Some prices failed to save.', 'errors': errors}), 400
     return jsonify({'message': 'Competitive prices saved successfully.'})
 
-# Add Trader
-@coredata_bp.route('/add-trader', methods=['GET', 'POST'])
-def add_trader():
-    edit_id = request.args.get('edit_id') or request.form.get('edit_id')
-    trader = Trader.query.get(edit_id) if edit_id else None
-    form = TraderForm(obj=trader)
-
-    countries = Country.query.order_by(Country.country_name).all()
-    form.country_id.choices = [(c.country_code, f"{c.country_name} ({c.country_code})") for c in countries]
-
-    if form.validate_on_submit():
-        if not trader:
-            trader = Trader()
-            db.session.add(trader)
-
-        form.populate_obj(trader)
-
-        if not trader.trader_code or trader.trader_code.strip() == '':
-            trader.trader_code = _generate_next_code(Trader, 'trader_code', 'TR')
-
-        db.session.commit()
-        return redirect(url_for('coredata.view_edit_traders'))
-
-    if request.method == 'GET' and not trader:
-        form.trader_code.data = _generate_next_code(Trader, 'trader_code', 'TR')
-
-    return render_template('coredata/add_trader.html', form=form, edit_id=edit_id)
 
 # View/Edit Traders
-@coredata_bp.route('/view-edit-traders')
-def view_edit_traders():
-    # Fetch managers and their branches, and also traders who are not part of a region
-    managers = Trader.query.filter_by(is_manager=True).order_by(Trader.manager_name).all()
-    branches = Trader.query.filter_by(is_manager=False).order_by(Trader.name).all()
-    return render_template('coredata/view_edit_traders.html', 
-                           managers=managers, 
-                           branches=branches)
-
-# Debug Traders
-@coredata_bp.route('/debug-traders')
-def debug_traders():
-    trader_list = Trader.query.all()
-    return render_template('coredata/debug_traders.html', trader_list=trader_list)
-
-# Delete Trader
-@coredata_bp.route('/delete-trader/<int:trader_id>')
-def delete_trader(trader_id):
-    trader = Trader.query.get_or_404(trader_id)
-    db.session.delete(trader)
-    db.session.commit()
-    return redirect(url_for('coredata.view_edit_traders'))
 
 
 

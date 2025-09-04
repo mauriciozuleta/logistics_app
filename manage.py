@@ -5,7 +5,7 @@ from flask.cli import with_appcontext
 
 from app import app, create_app
 from data.seed_all_from_csv import seed_all
-from models import Aircraft, Country, Trader, Route, Product, Airport, Shipment
+from models import Aircraft, Country, Route, Product, Airport, Shipment
 
 
 # The app instance from app.py is now exposed for Flask run and CLI
@@ -57,7 +57,6 @@ def export_command(table):
 
     models_to_export = {
         'Aircraft': Aircraft,
-        'Trader': Trader,
         'Route': Route,
         'Product': Product,
         'Airport': Airport,

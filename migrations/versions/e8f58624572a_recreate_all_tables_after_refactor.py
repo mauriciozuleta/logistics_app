@@ -1,8 +1,8 @@
-"""Initial database schema
+"""Recreate all tables after refactor
 
-Revision ID: ee4ea919de60
+Revision ID: e8f58624572a
 Revises: 
-Create Date: 2025-08-15 17:49:28.416342
+Create Date: 2025-09-03 16:25:39.328396
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ee4ea919de60'
+revision = 'e8f58624572a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -55,7 +55,17 @@ def upgrade():
     sa.Column('country_code', sa.String(length=10), nullable=False),
     sa.Column('country_name', sa.String(length=64), nullable=False),
     sa.Column('currency_code', sa.String(length=4), nullable=False),
+    sa.Column('region', sa.String(length=32), nullable=True),
     sa.PrimaryKeyConstraint('country_code')
+    )
+    op.create_table('regions',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=64), nullable=False),
+    sa.Column('manager_name', sa.String(length=128), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('airports',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -80,13 +90,36 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('iata_code')
     )
+    op.create_table('country_trade_info',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('country_id', sa.String(length=10), nullable=False),
+    sa.Column('region_id', sa.Integer(), nullable=False),
+    sa.Column('operational_cost_year', sa.Float(), nullable=True),
+    sa.Column('revenue_taxes', sa.Float(), nullable=True),
+    sa.Column('export_profit_pct', sa.Float(), nullable=True),
+    sa.Column('export_sales_tax', sa.Float(), nullable=True),
+    sa.Column('export_other_taxes', sa.Float(), nullable=True),
+    sa.Column('export_other_cost', sa.Float(), nullable=True),
+    sa.Column('import_profit_pct', sa.Float(), nullable=True),
+    sa.Column('import_taxes', sa.Float(), nullable=True),
+    sa.Column('import_other_taxes', sa.Float(), nullable=True),
+    sa.Column('import_other_cost', sa.Float(), nullable=True),
+    sa.Column('other_taxes', sa.Float(), nullable=True),
+    sa.Column('other_costs', sa.Float(), nullable=True),
+    sa.Column('additional_info', sa.String(length=500), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['country_id'], ['countries.country_code'], ),
+    sa.ForeignKeyConstraint(['region_id'], ['regions.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('products',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('product_code', sa.String(length=16), nullable=False),
     sa.Column('product_type', sa.String(length=64), nullable=False),
     sa.Column('name', sa.String(length=128), nullable=False),
     sa.Column('country_id', sa.String(length=10), nullable=True),
-    sa.Column('trade_unit', sa.Integer(), nullable=True),
+    sa.Column('trade_unit', sa.String(length=16), nullable=True),
     sa.Column('fca_cost_per_wu', sa.Float(), nullable=True),
     sa.Column('packaging', sa.String(length=64), nullable=True),
     sa.Column('packaging_weight', sa.Float(), nullable=True),
@@ -100,27 +133,31 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('product_code')
     )
-    op.create_table('traders',
+    op.create_table('branches',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('trader_code', sa.String(length=10), nullable=True),
-    sa.Column('country_id', sa.String(length=10), nullable=False),
-    sa.Column('city', sa.String(length=100), nullable=False),
-    sa.Column('name', sa.String(length=128), nullable=False),
-    sa.Column('revenue_taxes', sa.Float(), nullable=True),
-    sa.Column('operational_cost_year', sa.Float(), nullable=True),
-    sa.Column('export_profit_pct', sa.Float(), nullable=True),
-    sa.Column('export_sales_tax', sa.Float(), nullable=True),
-    sa.Column('export_other_taxes', sa.Float(), nullable=True),
-    sa.Column('export_other_cost', sa.Float(), nullable=True),
-    sa.Column('import_profit_pct', sa.Float(), nullable=True),
-    sa.Column('import_taxes', sa.Float(), nullable=True),
-    sa.Column('import_other_taxes', sa.Float(), nullable=True),
-    sa.Column('import_other_cost', sa.Float(), nullable=True),
+    sa.Column('branch_code', sa.String(length=10), nullable=True),
+    sa.Column('country_trade_info_id', sa.Integer(), nullable=False),
+    sa.Column('city', sa.String(length=100), nullable=True),
+    sa.Column('name', sa.String(length=128), nullable=True),
+    sa.Column('type_of_freight', sa.String(length=64), nullable=True),
+    sa.Column('airport_iata', sa.String(length=3), nullable=True),
+    sa.Column('ground_terminal_code', sa.String(length=64), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['country_id'], ['countries.country_code'], ),
+    sa.ForeignKeyConstraint(['country_trade_info_id'], ['country_trade_info.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('trader_code')
+    sa.UniqueConstraint('branch_code')
+    )
+    op.create_table('competitive_prices',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('product_id', sa.Integer(), nullable=False),
+    sa.Column('product_code', sa.String(length=32), nullable=False),
+    sa.Column('country', sa.String(length=64), nullable=False),
+    sa.Column('origin', sa.String(length=64), nullable=False),
+    sa.Column('price_to_compare', sa.Float(), nullable=False),
+    sa.Column('updated_date', sa.Date(), nullable=False),
+    sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('routes',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -143,6 +180,7 @@ def upgrade():
     sa.Column('finish_airport_name', sa.String(length=255), nullable=True),
     sa.Column('total_distance_nm', sa.Float(), nullable=True),
     sa.Column('total_flight_time_hours', sa.Float(), nullable=True),
+    sa.Column('total_adjusted_flight_time_hours', sa.Float(), nullable=True),
     sa.Column('total_fuel_gallons', sa.Float(), nullable=True),
     sa.Column('total_fuel_cost', sa.Float(), nullable=True),
     sa.Column('total_block_hours_cost', sa.Float(), nullable=True),
@@ -152,6 +190,7 @@ def upgrade():
     sa.Column('leg1_route', sa.String(length=128), nullable=True),
     sa.Column('leg1_distance', sa.Float(), nullable=True),
     sa.Column('leg1_flight_time', sa.Float(), nullable=True),
+    sa.Column('leg1_adjusted_flight_time', sa.Float(), nullable=True),
     sa.Column('leg1_route_fuel_gls', sa.Float(), nullable=True),
     sa.Column('leg1_bh_cost_usd', sa.Float(), nullable=True),
     sa.Column('leg1_fuel_cost_usd', sa.Float(), nullable=True),
@@ -165,6 +204,7 @@ def upgrade():
     sa.Column('leg2_route', sa.String(length=128), nullable=True),
     sa.Column('leg2_distance', sa.Float(), nullable=True),
     sa.Column('leg2_flight_time', sa.Float(), nullable=True),
+    sa.Column('leg2_adjusted_flight_time', sa.Float(), nullable=True),
     sa.Column('leg2_route_fuel_gls', sa.Float(), nullable=True),
     sa.Column('leg2_bh_cost_usd', sa.Float(), nullable=True),
     sa.Column('leg2_fuel_cost_usd', sa.Float(), nullable=True),
@@ -189,8 +229,6 @@ def upgrade():
     op.create_table('shipments',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('shipment_reference', sa.String(length=64), nullable=False),
-    sa.Column('shipper_id', sa.Integer(), nullable=False),
-    sa.Column('consignee_id', sa.Integer(), nullable=False),
     sa.Column('departure_route_id', sa.Integer(), nullable=False),
     sa.Column('return_route_id', sa.Integer(), nullable=True),
     sa.Column('first_leg_route', sa.String(length=64), nullable=False),
@@ -213,10 +251,8 @@ def upgrade():
     sa.Column('return_kg_cost', sa.Float(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['consignee_id'], ['traders.id'], ),
     sa.ForeignKeyConstraint(['departure_route_id'], ['routes.id'], ),
     sa.ForeignKeyConstraint(['return_route_id'], ['routes.id'], ),
-    sa.ForeignKeyConstraint(['shipper_id'], ['traders.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('shipment_reference')
     )
@@ -227,9 +263,12 @@ def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('shipments')
     op.drop_table('routes')
-    op.drop_table('traders')
+    op.drop_table('competitive_prices')
+    op.drop_table('branches')
     op.drop_table('products')
+    op.drop_table('country_trade_info')
     op.drop_table('airports')
+    op.drop_table('regions')
     op.drop_table('countries')
     op.drop_table('aircraft')
     # ### end Alembic commands ###

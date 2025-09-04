@@ -1,0 +1,95 @@
+/* Shipment Management Page Styles (migrated from add_shipment_css.css) */
+
+.shipment-form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: center;
+  width: 90%;
+  margin: 0 auto 1rem auto;
+}
+.shipment-form-row .form-group {
+  flex: 1 1 20%;
+  min-width: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.shipment-section {
+  background-color: rgba(24, 28, 34, 0.8);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.section-title {
+  color: #FF5C00;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 92, 0, 0.3);
+  padding-bottom: 5px;
+}
+.coming-soon-notice {
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+.products-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  border-radius: 8px;
+}
+
+input.form-control,
+input[type="text"].form-control,
+input[type="number"].form-control {
+  background-color: transparent !important;
+  color: #e0e0e0;
+}
+.input-invalid {
+  border: 2px solid #ff4444 !important;
+  animation: inputBlink 1s infinite;
+}
+@keyframes inputBlink {
+  0% { box-shadow: 0 0 0 0 #ff4444; }
+  50% { box-shadow: 0 0 8px 2px #ff4444; }
+  100% { box-shadow: 0 0 0 0 #ff4444; }
+}
+.input-required-style {
+  background-color: white !important;
+  color: black !important;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+
+/* Modal Styles */
+.modal {
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 5px;
+  text-align: center;
+}
+.close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+.close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
+.modal-actions { margin-top: 20px; }

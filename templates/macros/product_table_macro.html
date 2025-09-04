@@ -1,0 +1,37 @@
+{# templates/macros/product_table_macro.html #}
+{% macro product_table(columns, products, table_id='product-table', show_totals=False) %}
+<table id="{{ table_id }}" class="table table-striped table-bordered">
+    <thead>
+        <tr>
+        {% for col in columns %}
+            <th>{{ col.label }}</th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for product in products %}
+        <tr>
+        {% for col in columns %}
+            <td>{{ attribute(product, col.key) }}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+    {% if show_totals %}
+    <tfoot>
+        <tr>
+        {% for col in columns %}
+            <td>
+                {# Example: show sum for 'amount' column #}
+                {% if col.key == 'amount' %}
+                    {{ products | sum(attribute=col.key) }}
+                {% else %}
+                    <!-- Totals or custom logic here -->
+                {% endif %}
+            </td>
+        {% endfor %}
+        </tr>
+    </tfoot>
+    {% endif %}
+</table>
+{% endmacro %}
