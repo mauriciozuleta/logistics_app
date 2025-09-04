@@ -22,9 +22,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Listen for input events for Port of Arrival
     portOfArrival.addEventListener('input', function() {
-        const portCode = portOfArrival.value;
+        let portCode = portOfArrival.value;
+        // Capitalize input automatically
+        portCode = portCode.toUpperCase();
+        portOfArrival.value = portCode;
+        // Only trigger when code is exactly 3 characters (IATA)
+        // For Sea and Ground, adjust this length check as needed
+        if (!portCode || portCode.length !== 3) return;
         console.log('Port of Arrival code entered:', portCode);
-        if (!portCode) return;
         fetch(`/api/trader-info?port_code=${encodeURIComponent(portCode)}`)
             .then(response => response.json())
             .then(data => {
@@ -139,9 +144,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Listen for input events for instant feedback
     portOfShipping.addEventListener('input', function() {
-        const portCode = portOfShipping.value;
+        let portCode = portOfShipping.value;
+        // Capitalize input automatically
+        portCode = portCode.toUpperCase();
+        portOfShipping.value = portCode;
+        // Only trigger when code is exactly 3 characters (IATA)
+        // For Sea and Ground, adjust this length check as needed
+        if (!portCode || portCode.length !== 3) return;
         console.log('Port code entered:', portCode);
-        if (!portCode) return;
         fetch(`/api/trader-info?port_code=${encodeURIComponent(portCode)}`)
             .then(response => response.json())
             .then(data => {
