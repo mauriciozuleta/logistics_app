@@ -7,6 +7,58 @@
 // });
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Add event listener for return route selection
+    const returnRouteSelect = document.getElementById('return_route');
+    const returnPayloadField = document.getElementById('available_payload_return');
+    const returnRouteCostField = document.getElementById('route_cost_return');
+
+    if (returnRouteSelect) {
+        returnRouteSelect.addEventListener('change', function() {
+            const selectedReturnRouteId = returnRouteSelect.value;
+            const selectedOption = returnRouteSelect.options[returnRouteSelect.selectedIndex];
+            let arrivalIata = '';
+            if (selectedOption && selectedOption.text) {
+                // Example route name: MIA-MDE-A321F
+                const parts = selectedOption.text.split('-');
+                if (parts.length >= 2) {
+                    arrivalIata = parts[1];
+                }
+            }
+            if (!selectedReturnRouteId || !arrivalIata) {
+                if (returnPayloadField) returnPayloadField.value = '';
+                if (returnRouteCostField) returnRouteCostField.value = '';
+                return;
+            }
+            // Fetch route details for selected return route
+            fetch(`/api/route-details?route_id=${encodeURIComponent(selectedReturnRouteId)}&arrival_iata=${encodeURIComponent(arrivalIata)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Populate available payload (kg)
+                    if (returnPayloadField) returnPayloadField.value = data.payload_kg || '';
+                    // Calculate and populate route cost
+                    let totalCost = 0;
+                    if (data.leg1_total_cost_usd) totalCost += data.leg1_total_cost_usd;
+                    if (data.airport_fee) totalCost += data.airport_fee;
+                    if (data.turnaround_cost) totalCost += data.turnaround_cost;
+                    if (returnRouteCostField) returnRouteCostField.value = totalCost ? totalCost.toFixed(2) : '';
+
+                    // Sum both route cost values and populate total flight cost
+                    const outboundRouteCostField = document.getElementById('route_cost');
+                    const totalFlightCostDisplay = document.getElementById('total_flight_cost_display');
+                    let outboundCost = outboundRouteCostField && outboundRouteCostField.value ? parseFloat(outboundRouteCostField.value) : 0;
+                    let returnCost = totalCost ? totalCost : 0;
+                    let totalFlightCost = outboundCost + returnCost;
+                    if (totalFlightCostDisplay) {
+                        totalFlightCostDisplay.textContent = totalFlightCost ? totalFlightCost.toFixed(2) : '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching return route details:', error);
+                    if (returnPayloadField) returnPayloadField.value = '';
+                    if (returnRouteCostField) returnRouteCostField.value = '';
+                });
+        });
+    }
     // Define all DOM elements first
     const typeOfFreight = document.getElementById('type_of_freight');
     const portOfShipping = document.getElementById('port_of_shipping');
