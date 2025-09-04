@@ -49,6 +49,16 @@
   border-radius: 8px;
 }
 
+.form-control.input-required-style,
+input.form-control.input-required-style,
+input[type="text"].form-control.input-required-style,
+input[type="number"].form-control.input-required-style {
+  background-color: white !important;
+  color: black !important;
+  box-shadow: 0 0 0 2px #ff5c00;
+  z-index: 2;
+}
+
 input.form-control,
 input[type="text"].form-control,
 input[type="number"].form-control {

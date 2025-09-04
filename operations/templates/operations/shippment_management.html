@@ -123,19 +123,23 @@
             </div>
             <div class="form-group" style="min-width: 150px;">
                 <label for="type_of_return">Type of Return</label>
-                <input type="text" id="type_of_return" name="type_of_return" class="form-control" placeholder="Type of Return" style="border: 2px solid #257777;">
+                <select id="type_of_return" name="type_of_return" class="form-control" style="border: 2px solid #2b792b;">
+                    <option value="">Select type of return</option>
+                    <option value="compensated">Compensated</option>
+                    <option value="full">Full</option>
+                </select>
             </div>
             <div class="form-group" style="min-width: 150px; display: flex; flex-direction: column; align-items: stretch;">
                 <label for="outbound_cost_weight" style="width: 100%; text-align: center;">Outbound cost Weight (%)</label>
                 <div style="display: flex; flex-direction: row; align-items: center; width: 100%;">
-                    <input type="text" id="outbound_cost_weight" name="outbound_cost_weight" class="form-control" placeholder="Outbound cost Weight (%)" style="border: 2px solid #257777; width: 50%;">
+                    <input type="text" id="outbound_cost_weight" name="outbound_cost_weight" class="form-control" placeholder="Outbound cost Weight (%)" style="border: 2px solid #257777; width: 50%;" disabled>
                     <input type="text" id="outbound_cost_weight_value" class="form-control" placeholder="" style="border: 2px solid #257777; background: none; width: 50%; margin-left: 4px;" readonly>
                 </div>
             </div>
             <div class="form-group" style="min-width: 150px; display: flex; flex-direction: column; align-items: stretch;">
                 <label for="target_cargo_load" style="width: 100%; text-align: center;">Target Cargo Load (%)</label>
                 <div style="display: flex; flex-direction: row; align-items: center; width: 100%;">
-                    <input type="text" id="target_cargo_load" name="target_cargo_load" class="form-control" placeholder="Target Cargo Load (%)" style="border: 2px solid #257777; width: 50%;">
+                    <input type="text" id="target_cargo_load" name="target_cargo_load" class="form-control" placeholder="Target Cargo Load (%)" style="border: 2px solid #257777; width: 50%;" disabled>
                     <input type="text" id="target_cargo_load_departure_value" class="form-control" placeholder="" style="border: 2px solid #257777; background: none; width: 50%; margin-left: 4px;" readonly>
                 </div>
             </div>
@@ -162,15 +166,15 @@
             <div class="form-group" style="min-width: 150px; display: flex; flex-direction: column; align-items: stretch;">
                 <label for="return_cost_weight" style="width: 100%; text-align: center;">Return cost Weight (%)</label>
                 <div style="display: flex; flex-direction: row; align-items: center; width: 100%;">
-                    <input type="text" id="return_cost_weight" name="return_cost_weight" class="form-control" placeholder="Return cost Weight (%)" style="border: 2px solid #2b792b; width: 50%;">
+                    <input type="text" id="return_cost_weight" name="return_cost_weight" class="form-control" placeholder="Return cost Weight (%)" style="border: 2px solid #2b792b; width: 50%;" disabled>
                     <input type="text" id="return_cost_weight_value" class="form-control" placeholder="" style="border: 2px solid #2b792b; background: none; width: 50%; margin-left: 4px;" readonly>
                 </div>
             </div>
             <div class="form-group" style="min-width: 150px; display: flex; flex-direction: column; align-items: stretch;">
                 <label for="target_cargo_load_return" style="width: 100%; text-align: center;">Target Cargo Load (%)</label>
                 <div style="display: flex; flex-direction: row; align-items: center; width: 100%;">
-                    <input type="text" id="target_cargo_load_return_percentage" name="target_cargo_load_return" class="form-control" placeholder="Target Cargo Load (%)" style="border: 2px solid #2b792b; width: 50%;">
-                    <input type="text" id="target_cargo_load_value_kilogram" class="form-control" placeholder="" style="border: 2px solid #2b792b; background: none; width: 50%; margin-left: 4px;" readonly>
+                    <input type="text" id="target_cargo_load_return_percentage" name="target_cargo_load_return" class="form-control" placeholder="Target Cargo Load (%)" style="border: 2px solid #2b792b; width: 50%;" disabled>
+                    <input type="text" id="target_cargo_load_return" class="form-control" placeholder="" style="border: 2px solid #2b792b; background: none; width: 50%; margin-left: 4px;" readonly>
                 </div>
             </div>
         </div>

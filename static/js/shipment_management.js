@@ -7,6 +7,76 @@
 // });
 
 document.addEventListener('DOMContentLoaded', function() {
+    // --- Automatic Calculation Logic ---
+    function parseNumber(val) {
+        if (!val) return 0;
+        // Remove $ and commas if present
+        return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
+    }
+
+    function updateCalculatedFields() {
+        // Get elements
+        const totalFlightCostDisplay = document.getElementById('total_flight_cost_display');
+        const outboundCostWeight = document.getElementById('outbound_cost_weight');
+        const outboundCostWeightValue = document.getElementById('outbound_cost_weight_value');
+        const availablePayload = document.getElementById('available_payload');
+        const targetCargoLoad = document.getElementById('target_cargo_load');
+        const targetCargoLoadDepartureValue = document.getElementById('target_cargo_load_departure_value');
+        const returnCostWeight = document.getElementById('return_cost_weight');
+        const returnCostWeightValue = document.getElementById('return_cost_weight_value');
+        const availablePayloadReturn = document.getElementById('available_payload_return');
+        const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
+        const targetCargoLoadReturn = document.getElementById('target_cargo_load_return');
+
+        // 1. outbound_cost_weight_value = total_flight_cost_display * outbound_cost_weight (as %)
+        const totalFlightCost = parseNumber(totalFlightCostDisplay.textContent);
+        const outboundWeightPct = parseNumber(outboundCostWeight.value);
+        const outboundCostWeightVal = totalFlightCost * (outboundWeightPct / 100);
+        if (outboundCostWeightValue) {
+            outboundCostWeightValue.value = outboundCostWeightVal ? ('$' + outboundCostWeightVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
+        }
+
+        // 2. target_cargo_load_departure_value = available_payload * target_cargo_load (as %)
+        const availablePayloadVal = parseNumber(availablePayload.value);
+        const targetCargoLoadPct = parseNumber(targetCargoLoad.value);
+        const targetCargoLoadDepartureVal = availablePayloadVal * (targetCargoLoadPct / 100);
+        if (targetCargoLoadDepartureValue) {
+            targetCargoLoadDepartureValue.value = targetCargoLoadDepartureVal ? targetCargoLoadDepartureVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+        }
+
+        // 3. return_cost_weight = 100 - outbound_cost_weight
+        const returnWeightPct = 100 - outboundWeightPct;
+        if (returnCostWeight) {
+            returnCostWeight.value = returnWeightPct;
+        }
+
+        // 4. target_cargo_load_return = available_payload_return * target_cargo_load_return_percentage (as %)
+        const availablePayloadReturnVal = parseNumber(availablePayloadReturn.value);
+        const targetCargoLoadReturnPct = parseNumber(targetCargoLoadReturnPercentage.value);
+        const targetCargoLoadReturnVal = availablePayloadReturnVal * (targetCargoLoadReturnPct / 100);
+        if (targetCargoLoadReturn) {
+            targetCargoLoadReturn.value = targetCargoLoadReturnVal ? targetCargoLoadReturnVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+        }
+
+        // 5. return_cost_weight_value = total_flight_cost_display * return_cost_weight (as %)
+        const returnCostWeightVal = totalFlightCost * (returnWeightPct / 100);
+        if (returnCostWeightValue) {
+            returnCostWeightValue.value = returnCostWeightVal ? ('$' + returnCostWeightVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
+        }
+    }
+
+    // Run calculation on page load and whenever relevant fields change
+    setInterval(updateCalculatedFields, 500); // Polling for programmatic changes
+
+    [
+        'total_flight_cost_display', 'outbound_cost_weight', 'available_payload', 'target_cargo_load',
+        'available_payload_return', 'target_cargo_load_return_percentage'
+    ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updateCalculatedFields);
+        }
+    });
     // Add event listener for return route selection
     const returnRouteSelect = document.getElementById('return_route');
     const returnPayloadField = document.getElementById('available_payload_return');
@@ -40,7 +110,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.leg1_total_cost_usd) totalCost += data.leg1_total_cost_usd;
                     if (data.airport_fee) totalCost += data.airport_fee;
                     if (data.turnaround_cost) totalCost += data.turnaround_cost;
-                    if (returnRouteCostField) returnRouteCostField.value = totalCost ? totalCost.toFixed(2) : '';
+                    if (returnRouteCostField) {
+                        returnRouteCostField.value = totalCost ? ('$' + totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
+                    }
 
                     // Sum both route cost values and populate total flight cost
                     const outboundRouteCostField = document.getElementById('route_cost');
@@ -49,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     let returnCost = totalCost ? totalCost : 0;
                     let totalFlightCost = outboundCost + returnCost;
                     if (totalFlightCostDisplay) {
-                        totalFlightCostDisplay.textContent = totalFlightCost ? totalFlightCost.toFixed(2) : '';
+                        totalFlightCostDisplay.textContent = totalFlightCost ? ('$' + totalFlightCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
                     }
                 })
                 .catch(error => {
@@ -395,4 +467,86 @@ document.addEventListener('DOMContentLoaded', function() {
                 returnRouteField.value = '';
             });
     });
+    // --- Type of Return logic for outbound cost weight and target cargo load ---
+    const typeOfReturn = document.getElementById('type_of_return');
+    const outboundCostWeight = document.getElementById('outbound_cost_weight');
+    const outboundCostWeightValue = document.getElementById('outbound_cost_weight_value');
+    const totalFlightCostDisplay = document.getElementById('total_flight_cost_display');
+    const targetCargoLoad = document.getElementById('target_cargo_load');
+    const targetCargoLoadDepartureValue = document.getElementById('target_cargo_load_departure_value');
+    const availablePayload = document.getElementById('available_payload');
+
+    function parseNumber(val) {
+        if (!val) return 0;
+        return parseFloat(val.toString().replace(/[$,]/g, '')) || 0;
+    }
+
+    function updateOutboundCostWeightAndCargoLoad() {
+        if (!typeOfReturn || !outboundCostWeight || !outboundCostWeightValue || !totalFlightCostDisplay || !targetCargoLoad || !targetCargoLoadDepartureValue || !availablePayload) return;
+        if (typeOfReturn.value === 'full') {
+            outboundCostWeight.value = 100;
+            outboundCostWeight.disabled = true;
+            let totalCost = parseNumber(totalFlightCostDisplay.textContent);
+            outboundCostWeightValue.value = totalCost ? ('$' + (totalCost * 1).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
+            // Enable target_cargo_load for editing and set background to white using CSS class
+            targetCargoLoad.disabled = false;
+            targetCargoLoad.classList.add('input-required-style');
+        } else {
+            outboundCostWeight.disabled = false;
+            outboundCostWeight.value = '';
+            outboundCostWeightValue.value = '';
+            targetCargoLoad.disabled = true;
+            targetCargoLoad.classList.remove('input-required-style');
+            targetCargoLoadDepartureValue.value = '';
+        }
+    }
+    if (typeOfReturn) {
+        typeOfReturn.addEventListener('change', updateOutboundCostWeightAndCargoLoad);
+        updateOutboundCostWeightAndCargoLoad(); // Initial state
+    }
+    // When user enters data in target_cargo_load, calculate and set target_cargo_load_departure_value, and reset background
+    if (targetCargoLoad) {
+        targetCargoLoad.addEventListener('input', function() {
+            targetCargoLoad.classList.remove('input-required-style');
+            let availablePayloadVal = parseNumber(availablePayload.value);
+            let targetCargoLoadPct = parseNumber(targetCargoLoad.value);
+            let result = availablePayloadVal * (targetCargoLoadPct / 100);
+            targetCargoLoadDepartureValue.value = result ? result.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+        });
+    }
+    // --- Type of Return logic (correct variable order) ---
+    const returnCostWeight = document.getElementById('return_cost_weight');
+    const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
+
+    function updateReturnFields() {
+        // Defensive: ensure all elements exist
+        if (!typeOfReturn || !returnCostWeight || !targetCargoLoadReturnPercentage) return;
+        const value = typeOfReturn.value;
+        if (value === 'full') {
+            returnCostWeight.disabled = false;
+            returnCostWeight.style.backgroundColor = '#eaffea';
+            returnCostWeight.style.border = '2px solid #2b792b';
+            targetCargoLoadReturnPercentage.disabled = false;
+            targetCargoLoadReturnPercentage.style.backgroundColor = '#eaffea';
+            targetCargoLoadReturnPercentage.style.border = '2px solid #2b792b';
+        } else if (value === 'compensated') {
+            returnCostWeight.disabled = true;
+            returnCostWeight.style.backgroundColor = '#f0f0f0';
+            returnCostWeight.style.border = '2px solid #cccccc';
+            targetCargoLoadReturnPercentage.disabled = true;
+            targetCargoLoadReturnPercentage.style.backgroundColor = '#f0f0f0';
+            targetCargoLoadReturnPercentage.style.border = '2px solid #cccccc';
+        } else {
+            returnCostWeight.disabled = true;
+            returnCostWeight.style.backgroundColor = '';
+            returnCostWeight.style.border = '';
+            targetCargoLoadReturnPercentage.disabled = true;
+            targetCargoLoadReturnPercentage.style.backgroundColor = '';
+            targetCargoLoadReturnPercentage.style.border = '';
+        }
+    }
+    if (typeOfReturn) {
+        typeOfReturn.addEventListener('change', updateReturnFields);
+        updateReturnFields(); // Initial state
+    }
 });
