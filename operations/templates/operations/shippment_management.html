@@ -7,6 +7,38 @@
 <script>
 // Collapse all main sections at page load, disable toggle buttons, and expand sections on user input
 document.addEventListener('DOMContentLoaded', function() {
+    // --- Calculate Est. Ret. Kg. $ ---
+    function getNumericFieldValueRet(field) {
+        if (!field) return NaN;
+        var val = field.value !== undefined ? field.value : field.textContent;
+        if (typeof val === 'string') {
+            val = val.replace(/[$,]/g, '').trim();
+        }
+        return parseFloat(val);
+    }
+
+    function calculateEstRetKgCost() {
+        var returnCostWeightValue = getNumericFieldValueRet(document.getElementById('return_cost_weight_value'));
+        var targetCargoLoadReturnValue = getNumericFieldValueRet(document.getElementById('target_cargo_load_return'));
+        var estRetKgCostField = document.getElementById('est_ret_kg_cost');
+        if (!isNaN(returnCostWeightValue) && !isNaN(targetCargoLoadReturnValue) && targetCargoLoadReturnValue !== 0) {
+            var result = returnCostWeightValue / targetCargoLoadReturnValue;
+            estRetKgCostField.value = result.toFixed(2);
+        } else {
+            estRetKgCostField.value = '';
+        }
+    }
+
+    var returnCostWeightValueField = document.getElementById('return_cost_weight_value');
+    var targetCargoLoadReturnValueField = document.getElementById('target_cargo_load_return');
+    if (returnCostWeightValueField && targetCargoLoadReturnValueField) {
+        returnCostWeightValueField.addEventListener('input', calculateEstRetKgCost);
+        targetCargoLoadReturnValueField.addEventListener('input', calculateEstRetKgCost);
+        returnCostWeightValueField.addEventListener('change', calculateEstRetKgCost);
+        targetCargoLoadReturnValueField.addEventListener('change', calculateEstRetKgCost);
+        setInterval(calculateEstRetKgCost, 200);
+        calculateEstRetKgCost();
+    }
     var trading = document.getElementById('trading-info-content');
     if (trading) trading.style.display = 'none';
     var logistic = document.getElementById('logistic-info-content');
