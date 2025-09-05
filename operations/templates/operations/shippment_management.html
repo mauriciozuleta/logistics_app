@@ -7,6 +7,59 @@
 <script>
 // Collapse all main sections at page load, disable toggle buttons, and expand sections on user input
 document.addEventListener('DOMContentLoaded', function() {
+    // 1. Collapse Products / Goods Selection section at page load, disable toggle
+    var productsSection = document.getElementById('container-5');
+    var productsToggleBtn = document.getElementById('toggle-products-btn');
+    // Only hide the content (not the section title)
+    var productsContent = null;
+    if (productsSection) {
+        // Find the first .shipment-form-row inside container-5 (the content block)
+        productsContent = productsSection.querySelector('.shipment-form-row').parentElement;
+        if (productsContent) productsContent.style.display = 'none';
+    }
+    if (productsToggleBtn) productsToggleBtn.disabled = true;
+
+    // Toggle button logic for Products section
+    if (productsToggleBtn && productsContent) {
+        productsToggleBtn.addEventListener('click', function() {
+            if (productsContent.style.display === 'none') {
+                productsContent.style.display = '';
+            } else {
+                productsContent.style.display = 'none';
+            }
+        });
+    }
+
+    // 2. Expand and enable toggle on 'type_of_return' selection
+    var typeOfReturn = document.getElementById('type_of_return');
+    if (typeOfReturn) {
+        typeOfReturn.addEventListener('change', function() {
+            if (typeOfReturn.value && productsContent) {
+                productsContent.style.display = '';
+                if (productsToggleBtn) productsToggleBtn.disabled = false;
+            }
+        });
+    }
+
+    // 3. Populate add_cargo_outbound and add_cargo_return fields
+    var portOfShipping = document.getElementById('port_of_shipping');
+    var consigneePortOfShipping = document.getElementById('consignee_port_of_shipping');
+    var addCargoOutbound = document.getElementById('add_cargo_outbound');
+    var addCargoReturn = document.getElementById('add_cargo_return');
+    if (portOfShipping && addCargoOutbound) {
+        portOfShipping.addEventListener('input', function() {
+            addCargoOutbound.value = portOfShipping.value;
+        });
+        // Initial value
+        addCargoOutbound.value = portOfShipping.value;
+    }
+    if (consigneePortOfShipping && addCargoReturn) {
+        consigneePortOfShipping.addEventListener('input', function() {
+            addCargoReturn.value = consigneePortOfShipping.value;
+        });
+        // Initial value
+        addCargoReturn.value = consigneePortOfShipping.value;
+    }
     // --- Calculate Est. Ret. Kg. $ ---
     function getNumericFieldValueRet(field) {
         if (!field) return NaN;
@@ -300,23 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 
-<div class="shipment-section" id="container-4">
-    <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
-        <span>Shipment summary</span>
-    <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleSummaryInfo()" style="margin-left: 10px;" id="toggle-summary-btn" disabled>Toggle</button>
-    </div>
-</style>
-<div id="route-not-found-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="document.getElementById('route-not-found-modal').style.display='none'">&times;</span>
-        <h4>Route Not Found</h4>
-        <p>The selected route does not exist in the database. Please create it first or select different ports.</p>
-        <div class="modal-actions">
-            <a href="{{ url_for('operations.add_route') }}" class="btn btn-primary">Create New Route</a>
-            <button type="button" class="btn btn-secondary" onclick="document.getElementById('route-not-found-modal').style.display='none'">Change Ports</button>
-        </div>
-    </div>
-</div>
+
 
 <!-- Close the form tag -->
 </form>
@@ -325,83 +362,84 @@ document.addEventListener('DOMContentLoaded', function() {
         <span>Products / Goods Selection</span>
         <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleProductsInfo()" style="margin-left: 10px;" id="toggle-products-btn" disabled>Toggle</button>
     </div>
-    <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
-    <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
-
-            <label for="filter_category" style="color: #8f7d16; font-weight: bold;">Filter by Category</label>
-            <input type="text" id="filter_category" name="filter_category" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+    <div id="products-content-wrapper">
+        <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+                <label for="filter_category" style="color: #8f7d16; font-weight: bold;">Filter by Category</label>
+                <input type="text" id="filter_category" name="filter_category" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+            </div>
+            <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+                <label for="add_cargo_outbound" style="color: #8f7d16; font-weight: bold;">Load Cargo in:</label>
+                <input type="text" id="add_cargo_outbound" name="add_cargo_outbound" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;" readonly disabled>
+            </div>
+            <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+                <label for="add_cargo_return" style="color: #8f7d16; font-weight: bold;">Load Cargo in:</label>
+                <input type="text" id="add_cargo_return" name="add_cargo_return" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;" readonly disabled>
+            </div>
+            <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+                <label for="exchange_rate" style="color: #8f7d16; font-weight: bold;">Exchange Rate</label>
+                <input type="text" id="exchange_rate" name="exchange_rate" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
+            </div>
+            <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
+                <label style="visibility: hidden; height: 20px;">&nbsp;</label>
+                <a href="https://www.google.com/search?q=currency+converter" target="_blank" id="search_exchange_rate_btn" class="btn" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; font-weight: bold; width: 100%; max-width: 300px; text-align: center; padding-top: 6px;">Search Exchange Rate</a>
+            </div>
         </div>
-        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
-            <label for="add_cargo_outbound" style="color: #8f7d16; font-weight: bold;">Add cargo to Outbound Route</label>
-            <input type="text" id="add_cargo_outbound" name="add_cargo_outbound" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;" readonly disabled>
+        <!-- This single container now handles ALL scrolling for the table component -->
+        <div class="product-list-scroll" style="overflow: auto; width: 100%; max-height: 500px;">
+            <!-- The header is now sticky, so it stays at the top during vertical scroll -->
+            <div class="product-list-header" style="display: flex; flex-direction: row; align-items: center; gap: 0; min-width: 2400px; font-weight: bold; background: #1c1c1c; border-bottom: 2px solid #ff5c00; padding: 8px 0; position: sticky; top: 0; z-index: 1;">
+                <style>
+                .product-list-header > div {
+                    border-right: 1px solid #ff5c00;
+                    padding: 0 8px;
+                }
+                .product-list-header > div:last-child {
+                    border-right: none;
+                }
+                label[for="add_cargo_outbound"] {
+                    cursor: pointer;
+                }
+                </style>
+                <div id="product-header-code" style="width: 150px; text-align: left; color: #e7e5d5;">Code</div>
+                <div id="product-header-name" style="width: 400px; text-align: left; color: #e7e5d5;">Name</div>
+                <div id="product-header-category" style="width: 150px; text-align: left; color: #e7e5d5;">Category</div>
+                <div id="product-header-country" style="width: 100px; text-align: center; color: #e7e5d5;">Country ID</div>
+                <div id="product-header-trade-unit" style="width: 100px; text-align: center; color: #e7e5d5;">Trade Unit</div>
+                <div id="product-header-packaging" style="width: 120px; text-align: left; color: #e7e5d5;">Packaging</div>
+                <div id="product-header-weight" style="width: 100px; text-align: right; color: #e7e5d5;">Pack Weight</div>
+                <div id="product-header-units-pack" style="width: 100px; text-align: right; color: #e7e5d5;">Units/ Pack</div>
+                <div id="product-header-packaging-cost" style="width: 200px; text-align: right; color: #e7e5d5;">Packaging Cost</div>
+                <div id="product-header-currency" style="width: 80px; text-align: center; color: #e7e5d5;">Currency</div>
+                <div id="product-header-amount" style="width: 150px; text-align: right; color: #e7e5d5;">Amount</div>
+                <!-- Product List calculations column fca calculations-->
+                <div id="product-header-total-weight" style="width: 200px; text-align: right; color: #b64545;">Total Weight</div>
+                <div id="product-header-total-cost" style="width: 300px; text-align: right; color: #b64545;">Total Product Cost</div>
+                <div id="product-header-export-taxes" style="width: 120px; text-align: right; color: #b64545;">Export Taxes</div>
+                <div id="product-header-exporter-profit" style="width: 120px; text-align: right; color: #b64545;">Exporter Profit</div>
+                <div id="product-header-fca-cost" style="width: 120px; text-align: right; color: #b64545;">FCA Cost</div>
+                <!-- Product List calculations column cip calculations-->
+                <div id="product-header-fca-usd" style="width: 120px; text-align: right; color: #8f7d16;">FCA USD</div>
+                <div id="product-header-load-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Load cost</div>
+                <div id="product-header-freight-cost" style="width: 120px; text-align: right; color: #8f7d16;">Air Freight cost</div>
+                <div id="product-header-unload-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Unload cost</div>
+                <div id="product-header-cip-cost" style="width: 120px; text-align: right; color: #8f7d16;">CIP Cost</div>
+                <!-- Product List calculations column dat calculations-->
+                <div id="product-header-import-taxes" style="width: 120px; text-align: right; color: #8f7d16;">Import Taxes</div>
+                <div id="product-header-dat-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT Kg. Cost</div>
+                <div id="product-header-dat-ea-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT EA. cost</div>
+                <div id="product-header-comparative-price" style="width: 120px; text-align: right; color: #8f7d16;">Comparative Price</div>
+                <div id="product-header-suggested-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Sug. Product Profit (EA)</div>
+                <div id="product-header-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Product Profit (EA)</div>
+                <div id="product-header-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Product final DAT Price (EA)</div>
+                <div id="product-header-total-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Total Product Cost DAT</div>
+                <div id="product-header-total-dat-profit-" style="width: 120px; text-align: right; color: #8f7d16;">Total DAT Profit</div>
+            </div>
+            <!-- This is now a simple container for the JS-injected rows -->
+            <div id="product-table-container"></div>
+            <!-- The totals row is now sticky, so it stays at the bottom -->
+            <div id="product-list-totals" style="position: sticky; bottom: 0; z-index: 1;"></div>
         </div>
-        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
-            <label for="add_cargo_return" style="color: #8f7d16; font-weight: bold;">Add cargo to Return Route</label>
-            <input type="text" id="add_cargo_return" name="add_cargo_return" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;" readonly disabled>
-        </div>
-        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
-            <label for="exchange_rate" style="color: #8f7d16; font-weight: bold;">Exchange Rate</label>
-            <input type="text" id="exchange_rate" name="exchange_rate" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
-        </div>
-        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
-            <label style="visibility: hidden; height: 20px;">&nbsp;</label>
-            <a href="https://www.google.com/search?q=currency+converter" target="_blank" id="search_exchange_rate_btn" class="btn" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; font-weight: bold; width: 100%; max-width: 300px; text-align: center; padding-top: 6px;">Search Exchange Rate</a>
-        </div>
-    </div>
-    <!-- This single container now handles ALL scrolling for the table component -->
-    <div class="product-list-scroll" style="overflow: auto; width: 100%; max-height: 500px;">
-        <!-- The header is now sticky, so it stays at the top during vertical scroll -->
-        <div class="product-list-header" style="display: flex; flex-direction: row; align-items: center; gap: 0; min-width: 2400px; font-weight: bold; background: #1c1c1c; border-bottom: 2px solid #ff5c00; padding: 8px 0; position: sticky; top: 0; z-index: 1;">
-        <style>
-        .product-list-header > div {
-            border-right: 1px solid #ff5c00;
-            padding: 0 8px;
-        }
-        .product-list-header > div:last-child {
-            border-right: none;
-        }
-        label[for="add_cargo_outbound"] {
-            cursor: pointer;
-        }
-        </style>
-            <div id="product-header-code" style="width: 150px; text-align: left; color: #e7e5d5;">Code</div>
-            <div id="product-header-name" style="width: 400px; text-align: left; color: #e7e5d5;">Name</div>
-            <div id="product-header-category" style="width: 150px; text-align: left; color: #e7e5d5;">Category</div>
-            <div id="product-header-country" style="width: 100px; text-align: center; color: #e7e5d5;">Country ID</div>
-            <div id="product-header-trade-unit" style="width: 100px; text-align: center; color: #e7e5d5;">Trade Unit</div>
-            <div id="product-header-packaging" style="width: 120px; text-align: left; color: #e7e5d5;">Packaging</div>
-            <div id="product-header-weight" style="width: 100px; text-align: right; color: #e7e5d5;">Pack Weight</div>
-            <div id="product-header-units-pack" style="width: 100px; text-align: right; color: #e7e5d5;">Units/ Pack</div>
-            <div id="product-header-packaging-cost" style="width: 200px; text-align: right; color: #e7e5d5;">Packaging Cost</div>
-            <div id="product-header-currency" style="width: 80px; text-align: center; color: #e7e5d5;">Currency</div>
-            <div id="product-header-amount" style="width: 150px; text-align: right; color: #e7e5d5;">Amount</div>
-            <!-- Product List calculations column fca calculations-->
-            <div id="product-header-total-weight" style="width: 200px; text-align: right; color: #b64545;">Total Weight</div>
-            <div id="product-header-total-cost" style="width: 300px; text-align: right; color: #b64545;">Total Product Cost</div>
-            <div id="product-header-export-taxes" style="width: 120px; text-align: right; color: #b64545;">Export Taxes</div>
-            <div id="product-header-exporter-profit" style="width: 120px; text-align: right; color: #b64545;">Exporter Profit</div>
-            <div id="product-header-fca-cost" style="width: 120px; text-align: right; color: #b64545;">FCA Cost</div>
-            <!-- Product List calculations column cip calculations-->
-            <div id="product-header-fca-usd" style="width: 120px; text-align: right; color: #8f7d16;">FCA USD</div>
-            <div id="product-header-load-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Load cost</div>
-            <div id="product-header-freight-cost" style="width: 120px; text-align: right; color: #8f7d16;">Air Freight cost</div>
-            <div id="product-header-unload-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Unload cost</div>
-            <div id="product-header-cip-cost" style="width: 120px; text-align: right; color: #8f7d16;">CIP Cost</div>
-            <!-- Product List calculations column dat calculations-->
-            <div id="product-header-import-taxes" style="width: 120px; text-align: right; color: #8f7d16;">Import Taxes</div>
-            <div id="product-header-dat-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT Kg. Cost</div>
-            <div id="product-header-dat-ea-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT EA. cost</div>
-            <div id="product-header-comparative-price" style="width: 120px; text-align: right; color: #8f7d16;">Comparative Price</div>
-            <div id="product-header-suggested-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Sug. Product Profit (EA)</div>
-            <div id="product-header-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Product Profit (EA)</div>
-            <div id="product-header-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Product final DAT Price (EA)</div>
-            <div id="product-header-total-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Total Product Cost DAT</div>
-            <div id="product-header-total-dat-profit-" style="width: 120px; text-align: right; color: #8f7d16;">Total DAT Profit</div>
-        </div>
-        <!-- This is now a simple container for the JS-injected rows -->
-        <div id="product-table-container"></div>
-        <!-- The totals row is now sticky, so it stays at the bottom -->
-        <div id="product-list-totals" style="position: sticky; bottom: 0; z-index: 1;"></div>
     </div>
 </div>
         <!-- Inject mock window.products for debugging -->
