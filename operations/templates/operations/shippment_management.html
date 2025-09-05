@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleLogisticInfo()" style="margin-left: 10px;" id="toggle-logistic-btn" disabled>Toggle</button>
     </div>
     <div id="logistic-info-content">
-        <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
+    <div class="shipment-form-row" style="margin-top: 15px; align-items: center; width: 100%; padding: 0 8px; box-sizing: border-box;">
             <div class="form-group" style="min-width: 150px;">
                 <label for="departure_route" style="color: #257777; font-weight: bold;">Departure Route</label>
                 <select id="departure_route" name="departure_route" class="form-control" style="border: 2px solid #257777;" disabled></select>
@@ -182,8 +182,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="text" id="target_cargo_load_departure_value" class="form-control" placeholder="" style="border: 2px solid #257777; background: none; width: 50%; margin-left: 4px;" readonly>
                 </div>
             </div>
+            <div class="form-group" style="min-width: 120px; max-width: 140px; display: flex; flex-direction: column; align-items: stretch;">
+                <label style="width: 100%; text-align: center;">Est. outB. Kg. $</label>
+                <input type="text" id="est_outb_kg_cost" class="form-control" placeholder="" style="border: 2px solid #257777; width: 120px; min-width: 80px; text-align: right; font-size: 0.95em;" readonly>
+            </div>
         </div>
-        <div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
+    <div class="shipment-form-row" style="margin-top: 10px; align-items: center; width: 100%; padding: 0 8px; box-sizing: border-box;">
             <div class="form-group" style="min-width: 150px;">
                 <span style="color: #2b792b; font-weight: bold;">Return Route</span>
                 <select id="return_route" class="form-control" style="border: 2px solid #2b792b;">
@@ -215,6 +219,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="text" id="target_cargo_load_return_percentage" name="target_cargo_load_return" class="form-control" placeholder="Target Cargo Load (%)" style="border: 2px solid #2b792b; width: 50%;">
                     <input type="text" id="target_cargo_load_return" class="form-control" placeholder="" style="border: 2px solid #2b792b; background: none; width: 50%; margin-left: 4px;" readonly>
                 </div>
+            </div>
+            <div class="form-group" style="min-width: 120px; max-width: 140px; display: flex; flex-direction: column; align-items: stretch;">
+                <label style="width: 100%; text-align: center;">Est. Ret. Kg. $</label>
+                <input type="text" id="est_ret_kg_cost" class="form-control" placeholder="" style="border: 2px solid #2b792b; width: 120px; min-width: 80px; text-align: right; font-size: 0.95em;" readonly>
             </div>
         </div>
     </div>
