@@ -3,6 +3,32 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shipment.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
+
+<script>
+// Collapse all main sections at page load, disable trading toggle, and expand trading info on type selection
+document.addEventListener('DOMContentLoaded', function() {
+    var trading = document.getElementById('trading-info-content');
+    if (trading) trading.style.display = 'none';
+    var logistic = document.getElementById('logistic-info-content');
+    if (logistic) logistic.style.display = 'none';
+    var products = document.getElementById('products-info-content');
+    if (products) products.style.display = 'none';
+
+    // Disable trading info toggle button
+    var tradingBtn = document.getElementById('toggle-trading-btn');
+    if (tradingBtn) tradingBtn.disabled = true;
+
+    // Expand trading info when type of freight is selected
+    var typeOfFreight = document.getElementById('type_of_freight');
+    if (typeOfFreight) {
+        typeOfFreight.addEventListener('change', function() {
+            if (typeOfFreight.value) {
+                if (trading) trading.style.display = '';
+            }
+        });
+    }
+});
+</script>
 <!-- All JS references removed. Only HTML structure and CSS remain. -->
 
 <form method="POST" action="">
@@ -12,8 +38,17 @@
 <div class="shipment-section" id="container-1">
     <div class="section-title" style="color: #FF5C00; text-align: left;">Shipment Reference</div>
     <div style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px;">
-    <button type="button" class="btn btn-primary" id="start-shipment-btn">Start New Shipment</button>
+        <button type="button" class="btn btn-primary" id="start-shipment-btn">Start New Shipment</button>
         <input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
+        <div id="type-of-freight-wrapper" style="display:none; align-items:center; gap:4px;">
+            <label for="type_of_freight" style="margin-bottom:0;">Type of Freight</label>
+            <select id="type_of_freight" name="type_of_freight" class="form-control" style="border: 2px solid #257777; width:120px;">
+                <option value="">Select Type</option>
+                <option value="Air">Air</option>
+                <option value="Sea">Sea</option>
+                <option value="Ground">Ground</option>
+            </select>
+        </div>
     </div>
 </div>
 
@@ -23,17 +58,7 @@
     <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;" id="toggle-trading-btn" disabled>Toggle</button>
 	</div>
 	<div id="trading-info-content">
-		<div class="shipment-form-row" style="margin-top: 15px; align-items: left;">
-                    <div class="form-group" style="width: 150px; max-width: 150px;">
-				<label for="type_of_freight">Type of Freight</label>
-				<select id="type_of_freight" name="type_of_freight" class="form-control" style="border: 2px solid #257777;">
-					<option value="">Select Type</option>
-					<option value="Air">Air</option>
-                        <option value="Sea">Sea</option>
-                        <option value="Ground">Ground</option>
-                    </select>
-                </div>
-            </div>
+    <!-- Type of Freight moved to Shipment Reference section -->
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
                 
                 <div class="form-group" style="width: 250px;">
@@ -105,7 +130,7 @@
 <div class="shipment-section" id="container-3">
     <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
         <span>Logistic Information</span>
-    <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleLogisticInfo()" style="margin-left: 10px;" id="toggle-logistic-btn" disabled>Toggle</button>
+        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleLogisticInfo()" style="margin-left: 10px;" id="toggle-logistic-btn" disabled>Toggle</button>
     </div>
     <div id="logistic-info-content">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
@@ -208,7 +233,8 @@
         <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleProductsInfo()" style="margin-left: 10px;" id="toggle-products-btn" disabled>Toggle</button>
     </div>
     <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
-        <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+    <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
+
             <label for="filter_category" style="color: #8f7d16; font-weight: bold;">Filter by Category</label>
             <input type="text" id="filter_category" name="filter_category" class="form-control" placeholder="" style="border: 2px solid #8f7d16; color: #8f7d16; background: none; width: 100%; max-width: 300px;">
         </div>

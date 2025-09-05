@@ -52,6 +52,41 @@
 // });
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Toggle Trading Information section
+    const tradingToggleBtn = document.getElementById('toggle-trading-btn');
+    const tradingInfoContent = document.getElementById('trading-info-content');
+    if (tradingToggleBtn && tradingInfoContent) {
+        tradingToggleBtn.disabled = false;
+        tradingToggleBtn.addEventListener('click', function() {
+            if (tradingInfoContent.style.display === 'none') {
+                tradingInfoContent.style.display = '';
+            } else {
+                tradingInfoContent.style.display = 'none';
+            }
+        });
+    }
+
+    // Toggle Logistic Information section
+    const logisticToggleBtn = document.getElementById('toggle-logistic-btn');
+    const logisticInfoContent = document.getElementById('logistic-info-content');
+    if (logisticToggleBtn && logisticInfoContent) {
+        logisticToggleBtn.disabled = false;
+        logisticToggleBtn.addEventListener('click', function() {
+            if (logisticInfoContent.style.display === 'none') {
+                logisticInfoContent.style.display = '';
+            } else {
+                logisticInfoContent.style.display = 'none';
+            }
+        });
+    }
+    // Show type_of_freight dropdown when Start New Shipment is clicked
+    const startShipmentBtn = document.getElementById('start-shipment-btn');
+    const typeOfFreightWrapper = document.getElementById('type-of-freight-wrapper');
+    if (startShipmentBtn && typeOfFreightWrapper) {
+        startShipmentBtn.addEventListener('click', function() {
+            typeOfFreightWrapper.style.display = 'flex';
+        });
+    }
     // --- Automatic Calculation Logic ---
     function parseNumber(val) {
         if (!val) return 0;
@@ -529,11 +564,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateOutboundCostWeightAndCargoLoad() {
         if (!typeOfReturn || !outboundCostWeight || !outboundCostWeightValue || !totalFlightCostDisplay || !targetCargoLoad || !targetCargoLoadDepartureValue || !availablePayload) return;
         if (typeOfReturn.value === 'full') {
+            // Outbound cost weight: 100, not editable, not highlighted, transparent background
             outboundCostWeight.value = 100;
             outboundCostWeight.disabled = true;
+            outboundCostWeight.classList.remove('input-required-style');
+            outboundCostWeight.style.backgroundColor = 'transparent';
             let totalCost = parseNumber(totalFlightCostDisplay.textContent);
             outboundCostWeightValue.value = totalCost ? ('$' + (totalCost * 1).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
-            // Enable target_cargo_load for editing, set background to white, and set default value to 0
+            // Target cargo load: editable, highlighted, set default value to 0
             targetCargoLoad.disabled = false;
             targetCargoLoad.value = 0;
             targetCargoLoad.classList.add('input-required-style');
@@ -544,7 +582,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let totalCost = parseNumber(totalFlightCostDisplay.textContent);
             let outboundWeightPct = parseNumber(outboundCostWeight.value);
             outboundCostWeightValue.value = totalCost ? ('$' + (totalCost * (outboundWeightPct / 100)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
-            // Enable target_cargo_load for editing, set background to white
+            // Target cargo load: editable, highlighted
             targetCargoLoad.disabled = false;
             targetCargoLoad.classList.add('input-required-style');
         } else {
@@ -590,7 +628,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const value = typeOfReturn.value;
         if (value === 'full') {
             returnCostWeight.disabled = false;
-            returnCostWeight.style.backgroundColor = '#eaffea';
+            returnCostWeight.classList.remove('input-required-style');
+            returnCostWeight.style.backgroundColor = 'transparent';
             returnCostWeight.style.border = '2px solid #2b792b';
             // Always keep target_cargo_load_return_percentage enabled and styled correctly
             targetCargoLoadReturnPercentage.disabled = false;
@@ -600,7 +639,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else if (value === 'compensated') {
             returnCostWeight.disabled = true;
-            returnCostWeight.style.backgroundColor = '#f0f0f0';
+            returnCostWeight.classList.remove('input-required-style');
+            returnCostWeight.style.backgroundColor = 'transparent';
             returnCostWeight.style.border = '2px solid #cccccc';
             // Always keep target_cargo_load_return_percentage enabled and styled correctly
             targetCargoLoadReturnPercentage.disabled = false;
@@ -610,7 +650,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else {
             returnCostWeight.disabled = true;
-            returnCostWeight.style.backgroundColor = '';
+            returnCostWeight.classList.remove('input-required-style');
+            returnCostWeight.style.backgroundColor = 'transparent';
             returnCostWeight.style.border = '';
             // Always keep target_cargo_load_return_percentage enabled and styled correctly
             targetCargoLoadReturnPercentage.disabled = false;
