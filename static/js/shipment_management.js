@@ -1,50 +1,26 @@
-    // --- Ensure target_cargo_load_return_percentage is enabled, default 100, white background until user input, and auto-calculate target_cargo_load_return ---
-    (function() {
-        const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
-        const targetCargoLoadReturn = document.getElementById('target_cargo_load_return');
-        const availablePayloadReturn = document.getElementById('available_payload_return');
-        if (targetCargoLoadReturnPercentage) {
-            targetCargoLoadReturnPercentage.disabled = false;
-            targetCargoLoadReturnPercentage.value = 100;
-            targetCargoLoadReturnPercentage.classList.add('input-required-style');
-            targetCargoLoadReturnPercentage.addEventListener('input', function() {
-                targetCargoLoadReturnPercentage.classList.remove('input-required-style');
-                targetCargoLoadReturnPercentage.style.backgroundColor = '';
-                if (targetCargoLoadReturn && availablePayloadReturn) {
-                    let perc = parseFloat(targetCargoLoadReturnPercentage.value);
-                    let payload = parseFloat(availablePayloadReturn.value);
-                    if (!isNaN(perc) && !isNaN(payload)) {
-                        targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
-                    } else {
-                        targetCargoLoadReturn.value = '';
-                    }
-                }
-            });
-        }
-        if (availablePayloadReturn && targetCargoLoadReturnPercentage && targetCargoLoadReturn) {
-            availablePayloadReturn.addEventListener('input', function() {
-                let perc = parseFloat(targetCargoLoadReturnPercentage.value);
-                let payload = parseFloat(availablePayloadReturn.value);
-                if (!isNaN(perc) && !isNaN(payload)) {
-                    targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
-                } else {
-                    targetCargoLoadReturn.value = '';
-                }
-            });
-        }
-    })();
+    // Removed duplicate IIFE initialization for target_cargo_load_return_percentage to prevent conflicts
+    // Removed duplicate IIFE initialization for target_cargo_load_return_percentage to prevent conflicts
     // --- Logic for target_cargo_load_return_percentage and target_cargo_load_return ---
     const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
     const targetCargoLoadReturn = document.getElementById('target_cargo_load_return');
     const availablePayloadReturn = document.getElementById('available_payload_return');
+    const returnCostWeight = document.getElementById('return_cost_weight');
+    // Always keep return_cost_weight disabled and remove .input-required-style if present
+    if (returnCostWeight) {
+        returnCostWeight.disabled = true;
+        returnCostWeight.classList.remove('input-required-style');
+    }
 
     if (targetCargoLoadReturnPercentage) {
+        // Always ensure enabled
+        targetCargoLoadReturnPercentage.removeAttribute('disabled');
         targetCargoLoadReturnPercentage.disabled = false;
         targetCargoLoadReturnPercentage.value = 100;
-        targetCargoLoadReturnPercentage.classList.add('input-required-style');
+        if (!targetCargoLoadReturnPercentage.classList.contains('input-required-style')) {
+            targetCargoLoadReturnPercentage.classList.add('input-required-style');
+        }
         targetCargoLoadReturnPercentage.addEventListener('input', function() {
             targetCargoLoadReturnPercentage.classList.remove('input-required-style');
-            // Calculate value on input
             if (targetCargoLoadReturn && availablePayloadReturn) {
                 let perc = parseFloat(targetCargoLoadReturnPercentage.value);
                 let payload = parseFloat(availablePayloadReturn.value);
@@ -616,23 +592,32 @@ document.addEventListener('DOMContentLoaded', function() {
             returnCostWeight.disabled = false;
             returnCostWeight.style.backgroundColor = '#eaffea';
             returnCostWeight.style.border = '2px solid #2b792b';
+            // Always keep target_cargo_load_return_percentage enabled and styled correctly
             targetCargoLoadReturnPercentage.disabled = false;
-            targetCargoLoadReturnPercentage.style.backgroundColor = '#eaffea';
-            targetCargoLoadReturnPercentage.style.border = '2px solid #2b792b';
+            targetCargoLoadReturnPercentage.removeAttribute('disabled');
+            if (!targetCargoLoadReturnPercentage.classList.contains('input-required-style')) {
+                targetCargoLoadReturnPercentage.classList.add('input-required-style');
+            }
         } else if (value === 'compensated') {
             returnCostWeight.disabled = true;
             returnCostWeight.style.backgroundColor = '#f0f0f0';
             returnCostWeight.style.border = '2px solid #cccccc';
-            targetCargoLoadReturnPercentage.disabled = true;
-            targetCargoLoadReturnPercentage.style.backgroundColor = '#f0f0f0';
-            targetCargoLoadReturnPercentage.style.border = '2px solid #cccccc';
+            // Always keep target_cargo_load_return_percentage enabled and styled correctly
+            targetCargoLoadReturnPercentage.disabled = false;
+            targetCargoLoadReturnPercentage.removeAttribute('disabled');
+            if (!targetCargoLoadReturnPercentage.classList.contains('input-required-style')) {
+                targetCargoLoadReturnPercentage.classList.add('input-required-style');
+            }
         } else {
             returnCostWeight.disabled = true;
             returnCostWeight.style.backgroundColor = '';
             returnCostWeight.style.border = '';
-            targetCargoLoadReturnPercentage.disabled = true;
-            targetCargoLoadReturnPercentage.style.backgroundColor = '';
-            targetCargoLoadReturnPercentage.style.border = '';
+            // Always keep target_cargo_load_return_percentage enabled and styled correctly
+            targetCargoLoadReturnPercentage.disabled = false;
+            targetCargoLoadReturnPercentage.removeAttribute('disabled');
+            if (!targetCargoLoadReturnPercentage.classList.contains('input-required-style')) {
+                targetCargoLoadReturnPercentage.classList.add('input-required-style');
+            }
         }
     }
     if (typeOfReturn) {

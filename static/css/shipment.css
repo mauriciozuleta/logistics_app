@@ -59,12 +59,7 @@ input[type="number"].form-control.input-required-style {
   z-index: 2;
 }
 
-input.form-control:not([disabled]),
-input[type="text"].form-control:not([disabled]),
-input[type="number"].form-control:not([disabled]) {
-  background-color: transparent !important;
-  color: #e0e0e0;
-}
+
 .input-invalid {
   border: 2px solid #ff4444 !important;
   animation: inputBlink 1s infinite;
@@ -77,6 +72,8 @@ input[type="number"].form-control:not([disabled]) {
 .input-required-style {
   background-color: white !important;
   color: black !important;
+  box-shadow: 0 0 0 2px #ff5c00;
+  z-index: 2;
 }
 
 .btn-sm {
