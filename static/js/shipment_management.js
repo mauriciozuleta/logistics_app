@@ -1,3 +1,72 @@
+    // --- Ensure target_cargo_load_return_percentage is enabled, default 100, white background until user input, and auto-calculate target_cargo_load_return ---
+    (function() {
+        const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
+        const targetCargoLoadReturn = document.getElementById('target_cargo_load_return');
+        const availablePayloadReturn = document.getElementById('available_payload_return');
+        if (targetCargoLoadReturnPercentage) {
+            targetCargoLoadReturnPercentage.disabled = false;
+            targetCargoLoadReturnPercentage.value = 100;
+            targetCargoLoadReturnPercentage.classList.add('input-required-style');
+            targetCargoLoadReturnPercentage.addEventListener('input', function() {
+                targetCargoLoadReturnPercentage.classList.remove('input-required-style');
+                targetCargoLoadReturnPercentage.style.backgroundColor = '';
+                if (targetCargoLoadReturn && availablePayloadReturn) {
+                    let perc = parseFloat(targetCargoLoadReturnPercentage.value);
+                    let payload = parseFloat(availablePayloadReturn.value);
+                    if (!isNaN(perc) && !isNaN(payload)) {
+                        targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
+                    } else {
+                        targetCargoLoadReturn.value = '';
+                    }
+                }
+            });
+        }
+        if (availablePayloadReturn && targetCargoLoadReturnPercentage && targetCargoLoadReturn) {
+            availablePayloadReturn.addEventListener('input', function() {
+                let perc = parseFloat(targetCargoLoadReturnPercentage.value);
+                let payload = parseFloat(availablePayloadReturn.value);
+                if (!isNaN(perc) && !isNaN(payload)) {
+                    targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
+                } else {
+                    targetCargoLoadReturn.value = '';
+                }
+            });
+        }
+    })();
+    // --- Logic for target_cargo_load_return_percentage and target_cargo_load_return ---
+    const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
+    const targetCargoLoadReturn = document.getElementById('target_cargo_load_return');
+    const availablePayloadReturn = document.getElementById('available_payload_return');
+
+    if (targetCargoLoadReturnPercentage) {
+        targetCargoLoadReturnPercentage.disabled = false;
+        targetCargoLoadReturnPercentage.value = 100;
+        targetCargoLoadReturnPercentage.classList.add('input-required-style');
+        targetCargoLoadReturnPercentage.addEventListener('input', function() {
+            targetCargoLoadReturnPercentage.classList.remove('input-required-style');
+            // Calculate value on input
+            if (targetCargoLoadReturn && availablePayloadReturn) {
+                let perc = parseFloat(targetCargoLoadReturnPercentage.value);
+                let payload = parseFloat(availablePayloadReturn.value);
+                if (!isNaN(perc) && !isNaN(payload)) {
+                    targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
+                } else {
+                    targetCargoLoadReturn.value = '';
+                }
+            }
+        });
+    }
+    if (availablePayloadReturn && targetCargoLoadReturnPercentage && targetCargoLoadReturn) {
+        availablePayloadReturn.addEventListener('input', function() {
+            let perc = parseFloat(targetCargoLoadReturnPercentage.value);
+            let payload = parseFloat(availablePayloadReturn.value);
+            if (!isNaN(perc) && !isNaN(payload)) {
+                targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
+            } else {
+                targetCargoLoadReturn.value = '';
+            }
+        });
+    }
 // shipment_management.js
 // Place all JS logic for shipment management page here
 
@@ -492,10 +561,21 @@ document.addEventListener('DOMContentLoaded', function() {
             targetCargoLoad.disabled = false;
             targetCargoLoad.value = 0;
             targetCargoLoad.classList.add('input-required-style');
+        } else if (typeOfReturn.value === 'compensated') {
+            outboundCostWeight.value = 100;
+            outboundCostWeight.disabled = false;
+            outboundCostWeight.classList.add('input-required-style');
+            let totalCost = parseNumber(totalFlightCostDisplay.textContent);
+            let outboundWeightPct = parseNumber(outboundCostWeight.value);
+            outboundCostWeightValue.value = totalCost ? ('$' + (totalCost * (outboundWeightPct / 100)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
+            // Enable target_cargo_load for editing, set background to white
+            targetCargoLoad.disabled = false;
+            targetCargoLoad.classList.add('input-required-style');
         } else {
             outboundCostWeight.disabled = false;
             outboundCostWeight.value = '';
             outboundCostWeightValue.value = '';
+            outboundCostWeight.classList.remove('input-required-style');
             targetCargoLoad.disabled = true;
             targetCargoLoad.classList.remove('input-required-style');
             targetCargoLoadDepartureValue.value = '';
@@ -504,6 +584,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeOfReturn) {
         typeOfReturn.addEventListener('change', updateOutboundCostWeightAndCargoLoad);
         updateOutboundCostWeightAndCargoLoad(); // Initial state
+    }
+    // When user enters data in outbound_cost_weight, remove highlight and recalculate value
+    if (outboundCostWeight) {
+        outboundCostWeight.addEventListener('input', function() {
+            outboundCostWeight.classList.remove('input-required-style');
+            let totalCost = parseNumber(totalFlightCostDisplay.textContent);
+            let outboundWeightPct = parseNumber(outboundCostWeight.value);
+            outboundCostWeightValue.value = totalCost ? ('$' + (totalCost * (outboundWeightPct / 100)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
+        });
     }
     // When user enters data in target_cargo_load, calculate and set target_cargo_load_departure_value, and reset background
     if (targetCargoLoad) {
