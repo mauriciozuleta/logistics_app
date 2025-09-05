@@ -5,7 +5,7 @@
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
 
 <script>
-// Collapse all main sections at page load, disable trading toggle, and expand trading info on type selection
+// Collapse all main sections at page load, disable toggle buttons, and expand sections on user input
 document.addEventListener('DOMContentLoaded', function() {
     var trading = document.getElementById('trading-info-content');
     if (trading) trading.style.display = 'none';
@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Disable trading info toggle button
     var tradingBtn = document.getElementById('toggle-trading-btn');
     if (tradingBtn) tradingBtn.disabled = true;
+    // Disable logistic info toggle button
+    var logisticBtn = document.getElementById('toggle-logistic-btn');
+    if (logisticBtn) logisticBtn.disabled = true;
 
     // Expand trading info when type of freight is selected
     var typeOfFreight = document.getElementById('type_of_freight');
@@ -24,6 +27,17 @@ document.addEventListener('DOMContentLoaded', function() {
         typeOfFreight.addEventListener('change', function() {
             if (typeOfFreight.value) {
                 if (trading) trading.style.display = '';
+            }
+        });
+    }
+
+    // Expand logistic info when Port of Arrival is entered, then enable toggle
+    var portOfArrival = document.getElementById('consignee_port_of_shipping');
+    if (portOfArrival) {
+        portOfArrival.addEventListener('input', function() {
+            if (portOfArrival.value && logistic) {
+                logistic.style.display = '';
+                if (logisticBtn) logisticBtn.disabled = false;
             }
         });
     }
