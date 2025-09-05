@@ -488,8 +488,9 @@ document.addEventListener('DOMContentLoaded', function() {
             outboundCostWeight.disabled = true;
             let totalCost = parseNumber(totalFlightCostDisplay.textContent);
             outboundCostWeightValue.value = totalCost ? ('$' + (totalCost * 1).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
-            // Enable target_cargo_load for editing and set background to white using CSS class
+            // Enable target_cargo_load for editing, set background to white, and set default value to 0
             targetCargoLoad.disabled = false;
+            targetCargoLoad.value = 0;
             targetCargoLoad.classList.add('input-required-style');
         } else {
             outboundCostWeight.disabled = false;
