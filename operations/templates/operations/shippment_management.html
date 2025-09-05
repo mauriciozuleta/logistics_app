@@ -41,6 +41,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // --- Calculate Est. outB. Kg. $ ---
+    function getNumericFieldValue(field) {
+        if (!field) return NaN;
+        // Try .value, fallback to .textContent
+        var val = field.value !== undefined ? field.value : field.textContent;
+        if (typeof val === 'string') {
+            val = val.replace(/[$,]/g, '').trim();
+        }
+        return parseFloat(val);
+    }
+
+    function calculateEstOutbKgCost() {
+        var outboundCostWeightValue = getNumericFieldValue(document.getElementById('outbound_cost_weight_value'));
+        var targetCargoLoadDepartureValue = getNumericFieldValue(document.getElementById('target_cargo_load_departure_value'));
+        var estOutbKgCostField = document.getElementById('est_outb_kg_cost');
+        if (!isNaN(outboundCostWeightValue) && !isNaN(targetCargoLoadDepartureValue) && targetCargoLoadDepartureValue !== 0) {
+            var result = outboundCostWeightValue / targetCargoLoadDepartureValue;
+            estOutbKgCostField.value = result.toFixed(2);
+        } else {
+            estOutbKgCostField.value = '';
+        }
+    }
+
+    var outboundCostWeightValueField = document.getElementById('outbound_cost_weight_value');
+    var targetCargoLoadDepartureValueField = document.getElementById('target_cargo_load_departure_value');
+    if (outboundCostWeightValueField && targetCargoLoadDepartureValueField) {
+        // Listen for user input
+        outboundCostWeightValueField.addEventListener('input', calculateEstOutbKgCost);
+        targetCargoLoadDepartureValueField.addEventListener('input', calculateEstOutbKgCost);
+        outboundCostWeightValueField.addEventListener('change', calculateEstOutbKgCost);
+        targetCargoLoadDepartureValueField.addEventListener('change', calculateEstOutbKgCost);
+
+        // Fallback: Poll for value changes every 200ms to ensure dynamic update
+        setInterval(calculateEstOutbKgCost, 200);
+
+        // Initial calculation
+        calculateEstOutbKgCost();
+    }
 });
 </script>
 <!-- All JS references removed. Only HTML structure and CSS remain. -->
