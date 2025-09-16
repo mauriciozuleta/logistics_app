@@ -723,4 +723,21 @@ document.addEventListener('DOMContentLoaded', function() {
             typeOfFreightWrapper.style.display = 'flex';
         });
     }
+        // Sync add_cargo_outbound with port_of_shipping
+        const portOfShippingInput = document.getElementById('port_of_shipping');
+        const addCargoOutboundInput = document.getElementById('add_cargo_outbound');
+        if (portOfShippingInput && addCargoOutboundInput) {
+            portOfShippingInput.addEventListener('input', function() {
+                addCargoOutboundInput.value = portOfShippingInput.value;
+            });
+        }
+
+        // Sync add_cargo_return with consignee_port_of_shipping
+        const consigneePortOfShippingInput = document.getElementById('consignee_port_of_shipping');
+        const addCargoReturnInput = document.getElementById('add_cargo_return');
+        if (consigneePortOfShippingInput && addCargoReturnInput) {
+            consigneePortOfShippingInput.addEventListener('input', function() {
+                addCargoReturnInput.value = consigneePortOfShippingInput.value;
+            });
+        }
 });
