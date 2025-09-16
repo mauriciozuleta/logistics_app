@@ -1,4 +1,4 @@
-    // Removed duplicate IIFE initialization for target_cargo_load_return_percentage to prevent conflicts
+// Removed duplicate IIFE initialization for target_cargo_load_return_percentage to prevent conflicts
     // Removed duplicate IIFE initialization for target_cargo_load_return_percentage to prevent conflicts
     // --- Logic for target_cargo_load_return_percentage and target_cargo_load_return ---
     const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
@@ -52,41 +52,73 @@
 // });
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Toggle Trading Information section
-    const tradingToggleBtn = document.getElementById('toggle-trading-btn');
+    // Declare shared DOM elements once
+    const typeOfFreight = document.getElementById('type_of_freight');
+    const portOfArrival = document.getElementById('consignee_port_of_shipping');
+    const typeOfReturn = document.getElementById('type_of_return');
+
+    // Collapse all main sections and disable toggles at page load
     const tradingInfoContent = document.getElementById('trading-info-content');
-    if (tradingToggleBtn && tradingInfoContent) {
-        tradingToggleBtn.disabled = false;
-        tradingToggleBtn.addEventListener('click', function() {
-            if (tradingInfoContent.style.display === 'none') {
+    const tradingToggleBtn = document.getElementById('toggle-trading-btn');
+    const logisticInfoContent = document.getElementById('logistic-info-content');
+    const logisticToggleBtn = document.getElementById('toggle-logistic-btn');
+    const productsContentWrapper = document.getElementById('products-content-wrapper');
+    const productsToggleBtn = document.getElementById('toggle-products-btn');
+
+    if (tradingInfoContent) tradingInfoContent.style.display = 'none';
+    if (tradingToggleBtn) tradingToggleBtn.disabled = true;
+    if (logisticInfoContent) logisticInfoContent.style.display = 'none';
+    if (logisticToggleBtn) logisticToggleBtn.disabled = true;
+    if (productsContentWrapper) productsContentWrapper.style.display = 'none';
+    if (productsToggleBtn) productsToggleBtn.disabled = true;
+
+    // Expand trading info when type_of_freight is selected
+    if (typeOfFreight) {
+        typeOfFreight.addEventListener('change', function() {
+            if (typeOfFreight.value && tradingInfoContent) {
                 tradingInfoContent.style.display = '';
-            } else {
-                tradingInfoContent.style.display = 'none';
+                if (tradingToggleBtn) tradingToggleBtn.disabled = false;
             }
         });
     }
 
-    // Toggle Logistic Information section
-    const logisticToggleBtn = document.getElementById('toggle-logistic-btn');
-    const logisticInfoContent = document.getElementById('logistic-info-content');
-    if (logisticToggleBtn && logisticInfoContent) {
-        logisticToggleBtn.disabled = false;
-        logisticToggleBtn.addEventListener('click', function() {
-            if (logisticInfoContent.style.display === 'none') {
+    // Expand logistic info when Port of Arrival is entered, then enable toggle
+    if (portOfArrival) {
+        portOfArrival.addEventListener('input', function() {
+            if (portOfArrival.value && logisticInfoContent) {
                 logisticInfoContent.style.display = '';
-            } else {
-                logisticInfoContent.style.display = 'none';
+                if (logisticToggleBtn) logisticToggleBtn.disabled = false;
             }
         });
     }
-    // Show type_of_freight dropdown when Start New Shipment is clicked
-    const startShipmentBtn = document.getElementById('start-shipment-btn');
-    const typeOfFreightWrapper = document.getElementById('type-of-freight-wrapper');
-    if (startShipmentBtn && typeOfFreightWrapper) {
-        startShipmentBtn.addEventListener('click', function() {
-            typeOfFreightWrapper.style.display = 'flex';
+
+    // Expand products section when type_of_return is selected
+    if (typeOfReturn) {
+        typeOfReturn.addEventListener('change', function() {
+            if (typeOfReturn.value && productsContentWrapper) {
+                productsContentWrapper.style.display = '';
+                if (productsToggleBtn) productsToggleBtn.disabled = false;
+            }
         });
     }
+
+    // Toggle button logic for each section
+    if (tradingToggleBtn && tradingInfoContent) {
+        tradingToggleBtn.addEventListener('click', function() {
+            tradingInfoContent.style.display = (tradingInfoContent.style.display === 'none') ? '' : 'none';
+        });
+    }
+    if (logisticToggleBtn && logisticInfoContent) {
+        logisticToggleBtn.addEventListener('click', function() {
+            logisticInfoContent.style.display = (logisticInfoContent.style.display === 'none') ? '' : 'none';
+        });
+    }
+    if (productsToggleBtn && productsContentWrapper) {
+        productsToggleBtn.addEventListener('click', function() {
+            productsContentWrapper.style.display = (productsContentWrapper.style.display === 'none') ? '' : 'none';
+        });
+    }
+
     // --- Automatic Calculation Logic ---
     function parseNumber(val) {
         if (!val) return 0;
@@ -142,6 +174,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const returnCostWeightVal = totalFlightCost * (returnWeightPct / 100);
         if (returnCostWeightValue) {
             returnCostWeightValue.value = returnCostWeightVal ? ('$' + returnCostWeightVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
+        }
+        // 6. est_outb_kg_cost = outbound_cost_weight_value / target_cargo_load_departure_value
+        const estOutbKgCostField = document.getElementById('est_outb_kg_cost');
+        const outboundCostWeightValueNum = parseNumber(outboundCostWeightValue.value);
+        const targetCargoLoadDepartureValueNum = parseNumber(targetCargoLoadDepartureValue.value);
+        if (estOutbKgCostField) {
+            if (!isNaN(outboundCostWeightValueNum) && !isNaN(targetCargoLoadDepartureValueNum) && targetCargoLoadDepartureValueNum !== 0) {
+                estOutbKgCostField.value = (outboundCostWeightValueNum / targetCargoLoadDepartureValueNum).toFixed(2);
+            } else {
+                estOutbKgCostField.value = '';
+            }
+        }
+        // 7. est_ret_kg_cost = return_cost_weight_value / target_cargo_load_return
+        const estRetKgCostField = document.getElementById('est_ret_kg_cost');
+        const returnCostWeightValueNum = parseNumber(returnCostWeightValue.value);
+        const targetCargoLoadReturnNum = parseNumber(targetCargoLoadReturn.value);
+        if (estRetKgCostField) {
+            if (!isNaN(returnCostWeightValueNum) && !isNaN(targetCargoLoadReturnNum) && targetCargoLoadReturnNum !== 0) {
+                estRetKgCostField.value = (returnCostWeightValueNum / targetCargoLoadReturnNum).toFixed(2);
+            } else {
+                estRetKgCostField.value = '';
+            }
         }
     }
 
@@ -212,9 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     // Define all DOM elements first
-    const typeOfFreight = document.getElementById('type_of_freight');
     const portOfShipping = document.getElementById('port_of_shipping');
-    const portOfArrival = document.getElementById('consignee_port_of_shipping');
     const regionField = document.getElementById('trading_region');
     const managerField = document.getElementById('trading_regional_manager');
     const countryField = document.getElementById('trading_country');
@@ -548,7 +600,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
     // --- Type of Return logic for outbound cost weight and target cargo load ---
-    const typeOfReturn = document.getElementById('type_of_return');
     const outboundCostWeight = document.getElementById('outbound_cost_weight');
     const outboundCostWeightValue = document.getElementById('outbound_cost_weight_value');
     const totalFlightCostDisplay = document.getElementById('total_flight_cost_display');
@@ -664,5 +715,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeOfReturn) {
         typeOfReturn.addEventListener('change', updateReturnFields);
         updateReturnFields(); // Initial state
+    }
+    const startShipmentBtn = document.getElementById('start-shipment-btn');
+    const typeOfFreightWrapper = document.getElementById('type-of-freight-wrapper');
+    if (startShipmentBtn && typeOfFreightWrapper) {
+        startShipmentBtn.addEventListener('click', function() {
+            typeOfFreightWrapper.style.display = 'flex';
+        });
     }
 });

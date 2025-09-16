@@ -4,169 +4,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shipment.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
 
-<script>
-// Collapse all main sections at page load, disable toggle buttons, and expand sections on user input
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. Collapse Products / Goods Selection section at page load, disable toggle
-    var productsSection = document.getElementById('container-5');
-    var productsToggleBtn = document.getElementById('toggle-products-btn');
-    // Only hide the content (not the section title)
-    var productsContent = null;
-    if (productsSection) {
-        // Find the first .shipment-form-row inside container-5 (the content block)
-        productsContent = productsSection.querySelector('.shipment-form-row').parentElement;
-        if (productsContent) productsContent.style.display = 'none';
-    }
-    if (productsToggleBtn) productsToggleBtn.disabled = true;
-
-    // Toggle button logic for Products section
-    if (productsToggleBtn && productsContent) {
-        productsToggleBtn.addEventListener('click', function() {
-            if (productsContent.style.display === 'none') {
-                productsContent.style.display = '';
-            } else {
-                productsContent.style.display = 'none';
-            }
-        });
-    }
-
-    // 2. Expand and enable toggle on 'type_of_return' selection
-    var typeOfReturn = document.getElementById('type_of_return');
-    if (typeOfReturn) {
-        typeOfReturn.addEventListener('change', function() {
-            if (typeOfReturn.value && productsContent) {
-                productsContent.style.display = '';
-                if (productsToggleBtn) productsToggleBtn.disabled = false;
-            }
-        });
-    }
-
-    // 3. Populate add_cargo_outbound and add_cargo_return fields
-    var portOfShipping = document.getElementById('port_of_shipping');
-    var consigneePortOfShipping = document.getElementById('consignee_port_of_shipping');
-    var addCargoOutbound = document.getElementById('add_cargo_outbound');
-    var addCargoReturn = document.getElementById('add_cargo_return');
-    if (portOfShipping && addCargoOutbound) {
-        portOfShipping.addEventListener('input', function() {
-            addCargoOutbound.value = portOfShipping.value;
-        });
-        // Initial value
-        addCargoOutbound.value = portOfShipping.value;
-    }
-    if (consigneePortOfShipping && addCargoReturn) {
-        consigneePortOfShipping.addEventListener('input', function() {
-            addCargoReturn.value = consigneePortOfShipping.value;
-        });
-        // Initial value
-        addCargoReturn.value = consigneePortOfShipping.value;
-    }
-    // --- Calculate Est. Ret. Kg. $ ---
-    function getNumericFieldValueRet(field) {
-        if (!field) return NaN;
-        var val = field.value !== undefined ? field.value : field.textContent;
-        if (typeof val === 'string') {
-            val = val.replace(/[$,]/g, '').trim();
-        }
-        return parseFloat(val);
-    }
-
-    function calculateEstRetKgCost() {
-        var returnCostWeightValue = getNumericFieldValueRet(document.getElementById('return_cost_weight_value'));
-        var targetCargoLoadReturnValue = getNumericFieldValueRet(document.getElementById('target_cargo_load_return'));
-        var estRetKgCostField = document.getElementById('est_ret_kg_cost');
-        if (!isNaN(returnCostWeightValue) && !isNaN(targetCargoLoadReturnValue) && targetCargoLoadReturnValue !== 0) {
-            var result = returnCostWeightValue / targetCargoLoadReturnValue;
-            estRetKgCostField.value = result.toFixed(2);
-        } else {
-            estRetKgCostField.value = '';
-        }
-    }
-
-    var returnCostWeightValueField = document.getElementById('return_cost_weight_value');
-    var targetCargoLoadReturnValueField = document.getElementById('target_cargo_load_return');
-    if (returnCostWeightValueField && targetCargoLoadReturnValueField) {
-        returnCostWeightValueField.addEventListener('input', calculateEstRetKgCost);
-        targetCargoLoadReturnValueField.addEventListener('input', calculateEstRetKgCost);
-        returnCostWeightValueField.addEventListener('change', calculateEstRetKgCost);
-        targetCargoLoadReturnValueField.addEventListener('change', calculateEstRetKgCost);
-        setInterval(calculateEstRetKgCost, 200);
-        calculateEstRetKgCost();
-    }
-    var trading = document.getElementById('trading-info-content');
-    if (trading) trading.style.display = 'none';
-    var logistic = document.getElementById('logistic-info-content');
-    if (logistic) logistic.style.display = 'none';
-    var products = document.getElementById('products-info-content');
-    if (products) products.style.display = 'none';
-
-    // Disable trading info toggle button
-    var tradingBtn = document.getElementById('toggle-trading-btn');
-    if (tradingBtn) tradingBtn.disabled = true;
-    // Disable logistic info toggle button
-    var logisticBtn = document.getElementById('toggle-logistic-btn');
-    if (logisticBtn) logisticBtn.disabled = true;
-
-    // Expand trading info when type of freight is selected
-    var typeOfFreight = document.getElementById('type_of_freight');
-    if (typeOfFreight) {
-        typeOfFreight.addEventListener('change', function() {
-            if (typeOfFreight.value) {
-                if (trading) trading.style.display = '';
-            }
-        });
-    }
-
-    // Expand logistic info when Port of Arrival is entered, then enable toggle
-    var portOfArrival = document.getElementById('consignee_port_of_shipping');
-    if (portOfArrival) {
-        portOfArrival.addEventListener('input', function() {
-            if (portOfArrival.value && logistic) {
-                logistic.style.display = '';
-                if (logisticBtn) logisticBtn.disabled = false;
-            }
-        });
-    }
-
-    // --- Calculate Est. outB. Kg. $ ---
-    function getNumericFieldValue(field) {
-        if (!field) return NaN;
-        // Try .value, fallback to .textContent
-        var val = field.value !== undefined ? field.value : field.textContent;
-        if (typeof val === 'string') {
-            val = val.replace(/[$,]/g, '').trim();
-        }
-        return parseFloat(val);
-    }
-
-    function calculateEstOutbKgCost() {
-        var outboundCostWeightValue = getNumericFieldValue(document.getElementById('outbound_cost_weight_value'));
-        var targetCargoLoadDepartureValue = getNumericFieldValue(document.getElementById('target_cargo_load_departure_value'));
-        var estOutbKgCostField = document.getElementById('est_outb_kg_cost');
-        if (!isNaN(outboundCostWeightValue) && !isNaN(targetCargoLoadDepartureValue) && targetCargoLoadDepartureValue !== 0) {
-            var result = outboundCostWeightValue / targetCargoLoadDepartureValue;
-            estOutbKgCostField.value = result.toFixed(2);
-        } else {
-            estOutbKgCostField.value = '';
-        }
-    }
-
-    var outboundCostWeightValueField = document.getElementById('outbound_cost_weight_value');
-    var targetCargoLoadDepartureValueField = document.getElementById('target_cargo_load_departure_value');
-    if (outboundCostWeightValueField && targetCargoLoadDepartureValueField) {
-        // Listen for user input
-        outboundCostWeightValueField.addEventListener('input', calculateEstOutbKgCost);
-        targetCargoLoadDepartureValueField.addEventListener('input', calculateEstOutbKgCost);
-        outboundCostWeightValueField.addEventListener('change', calculateEstOutbKgCost);
-        targetCargoLoadDepartureValueField.addEventListener('change', calculateEstOutbKgCost);
-
-        // Fallback: Poll for value changes every 200ms to ensure dynamic update
-        setInterval(calculateEstOutbKgCost, 200);
-
-        // Initial calculation
-        calculateEstOutbKgCost();
-    }
-});
-</script>
+<!-- JS moved to shipment_management.js -->
 <!-- All JS references removed. Only HTML structure and CSS remain. -->
 
 <form method="POST" action="">
@@ -193,9 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="shipment-section" id="container-2" data-check-route-url="{{ url_for('operations_api.check_route') }}">
 	<div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
 		<span>Trading Information</span>
-    <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleTradingInfo()" style="margin-left: 10px;" id="toggle-trading-btn" disabled>Toggle</button>
+    <button class="btn btn-sm btn-outline-info" type="button" style="margin-left: 10px;" id="toggle-trading-btn" disabled>Toggle</button>
 	</div>
-	<div id="trading-info-content">
+    <div id="trading-info-content" style="display: none;">
     <!-- Type of Freight moved to Shipment Reference section -->
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
                 
@@ -268,9 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="shipment-section" id="container-3">
     <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
         <span>Logistic Information</span>
-        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleLogisticInfo()" style="margin-left: 10px;" id="toggle-logistic-btn" disabled>Toggle</button>
+        <button class="btn btn-sm btn-outline-info" type="button" style="margin-left: 10px;" id="toggle-logistic-btn" disabled>Toggle</button>
     </div>
-    <div id="logistic-info-content">
+    <div id="logistic-info-content" style="display: none;">
     <div class="shipment-form-row" style="margin-top: 15px; align-items: center; width: 100%; padding: 0 8px; box-sizing: border-box;">
             <div class="form-group" style="min-width: 150px;">
                 <label for="departure_route" style="color: #257777; font-weight: bold;">Departure Route</label>
@@ -362,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <span>Products / Goods Selection</span>
         <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleProductsInfo()" style="margin-left: 10px;" id="toggle-products-btn" disabled>Toggle</button>
     </div>
-    <div id="products-content-wrapper">
+    <div id="products-content-wrapper" style="display: none;">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
             <div class="form-group" style="min-width: 180px; max-width: 300px; width: 100%;">
                 <label for="filter_category" style="color: #8f7d16; font-weight: bold;">Filter by Category</label>
@@ -387,62 +225,97 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <!-- This single container now handles ALL scrolling for the table component -->
         <div class="product-list-scroll" style="overflow: auto; width: 100%; max-height: 500px;">
-            <!-- The header is now sticky, so it stays at the top during vertical scroll -->
-            <div class="product-list-header" style="display: flex; flex-direction: row; align-items: center; gap: 0; min-width: 2400px; font-weight: bold; background: #1c1c1c; border-bottom: 2px solid #ff5c00; padding: 8px 0; position: sticky; top: 0; z-index: 1;">
-                <style>
-                .product-list-header > div {
-                    border-right: 1px solid #ff5c00;
-                    padding: 0 8px;
-                }
-                .product-list-header > div:last-child {
-                    border-right: none;
-                }
-                label[for="add_cargo_outbound"] {
-                    cursor: pointer;
-                }
-                </style>
-                <div id="product-header-code" style="width: 150px; text-align: left; color: #e7e5d5;">Code</div>
-                <div id="product-header-name" style="width: 400px; text-align: left; color: #e7e5d5;">Name</div>
-                <div id="product-header-category" style="width: 150px; text-align: left; color: #e7e5d5;">Category</div>
-                <div id="product-header-country" style="width: 100px; text-align: center; color: #e7e5d5;">Country ID</div>
-                <div id="product-header-trade-unit" style="width: 100px; text-align: center; color: #e7e5d5;">Trade Unit</div>
-                <div id="product-header-packaging" style="width: 120px; text-align: left; color: #e7e5d5;">Packaging</div>
-                <div id="product-header-weight" style="width: 100px; text-align: right; color: #e7e5d5;">Pack Weight</div>
-                <div id="product-header-units-pack" style="width: 100px; text-align: right; color: #e7e5d5;">Units/ Pack</div>
-                <div id="product-header-packaging-cost" style="width: 200px; text-align: right; color: #e7e5d5;">Packaging Cost</div>
-                <div id="product-header-currency" style="width: 80px; text-align: center; color: #e7e5d5;">Currency</div>
-                <div id="product-header-amount" style="width: 150px; text-align: right; color: #e7e5d5;">Amount</div>
-                <!-- Product List calculations column fca calculations-->
-                <div id="product-header-total-weight" style="width: 200px; text-align: right; color: #b64545;">Total Weight</div>
-                <div id="product-header-total-cost" style="width: 300px; text-align: right; color: #b64545;">Total Product Cost</div>
-                <div id="product-header-export-taxes" style="width: 120px; text-align: right; color: #b64545;">Export Taxes</div>
-                <div id="product-header-exporter-profit" style="width: 120px; text-align: right; color: #b64545;">Exporter Profit</div>
-                <div id="product-header-fca-cost" style="width: 120px; text-align: right; color: #b64545;">FCA Cost</div>
-                <!-- Product List calculations column cip calculations-->
-                <div id="product-header-fca-usd" style="width: 120px; text-align: right; color: #8f7d16;">FCA USD</div>
-                <div id="product-header-load-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Load cost</div>
-                <div id="product-header-freight-cost" style="width: 120px; text-align: right; color: #8f7d16;">Air Freight cost</div>
-                <div id="product-header-unload-cost" style="width: 120px; text-align: right; color: #8f7d16;">Cargo Unload cost</div>
-                <div id="product-header-cip-cost" style="width: 120px; text-align: right; color: #8f7d16;">CIP Cost</div>
-                <!-- Product List calculations column dat calculations-->
-                <div id="product-header-import-taxes" style="width: 120px; text-align: right; color: #8f7d16;">Import Taxes</div>
-                <div id="product-header-dat-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT Kg. Cost</div>
-                <div id="product-header-dat-ea-cost-arrival" style="width: 120px; text-align: right; color: #8f7d16;">DAT EA. cost</div>
-                <div id="product-header-comparative-price" style="width: 120px; text-align: right; color: #8f7d16;">Comparative Price</div>
-                <div id="product-header-suggested-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Sug. Product Profit (EA)</div>
-                <div id="product-header-profit-ea" style="width: 120px; text-align: right; color: #8f7d16;">Product Profit (EA)</div>
-                <div id="product-header-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Product final DAT Price (EA)</div>
-                <div id="product-header-total-dat-final" style="width: 120px; text-align: right; color: #8f7d16;">Total Product Cost DAT</div>
-                <div id="product-header-total-dat-profit-" style="width: 120px; text-align: right; color: #8f7d16;">Total DAT Profit</div>
-            </div>
-            <!-- This is now a simple container for the JS-injected rows -->
-            <div id="product-table-container"></div>
-            <!-- The totals row is now sticky, so it stays at the bottom -->
-            <div id="product-list-totals" style="position: sticky; bottom: 0; z-index: 1;"></div>
+            <style>
+            .product-list-table {
+                width: 100%;
+                min-width: 4400px;
+                border-collapse: collapse;
+                background: #1c1c1c;
+            }
+            .product-list-table th, .product-list-table td {
+                border: 1px solid #ff5c00;
+                padding: 8px 6px;
+                color: #e7e5d5;
+                font-weight: normal;
+                background: #222;
+                vertical-align: middle;
+            }
+            .product-list-table th {
+                background: #1c1c1c;
+                color: #ffb84d;
+                font-weight: bold;
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                white-space: normal;
+                word-break: break-word;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                line-height: 1.1;
+                height: 2.6em;
+                text-align: center;
+            }
+            .product-list-table th span {
+                display: inline-block;
+                white-space: normal;
+                word-break: break-word;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.1;
+                height: 2.2em;
+            }
+            .product-list-table tr:nth-child(even) td {
+                background: #232323;
+            }
+            .product-list-table tr:hover td {
+                background: #2a2a2a;
+            }
+            </style>
+            <table class="product-list-table">
+                <thead>
+                    <tr>
+                        <th style="width: 200px; text-align: center;">Code</th>
+                        <th style="width: 1000px; text-align: center;">Name</th>
+                        <th style="width: 300px; text-align: center;">Category</th>
+                        <th style="width: 250px; text-align: center;">Country ID</th>
+                        <th style="width: 350px; text-align: center;">Packaging</th>
+                        <th style="width: 300px; text-align: center;">Pack Weight</th>
+                        <th style="width: 300px; text-align: center;">Units/ Pack</th>
+                        <th style="width: 350px; text-align: center;">Packaging Cost</th>
+                        <th style="width: 280px; text-align: center;">Currency</th>
+                        <th style="width: 300px; text-align: center;">Amount</th>
+                        <th style="width: 400px; text-align: center; color: #b64545;">Total Weight</th>
+                        <th style="width: 500px; text-align: center; color: #b64545;">Total Product Cost</th>
+                        <th style="width: 300px; text-align: center; color: #b64545;">Export Taxes</th>
+                        <th style="width: 300px; text-align: center; color: #b64545;">Exporter Profit</th>
+                        <th style="width: 500px; text-align: center; color: #b64545;">FCA Cost</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">FCA USD</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Cargo Load cost</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Air Freight cost</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Cargo Unload cost</th>
+                        <th style="width: 600px; text-align: center; color: #8f7d16;">CIP Cost</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Import Taxes</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">DAT Kg. Cost</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">DAT EA. cost</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Comparative Price</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Sug. Prod. Prof (EA)</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Product Profit (EA)</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">final DAT Price (EA)</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Total Pr. Cost DAT</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Total DAT Profit</th>
+                    </tr>
+                </thead>
+                <tbody id="product-table-container">
+                    <!-- JS-injected rows go here -->
+                </tbody>
+                <tfoot>
+                    <tr id="product-list-totals">
+                        <!-- JS-injected totals row goes here -->
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
 </div>
-        <!-- Inject mock window.products for debugging -->
-</div>
-
+<!-- ...existing code... -->
 {% endblock %}
