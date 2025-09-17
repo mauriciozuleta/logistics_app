@@ -275,6 +275,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const consigneeManagerField = document.getElementById('consignee_regional_manager');
     const consigneeCountryField = document.getElementById('consignee_country');
     const consigneeBranchField = document.getElementById('consignee_branch');
+    const shipperCountryCodeField = document.getElementById('shipper_country_code');
+    const addCargoOutboundBtn = document.getElementById('add_cargo_outbound_btn');
+    const productTableContainer = document.getElementById('product-table-container');
 
     // Listen for input events for Port of Arrival
     portOfArrival.addEventListener('input', function() {
@@ -388,9 +391,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (portOfShipping && portOfShipping.tagName === 'INPUT') {
             portOfShipping.placeholder = placeholder;
         }
-        if (portOfArrival && portOfArrival.options && portOfArrival.options.length > 0) {
+        if (portOfArrival && portOfArrival.tagName === 'SELECT' && portOfArrival.options && portOfArrival.options.length > 0) {
             portOfArrival.options[0].text = placeholder;
             portOfArrival.options[0].value = '';
+        } else if (portOfArrival && portOfArrival.tagName === 'INPUT') {
+            portOfArrival.placeholder = placeholder;
         }
     }
 
@@ -478,6 +483,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         branchField.value = data.branch || '';
                     }
+                }
+
+                // --- Store country code but DO NOT load products yet ---
+                if (shipperCountryCodeField && data.country_id) {
+                    shipperCountryCodeField.value = data.country_id;
                 }
             })
             .catch(error => {
@@ -740,4 +750,82 @@ document.addEventListener('DOMContentLoaded', function() {
                 addCargoReturnInput.value = consigneePortOfShippingInput.value;
             });
         }
+
+    // --- New listener for the "Load Cargo" button ---
+    if (addCargoOutboundBtn) {
+        addCargoOutboundBtn.addEventListener('click', function() {
+            const countryCode = shipperCountryCodeField.value;
+            if (countryCode) {
+                loadProductsForCountry(countryCode);
+            } else {
+                alert('Please enter a valid Port of Shipping first to determine the country.');
+            }
+        });
+    }
+
+    // --- Product Table Creation Logic ---
+
+    // Helper to format numbers
+    function formatNumber(num) {
+        return num ? num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+    }
+
+    // Function to build a single product row
+    function createProductRow(product) {
+        // This function creates the HTML for a single table row based on a product object.
+        // The empty cells are placeholders for calculated values.
+        return `
+            <tr>
+                <td style="text-align: center;">${product.product_code || '-'}</td>
+                <td style="text-align: left;">${product.name || '-'}</td>
+                <td style="text-align: center;">${product.product_type || '-'}</td>
+                <td style="text-align: center;">${product.country_id || '-'}</td>
+                <td style="text-align: center;">${product.packaging || '-'}</td>
+                <td style="text-align: right;">${formatNumber(product.packaging_weight)} kg</td>
+                <td style="text-align: center;">${product.units_per_pack || '-'}</td>
+                <td style="text-align: right;">$${formatNumber(product.packaging_cost)}</td>
+                <td style="text-align: center;">${product.currency || '-'}</td>
+                <td style="text-align: center;"><input type="number" name="amount_${product.product_code}" value="0" style="width: 80px; text-align: right;"></td>
+                <td style="text-align: center; color: #b64545;">-</td>
+                <td style="text-align: center; color: #b64545;">-</td>
+                <td style="text-align: center; color: #b64545;">-</td>
+                <td style="text-align: center; color: #b64545;">-</td>
+                <td style="text-align: center; color: #b64545;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td style="text-align: center; color: #8f7d16;">-</td>
+            </tr>
+        `;
+    }
+
+    // Function to fetch and render products
+    async function loadProductsForCountry(countryCode) {
+        if (!countryCode || !productTableContainer) {
+            if(productTableContainer) productTableContainer.innerHTML = '<tr><td colspan="29" style="text-align: center;">Please select a port of shipping to see products.</td></tr>';
+            return;
+        }
+        try {
+            const response = await fetch(`/api/products-by-country?country_id=${countryCode}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            const products = data.products;
+            productTableContainer.innerHTML = (products && products.length > 0) 
+                ? products.map(createProductRow).join('') 
+                : `<tr><td colspan="29" style="text-align: center;">No products found for this country.</td></tr>`;
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            productTableContainer.innerHTML = `<tr><td colspan="29" style="text-align: center; color: red;">Error loading products.</td></tr>`;
+        }
+    }
 });

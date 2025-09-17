@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import Branch, CountryTradeInfo, Region, Country
+from models import Branch, CountryTradeInfo, Region, Country, Product, Airport
 from extensions import db
 
 # Minimal placeholder blueprint for operations API
@@ -153,3 +153,53 @@ def trader_info():
             result[col.name] = getattr(country_trade_info, col.name)
     print('DEBUG: Trader Info Object:', result)
     return jsonify(result)
+
+@operations_api_new.route('/airport-country', methods=['GET'])
+def get_airport_country():
+    """Get the country ID for an IATA airport code"""
+    iata_code = request.args.get('iata_code', '').strip().upper()
+    if not iata_code:
+        return jsonify({'error': 'IATA code is required'}), 400
+    
+    # Find the airport by IATA code
+    airport = Airport.query.filter_by(iata_code=iata_code).first()
+    if not airport:
+        return jsonify({'error': f'No airport found with IATA code {iata_code}'}), 404
+    
+    return jsonify({
+        'iata_code': iata_code,
+        'country_id': airport.country_id,
+        'country_name': airport.country.country_name if airport.country else None
+    })
+
+@operations_api_new.route('/products-by-country', methods=['GET'])
+def get_products_by_country():
+    """Get all products for a specific country ID"""
+    country_id = request.args.get('country_id', '').strip().upper()
+    if not country_id:
+        return jsonify({'error': 'Country ID is required'}), 400
+    
+    # Find products by country ID
+    products = Product.query.filter_by(country_id=country_id).all()
+    
+    # Convert to dictionary for JSON serialization
+    products_data = []
+    for product in products:
+        product_dict = {
+            'id': product.id,
+            'product_code': product.product_code,
+            'name': product.name,
+            'product_type': product.product_type,
+            'country_id': product.country_id,
+            'packaging': product.packaging,
+            'packaging_weight': product.packaging_weight,
+            'units_per_pack': product.units_per_pack,
+            'packaging_cost': product.packaging_cost,
+            'currency': product.currency
+        }
+        products_data.append(product_dict)
+    
+    return jsonify({
+        'country_id': country_id,
+        'products': products_data
+    })

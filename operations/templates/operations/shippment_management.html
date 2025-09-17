@@ -10,6 +10,7 @@
 <form method="POST" action="">
     {# This hidden input is crucial for the JavaScript fetch request to work #}
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" id="shipper_country_code" name="shipper_country_code" value="">
 
 <div class="shipment-section" id="container-1">
     <div class="section-title" style="color: #FF5C00; text-align: left;">Shipment Reference</div>
@@ -198,7 +199,7 @@
 <div class="shipment-section" id="container-5">
     <div class="section-title" style="color: #FF5C00; display: flex; justify-content: space-between; align-items: center;">
         <span>Products / Goods Selection</span>
-        <button class="btn btn-sm btn-outline-info" type="button" onclick="toggleProductsInfo()" style="margin-left: 10px;" id="toggle-products-btn" disabled>Toggle</button>
+        <button class="btn btn-sm btn-outline-info" type="button" style="margin-left: 10px;" id="toggle-products-btn" disabled>Toggle</button>
     </div>
     <div id="products-content-wrapper" style="display: none;">
         <div class="shipment-form-row" style="margin-top: 15px; align-items: flex-start; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
