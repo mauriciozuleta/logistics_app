@@ -276,7 +276,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const consigneeCountryField = document.getElementById('consignee_country');
     const consigneeBranchField = document.getElementById('consignee_branch');
     const shipperCountryCodeField = document.getElementById('shipper_country_code');
+    const consigneeCountryCodeField = document.getElementById('consignee_country_code');
     const addCargoOutboundBtn = document.getElementById('add_cargo_outbound_btn');
+    const addCargoReturnBtn = document.getElementById('add_cargo_return_btn');
     const productTableContainer = document.getElementById('product-table-container');
 
     // Listen for input events for Port of Arrival
@@ -359,6 +361,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         consigneeBranchField.value = data.branch || '';
                     }
+                }
+
+                // --- Store consignee country code ---
+                if (consigneeCountryCodeField && data.country_id) {
+                    consigneeCountryCodeField.value = data.country_id;
                 }
             })
             .catch(error => {
@@ -751,14 +758,36 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+    // --- Helper to change table header color ---
+    function setTableHeaderColor(color) {
+        const productTableHeaders = document.querySelectorAll('.product-list-table thead th');
+        productTableHeaders.forEach(th => {
+            th.style.backgroundColor = color;
+        });
+    }
+
     // --- New listener for the "Load Cargo" button ---
     if (addCargoOutboundBtn) {
         addCargoOutboundBtn.addEventListener('click', function() {
             const countryCode = shipperCountryCodeField.value;
             if (countryCode) {
                 loadProductsForCountry(countryCode);
+                setTableHeaderColor('#257777'); // Shipper-related color
             } else {
                 alert('Please enter a valid Port of Shipping first to determine the country.');
+            }
+        });
+    }
+
+    // --- Listener for the return "Load Cargo" button ---
+    if (addCargoReturnBtn) {
+        addCargoReturnBtn.addEventListener('click', function() {
+            const countryCode = consigneeCountryCodeField.value;
+            if (countryCode) {
+                loadProductsForCountry(countryCode);
+                setTableHeaderColor('#2b792b'); // Consignee-related color
+            } else {
+                alert('Please enter a valid Port of Arrival first to determine the country.');
             }
         });
     }
