@@ -280,6 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const addCargoOutboundBtn = document.getElementById('add_cargo_outbound_btn');
     const addCargoReturnBtn = document.getElementById('add_cargo_return_btn');
     const productTableContainer = document.getElementById('product-table-container');
+    let currentCargoContext = null; // To track if we are editing outbound or return cargo
 
     // Listen for input events for Port of Arrival
     portOfArrival.addEventListener('input', function() {
@@ -363,9 +364,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // --- Store consignee country code ---
-                if (consigneeCountryCodeField && data.country_id) {
-                    consigneeCountryCodeField.value = data.country_id;
+                // --- Store consignee country code and tax/profit percentages ---
+                if (consigneeCountryCodeField) {
+                    if (data.country_id) {
+                        consigneeCountryCodeField.value = data.country_id;
+                    }
+                    consigneeCountryCodeField.dataset.exportTax = data.export_sales_tax || 0;
+                    consigneeCountryCodeField.dataset.exportProfit = data.export_profit_pct || 0;
                 }
             })
             .catch(error => {
@@ -492,9 +497,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // --- Store country code but DO NOT load products yet ---
-                if (shipperCountryCodeField && data.country_id) {
-                    shipperCountryCodeField.value = data.country_id;
+                // --- Store country code and tax/profit percentages but DO NOT load products yet ---
+                if (shipperCountryCodeField) {
+                    if (data.country_id) {
+                        shipperCountryCodeField.value = data.country_id;
+                    }
+                    shipperCountryCodeField.dataset.exportTax = data.export_sales_tax || 0;
+                    shipperCountryCodeField.dataset.exportProfit = data.export_profit_pct || 0;
                 }
             })
             .catch(error => {
@@ -771,6 +780,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addCargoOutboundBtn.addEventListener('click', function() {
             const countryCode = shipperCountryCodeField.value;
             if (countryCode) {
+                currentCargoContext = 'outbound'; // Set context
                 loadProductsForCountry(countryCode);
                 setTableHeaderColor('#257777'); // Shipper-related color
                 addCargoOutboundBtn.style.color = '#257777';
@@ -786,6 +796,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addCargoReturnBtn.addEventListener('click', function() {
             const countryCode = consigneeCountryCodeField.value;
             if (countryCode) {
+                currentCargoContext = 'return'; // Set context
                 loadProductsForCountry(countryCode);
                 setTableHeaderColor('#2b792b'); // Consignee-related color
                 addCargoReturnBtn.style.color = '#2b792b';
@@ -830,8 +841,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </td>
                 <td id="total-weight-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td id="total-cost-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
-                <td style="text-align: center; color: #b64545;">-</td>
-                <td style="text-align: center; color: #b64545;">-</td>
+                <td id="export-taxes-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
+                <td id="exporter-profit-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td style="text-align: center; color: #b64545;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
@@ -888,9 +899,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 const totalWeight = amount * packWeight;
                 const totalCost = amount * packCost;
 
+                // Get tax/profit percentages based on the current context
+                let taxPct = 0;
+                let profitPct = 0;
+                if (currentCargoContext === 'outbound' && shipperCountryCodeField) {
+                    taxPct = parseFloat(shipperCountryCodeField.dataset.exportTax) || 0;
+                    profitPct = parseFloat(shipperCountryCodeField.dataset.exportProfit) || 0;
+                } else if (currentCargoContext === 'return' && consigneeCountryCodeField) {
+                    // For return, we use the consignee's country's export values
+                    taxPct = parseFloat(consigneeCountryCodeField.dataset.exportTax) || 0;
+                    profitPct = parseFloat(consigneeCountryCodeField.dataset.exportProfit) || 0;
+                }
+
+                // Calculate export taxes and profit
+                const exportTaxes = totalCost * (taxPct / 100);
+                const exporterProfit = totalCost * (profitPct / 100);
+
                 // Find the corresponding cells to update
                 const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
                 const totalCostCell = document.getElementById(`total-cost-${productCode}`);
+                const exportTaxesCell = document.getElementById(`export-taxes-${productCode}`);
+                const exporterProfitCell = document.getElementById(`exporter-profit-${productCode}`);
 
                 // Update the cell content using the existing formatNumber helper
                 if (totalWeightCell) {
@@ -898,6 +927,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (totalCostCell) {
                     totalCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
+                }
+                if (exportTaxesCell) {
+                    exportTaxesCell.textContent = exportTaxes > 0 ? `$${formatNumber(exportTaxes)}` : '-';
+                }
+                if (exporterProfitCell) {
+                    exporterProfitCell.textContent = exporterProfit > 0 ? `$${formatNumber(exporterProfit)}` : '-';
                 }
 
                 // After updating the row, update the footer totals
@@ -911,6 +946,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const rows = productTableContainer.querySelectorAll('tr');
         let totalWeight = 0;
         let totalCost = 0;
+        let totalExportTaxes = 0;
+        let totalExporterProfit = 0;
         // Add other total variables here as they are implemented
 
         rows.forEach(row => {
@@ -928,12 +965,29 @@ document.addEventListener('DOMContentLoaded', function() {
             if (costCell && costCell.textContent !== '-') {
                 totalCost += parseFloat(costCell.textContent.replace(/[^\d.-]/g, '')) || 0;
             }
+
+            // Sum Export Taxes
+            const taxesCell = document.getElementById(`export-taxes-${productCode}`);
+            if (taxesCell && taxesCell.textContent !== '-') {
+                totalExportTaxes += parseFloat(taxesCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
+
+            // Sum Exporter Profit
+            const profitCell = document.getElementById(`exporter-profit-${productCode}`);
+            if (profitCell && profitCell.textContent !== '-') {
+                totalExporterProfit += parseFloat(profitCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
         });
 
         // Update the footer cells with the calculated totals
         const footerWeightCell = document.getElementById('footer-total-weight');
         const footerCostCell = document.getElementById('footer-total-cost');
+        const footerTaxesCell = document.getElementById('footer-export-taxes');
+        const footerProfitCell = document.getElementById('footer-exporter-profit');
+
         if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
+        if (footerTaxesCell) footerTaxesCell.textContent = totalExportTaxes > 0 ? `$${formatNumber(totalExportTaxes)}` : '-';
+        if (footerProfitCell) footerProfitCell.textContent = totalExporterProfit > 0 ? `$${formatNumber(totalExporterProfit)}` : '-';
     }
 });
