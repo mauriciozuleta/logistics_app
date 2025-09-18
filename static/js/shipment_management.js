@@ -865,6 +865,8 @@ document.addEventListener('DOMContentLoaded', function() {
             productTableContainer.innerHTML = (products && products.length > 0) 
                 ? products.map(createProductRow).join('') 
                 : `<tr><td colspan="29" style="text-align: center;">No products found for this country.</td></tr>`;
+            // Initialize/clear totals when table is reloaded
+            updateTableTotals();
         } catch (error) {
             console.error('Error fetching products:', error);
             productTableContainer.innerHTML = `<tr><td colspan="29" style="text-align: center; color: red;">Error loading products.</td></tr>`;
@@ -897,7 +899,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (totalCostCell) {
                     totalCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
                 }
+
+                // After updating the row, update the footer totals
+                updateTableTotals();
             }
         });
+    }
+
+    // --- Function to calculate and update all footer totals ---
+    function updateTableTotals() {
+        const rows = productTableContainer.querySelectorAll('tr');
+        let totalWeight = 0;
+        let totalCost = 0;
+        // Add other total variables here as they are implemented
+
+        rows.forEach(row => {
+            const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
+            if (!productCode) return;
+
+            // Sum Total Weight
+            const weightCell = document.getElementById(`total-weight-${productCode}`);
+            if (weightCell && weightCell.textContent !== '-') {
+                totalWeight += parseFloat(weightCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
+
+            // Sum Total Product Cost
+            const costCell = document.getElementById(`total-cost-${productCode}`);
+            if (costCell && costCell.textContent !== '-') {
+                totalCost += parseFloat(costCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
+        });
+
+        // Update the footer cells with the calculated totals
+        const footerWeightCell = document.getElementById('footer-total-weight');
+        const footerCostCell = document.getElementById('footer-total-cost');
+        if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
+        if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
     }
 });

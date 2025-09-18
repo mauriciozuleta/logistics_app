@@ -272,6 +272,16 @@
             .product-list-table tr:hover td {
                 background: #2a2a2a;
             }
+            .product-list-table tfoot {
+                position: sticky;
+                bottom: 0;
+                z-index: 2;
+            }
+            .product-list-table tfoot td {
+                background: #1c1c1c;
+                border-top: 2px solid #ff5c00;
+                font-weight: bold;
+            }
             </style>
             <table class="product-list-table">
                 <thead>
@@ -310,9 +320,28 @@
                 <tbody id="product-table-container">
                     <!-- JS-injected rows go here -->
                 </tbody>
-                <tfoot>
+                <tfoot style="text-align: right;">
                     <tr id="product-list-totals">
-                        <!-- JS-injected totals row goes here -->
+                        <td colspan="10" style="text-align: right; color: #ffb84d;">Totals:</td>
+                        <td id="footer-total-weight" style="color: #b64545;">-</td>
+                        <td id="footer-total-cost" style="color: #b64545;">-</td>
+                        <td id="footer-export-taxes" style="color: #b64545;">-</td>
+                        <td id="footer-exporter-profit" style="color: #b64545;">-</td>
+                        <td id="footer-fca-cost" style="color: #b64545;">-</td>
+                        <td id="footer-fca-usd" style="color: #8f7d16;">-</td>
+                        <td id="footer-cargo-load-cost" style="color: #8f7d16;">-</td>
+                        <td id="footer-air-freight-cost" style="color: #8f7d16;">-</td>
+                        <td id="footer-cargo-unload-cost" style="color: #8f7d16;">-</td>
+                        <td id="footer-cip-cost" style="color: #8f7d16;">-</td>
+                        <td id="footer-import-taxes" style="color: #8f7d16;">-</td>
+                        <td style="text-align: center;">-</td> <!-- DAT Kg. Cost -->
+                        <td style="text-align: center;">-</td> <!-- DAT EA. cost -->
+                        <td style="text-align: center;">-</td> <!-- Comparative Price -->
+                        <td style="text-align: center;">-</td> <!-- Sug. Prod. Prof (EA) -->
+                        <td style="text-align: center;">-</td> <!-- Product Profit (EA) -->
+                        <td style="text-align: center;">-</td> <!-- final DAT Price (EA) -->
+                        <td id="footer-total-pr-cost-dat" style="color: #8f7d16;">-</td>
+                        <td id="footer-total-dat-profit" style="color: #8f7d16;">-</td>
                     </tr>
                 </tfoot>
             </table>
