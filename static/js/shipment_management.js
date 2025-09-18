@@ -773,6 +773,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (countryCode) {
                 loadProductsForCountry(countryCode);
                 setTableHeaderColor('#257777'); // Shipper-related color
+                addCargoOutboundBtn.style.color = '#257777';
+                if (addCargoReturnBtn) addCargoReturnBtn.style.color = '#8f7d16'; // Reset other button
             } else {
                 alert('Please enter a valid Port of Shipping first to determine the country.');
             }
@@ -786,6 +788,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (countryCode) {
                 loadProductsForCountry(countryCode);
                 setTableHeaderColor('#2b792b'); // Consignee-related color
+                addCargoReturnBtn.style.color = '#2b792b';
+                if (addCargoOutboundBtn) addCargoOutboundBtn.style.color = '#8f7d16'; // Reset other button
             } else {
                 alert('Please enter a valid Port of Arrival first to determine the country.');
             }
@@ -814,9 +818,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td style="text-align: center;">${product.units_per_pack || '-'}</td>
                 <td style="text-align: right;">$${formatNumber(product.packaging_cost)}</td>
                 <td style="text-align: center;">${product.currency || '-'}</td>
-                <td style="text-align: center;"><input type="number" name="amount_${product.product_code}" value="0" style="width: 80px; text-align: right;"></td>
-                <td style="text-align: center; color: #b64545;">-</td>
-                <td style="text-align: center; color: #b64545;">-</td>
+                <td style="text-align: center;">
+                    <input type="number" 
+                           class="product-amount-input" 
+                           name="amount_${product.product_code}" 
+                           value="0" 
+                           style="width: 80px; text-align: right;"
+                           data-pack-weight="${product.packaging_weight || 0}"
+                           data-pack-cost="${product.packaging_cost || 0}"
+                           data-product-code="${product.product_code}">
+                </td>
+                <td id="total-weight-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
+                <td id="total-cost-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td style="text-align: center; color: #b64545;">-</td>
                 <td style="text-align: center; color: #b64545;">-</td>
                 <td style="text-align: center; color: #b64545;">-</td>
@@ -856,5 +869,35 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error fetching products:', error);
             productTableContainer.innerHTML = `<tr><td colspan="29" style="text-align: center; color: red;">Error loading products.</td></tr>`;
         }
+    }
+
+    // --- Calculation logic for product table ---
+    if (productTableContainer) {
+        productTableContainer.addEventListener('input', function(event) {
+            // Use event delegation to handle input changes on amount fields
+            if (event.target.classList.contains('product-amount-input')) {
+                const input = event.target;
+                const amount = parseFloat(input.value) || 0;
+                const packWeight = parseFloat(input.dataset.packWeight) || 0;
+                const packCost = parseFloat(input.dataset.packCost) || 0;
+                const productCode = input.dataset.productCode;
+
+                // Calculate total weight and total cost
+                const totalWeight = amount * packWeight;
+                const totalCost = amount * packCost;
+
+                // Find the corresponding cells to update
+                const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
+                const totalCostCell = document.getElementById(`total-cost-${productCode}`);
+
+                // Update the cell content using the existing formatNumber helper
+                if (totalWeightCell) {
+                    totalWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
+                }
+                if (totalCostCell) {
+                    totalCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
+                }
+            }
+        });
     }
 });
