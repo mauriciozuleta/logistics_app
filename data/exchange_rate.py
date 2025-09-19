@@ -96,6 +96,13 @@ def get_exchange_rate(
         except Exception as e:
             error_messages.append(f"ECB API error: {str(e)}")
     
+    # If that fails, try static fallback
+    if rate is None:
+        try:
+            rate = _get_rate_from_static_fallback(from_currency, to_currency)
+        except Exception as e:
+            error_messages.append(f"Static fallback error: {str(e)}")
+    
     # If rate is still None, we couldn't get data from any API
     if rate is None:
         raise ConnectionError(f"Failed to get exchange rate for {from_currency} to {to_currency}. Errors: {'; '.join(error_messages)}")
@@ -240,6 +247,47 @@ def _get_rate_from_ecb(from_currency: str, to_currency: str) -> Optional[float]:
     
     except Exception as e:
         logger.warning(f"ECB request failed: {str(e)}")
+        return None
+
+
+def _get_rate_from_static_fallback(from_currency: str, to_currency: str) -> Optional[float]:
+    """
+    Get exchange rate from static fallback file.
+    
+    This is used as a last resort when all online APIs fail.
+    """
+    # Path to static exchange rates file
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, 'static_exchange_rates.json')
+    
+    try:
+        if not os.path.exists(file_path):
+            logger.warning(f"Static exchange rates file not found: {file_path}")
+            return None
+            
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        
+        rates = data.get('rates', {})
+        
+        # Log available currencies for debugging
+        logger.debug(f"Static fallback available currencies: {', '.join(rates.keys())}")
+        
+        # All rates in the static file are relative to USD
+        if from_currency == 'USD' and to_currency in rates:
+            return rates[to_currency]
+        elif to_currency == 'USD' and from_currency in rates:
+            return 1.0 / rates[from_currency]
+        elif from_currency in rates and to_currency in rates:
+            # Cross-rate calculation
+            return rates[to_currency] / rates[from_currency]
+        
+        logger.warning(f"Static file does not provide rate for {from_currency} to {to_currency}")
+        return None
+    
+    except Exception as e:
+        logger.warning(f"Static fallback failed: {str(e)}")
         return None
 
 

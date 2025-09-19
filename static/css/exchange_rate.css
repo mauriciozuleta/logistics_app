@@ -1,0 +1,24 @@
+/* Exchange rate styles */
+#exchange_rate {
+    transition: background-color 0.3s ease;
+}
+
+#exchange_rate:focus {
+    background-color: #f8f9fa;
+}
+
+#exchange_rate[data-source="logistics_app_exchange_api"] {
+    border-left: 3px solid #28a745; /* Green for live data */
+}
+
+#exchange_rate[data-source="static_fallback"] {
+    border-left: 3px solid #ffc107; /* Yellow for static fallback */
+}
+
+#exchange_rate[data-source="hardcoded_fallback"] {
+    border-left: 3px solid #dc3545; /* Red for hardcoded fallback */
+}
+
+#exchange_rate[data-source="default-usd"] {
+    border-left: 3px solid #007bff; /* Blue for USD */
+}

@@ -179,6 +179,13 @@ def get_products_by_country():
     if not country_id:
         return jsonify({'error': 'Country ID is required'}), 400
     
+    # Get the country info to get currency code
+    country = Country.query.get(country_id)
+    if not country:
+        return jsonify({'error': 'Country not found'}), 404
+    
+    print(f"Found country: {country_id}, currency: {country.currency_code}")
+    
     # Find products by country ID
     products = Product.query.filter_by(country_id=country_id).all()
     
@@ -191,15 +198,23 @@ def get_products_by_country():
             'name': product.name,
             'product_type': product.product_type,
             'country_id': product.country_id,
+            'trade_unit': product.trade_unit,
+            'fca_cost_per_wu': product.fca_cost_per_wu,
             'packaging': product.packaging,
             'packaging_weight': product.packaging_weight,
             'units_per_pack': product.units_per_pack,
             'packaging_cost': product.packaging_cost,
-            'currency': product.currency
+            'other_info': product.other_info,
+            'currency': product.currency or country.currency_code  # Use product currency or fallback to country
         }
         products_data.append(product_dict)
     
+    # Debug print
+    print(f"Returning data with country_currency: {country.currency_code}")
+    
     return jsonify({
         'country_id': country_id,
+        'country_name': country.country_name,
+        'country_currency': country.currency_code,
         'products': products_data
     })

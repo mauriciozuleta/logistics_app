@@ -864,23 +864,172 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to fetch and render products
     async function loadProductsForCountry(countryCode) {
+        console.log(`loadProductsForCountry called with countryCode: ${countryCode}`);
+        
         if (!countryCode || !productTableContainer) {
+            console.log('Missing countryCode or productTableContainer');
             if(productTableContainer) productTableContainer.innerHTML = '<tr><td colspan="29" style="text-align: center;">Please select a port of shipping to see products.</td></tr>';
             return;
         }
         try {
+            // Fetch products for the country
+            console.log(`Fetching products for country: ${countryCode}`);
             const response = await fetch(`/api/products-by-country?country_id=${countryCode}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
             const data = await response.json();
+            console.log('API response:', data);
+            
             const products = data.products;
+            
+            // Render products in the table
             productTableContainer.innerHTML = (products && products.length > 0) 
                 ? products.map(createProductRow).join('') 
                 : `<tr><td colspan="29" style="text-align: center;">No products found for this country.</td></tr>`;
+            
             // Initialize/clear totals when table is reloaded
             updateTableTotals();
+            
+            // Get the currency code directly from the API response
+            const currencyCode = data.country_currency;
+            console.log(`Country currency code: ${currencyCode}`);
+            
+            if (!currencyCode) {
+                console.error('No currency code found in API response');
+                return;
+            }
+            
+            // For testing, set a default value first so the user sees something even if API fails
+            const exchangeRateField = document.getElementById('exchange_rate');
+            if (exchangeRateField) {
+                // Default values based on currency
+                let defaultRate;
+                if (currencyCode === 'USD') {
+                    defaultRate = 1.0;
+                } else if (currencyCode === 'EUR') {
+                    defaultRate = 1.17;
+                } else if (currencyCode === 'GBP') {
+                    defaultRate = 1.38;
+                } else if (currencyCode === 'JPY') {
+                    defaultRate = 0.0091;
+                } else if (currencyCode === 'CAD') {
+                    defaultRate = 0.8;
+                } else if (currencyCode === 'AUD') {
+                    defaultRate = 0.75;
+                } else {
+                    // Default rate for other currencies
+                    defaultRate = 0.5;
+                }
+                
+                exchangeRateField.value = defaultRate.toFixed(4);
+                console.log(`Set default exchange rate for ${currencyCode} to ${defaultRate.toFixed(4)}`);
+            }
+            
+            // Fetch actual exchange rate
+            if (currencyCode && currencyCode !== 'USD') {
+                try {
+                    console.log(`Fetching exchange rate for ${currencyCode} to USD`);
+                    const exchangeRateUrl = `/api/exchange/get_exchange_rate?from_currency=${currencyCode}&to_currency=USD`;
+                    console.log(`Exchange rate URL: ${exchangeRateUrl}`);
+                    
+                    const exchangeRateResponse = await fetch(exchangeRateUrl);
+                    console.log('Exchange rate response status:', exchangeRateResponse.status);
+                    
+                    let exchangeRateData;
+                    try {
+                        exchangeRateData = await exchangeRateResponse.json();
+                        console.log('Exchange rate data:', exchangeRateData);
+                    } catch (parseError) {
+                        console.error('Error parsing exchange rate response:', parseError);
+                        showManualExchangeRateOption(currencyCode);
+                        return;
+                    }
+                    
+                    if (exchangeRateData.success) {
+                        // Update the exchange rate field
+                        const exchangeRateField = document.getElementById('exchange_rate');
+                        console.log('Exchange rate field element:', exchangeRateField);
+                        
+                        if (exchangeRateField) {
+                            exchangeRateField.value = exchangeRateData.rate.toFixed(4);
+                            console.log(`Updated exchange rate: ${currencyCode} to USD = ${exchangeRateData.rate.toFixed(4)}`);
+                            
+                            // Hide manual search button if visible
+                            const manualButton = document.getElementById('manual_exchange_search');
+                            if (manualButton) {
+                                manualButton.style.display = 'none';
+                            }
+                        } else {
+                            console.error('Exchange rate field not found in DOM');
+                        }
+                    } else {
+                        console.error('Exchange rate API returned success=false:', exchangeRateData);
+                        showManualExchangeRateOption(currencyCode);
+                    }
+                } catch (error) {
+                    console.error('Error fetching exchange rate:', error);
+                    showManualExchangeRateOption(currencyCode);
+                }
+            } else if (currencyCode === 'USD') {
+                // If currency is USD, set exchange rate to 1
+                const exchangeRateField = document.getElementById('exchange_rate');
+                if (exchangeRateField) {
+                    exchangeRateField.value = '1.0000';
+                    console.log('Currency is USD, set exchange rate to 1.0000');
+                    
+                    // Hide manual search button if visible
+                    const manualButton = document.getElementById('manual_exchange_search');
+                    if (manualButton) {
+                        manualButton.style.display = 'none';
+                    }
+                } else {
+                    console.error('Exchange rate field not found in DOM');
+                }
+            } else {
+                console.warn('No valid currency code found');
+            }
         } catch (error) {
-            console.error('Error fetching products:', error);
+            console.error('Error in loadProductsForCountry:', error);
             productTableContainer.innerHTML = `<tr><td colspan="29" style="text-align: center; color: red;">Error loading products.</td></tr>`;
+        }
+    }
+    
+    // Function to show manual exchange rate search option
+    function showManualExchangeRateOption(currencyCode) {
+        const exchangeRateField = document.getElementById('exchange_rate');
+        if (!exchangeRateField) return;
+        
+        // Set placeholder text
+        exchangeRateField.value = '';
+        exchangeRateField.placeholder = 'Search Manually for exchange rate';
+        
+        // Check if button already exists
+        let manualButton = document.getElementById('manual_exchange_search');
+        
+        // If button doesn't exist, create it
+        if (!manualButton) {
+            // Get the parent container of the exchange rate field
+            const container = exchangeRateField.parentElement;
+            
+            // Create button
+            manualButton = document.createElement('button');
+            manualButton.id = 'manual_exchange_search';
+            manualButton.type = 'button';
+            manualButton.className = 'btn btn-sm btn-primary ml-2';
+            manualButton.innerHTML = '<i class="fas fa-search"></i> Search';
+            manualButton.style.marginLeft = '10px';
+            
+            // Add event listener to the button
+            manualButton.addEventListener('click', function() {
+                // Open exchange rate search page in a new window/tab
+                window.open(`/operations/exchange_search?from_currency=${currencyCode}&to_currency=USD`, '_blank');
+            });
+            
+            // Add button after the exchange rate field
+            container.appendChild(manualButton);
+        } else {
+            // Update button visibility
+            manualButton.style.display = 'inline-block';
         }
     }
 
@@ -989,5 +1138,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
         if (footerTaxesCell) footerTaxesCell.textContent = totalExportTaxes > 0 ? `$${formatNumber(totalExportTaxes)}` : '-';
         if (footerProfitCell) footerProfitCell.textContent = totalExporterProfit > 0 ? `$${formatNumber(totalExporterProfit)}` : '-';
+    }
+});
+
+// Set up message listener for exchange rate updates from popup window
+window.addEventListener('message', function(event) {
+    // Verify the message type
+    if (event.data && event.data.type === 'setExchangeRate') {
+        const { rate, fromCurrency, toCurrency } = event.data;
+        
+        // Find the exchange rate field
+        const exchangeRateField = document.getElementById('exchange_rate');
+        
+        // Update the exchange rate value
+        if (exchangeRateField) {
+            exchangeRateField.value = rate;
+            console.log(`Exchange rate updated from popup: ${fromCurrency} to ${toCurrency} = ${rate}`);
+            
+            // Hide the manual search button if it exists
+            const manualButton = document.getElementById('manual_exchange_search');
+            if (manualButton) {
+                manualButton.style.display = 'none';
+            }
+        }
     }
 });

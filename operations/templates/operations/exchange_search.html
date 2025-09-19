@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Exchange Rate Search{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .rate-source {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+    .rate-card {
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    .rate-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .copy-btn {
+        cursor: pointer;
+    }
+    .copy-btn:hover {
+        color: #007bff;
+    }
+    .search-result {
+        margin-top: 2rem;
+    }
+    .currency-info {
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">Exchange Rate Search</h1>
+            <p class="text-muted">Find the current exchange rate between two currencies</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Search Parameters</h5>
+                    
+                    <div class="currency-info">
+                        {% if from_country_name %}
+                        <p><strong>From Currency:</strong> {{ from_currency }} ({{ from_country_name }})</p>
+                        {% else %}
+                        <p><strong>From Currency:</strong> {{ from_currency }}</p>
+                        {% endif %}
+
+                        {% if to_country_name %}
+                        <p><strong>To Currency:</strong> {{ to_currency }} ({{ to_country_name }})</p>
+                        {% else %}
+                        <p><strong>To Currency:</strong> {{ to_currency }}</p>
+                        {% endif %}
+                    </div>
+
+                    <form id="rate-search-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="from_currency" value="{{ from_currency }}">
+                        <input type="hidden" name="to_currency" value="{{ to_currency }}">
+                        
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-search"></i> Search for Current Rate
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Manual Entry</h5>
+                    <p class="text-muted">Enter exchange rate manually and use in your shipment</p>
+                    
+                    <form id="manual-rate-form">
+                        <div class="form-group">
+                            <label for="manualRate">Exchange Rate (1 {{ from_currency }} = ? {{ to_currency }})</label>
+                            <input type="number" class="form-control" id="manualRate" step="0.0001" min="0.0001" required>
+                            <small class="form-text text-muted">Enter the precise exchange rate</small>
+                        </div>
+                        
+                        <button type="button" id="useRateBtn" class="btn btn-success btn-block">
+                            <i class="fas fa-check"></i> Use This Rate
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="search-result" id="searchResults">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i> Click "Search for Current Rate" to find the latest exchange rates from various sources.
+                </div>
+                
+                <!-- Results will appear here -->
+                <div id="resultsContainer" style="display: none">
+                    <h5>Exchange Rate Results</h5>
+                    <div id="rateCards"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fromCurrency = '{{ from_currency }}';
+        const toCurrency = '{{ to_currency }}';
+        const rateSearchForm = document.getElementById('rate-search-form');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const rateCards = document.getElementById('rateCards');
+        const manualRateInput = document.getElementById('manualRate');
+        const useRateBtn = document.getElementById('useRateBtn');
+        
+        // Handle search form submission
+        rateSearchForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            rateCards.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2">Fetching exchange rates...</p></div>';
+            resultsContainer.style.display = 'block';
+            
+            try {
+                // Search external exchange rate sites
+                const sites = [
+                    {
+                        name: 'XE.com',
+                        url: `https://www.xe.com/currencyconverter/convert/?Amount=1&From=${fromCurrency}&To=${toCurrency}`,
+                        description: 'Popular currency converter with up-to-date rates'
+                    },
+                    {
+                        name: 'OANDA',
+                        url: `https://www.oanda.com/currency-converter/en/?from=${fromCurrency}&to=${toCurrency}&amount=1`,
+                        description: 'Forex trading and exchange rate services'
+                    },
+                    {
+                        name: 'Yahoo Finance',
+                        url: `https://finance.yahoo.com/quote/${fromCurrency}${toCurrency}=X/`,
+                        description: 'Financial news and exchange rate provider'
+                    },
+                    {
+                        name: 'Currency.Wiki',
+                        url: `https://currency.wiki/${fromCurrency}/${toCurrency}`,
+                        description: 'Currency information and conversion'
+                    },
+                    {
+                        name: 'X-Rates',
+                        url: `https://www.x-rates.com/calculator/?from=${fromCurrency}&to=${toCurrency}&amount=1`,
+                        description: 'Currency tables and exchange rate information'
+                    }
+                ];
+                
+                // Generate cards for each site
+                rateCards.innerHTML = '';
+                sites.forEach(site => {
+                    const card = document.createElement('div');
+                    card.className = 'card rate-card';
+                    card.innerHTML = `
+                        <div class="card-body">
+                            <h5 class="card-title">${site.name}</h5>
+                            <p class="card-text">${site.description}</p>
+                            <a href="${site.url}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Visit Site
+                            </a>
+                        </div>
+                    `;
+                    rateCards.appendChild(card);
+                });
+            } catch (error) {
+                rateCards.innerHTML = `<div class="alert alert-danger">Error fetching exchange rates: ${error.message}</div>`;
+            }
+        });
+        
+        // Handle use rate button
+        useRateBtn.addEventListener('click', function() {
+            const rate = manualRateInput.value;
+            if (!rate || isNaN(rate) || rate <= 0) {
+                alert('Please enter a valid exchange rate');
+                return;
+            }
+            
+            // Get the opener window (parent window that opened this popup)
+            const opener = window.opener;
+            
+            if (opener) {
+                // Send message to parent window with the exchange rate
+                try {
+                    // Format to 4 decimal places
+                    const formattedRate = parseFloat(rate).toFixed(4);
+                    
+                    // Check if using direct exchange rate or inverse
+                    let finalRate;
+                    if (toCurrency === 'USD') {
+                        // Direct rate (e.g., COP to USD)
+                        finalRate = formattedRate;
+                    } else if (fromCurrency === 'USD') {
+                        // Inverse rate (e.g., USD to COP)
+                        finalRate = (1 / parseFloat(rate)).toFixed(4);
+                    } else {
+                        // Cross rate - need to handle specially
+                        finalRate = formattedRate;
+                    }
+                    
+                    // Set the rate in the parent window
+                    opener.postMessage({
+                        type: 'setExchangeRate',
+                        rate: finalRate,
+                        fromCurrency: fromCurrency,
+                        toCurrency: toCurrency
+                    }, '*');
+                    
+                    // Show success message
+                    alert(`Exchange rate ${formattedRate} has been applied. You can close this window.`);
+                    
+                    // Optional: close the window after setting the rate
+                    // window.close();
+                } catch (error) {
+                    alert(`Error setting exchange rate: ${error.message}`);
+                }
+            } else {
+                alert('Cannot communicate with parent window. Please copy the rate manually.');
+            }
+        });
+    });
+</script>
+{% endblock %}

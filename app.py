@@ -47,6 +47,7 @@ def create_app():
     csrf.exempt(operations_api_new)
     csrf.exempt(operations_api)
     app.register_blueprint(exchange_api, url_prefix='/api/exchange')
+    csrf.exempt(exchange_api)  # Exempt exchange_api from CSRF protection
     app.register_blueprint(operations_diagnostic, url_prefix='/diagnostic')
 
     # Homepage route

@@ -23,6 +23,37 @@ def generate_product_code(product_type):
 operations = Blueprint("operations", __name__, template_folder="templates")
 operations_api = Blueprint("operations_api", __name__)
 
+# Exchange rate search page
+@operations.route('/exchange_search', methods=['GET'])
+def exchange_search():
+    """
+    Page to help users manually search for exchange rates.
+    
+    Query parameters:
+        from_currency: Source currency code (3-letter ISO)
+        to_currency: Target currency code (3-letter ISO)
+    """
+    from_currency = request.args.get('from_currency', '').upper()
+    to_currency = request.args.get('to_currency', 'USD').upper()
+    
+    # Get country names for better UX
+    from models import Country
+    
+    from_country = Country.query.filter_by(currency_code=from_currency).first()
+    to_country = Country.query.filter_by(currency_code=to_currency).first()
+    
+    from_country_name = from_country.country_name if from_country else None
+    to_country_name = to_country.country_name if to_country else None
+    
+    return render_template(
+        'operations/exchange_search.html',
+        from_currency=from_currency,
+        to_currency=to_currency,
+        from_country_name=from_country_name,
+        to_country_name=to_country_name,
+        csrf_token=generate_csrf()
+    )
+
 # Add the shipment_management route after Blueprint definition
 @operations.route('/shipments', methods=['GET', 'POST'])
 def shipment_management():
@@ -947,8 +978,3 @@ def delete_shipment(shipment_id):
 def schedule():
     """Renders the schedule calendar page."""
     return render_template('operations/schedule.html')
-
-@operations.route('/exchange-calculator')
-def exchange_calculator():
-    """Renders the currency exchange calculator page."""
-    return render_template('operations/exchange_calculator.html')

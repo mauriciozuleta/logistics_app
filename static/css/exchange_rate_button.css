@@ -1,0 +1,20 @@
+/* Exchange rate field and button styles */
+#exchange_rate {
+    transition: all 0.3s ease;
+}
+
+#exchange_rate::placeholder {
+    color: #dc3545;
+    font-style: italic;
+}
+
+#manual_exchange_search {
+    display: inline-block;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+#manual_exchange_search:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
