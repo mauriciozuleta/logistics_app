@@ -843,8 +843,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td id="total-cost-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td id="export-taxes-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td id="exporter-profit-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
-                <td style="text-align: center; color: #b64545;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td id="fca-cost-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
+                <td id="fca-usd-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
@@ -1063,12 +1063,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Calculate export taxes and profit
                 const exportTaxes = totalCost * (taxPct / 100);
                 const exporterProfit = totalCost * (profitPct / 100);
+                
+                // Calculate FCA Cost (sum of totalCost + exportTaxes + exporterProfit)
+                const fcaCost = totalCost + exportTaxes + exporterProfit;
+                
+                // Calculate FCA USD (fcaCost * exchange_rate)
+                const exchangeRateField = document.getElementById('exchange_rate');
+                const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
+                const fcaUsd = fcaCost * exchangeRate;
 
                 // Find the corresponding cells to update
                 const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
                 const totalCostCell = document.getElementById(`total-cost-${productCode}`);
                 const exportTaxesCell = document.getElementById(`export-taxes-${productCode}`);
                 const exporterProfitCell = document.getElementById(`exporter-profit-${productCode}`);
+                const fcaCostCell = document.getElementById(`fca-cost-${productCode}`);
+                const fcaUsdCell = document.getElementById(`fca-usd-${productCode}`);
 
                 // Update the cell content using the existing formatNumber helper
                 if (totalWeightCell) {
@@ -1082,6 +1092,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (exporterProfitCell) {
                     exporterProfitCell.textContent = exporterProfit > 0 ? `$${formatNumber(exporterProfit)}` : '-';
+                }
+                if (fcaCostCell) {
+                    fcaCostCell.textContent = fcaCost > 0 ? `$${formatNumber(fcaCost)}` : '-';
+                }
+                if (fcaUsdCell) {
+                    fcaUsdCell.textContent = fcaUsd > 0 ? `$${formatNumber(fcaUsd)}` : '-';
                 }
 
                 // After updating the row, update the footer totals
@@ -1097,6 +1113,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalCost = 0;
         let totalExportTaxes = 0;
         let totalExporterProfit = 0;
+        let totalFcaCost = 0;
+        let totalFcaUsd = 0;
         // Add other total variables here as they are implemented
 
         rows.forEach(row => {
@@ -1126,6 +1144,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (profitCell && profitCell.textContent !== '-') {
                 totalExporterProfit += parseFloat(profitCell.textContent.replace(/[^\d.-]/g, '')) || 0;
             }
+            
+            // Sum FCA Cost
+            const fcaCostCell = document.getElementById(`fca-cost-${productCode}`);
+            if (fcaCostCell && fcaCostCell.textContent !== '-') {
+                totalFcaCost += parseFloat(fcaCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
+            
+            // Sum FCA USD
+            const fcaUsdCell = document.getElementById(`fca-usd-${productCode}`);
+            if (fcaUsdCell && fcaUsdCell.textContent !== '-') {
+                totalFcaUsd += parseFloat(fcaUsdCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
         });
 
         // Update the footer cells with the calculated totals
@@ -1133,33 +1163,79 @@ document.addEventListener('DOMContentLoaded', function() {
         const footerCostCell = document.getElementById('footer-total-cost');
         const footerTaxesCell = document.getElementById('footer-export-taxes');
         const footerProfitCell = document.getElementById('footer-exporter-profit');
+        const footerFcaCostCell = document.getElementById('footer-fca-cost');
+        const footerFcaUsdCell = document.getElementById('footer-fca-usd');
 
         if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
         if (footerTaxesCell) footerTaxesCell.textContent = totalExportTaxes > 0 ? `$${formatNumber(totalExportTaxes)}` : '-';
         if (footerProfitCell) footerProfitCell.textContent = totalExporterProfit > 0 ? `$${formatNumber(totalExporterProfit)}` : '-';
+        if (footerFcaCostCell) footerFcaCostCell.textContent = totalFcaCost > 0 ? `$${formatNumber(totalFcaCost)}` : '-';
+        if (footerFcaUsdCell) footerFcaUsdCell.textContent = totalFcaUsd > 0 ? `$${formatNumber(totalFcaUsd)}` : '-';
     }
 });
 
-// Set up message listener for exchange rate updates from popup window
-window.addEventListener('message', function(event) {
-    // Verify the message type
-    if (event.data && event.data.type === 'setExchangeRate') {
-        const { rate, fromCurrency, toCurrency } = event.data;
-        
-        // Find the exchange rate field
-        const exchangeRateField = document.getElementById('exchange_rate');
-        
-        // Update the exchange rate value
-        if (exchangeRateField) {
-            exchangeRateField.value = rate;
-            console.log(`Exchange rate updated from popup: ${fromCurrency} to ${toCurrency} = ${rate}`);
+    // Set up message listener for exchange rate updates from popup window
+    window.addEventListener('message', function(event) {
+        // Verify the message type
+        if (event.data && event.data.type === 'setExchangeRate') {
+            const { rate, fromCurrency, toCurrency } = event.data;
             
-            // Hide the manual search button if it exists
-            const manualButton = document.getElementById('manual_exchange_search');
-            if (manualButton) {
-                manualButton.style.display = 'none';
+            // Find the exchange rate field
+            const exchangeRateField = document.getElementById('exchange_rate');
+            
+            // Update the exchange rate value
+            if (exchangeRateField) {
+                exchangeRateField.value = rate;
+                console.log(`Exchange rate updated from popup: ${fromCurrency} to ${toCurrency} = ${rate}`);
+                
+                // Hide the manual search button if it exists
+                const manualButton = document.getElementById('manual_exchange_search');
+                if (manualButton) {
+                    manualButton.style.display = 'none';
+                }
+                
+                // Recalculate all FCA USD values when exchange rate changes
+                recalculateAllFcaValues();
             }
         }
+    });
+    
+    // Function to recalculate all FCA values when exchange rate changes
+    function recalculateAllFcaValues() {
+        const rows = productTableContainer.querySelectorAll('tr');
+        const exchangeRateField = document.getElementById('exchange_rate');
+        const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
+        
+        rows.forEach(row => {
+            const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
+            if (!productCode) return;
+            
+            // Get FCA Cost
+            const fcaCostCell = document.getElementById(`fca-cost-${productCode}`);
+            if (!fcaCostCell || fcaCostCell.textContent === '-') return;
+            
+            // Parse FCA Cost value
+            const fcaCost = parseFloat(fcaCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            
+            // Calculate new FCA USD value
+            const fcaUsd = fcaCost * exchangeRate;
+            
+            // Update FCA USD cell
+            const fcaUsdCell = document.getElementById(`fca-usd-${productCode}`);
+            if (fcaUsdCell) {
+                fcaUsdCell.textContent = fcaUsd > 0 ? `$${formatNumber(fcaUsd)}` : '-';
+            }
+        });
+        
+        // Update totals
+        updateTableTotals();
     }
-});
+    
+    // Add event listener to exchange rate field for manual changes
+    const exchangeRateField = document.getElementById('exchange_rate');
+    if (exchangeRateField) {
+        exchangeRateField.addEventListener('input', function() {
+            recalculateAllFcaValues();
+        });
+    }
