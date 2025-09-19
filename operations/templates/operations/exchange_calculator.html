@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Currency Exchange Calculator</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-info-circle"></i> 
+                                Use this tool to convert amounts between different currencies using real-time exchange rates.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form id="exchange-form">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="amount" class="form-label">Amount</label>
+                                <input type="number" class="form-control" id="amount" min="0.01" step="0.01" value="1.00" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="from-currency" class="form-label">From Currency</label>
+                                <select class="form-select" id="from-currency">
+                                    <option value="USD" selected>USD - US Dollar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                    <option value="GBP">GBP - British Pound</option>
+                                    <option value="JPY">JPY - Japanese Yen</option>
+                                    <option value="CAD">CAD - Canadian Dollar</option>
+                                    <option value="AUD">AUD - Australian Dollar</option>
+                                    <option value="CHF">CHF - Swiss Franc</option>
+                                    <option value="CNY">CNY - Chinese Yuan</option>
+                                    <option value="INR">INR - Indian Rupee</option>
+                                    <option value="BRL">BRL - Brazilian Real</option>
+                                    <option value="ZAR">ZAR - South African Rand</option>
+                                    <!-- Add more currencies as needed -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="to-currency" class="form-label">To Currency</label>
+                                <select class="form-select" id="to-currency">
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="EUR" selected>EUR - Euro</option>
+                                    <option value="GBP">GBP - British Pound</option>
+                                    <option value="JPY">JPY - Japanese Yen</option>
+                                    <option value="CAD">CAD - Canadian Dollar</option>
+                                    <option value="AUD">AUD - Australian Dollar</option>
+                                    <option value="CHF">CHF - Swiss Franc</option>
+                                    <option value="CNY">CNY - Chinese Yuan</option>
+                                    <option value="INR">INR - Indian Rupee</option>
+                                    <option value="BRL">BRL - Brazilian Real</option>
+                                    <option value="ZAR">ZAR - South African Rand</option>
+                                    <!-- Add more currencies as needed -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-exchange-alt"></i> Convert
+                                </button>
+                                <button type="button" id="swap-btn" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-sync"></i> Swap
+                                </button>
+                                <button type="button" id="refresh-btn" class="btn btn-outline-info ms-2" title="Refresh exchange rates">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h4 class="result-text text-center mb-0">
+                                        <span id="original-amount">1.00</span>
+                                        <span id="from-currency-code">USD</span>
+                                        <i class="fas fa-equals mx-2"></i>
+                                        <span id="converted-amount">--</span>
+                                        <span id="to-currency-code">EUR</span>
+                                    </h4>
+                                    <p class="text-center text-muted mt-2 mb-0">
+                                        <small>Exchange Rate: <span id="exchange-rate">--</span></small>
+                                        <br>
+                                        <small>Last Updated: <span id="timestamp">--</span></small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="error-container" class="row mt-3" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span id="error-message"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Recent Exchange Rates</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="rates-table">
+                            <thead>
+                                <tr>
+                                    <th>Currency</th>
+                                    <th>Rate (vs USD)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rates will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('exchange-form');
+    const amountInput = document.getElementById('amount');
+    const fromCurrencySelect = document.getElementById('from-currency');
+    const toCurrencySelect = document.getElementById('to-currency');
+    const swapBtn = document.getElementById('swap-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const originalAmountSpan = document.getElementById('original-amount');
+    const fromCurrencyCodeSpan = document.getElementById('from-currency-code');
+    const convertedAmountSpan = document.getElementById('converted-amount');
+    const toCurrencyCodeSpan = document.getElementById('to-currency-code');
+    const exchangeRateSpan = document.getElementById('exchange-rate');
+    const timestampSpan = document.getElementById('timestamp');
+    const errorContainer = document.getElementById('error-container');
+    const errorMessageSpan = document.getElementById('error-message');
+    const ratesTableBody = document.querySelector('#rates-table tbody');
+    
+    // Store the recent rates
+    const recentRates = {};
+    
+    // Initialize
+    updateCurrencyCodes();
+    convertCurrency();
+    
+    // Event listeners
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        convertCurrency();
+    });
+    
+    swapBtn.addEventListener('click', function() {
+        const fromValue = fromCurrencySelect.value;
+        const toValue = toCurrencySelect.value;
+        
+        fromCurrencySelect.value = toValue;
+        toCurrencySelect.value = fromValue;
+        
+        updateCurrencyCodes();
+        convertCurrency();
+    });
+    
+    refreshBtn.addEventListener('click', function() {
+        convertCurrency(true);
+    });
+    
+    fromCurrencySelect.addEventListener('change', function() {
+        updateCurrencyCodes();
+    });
+    
+    toCurrencySelect.addEventListener('change', function() {
+        updateCurrencyCodes();
+    });
+    
+    // Update the currency codes in the result display
+    function updateCurrencyCodes() {
+        fromCurrencyCodeSpan.textContent = fromCurrencySelect.value;
+        toCurrencyCodeSpan.textContent = toCurrencySelect.value;
+    }
+    
+    // Convert the currency
+    function convertCurrency(refresh = false) {
+        const amount = parseFloat(amountInput.value);
+        const fromCurrency = fromCurrencySelect.value;
+        const toCurrency = toCurrencySelect.value;
+        
+        if (isNaN(amount) || amount <= 0) {
+            showError('Please enter a valid amount.');
+            return;
+        }
+        
+        // Show loading state
+        convertedAmountSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        exchangeRateSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        hideError();
+        
+        // Format the original amount
+        originalAmountSpan.textContent = amount.toFixed(2);
+        
+        // Call the API
+        fetch(`/api/exchange/get_exchange_rate?from_currency=${fromCurrency}&to_currency=${toCurrency}&amount=${amount}&refresh=${refresh}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the display
+                    convertedAmountSpan.textContent = data.converted_amount.toFixed(2);
+                    exchangeRateSpan.textContent = `1 ${fromCurrency} = ${data.rate.toFixed(6)} ${toCurrency}`;
+                    
+                    // Format the timestamp
+                    const date = new Date(data.timestamp);
+                    timestampSpan.textContent = date.toLocaleString();
+                    
+                    // Add to recent rates
+                    if (fromCurrency === 'USD') {
+                        addRecentRate(toCurrency, data.rate);
+                    } else if (toCurrency === 'USD') {
+                        addRecentRate(fromCurrency, 1 / data.rate);
+                    }
+                    
+                    hideError();
+                } else {
+                    showError(data.error || 'An error occurred while converting the currency.');
+                    convertedAmountSpan.textContent = '--';
+                    exchangeRateSpan.textContent = '--';
+                }
+            })
+            .catch(error => {
+                showError('Network error. Please try again later.');
+                convertedAmountSpan.textContent = '--';
+                exchangeRateSpan.textContent = '--';
+                console.error('Error:', error);
+            });
+    }
+    
+    // Add a rate to the recent rates table
+    function addRecentRate(currency, rate) {
+        // Store the rate
+        recentRates[currency] = rate;
+        
+        // Update the table
+        updateRatesTable();
+    }
+    
+    // Update the rates table
+    function updateRatesTable() {
+        // Clear the table
+        ratesTableBody.innerHTML = '';
+        
+        // Add the rates
+        for (const [currency, rate] of Object.entries(recentRates)) {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td>${currency}</td>
+                <td>${rate.toFixed(6)}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary set-from-btn" data-currency="${currency}">
+                        <i class="fas fa-arrow-up"></i> From
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary set-to-btn" data-currency="${currency}">
+                        <i class="fas fa-arrow-down"></i> To
+                    </button>
+                </td>
+            `;
+            
+            ratesTableBody.appendChild(row);
+        }
+        
+        // Add event listeners to the buttons
+        document.querySelectorAll('.set-from-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                fromCurrencySelect.value = this.dataset.currency;
+                updateCurrencyCodes();
+                convertCurrency();
+            });
+        });
+        
+        document.querySelectorAll('.set-to-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                toCurrencySelect.value = this.dataset.currency;
+                updateCurrencyCodes();
+                convertCurrency();
+            });
+        });
+    }
+    
+    // Show an error message
+    function showError(message) {
+        errorMessageSpan.textContent = message;
+        errorContainer.style.display = 'block';
+    }
+    
+    // Hide the error message
+    function hideError() {
+        errorContainer.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

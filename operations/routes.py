@@ -947,3 +947,8 @@ def delete_shipment(shipment_id):
 def schedule():
     """Renders the schedule calendar page."""
     return render_template('operations/schedule.html')
+
+@operations.route('/exchange-calculator')
+def exchange_calculator():
+    """Renders the currency exchange calculator page."""
+    return render_template('operations/exchange_calculator.html')
