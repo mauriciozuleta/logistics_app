@@ -751,19 +751,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (countryCode) {
                 currentCargoContext = 'outbound'; // Set context
                 
-                // Get the IATA code from the port of shipping field
-                const iataCode = document.getElementById('port_of_shipping').value.trim().toUpperCase();
+                // Get IATA codes for both departure and arrival airports
+                const departureIata = document.getElementById('port_of_shipping').value.trim().toUpperCase();
+                const arrivalIata = document.getElementById('consignee_port_of_shipping').value.trim().toUpperCase();
                 
-                // Fetch cargo handling cost for this airport
-                outboundCargoHandlingCost = await fetchCargoHandlingCost(iataCode);
-                console.log(`Set outbound cargo handling cost: ${outboundCargoHandlingCost}`);
+                // Fetch and store handling costs for BOTH airports
+                outboundCargoHandlingCost = await fetchCargoHandlingCost(departureIata);
+                returnCargoHandlingCost = await fetchCargoHandlingCost(arrivalIata);
+                console.log(`Outbound context: Departure Cost=${outboundCargoHandlingCost}, Arrival Cost=${returnCargoHandlingCost}`);
                 
                 // Load products for country
                 loadProductsForCountry(countryCode);
 
-                // After products are loaded, trigger the cargo load cost calculation for all visible rows
                 if (typeof window.updateCargoLoadCost === 'function') {
                     window.updateCargoLoadCost('outbound', outboundCargoHandlingCost);
+                }
+                // Also calculate unload cost, which uses the consignee's airport cost
+                if (typeof window.updateCargoUnloadCost === 'function') {
+                    window.updateCargoUnloadCost('outbound', returnCargoHandlingCost);
                 }
                 
                 setTableHeaderColor('#257777'); // Shipper-related color
@@ -782,19 +787,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (countryCode) {
                 currentCargoContext = 'return'; // Set context
                 
-                // Get the IATA code from the consignee port of shipping field
-                const iataCode = document.getElementById('consignee_port_of_shipping').value.trim().toUpperCase();
+                // Get IATA codes for both departure and arrival airports
+                const departureIata = document.getElementById('port_of_shipping').value.trim().toUpperCase();
+                const arrivalIata = document.getElementById('consignee_port_of_shipping').value.trim().toUpperCase();
                 
-                // Fetch cargo handling cost for this airport
-                returnCargoHandlingCost = await fetchCargoHandlingCost(iataCode);
-                console.log(`Set return cargo handling cost: ${returnCargoHandlingCost}`);
+                // Fetch and store handling costs for BOTH airports
+                outboundCargoHandlingCost = await fetchCargoHandlingCost(departureIata);
+                returnCargoHandlingCost = await fetchCargoHandlingCost(arrivalIata);
+                console.log(`Return context: Departure Cost=${outboundCargoHandlingCost}, Arrival Cost=${returnCargoHandlingCost}`);
                 
                 // Load products for country
                 loadProductsForCountry(countryCode);
 
-                // After products are loaded, trigger the cargo load cost calculation for all visible rows
                 if (typeof window.updateCargoLoadCost === 'function') {
                     window.updateCargoLoadCost('return', returnCargoHandlingCost);
+                }
+                // Also calculate unload cost, which uses the original shipper's airport cost
+                if (typeof window.updateCargoUnloadCost === 'function') {
+                    window.updateCargoUnloadCost('return', outboundCargoHandlingCost);
                 }
                 
                 setTableHeaderColor('#2b792b'); // Consignee-related color
@@ -846,8 +856,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td id="fca-usd-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="cargo-load-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="air-freight-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td id="cargo-unload-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="cip-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
@@ -1102,22 +1112,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // After updating the row, update the footer totals
-                updateTableTotals();
-
-                // Get the appropriate handling cost based on context
-                const cargoHandlingCost = (currentCargoContext === 'outbound') ? outboundCargoHandlingCost : returnCargoHandlingCost;
-
-                // Call the global function to update the cargo load cost for the specific row
-                if (typeof window.updateCargoLoadCost === 'function') {
-                    window.updateCargoLoadCost(currentCargoContext, cargoHandlingCost);
-                }
+                updateTableTotals(); // This call updates the row's Total Weight cell.
             }
-            // CRITICAL FIX: After any amount change, we must recalculate the air freight
-            // because the total weight has changed.
+
+            // Now that Total Weight is updated, calculate the costs that depend on it.
+            const cargoHandlingCost = (currentCargoContext === 'outbound') ? outboundCargoHandlingCost : returnCargoHandlingCost;
+            if (typeof window.updateCargoLoadCost === 'function') {
+                window.updateCargoLoadCost(currentCargoContext, cargoHandlingCost);
+            }
+
+            const cargoUnloadHandlingCost = (currentCargoContext === 'outbound') ? returnCargoHandlingCost : outboundCargoHandlingCost;
+            if (typeof window.updateCargoUnloadCost === 'function') {
+                window.updateCargoUnloadCost(currentCargoContext, cargoUnloadHandlingCost);
+            }
+
             if (typeof window.updateAirFreightCost === 'function') {
                 window.updateAirFreightCost(currentCargoContext);
             }
-            updateTableTotals(); // Call again to sum the new air freight costs into the footer.
+
+            // After all individual costs are calculated, update the footer totals again
+            // to sum the new cargo load/unload and air freight costs.
+            updateTableTotals();
+
+            // After all other costs are calculated, update the CIP cost
+            if (typeof window.updateCipCost === 'function') {
+                window.updateCipCost();
+            }
+            updateTableTotals(); // Final call to sum CIP costs into the footer
         });
     }
 
@@ -1132,6 +1153,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalFcaUsd = 0;
         let totalCargoLoadCost = 0;
         let totalAirFreightCost = 0;
+        let totalCargoUnloadCost = 0;
+        let totalCipCost = 0;
         // Add other total variables here as they are implemented
 
         rows.forEach(row => {
@@ -1185,6 +1208,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (airFreightCostCell && airFreightCostCell.textContent !== '-') {
                 totalAirFreightCost += parseFloat(airFreightCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
             }
+
+            // Sum Cargo Unload Cost
+            const cargoUnloadCostCell = document.getElementById(`cargo-unload-cost-${productCode}`);
+            if (cargoUnloadCostCell && cargoUnloadCostCell.textContent !== '-') {
+                totalCargoUnloadCost += parseFloat(cargoUnloadCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
+
+            // Sum CIP Cost
+            const cipCostCell = document.getElementById(`cip-cost-${productCode}`);
+            if (cipCostCell && cipCostCell.textContent !== '-') {
+                totalCipCost += parseFloat(cipCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
         });
 
         // Update the footer cells with the calculated totals
@@ -1196,6 +1231,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const footerFcaUsdCell = document.getElementById('footer-fca-usd');
         const footerCargoLoadCostCell = document.getElementById('footer-cargo-load-cost');
         const footerAirFreightCostCell = document.getElementById('footer-air-freight-cost');
+        const footerCargoUnloadCostCell = document.getElementById('footer-cargo-unload-cost');
+        const footerCipCostCell = document.getElementById('footer-cip-cost');
 
         if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
@@ -1205,6 +1242,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (footerFcaUsdCell) footerFcaUsdCell.textContent = totalFcaUsd > 0 ? `$${formatNumber(totalFcaUsd)}` : '-';
         if (footerCargoLoadCostCell) footerCargoLoadCostCell.textContent = totalCargoLoadCost > 0 ? `$${formatNumber(totalCargoLoadCost)}` : '-';
         if (footerAirFreightCostCell) footerAirFreightCostCell.textContent = totalAirFreightCost > 0 ? `$${formatNumber(totalAirFreightCost)}` : '-';
+        if (footerCargoUnloadCostCell) footerCargoUnloadCostCell.textContent = totalCargoUnloadCost > 0 ? `$${formatNumber(totalCargoUnloadCost)}` : '-';
+        if (footerCipCostCell) footerCipCostCell.textContent = totalCipCost > 0 ? `$${formatNumber(totalCipCost)}` : '-';
     }
 
     // Function to recalculate all FCA values when exchange rate changes

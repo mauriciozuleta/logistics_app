@@ -75,4 +75,60 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // --- Function to calculate Cargo Unload Cost ---
+    // This function is globally available to be called from other scripts.
+    window.updateCargoUnloadCost = function(context, handlingCost) {
+        const productTableContainer = document.getElementById('product-table-container');
+        if (!productTableContainer || !context || handlingCost === undefined) return;
+
+        console.log(`Updating Cargo Unload Cost for context: ${context} with cost/kg: ${handlingCost}`);
+
+        // Iterate over each product row to calculate and update its cargo unload cost
+        const rows = productTableContainer.querySelectorAll('tr');
+        rows.forEach(row => {
+            const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
+            if (!productCode) return;
+
+            const weightCell = document.getElementById(`total-weight-${productCode}`);
+            const cargoUnloadCostCell = document.getElementById(`cargo-unload-cost-${productCode}`);
+
+            if (weightCell && cargoUnloadCostCell) {
+                const rowWeight = parseFloat(weightCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+                const cargoUnloadCost = rowWeight * handlingCost;
+                cargoUnloadCostCell.textContent = (cargoUnloadCost > 0) ? `$${formatNumber(cargoUnloadCost)}` : '-';
+            }
+        });
+    }
+
+    // --- Function to calculate CIP Cost ---
+    // This function is globally available to be called from other scripts.
+    window.updateCipCost = function() {
+        const productTableContainer = document.getElementById('product-table-container');
+        if (!productTableContainer) return;
+
+        // Helper to parse numbers from cells
+        const parseNumberFromCell = (cell) => {
+            if (!cell || !cell.textContent) return 0;
+            return parseFloat(cell.textContent.replace(/[$,]/g, '')) || 0;
+        };
+
+        const rows = productTableContainer.querySelectorAll('tr');
+        rows.forEach(row => {
+            const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
+            if (!productCode) return;
+
+            const fcaUsd = parseNumberFromCell(document.getElementById(`fca-usd-${productCode}`));
+            const cargoLoadCost = parseNumberFromCell(document.getElementById(`cargo-load-cost-${productCode}`));
+            const airFreightCost = parseNumberFromCell(document.getElementById(`air-freight-cost-${productCode}`));
+            const cargoUnloadCost = parseNumberFromCell(document.getElementById(`cargo-unload-cost-${productCode}`));
+
+            const cipCost = fcaUsd + cargoLoadCost + airFreightCost + cargoUnloadCost;
+
+            const cipCostCell = document.getElementById(`cip-cost-${productCode}`);
+            if (cipCostCell) {
+                cipCostCell.textContent = (cipCost > 0) ? `$${formatNumber(cipCost)}` : '-';
+            }
+        });
+    }
 });
