@@ -587,6 +587,23 @@ def check_route_exists():
 
     return jsonify({'exists': bool(existing_route)})
 
+@operations_api.route('/airport-details')
+def airport_details_api():
+    """
+    Fetches details for a single airport by IATA code.
+    """
+    iata_code = request.args.get('iata_code')
+    if not iata_code:
+        return jsonify({'error': 'Missing iata_code parameter'}), 400
+
+    airport = Airport.query.filter_by(iata_code=iata_code.upper()).first()
+
+    if airport:
+        return jsonify({
+            'cargo_handling_cost_kg': airport.cargo_handling_cost_kg or 0
+        })
+    return jsonify({'error': 'Airport not found'}), 404
+
 @operations_api.route('/check-route', methods=['POST'])
 def check_route():
     """

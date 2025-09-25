@@ -1,56 +1,3 @@
-// Removed duplicate IIFE initialization for target_cargo_load_return_percentage to prevent conflicts
-    // Removed duplicate IIFE initialization for target_cargo_load_return_percentage to prevent conflicts
-    // --- Logic for target_cargo_load_return_percentage and target_cargo_load_return ---
-    const targetCargoLoadReturnPercentage = document.getElementById('target_cargo_load_return_percentage');
-    const targetCargoLoadReturn = document.getElementById('target_cargo_load_return');
-    const availablePayloadReturn = document.getElementById('available_payload_return');
-    const returnCostWeight = document.getElementById('return_cost_weight');
-    // Always keep return_cost_weight disabled and remove .input-required-style if present
-    if (returnCostWeight) {
-        returnCostWeight.disabled = true;
-        returnCostWeight.classList.remove('input-required-style');
-    }
-
-    if (targetCargoLoadReturnPercentage) {
-        // Always ensure enabled
-        targetCargoLoadReturnPercentage.removeAttribute('disabled');
-        targetCargoLoadReturnPercentage.disabled = false;
-        targetCargoLoadReturnPercentage.value = 100;
-        if (!targetCargoLoadReturnPercentage.classList.contains('input-required-style')) {
-            targetCargoLoadReturnPercentage.classList.add('input-required-style');
-        }
-        targetCargoLoadReturnPercentage.addEventListener('input', function() {
-            targetCargoLoadReturnPercentage.classList.remove('input-required-style');
-            if (targetCargoLoadReturn && availablePayloadReturn) {
-                let perc = parseFloat(targetCargoLoadReturnPercentage.value);
-                let payload = parseFloat(availablePayloadReturn.value);
-                if (!isNaN(perc) && !isNaN(payload)) {
-                    targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
-                } else {
-                    targetCargoLoadReturn.value = '';
-                }
-            }
-        });
-    }
-    if (availablePayloadReturn && targetCargoLoadReturnPercentage && targetCargoLoadReturn) {
-        availablePayloadReturn.addEventListener('input', function() {
-            let perc = parseFloat(targetCargoLoadReturnPercentage.value);
-            let payload = parseFloat(availablePayloadReturn.value);
-            if (!isNaN(perc) && !isNaN(payload)) {
-                targetCargoLoadReturn.value = (payload * perc / 100).toFixed(2);
-            } else {
-                targetCargoLoadReturn.value = '';
-            }
-        });
-    }
-// shipment_management.js
-// Place all JS logic for shipment management page here
-
-// Example: Document ready
-// document.addEventListener('DOMContentLoaded', function() {
-//     // Your JS code here
-// });
-
 document.addEventListener('DOMContentLoaded', function() {
     // Declare shared DOM elements once
     const typeOfFreight = document.getElementById('type_of_freight');
@@ -199,6 +146,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // --- Cargo Handling Cost Fetcher ---
+    async function fetchCargoHandlingCost(iataCode) {
+        if (!iataCode) return 0;
+        try {
+            const response = await fetch(`/api/airport-details?iata_code=${iataCode}`);
+            if (!response.ok) {
+                console.error(`Failed to fetch airport details for ${iataCode}`);
+                return 0;
+            }
+            const data = await response.json();
+            return data.cargo_handling_cost_kg || 0;
+        } catch (error) {
+            console.error(`Error fetching cargo handling cost for ${iataCode}:`, error);
+            return 0;
+        }
+    }
+
+
     // Run calculation on page load and whenever relevant fields change
     setInterval(updateCalculatedFields, 500); // Polling for programmatic changes
 
@@ -281,6 +246,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const addCargoReturnBtn = document.getElementById('add_cargo_return_btn');
     const productTableContainer = document.getElementById('product-table-container');
     let currentCargoContext = null; // To track if we are editing outbound or return cargo
+    
+    // Global variables for cargo handling costs
+    let outboundCargoHandlingCost = 0;
+    let returnCargoHandlingCost = 0;
 
     // Listen for input events for Port of Arrival
     portOfArrival.addEventListener('input', function() {
@@ -777,11 +746,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- New listener for the "Load Cargo" button ---
     if (addCargoOutboundBtn) {
-        addCargoOutboundBtn.addEventListener('click', function() {
+        addCargoOutboundBtn.addEventListener('click', async function() {
             const countryCode = shipperCountryCodeField.value;
             if (countryCode) {
                 currentCargoContext = 'outbound'; // Set context
+                
+                // Get the IATA code from the port of shipping field
+                const iataCode = document.getElementById('port_of_shipping').value.trim().toUpperCase();
+                
+                // Fetch cargo handling cost for this airport
+                outboundCargoHandlingCost = await fetchCargoHandlingCost(iataCode);
+                console.log(`Set outbound cargo handling cost: ${outboundCargoHandlingCost}`);
+                
+                // Load products for country
                 loadProductsForCountry(countryCode);
+                
                 setTableHeaderColor('#257777'); // Shipper-related color
                 addCargoOutboundBtn.style.color = '#257777';
                 if (addCargoReturnBtn) addCargoReturnBtn.style.color = '#8f7d16'; // Reset other button
@@ -793,11 +772,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Listener for the return "Load Cargo" button ---
     if (addCargoReturnBtn) {
-        addCargoReturnBtn.addEventListener('click', function() {
+        addCargoReturnBtn.addEventListener('click', async function() {
             const countryCode = consigneeCountryCodeField.value;
             if (countryCode) {
                 currentCargoContext = 'return'; // Set context
+                
+                // Get the IATA code from the consignee port of shipping field
+                const iataCode = document.getElementById('consignee_port_of_shipping').value.trim().toUpperCase();
+                
+                // Fetch cargo handling cost for this airport
+                returnCargoHandlingCost = await fetchCargoHandlingCost(iataCode);
+                console.log(`Set return cargo handling cost: ${returnCargoHandlingCost}`);
+                
+                // Load products for country
                 loadProductsForCountry(countryCode);
+                
                 setTableHeaderColor('#2b792b'); // Consignee-related color
                 addCargoReturnBtn.style.color = '#2b792b';
                 if (addCargoOutboundBtn) addCargoOutboundBtn.style.color = '#8f7d16'; // Reset other button
@@ -845,7 +834,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td id="exporter-profit-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td id="fca-cost-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td id="fca-usd-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td id="cargo-load-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="air-freight-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
@@ -1071,6 +1061,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const exchangeRateField = document.getElementById('exchange_rate');
                 const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
                 const fcaUsd = fcaCost * exchangeRate;
+                
+                // Calculate cargo load cost based on total weight and the current cargo handling cost
+                let cargoHandlingCost = 0;
+                if (currentCargoContext === 'outbound') {
+                    cargoHandlingCost = outboundCargoHandlingCost;
+                } else if (currentCargoContext === 'return') {
+                    cargoHandlingCost = returnCargoHandlingCost;
+                }
+                const cargoLoadCost = totalWeight * cargoHandlingCost;
 
                 // Find the corresponding cells to update
                 const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
@@ -1079,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const exporterProfitCell = document.getElementById(`exporter-profit-${productCode}`);
                 const fcaCostCell = document.getElementById(`fca-cost-${productCode}`);
                 const fcaUsdCell = document.getElementById(`fca-usd-${productCode}`);
+                const cargoLoadCostCell = document.getElementById(`cargo-load-cost-${productCode}`);
 
                 // Update the cell content using the existing formatNumber helper
                 if (totalWeightCell) {
@@ -1099,10 +1099,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (fcaUsdCell) {
                     fcaUsdCell.textContent = fcaUsd > 0 ? `$${formatNumber(fcaUsd)}` : '-';
                 }
+                if (cargoLoadCostCell) {
+                    cargoLoadCostCell.textContent = cargoLoadCost > 0 ? `$${formatNumber(cargoLoadCost)}` : '-';
+                }
 
                 // After updating the row, update the footer totals
                 updateTableTotals();
             }
+            // CRITICAL FIX: After any amount change, we must recalculate the air freight
+            // because the total weight has changed.
+            updateAirFreightCost();
+            updateTableTotals(); // Call again to sum the new air freight costs into the footer.
         });
     }
 
@@ -1115,6 +1122,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalExporterProfit = 0;
         let totalFcaCost = 0;
         let totalFcaUsd = 0;
+        let totalCargoLoadCost = 0;
+        let totalAirFreightCost = 0;
         // Add other total variables here as they are implemented
 
         rows.forEach(row => {
@@ -1156,6 +1165,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (fcaUsdCell && fcaUsdCell.textContent !== '-') {
                 totalFcaUsd += parseFloat(fcaUsdCell.textContent.replace(/[^\d.-]/g, '')) || 0;
             }
+            
+            // Sum Cargo Load Cost
+            const cargoLoadCostCell = document.getElementById(`cargo-load-cost-${productCode}`);
+            if (cargoLoadCostCell && cargoLoadCostCell.textContent !== '-') {
+                totalCargoLoadCost += parseFloat(cargoLoadCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
+
+            // Sum Air Freight Cost
+            const airFreightCostCell = document.getElementById(`air-freight-cost-${productCode}`);
+            if (airFreightCostCell && airFreightCostCell.textContent !== '-') {
+                totalAirFreightCost += parseFloat(airFreightCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
         });
 
         // Update the footer cells with the calculated totals
@@ -1165,6 +1186,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const footerProfitCell = document.getElementById('footer-exporter-profit');
         const footerFcaCostCell = document.getElementById('footer-fca-cost');
         const footerFcaUsdCell = document.getElementById('footer-fca-usd');
+        const footerCargoLoadCostCell = document.getElementById('footer-cargo-load-cost');
+        const footerAirFreightCostCell = document.getElementById('footer-air-freight-cost');
 
         if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
@@ -1172,66 +1195,69 @@ document.addEventListener('DOMContentLoaded', function() {
         if (footerProfitCell) footerProfitCell.textContent = totalExporterProfit > 0 ? `$${formatNumber(totalExporterProfit)}` : '-';
         if (footerFcaCostCell) footerFcaCostCell.textContent = totalFcaCost > 0 ? `$${formatNumber(totalFcaCost)}` : '-';
         if (footerFcaUsdCell) footerFcaUsdCell.textContent = totalFcaUsd > 0 ? `$${formatNumber(totalFcaUsd)}` : '-';
+        if (footerCargoLoadCostCell) footerCargoLoadCostCell.textContent = totalCargoLoadCost > 0 ? `$${formatNumber(totalCargoLoadCost)}` : '-';
+        if (footerAirFreightCostCell) footerAirFreightCostCell.textContent = totalAirFreightCost > 0 ? `$${formatNumber(totalAirFreightCost)}` : '-';
     }
-});
 
-    // Set up message listener for exchange rate updates from popup window
-    window.addEventListener('message', function(event) {
-        // Verify the message type
-        if (event.data && event.data.type === 'setExchangeRate') {
-            const { rate, fromCurrency, toCurrency } = event.data;
-            
-            // Find the exchange rate field
-            const exchangeRateField = document.getElementById('exchange_rate');
-            
-            // Update the exchange rate value
-            if (exchangeRateField) {
-                exchangeRateField.value = rate;
-                console.log(`Exchange rate updated from popup: ${fromCurrency} to ${toCurrency} = ${rate}`);
-                
-                // Hide the manual search button if it exists
-                const manualButton = document.getElementById('manual_exchange_search');
-                if (manualButton) {
-                    manualButton.style.display = 'none';
-                }
-                
-                // Recalculate all FCA USD values when exchange rate changes
-                recalculateAllFcaValues();
-            }
-        }
-    });
-    
     // Function to recalculate all FCA values when exchange rate changes
     function recalculateAllFcaValues() {
         const rows = productTableContainer.querySelectorAll('tr');
         const exchangeRateField = document.getElementById('exchange_rate');
+        if (!productTableContainer || !exchangeRateField) {
+            return;
+        }
         const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
-        
+
         rows.forEach(row => {
             const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
             if (!productCode) return;
-            
+
             // Get FCA Cost
             const fcaCostCell = document.getElementById(`fca-cost-${productCode}`);
             if (!fcaCostCell || fcaCostCell.textContent === '-') return;
-            
+
             // Parse FCA Cost value
             const fcaCost = parseFloat(fcaCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
-            
+
             // Calculate new FCA USD value
             const fcaUsd = fcaCost * exchangeRate;
-            
+
             // Update FCA USD cell
             const fcaUsdCell = document.getElementById(`fca-usd-${productCode}`);
             if (fcaUsdCell) {
                 fcaUsdCell.textContent = fcaUsd > 0 ? `$${formatNumber(fcaUsd)}` : '-';
             }
         });
-        
+
         // Update totals
         updateTableTotals();
+        // After totals are updated, recalculate air freight cost
+        if (typeof window.updateAirFreightCost === 'function') {
+            window.updateAirFreightCost();
+        }
+        updateTableTotals(); // Call again to update the air freight total in the footer.
     }
-    
+
+    // Set up message listener for exchange rate updates from popup window
+    window.addEventListener('message', function(event) {
+        // Verify the message type
+        if (event.data && event.data.type === 'setExchangeRate') {
+            const { rate, fromCurrency, toCurrency } = event.data;
+            const exchangeRateField = document.getElementById('exchange_rate');
+
+            if (exchangeRateField) {
+                exchangeRateField.value = rate;
+                console.log(`Exchange rate updated from popup: ${fromCurrency} to ${toCurrency} = ${rate}`);
+
+                const manualButton = document.getElementById('manual_exchange_search');
+                if (manualButton) {
+                    manualButton.style.display = 'none';
+                }
+                recalculateAllFcaValues();
+            }
+        }
+    });
+
     // Add event listener to exchange rate field for manual changes
     const exchangeRateField = document.getElementById('exchange_rate');
     if (exchangeRateField) {
@@ -1239,3 +1265,20 @@ document.addEventListener('DOMContentLoaded', function() {
             recalculateAllFcaValues();
         });
     }
+
+    // --- API endpoint for airport details (including cargo handling cost) ---
+    // This is a mock-up. You will need to create a real API endpoint in your Flask app.
+    // Example: /api/airport-details?iata_code=MIA
+    // This should return JSON like: { "cargo_handling_cost_kg": 0.5 }
+    // For now, this is just a placeholder.
+    // The actual implementation is in the `fetchCargoHandlingCost` function above.
+    // No new code needed here if the endpoint exists.
+    // If it doesn't, you'll need to add it to your routes.py.
+    // Example route in Flask:
+    /*
+    @operations_api.route('/airport-details')
+    def airport_details_api():
+        iata_code = request.args.get('iata_code')
+        # ... logic to find airport and return its details ...
+    */
+});

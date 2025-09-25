@@ -3,6 +3,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shipment.css') }}">
 <script src="{{ url_for('static', filename='js/shipment_management.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cargo_handling.js') }}"></script>
 
 <!-- JS moved to shipment_management.js -->
 <!-- All JS references removed. Only HTML structure and CSS remain. -->
@@ -303,7 +304,7 @@
                         <th style="width: 500px; text-align: center; color: #b64545;">FCA Cost</th>
                         <th style="width: 500px; text-align: center; color: #8f7d16;">FCA USD</th>
                         <th style="width: 500px; text-align: center; color: #8f7d16;">Cargo Load cost</th>
-                        <th style="width: 500px; text-align: center; color: #8f7d16;">Air Freight cost</th>
+                        <th style="width: 500px; text-align: center; color: #8f7d16;">Air Freight Cost</th>
                         <th style="width: 500px; text-align: center; color: #8f7d16;">Cargo Unload cost</th>
                         <th style="width: 600px; text-align: center; color: #8f7d16;">CIP Cost</th>
                         <th style="width: 500px; text-align: center; color: #8f7d16;">Import Taxes</th>
@@ -319,7 +320,9 @@
                 </thead>
                 <tbody id="product-table-container">
                     <!-- JS-injected rows go here -->
+                    <!-- Example of a row structure for context -->
                 </tbody>
+
                 <tfoot style="text-align: right;">
                     <tr id="product-list-totals">
                         <td colspan="10" style="text-align: right; color: #ffb84d;">Totals:</td>
@@ -330,7 +333,7 @@
                         <td id="footer-fca-cost" style="color: #b64545;">-</td>
                         <td id="footer-fca-usd" style="color: #8f7d16;">-</td>
                         <td id="footer-cargo-load-cost" style="color: #8f7d16;">-</td>
-                        <td id="footer-air-freight-cost" style="color: #8f7d16;">-</td>
+                        <td id="footer-air-freight-cost" style="color: #8f7d16;">-</td> <!-- This is the footer total cell -->
                         <td id="footer-cargo-unload-cost" style="color: #8f7d16;">-</td>
                         <td id="footer-cip-cost" style="color: #8f7d16;">-</td>
                         <td id="footer-import-taxes" style="color: #8f7d16;">-</td>

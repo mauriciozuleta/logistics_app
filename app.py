@@ -31,6 +31,7 @@ def create_app():
     from operations.routes import operations, operations_api
     from operations.exchange_api import exchange_api
     from operations.api import operations_api_new
+    from operations.airport_api import airport_api
     from operations.diagnostic_routes import operations_diagnostic
 
     # Register blueprints in proper order
@@ -44,8 +45,10 @@ def create_app():
     # Register both API blueprints under /api
     app.register_blueprint(operations_api_new, url_prefix='/api')
     app.register_blueprint(operations_api, url_prefix='/api')
+    app.register_blueprint(airport_api, url_prefix='/api')
     csrf.exempt(operations_api_new)
     csrf.exempt(operations_api)
+    csrf.exempt(airport_api)
     app.register_blueprint(exchange_api, url_prefix='/api/exchange')
     csrf.exempt(exchange_api)  # Exempt exchange_api from CSRF protection
     app.register_blueprint(operations_diagnostic, url_prefix='/diagnostic')
