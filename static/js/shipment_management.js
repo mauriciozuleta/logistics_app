@@ -760,6 +760,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Load products for country
                 loadProductsForCountry(countryCode);
+
+                // After products are loaded, trigger the cargo load cost calculation for all visible rows
+                if (typeof window.updateCargoLoadCost === 'function') {
+                    window.updateCargoLoadCost('outbound', outboundCargoHandlingCost);
+                }
                 
                 setTableHeaderColor('#257777'); // Shipper-related color
                 addCargoOutboundBtn.style.color = '#257777';
@@ -786,6 +791,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Load products for country
                 loadProductsForCountry(countryCode);
+
+                // After products are loaded, trigger the cargo load cost calculation for all visible rows
+                if (typeof window.updateCargoLoadCost === 'function') {
+                    window.updateCargoLoadCost('return', returnCargoHandlingCost);
+                }
                 
                 setTableHeaderColor('#2b792b'); // Consignee-related color
                 addCargoReturnBtn.style.color = '#2b792b';
@@ -1062,14 +1072,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
                 const fcaUsd = fcaCost * exchangeRate;
                 
-                // Calculate cargo load cost based on total weight and the current cargo handling cost
-                let cargoHandlingCost = 0;
-                if (currentCargoContext === 'outbound') {
-                    cargoHandlingCost = outboundCargoHandlingCost;
-                } else if (currentCargoContext === 'return') {
-                    cargoHandlingCost = returnCargoHandlingCost;
-                }
-                const cargoLoadCost = totalWeight * cargoHandlingCost;
 
                 // Find the corresponding cells to update
                 const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
@@ -1078,7 +1080,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const exporterProfitCell = document.getElementById(`exporter-profit-${productCode}`);
                 const fcaCostCell = document.getElementById(`fca-cost-${productCode}`);
                 const fcaUsdCell = document.getElementById(`fca-usd-${productCode}`);
-                const cargoLoadCostCell = document.getElementById(`cargo-load-cost-${productCode}`);
 
                 // Update the cell content using the existing formatNumber helper
                 if (totalWeightCell) {
@@ -1099,16 +1100,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (fcaUsdCell) {
                     fcaUsdCell.textContent = fcaUsd > 0 ? `$${formatNumber(fcaUsd)}` : '-';
                 }
-                if (cargoLoadCostCell) {
-                    cargoLoadCostCell.textContent = cargoLoadCost > 0 ? `$${formatNumber(cargoLoadCost)}` : '-';
-                }
 
                 // After updating the row, update the footer totals
                 updateTableTotals();
+
+                // Get the appropriate handling cost based on context
+                const cargoHandlingCost = (currentCargoContext === 'outbound') ? outboundCargoHandlingCost : returnCargoHandlingCost;
+
+                // Call the global function to update the cargo load cost for the specific row
+                if (typeof window.updateCargoLoadCost === 'function') {
+                    window.updateCargoLoadCost(currentCargoContext, cargoHandlingCost);
+                }
             }
             // CRITICAL FIX: After any amount change, we must recalculate the air freight
             // because the total weight has changed.
-            updateAirFreightCost();
+            if (typeof window.updateAirFreightCost === 'function') {
+                window.updateAirFreightCost(currentCargoContext);
+            }
             updateTableTotals(); // Call again to sum the new air freight costs into the footer.
         });
     }
@@ -1233,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTableTotals();
         // After totals are updated, recalculate air freight cost
         if (typeof window.updateAirFreightCost === 'function') {
-            window.updateAirFreightCost();
+            window.updateAirFreightCost(currentCargoContext);
         }
         updateTableTotals(); // Call again to update the air freight total in the footer.
     }
