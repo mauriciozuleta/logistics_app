@@ -126,8 +126,13 @@
                   </div>
                   <div class="mt-3 p-3 w-100" style="background-color:#23272e;border:2px solid yellow;border-radius:8px;min-height:60px;width:100%;box-sizing:border-box;">
                     <div style="margin-bottom:8px;">
-                      <span style="color:yellow;font-size:1.2rem;font-weight:bold;">Branches</span>
-                      <button type="button" class="btn btn-outline-warning btn-sm float-end" id="toggle-branches" style="margin-left:10px;">Hide</button>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span style="color:yellow;font-size:1.2rem;font-weight:bold;">Branches</span>
+                        <div>
+                          <a href="#" id="products-competitiveness-btn" class="btn btn-info btn-sm" style="background-color: #00bcd4; border-color: #00bcd4; color: #fff; margin-right: 10px; display: none;" target="_blank">Products competitiveness</a>
+                          <button type="button" class="btn btn-outline-warning btn-sm" id="toggle-branches">Hide</button>
+                        </div>
+                      </div>
                       <div class="section-divider branches-divider" style="height:1px;background-color:yellow;margin-top:4px;margin-bottom:12px;clear:both;"></div>
                     </div>
                   </div>
@@ -676,6 +681,24 @@ document.addEventListener('DOMContentLoaded', function() {
                   });
               });
 
+              addCountryInfoBtn.addEventListener('click', function() {
+                countryFields.forEach(id => {
+                  const field = document.getElementById(id);
+                  field.disabled = false;
+                });
+              });
+
+              // --- Products Competitiveness Button Logic ---
+              const competitivenessBtn = document.getElementById('products-competitiveness-btn');
+              countryDropdown.addEventListener('change', function() {
+                const selectedCountryName = this.options[this.selectedIndex]?.text;
+                if (selectedCountryName && this.value) {
+                  competitivenessBtn.href = `{{ url_for('coredata.competitive_prices') }}?country=${encodeURIComponent(selectedCountryName)}`;
+                  competitivenessBtn.style.display = 'inline-block';
+                } else {
+                  competitivenessBtn.style.display = 'none';
+                }
+              });
               addCountryInfoBtn.addEventListener('click', function() {
                 countryFields.forEach(id => {
                   const field = document.getElementById(id);
