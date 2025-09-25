@@ -131,4 +131,69 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // --- Function to calculate Import Taxes and DAT Cost ---
+    window.updateImportTaxesAndDAT = function(context) {
+        const productTableContainer = document.getElementById('product-table-container');
+        if (!productTableContainer || !context) return;
+
+        // Determine which country's tax rates to use
+        const shipperCountryInfo = document.getElementById('shipper_country_code');
+        const consigneeCountryInfo = document.getElementById('consignee_country_code');
+
+        let destinationCountryInfo;
+        if (context === 'outbound') {
+            destinationCountryInfo = consigneeCountryInfo;
+        } else if (context === 'return') {
+            destinationCountryInfo = shipperCountryInfo;
+        } else {
+            return; // No context, no calculation
+        }
+
+        const importTaxesPct = parseFloat(destinationCountryInfo.dataset.importTaxes) || 0;
+        const importOtherTaxesPct = parseFloat(destinationCountryInfo.dataset.importOtherTaxes) || 0;
+        const totalImportTaxRate = (importTaxesPct + importOtherTaxesPct) / 100;
+
+        const rows = productTableContainer.querySelectorAll('tr');
+        rows.forEach(row => {
+            const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
+            if (!productCode) return;
+
+            const cipCostCell = document.getElementById(`cip-cost-${productCode}`);
+            const importTaxesCell = document.getElementById(`import-taxes-${productCode}`);
+            const datKgCostCell = document.getElementById(`dat-kg-cost-${productCode}`);
+            const datEaCostCell = document.getElementById(`dat-ea-cost-${productCode}`);
+            const comparativePriceCell = document.getElementById(`comparative-price-${productCode}`);
+            const sugProfitCell = document.getElementById(`sug-prod-prof-${productCode}`);
+            const weightCell = document.getElementById(`total-weight-${productCode}`);
+            const amountInput = document.querySelector(`input[name="amount_${productCode}"]`);
+
+            if (cipCostCell && importTaxesCell && datKgCostCell && datEaCostCell && comparativePriceCell && sugProfitCell && weightCell && amountInput) {
+                const cipCost = parseFloat(cipCostCell.textContent.replace(/[$,]/g, '')) || 0;
+                const totalWeight = parseFloat(weightCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+                const unitsPerPack = parseFloat(amountInput.dataset.unitsPerPack) || 1;
+
+                const importTaxes = cipCost * totalImportTaxRate;
+                const datCost = cipCost + importTaxes;
+                const datKgCost = (totalWeight > 0) ? (datCost / totalWeight) : 0;
+
+                // Calculate DAT EA. cost: (Total DAT Cost for the row) / (Total number of units)
+                const amount = parseFloat(amountInput.value) || 0;
+                const totalUnits = amount * unitsPerPack;
+                const datEaCost = (totalUnits > 0) ? (datCost / totalUnits) : 0;
+
+                // Calculate Suggested Product Profit (EA)
+                const comparativePrice = parseFloat(comparativePriceCell.textContent.replace(/[$,]/g, '')) || 0;
+                let suggestedProfit = 0;
+                if (comparativePrice > 0 && datEaCost > 0) {
+                    suggestedProfit = comparativePrice - datEaCost;
+                }
+
+                importTaxesCell.textContent = (importTaxes > 0) ? `$${formatNumber(importTaxes)}` : '-';
+                datKgCostCell.textContent = (datKgCost > 0) ? `$${formatNumber(datKgCost)}` : '-';
+                datEaCostCell.textContent = (datEaCost > 0) ? `$${formatNumber(datEaCost)}` : '-';
+                sugProfitCell.textContent = (suggestedProfit !== 0) ? `$${formatNumber(suggestedProfit)}` : '-';
+            }
+        });
+    }
 });

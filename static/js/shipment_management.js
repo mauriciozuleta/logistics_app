@@ -340,6 +340,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     consigneeCountryCodeField.dataset.exportTax = data.export_sales_tax || 0;
                     consigneeCountryCodeField.dataset.exportProfit = data.export_profit_pct || 0;
+                    consigneeCountryCodeField.dataset.importTaxes = data.import_taxes || 0;
+                    consigneeCountryCodeField.dataset.importOtherTaxes = data.import_other_taxes || 0;
                 }
             })
             .catch(error => {
@@ -473,6 +475,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     shipperCountryCodeField.dataset.exportTax = data.export_sales_tax || 0;
                     shipperCountryCodeField.dataset.exportProfit = data.export_profit_pct || 0;
+                    shipperCountryCodeField.dataset.importTaxes = data.import_taxes || 0;
+                    shipperCountryCodeField.dataset.importOtherTaxes = data.import_other_taxes || 0;
                 }
             })
             .catch(error => {
@@ -846,7 +850,8 @@ document.addEventListener('DOMContentLoaded', function() {
                            style="width: 80px; text-align: right;"
                            data-pack-weight="${product.packaging_weight || 0}"
                            data-pack-cost="${product.packaging_cost || 0}"
-                           data-product-code="${product.product_code}">
+                           data-product-code="${product.product_code}"
+                           data-units-per-pack="${product.units_per_pack || 1}">
                 </td>
                 <td id="total-weight-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
                 <td id="total-cost-${product.product_code}" style="text-align: right; color: #b64545;">-</td>
@@ -858,13 +863,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td id="air-freight-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="cargo-unload-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="cip-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td id="import-taxes-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="dat-kg-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="dat-ea-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="comparative-price-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="sug-prod-prof-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
@@ -1113,32 +1116,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // After updating the row, update the footer totals
                 updateTableTotals(); // This call updates the row's Total Weight cell.
-            }
 
-            // Now that Total Weight is updated, calculate the costs that depend on it.
-            const cargoHandlingCost = (currentCargoContext === 'outbound') ? outboundCargoHandlingCost : returnCargoHandlingCost;
-            if (typeof window.updateCargoLoadCost === 'function') {
-                window.updateCargoLoadCost(currentCargoContext, cargoHandlingCost);
-            }
+                // Now that Total Weight is updated, calculate the costs that depend on it.
+                const cargoHandlingCost = (currentCargoContext === 'outbound') ? outboundCargoHandlingCost : returnCargoHandlingCost;
+                if (typeof window.updateCargoLoadCost === 'function') {
+                    window.updateCargoLoadCost(currentCargoContext, cargoHandlingCost);
+                }
 
-            const cargoUnloadHandlingCost = (currentCargoContext === 'outbound') ? returnCargoHandlingCost : outboundCargoHandlingCost;
-            if (typeof window.updateCargoUnloadCost === 'function') {
-                window.updateCargoUnloadCost(currentCargoContext, cargoUnloadHandlingCost);
-            }
+                const cargoUnloadHandlingCost = (currentCargoContext === 'outbound') ? returnCargoHandlingCost : outboundCargoHandlingCost;
+                if (typeof window.updateCargoUnloadCost === 'function') {
+                    window.updateCargoUnloadCost(currentCargoContext, cargoUnloadHandlingCost);
+                }
 
-            if (typeof window.updateAirFreightCost === 'function') {
-                window.updateAirFreightCost(currentCargoContext);
-            }
+                if (typeof window.updateAirFreightCost === 'function') {
+                    window.updateAirFreightCost(currentCargoContext);
+                }
 
-            // After all individual costs are calculated, update the footer totals again
-            // to sum the new cargo load/unload and air freight costs.
-            updateTableTotals();
+                // After all individual costs are calculated, update the footer totals again
+                // to sum the new cargo load/unload and air freight costs.
+                updateTableTotals();
 
-            // After all other costs are calculated, update the CIP cost
-            if (typeof window.updateCipCost === 'function') {
-                window.updateCipCost();
+                // After all other costs are calculated, update the CIP cost
+                if (typeof window.updateCipCost === 'function') {
+                    window.updateCipCost();
+                }
+
+                // After CIP cost is calculated, update the Import Taxes and DAT cost
+                if (typeof window.updateImportTaxesAndDAT === 'function') {
+                    window.updateImportTaxesAndDAT(currentCargoContext);
+                }
+
+                updateTableTotals(); // Final call to sum CIP costs into the footer
             }
-            updateTableTotals(); // Final call to sum CIP costs into the footer
         });
     }
 
@@ -1155,6 +1164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalAirFreightCost = 0;
         let totalCargoUnloadCost = 0;
         let totalCipCost = 0;
+        let totalImportTaxes = 0;
         // Add other total variables here as they are implemented
 
         rows.forEach(row => {
@@ -1220,6 +1230,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (cipCostCell && cipCostCell.textContent !== '-') {
                 totalCipCost += parseFloat(cipCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
             }
+
+            // Sum Import Taxes
+            const importTaxesCell = document.getElementById(`import-taxes-${productCode}`);
+            if (importTaxesCell && importTaxesCell.textContent !== '-') {
+                totalImportTaxes += parseFloat(importTaxesCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
         });
 
         // Update the footer cells with the calculated totals
@@ -1233,6 +1249,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const footerAirFreightCostCell = document.getElementById('footer-air-freight-cost');
         const footerCargoUnloadCostCell = document.getElementById('footer-cargo-unload-cost');
         const footerCipCostCell = document.getElementById('footer-cip-cost');
+        const footerImportTaxesCell = document.getElementById('footer-import-taxes');
 
         if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
@@ -1244,6 +1261,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (footerAirFreightCostCell) footerAirFreightCostCell.textContent = totalAirFreightCost > 0 ? `$${formatNumber(totalAirFreightCost)}` : '-';
         if (footerCargoUnloadCostCell) footerCargoUnloadCostCell.textContent = totalCargoUnloadCost > 0 ? `$${formatNumber(totalCargoUnloadCost)}` : '-';
         if (footerCipCostCell) footerCipCostCell.textContent = totalCipCost > 0 ? `$${formatNumber(totalCipCost)}` : '-';
+        if (footerImportTaxesCell) footerImportTaxesCell.textContent = totalImportTaxes > 0 ? `$${formatNumber(totalImportTaxes)}` : '-';
     }
 
     // Function to recalculate all FCA values when exchange rate changes
