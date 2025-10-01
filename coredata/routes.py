@@ -711,21 +711,17 @@ def ai_price_search():
 
     if not product_name or not country:
         return jsonify({'success': False, 'error': 'Product name and country are required.'}), 400
-
-    # --- Fallback Data ---
-    # A simple dictionary of mock prices if the AI fails.
-    MOCK_PRICES_PER_KG = {
-        "coffee": 15.75,
-        "tea": 22.50,
-        "cocoa": 18.20,
-        "sugar": 2.50,
-        "rice": 3.10,
-        "wheat": 1.80,
-        "corn": 1.95,
-        "soybeans": 2.25,
-        "cotton": 4.50,
-        "rubber": 3.75,
-    }
+    
+    # Check if Ollama is running
+    try:
+        client = ollama.Client()
+        # Try a simple ping to verify Ollama is running
+        client.list()
+    except Exception:
+        return jsonify({
+            'success': False, 
+            'error': 'Ollama service is not running. Please start Ollama before using AI search.'
+        }), 503
     
     ai_error = None
     try:
@@ -820,17 +816,5 @@ def ai_price_search():
         ai_error = f'An unexpected error occurred with Ollama: {e}'
         print(f"AI Price Search Error (Ollama): {e}\n{traceback.format_exc()}")
 
-    # --- Fallback Logic ---
-    # If we've reached this point, the AI has failed.
-    mock_price = MOCK_PRICES_PER_KG.get(product_name.lower())
-    if mock_price:
-        return jsonify({
-            'success': True,
-            'primary': mock_price,
-            'accuracy': 20,  # Low accuracy to indicate it's a fallback
-            'method': 'Fallback (Mock Data)',
-            'details': f'AI search failed. Using a predefined mock price for {product_name}.'
-        })
-    
-    # If no AI price and no mock price, then we return the original error.
+    # No fallback data - return the error directly
     return jsonify({'success': False, 'error': ai_error}), 500
