@@ -312,4 +312,5 @@ class CompetitivePrice(db.Model):
     origin = db.Column(db.String(64), nullable=False)
     price_to_compare = db.Column(db.Float, nullable=False)
     updated_date = db.Column(db.Date, nullable=False)
+    source = db.Column(db.String(16), nullable=True)  # 'AI' or 'Manual'
     product = db.relationship('Product', backref='competitive_prices')
