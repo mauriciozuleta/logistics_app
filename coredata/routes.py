@@ -1,9 +1,11 @@
-
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
 from extensions import db
 from models import Product, Country, Aircraft, Airport, Branch, Region, CountryTradeInfo, CompetitivePrice
 from sqlalchemy.orm import joinedload
 from coredata.forms import AircraftForm, AirportForm, ProductForm, CountryTradeInfoForm
+import ollama
+import json
+import re
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
 
@@ -38,7 +40,6 @@ def _generate_next_code(model, field_name, prefix):
         
     padding = 2 if prefix == "ACFT" else 3
     return f"{prefix}{next_num:0{padding}d}"
-# ...existing code...
 
 # This route was lost due to file duplication. Adding it back as it's being called by the frontend.
 @coredata_bp.route('/api/country_branch_info')
@@ -702,3 +703,134 @@ def regional_branches_management():
     regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
     region_choices = [r[0] for r in regions if r[0]]
     return render_template('coredata/regional_branches_management.html', region_choices=region_choices)
+
+@coredata_bp.route('/api/ai_price_search')
+def ai_price_search():
+    product_name = request.args.get('product_name')
+    country = request.args.get('country')
+
+    if not product_name or not country:
+        return jsonify({'success': False, 'error': 'Product name and country are required.'}), 400
+
+    # --- Fallback Data ---
+    # A simple dictionary of mock prices if the AI fails.
+    MOCK_PRICES_PER_KG = {
+        "coffee": 15.75,
+        "tea": 22.50,
+        "cocoa": 18.20,
+        "sugar": 2.50,
+        "rice": 3.10,
+        "wheat": 1.80,
+        "corn": 1.95,
+        "soybeans": 2.25,
+        "cotton": 4.50,
+        "rubber": 3.75,
+    }
+    
+    ai_error = None
+    try:
+        # Ensure the Ollama server is running
+        client = ollama.Client()
+        
+        # Construct a detailed prompt for the LLM
+        prompt = f"""
+        You are an expert market research analyst. Your task is to find a realistic market price for a specific product in a given country.
+
+        Product: "{product_name}"
+        Country: "{country}"
+        Currency: USD
+
+        Instructions:
+        1.  Perform a simulated web search to find a range of prices for this product. Find both a low-end price (e.g., from a bulk discount store) and a high-end price (e.g., from a premium or specialty store).
+        2.  Calculate the average of the low-end and high-end prices you found.
+        3.  Identify the corresponding unit for the prices (e.g., per kg, per pound, per ounce). Assume the unit is the same for both low and high prices.
+        4.  You MUST respond with ONLY a JSON object. Do not include any other text, explanation, or markdown.
+        5.  The JSON object must have these exact keys: "price", "unit", "confidence", "estimated_sources".
+            - "price": A float representing the AVERAGE of the lowest and highest prices you found.
+            - "unit": A string for the unit of the price. Must be one of: "kg", "pound", "ounce", "gram", "item".
+            - "confidence": A string, either "High", "Medium", or "Low", based on the consistency of the prices you found.
+            - "estimated_sources": An integer representing the number of different price points you mentally synthesized (should be at least 2).
+
+        Example for "coffee" in "USA" (which is often sold by the pound):
+        {{
+            "price": 16.50,
+            "unit": "pound",
+            "confidence": "High",
+            "estimated_sources": 5
+        }}
+
+        Now, perform the task for the requested product and country.
+        """
+
+        response = client.chat(
+            model='gemma3:4b',
+            messages=[{'role': 'user', 'content': prompt}],
+            options={'temperature': 0.1}
+        )
+        
+        content = response['message']['content']
+        cleaned_content = re.sub(r'```json\n|\n```', '', content).strip()
+        data = json.loads(cleaned_content)
+        
+        price = data.get('price')
+        unit = data.get('unit')
+        confidence = data.get('confidence', 'Low')
+        sources = data.get('estimated_sources', 0)
+
+        # If the AI is not confident or can't find a price, treat it as an error and try the fallback.
+        if price is None or unit is None or confidence == 'Low':
+            ai_error = f'AI returned a low confidence result or could not find a price (Confidence: {confidence}).'
+        else:
+            # --- Conversion Logic ---
+            original_price = float(price)
+            price_per_kg = original_price
+            conversion_note = ""
+
+            if unit == 'pound':
+                price_per_kg = original_price * 2.20462
+                conversion_note = f"Converted from {original_price}/lb"
+            elif unit == 'ounce':
+                price_per_kg = original_price * 35.274
+                conversion_note = f"Converted from {original_price}/oz"
+            elif unit == 'gram':
+                price_per_kg = original_price * 1000
+                conversion_note = f"Converted from {original_price}/g"
+            elif unit == 'item':
+                confidence = "Low" # Force low confidence if it's a per-item price
+                conversion_note = "Price is per item, cannot reliably convert to kg."
+            
+            accuracy_map = {"High": 85, "Medium": 60, "Low": 35}
+            accuracy = accuracy_map.get(confidence, 30)
+            details_message = f'AI synthesized {sources} price points. {conversion_note}'.strip()
+
+            return jsonify({
+                'success': True,
+                'primary': round(price_per_kg, 2),
+                'accuracy': accuracy,
+                'method': f'Ollama ({confidence})',
+                'details': details_message,
+                'sources': sources,
+                'raw_response': data
+            })
+
+    except json.JSONDecodeError:
+        ai_error = 'AI returned a malformed response. Could not parse JSON.'
+    except Exception as e:
+        import traceback
+        ai_error = f'An unexpected error occurred with Ollama: {e}'
+        print(f"AI Price Search Error (Ollama): {e}\n{traceback.format_exc()}")
+
+    # --- Fallback Logic ---
+    # If we've reached this point, the AI has failed.
+    mock_price = MOCK_PRICES_PER_KG.get(product_name.lower())
+    if mock_price:
+        return jsonify({
+            'success': True,
+            'primary': mock_price,
+            'accuracy': 20,  # Low accuracy to indicate it's a fallback
+            'method': 'Fallback (Mock Data)',
+            'details': f'AI search failed. Using a predefined mock price for {product_name}.'
+        })
+    
+    # If no AI price and no mock price, then we return the original error.
+    return jsonify({'success': False, 'error': ai_error}), 500

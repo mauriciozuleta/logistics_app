@@ -1,6 +1,38 @@
 {% extends "base.html" %}
 
-
+{% block styles %}
+{{ super() }}
+<style>
+    #aiResultModal {
+        z-index: 9999 !important;
+    }
+    .modal-backdrop {
+        z-index: 9998 !important;
+    }
+    /* Establish proper sizing for the content area */
+    .container-fluid {
+        min-height: 95vh;
+    }
+    /* Make the row take up full height */
+    #competitive-prices-content {
+        min-height: 90vh;
+    }
+    /* Style the iframe container */
+    .iframe-container {
+        height: calc(90vh - 60px);
+        width: 100%;
+    }
+    /* Make the iframe fill its container completely */
+    #search-iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 90vh;
+        border: 1px solid #2196f3;
+        border-radius: 8px;
+        background: #fff;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -8,9 +40,9 @@
     <hr>
     <div class="row" id="competitive-prices-content">
         <!-- Left column: Product list -->
-        <div class="col-12">
+        <div class="col-12 col-md-6 mb-3">
             <h5>Products (not from {{ country }})</h5>
-            <div style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; background: #fafafa;">
+            <div style="flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; background: #fafafa;">
                 <table class="table table-striped table-hover mb-0" id="products-table">
                     <thead>
                         <tr>
@@ -40,8 +72,7 @@
                             </td>
                             <td>
                                 <div class="d-flex" style="gap: 8px;">
-                                    <button class="btn btn-sm btn-outline-primary" style="flex: 1;" onclick="searchPrice('{{ product.id }}', '{{ product.name|escape }}', '{{ country|escape }}')">Search</button>
-                                    <button class="btn btn-sm btn-outline-info" style="flex: 1;" onclick="aiSearchPrice('{{ product.id }}', '{{ product.name|escape }}', '{{ country|escape }}')">AI Search</button>
+                                    <button class="btn btn-sm btn-primary" style="flex: 1;" onclick="combinedSearch('{{ product.id }}', '{{ product.name|escape }}', '{{ country|escape }}')">Search & AI</button>
                                 </div>
                             </td>
                             <td>
@@ -59,13 +90,37 @@
                 <button id="save-prices-btn" class="btn" style="background: none; color: #2196f3; font-weight: normal; border: 0.5px solid #2196f3; padding: 8px 32px; border-radius: 4px; height: 44px; font-family: inherit; display: flex; align-items: center; justify-content: center; text-align: center; width: 220px; font-size: 1.1rem;" onclick="handleSavePrices()">Save product Prices</button>
             </div>
         </div>
+        <!-- Right column: Manual search iframe, now larger and 50% width -->
+        <div class="col-12 col-md-6 mb-3">
+            <h5>Manual Price Search</h5>
+            <iframe id="search-iframe" src="https://www.bing.com" title="Manual Price Search" style="width: 100%; height: 800px; min-height: 800px; border: 1px solid #2196f3; display: block;"></iframe>
+        </div>
     </div>
 </div>
+
+<!-- AI Result Modal -->
+<div class="modal fade" id="aiResultModal" tabindex="-1" aria-labelledby="aiResultModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="aiResultModalLabel">Full AI Response</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="ai-raw-response-container">
+        <!-- Content will be injected by JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 function searchPrice(productId, productName, country) {
-    var prompt = `Average Price for ${productName} in ${country} in supermarkets in USD`;
+    var prompt = `${productName} price in ${country} supermarket USD`;
     var bingUrl = `https://www.bing.com/search?q=${encodeURIComponent(prompt)}`;
-    window.open(bingUrl, '_blank');
+    document.getElementById('search-iframe').src = bingUrl;
 }
 
 function updateDate(productId) {
@@ -111,7 +166,6 @@ function handleSavePrices() {
             },
             body: JSON.stringify({ country: country, prices: validPrices })
         })
-        .then(response => response.json())
         .then(data => {
             if (data.errors) {
                 alert('Error: ' + data.errors.join('\n'));
@@ -171,6 +225,77 @@ function continueToSave() {
 function returnToSearch() {
     document.getElementById('warning-msg').style.display = 'none';
     document.getElementById('save-options').style.display = 'none';
+}
+
+function showAiResult(rawResponse) {
+    const container = document.getElementById('ai-raw-response-container');
+    let content = '<h4>AI Response Details</h4><ul class="list-group">';
+
+    for (const [key, value] of Object.entries(rawResponse)) {
+        // Capitalize and format the key for display
+        let formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        content += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>${formattedKey}:</strong>
+                        <span class="badge bg-primary rounded-pill">${value}</span>
+                    </li>`;
+    }
+
+    content += '</ul>';
+    container.innerHTML = content;
+
+    var myModal = new bootstrap.Modal(document.getElementById('aiResultModal'));
+    myModal.show();
+}
+
+// AI Search: now clicking the AI price fills the input
+async function aiSearchPrice(productId, productName, country) {
+    const resultCell = document.getElementById(`ai-result-${productId}`);
+    const accuracyCell = document.getElementById(`price-accuracy-${productId}`);
+    const inputCell = document.getElementById(`input-${productId}`);
+    resultCell.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Searching...';
+    accuracyCell.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    try {
+        const response = await fetch(`/coredata/api/ai_price_search?product_name=${encodeURIComponent(productName)}&country=${encodeURIComponent(country)}`);
+        const data = await response.json();
+        if (data.success) {
+            const tooltipText = data.details ? `${data.method}: ${data.details}` : `Method: ${data.method}`;
+            // Make AI price clickable to fill input
+            resultCell.innerHTML = `
+                <span class="text-success" title="${tooltipText}" data-bs-toggle="tooltip" data-bs-placement="top" style="cursor:pointer;" onclick="document.getElementById('input-${productId}').value='${data.primary.toFixed(2)}'; updateDate('${productId}')">
+                    $${data.primary.toFixed(2)}
+                </span>
+                <small class="text-muted d-block">(${data.method})</small>`;
+            let accuracyContent;
+            if (data.accuracy < 70 || (data.sources && data.sources < 3)) {
+                accuracyContent = `<span class="text-warning">Data not reliable, proceed to manually search</span>`;
+            } else {
+                accuracyContent = `${data.accuracy}%`;
+            }
+            accuracyCell.innerHTML = `<a href="#" onclick='showAiResult(${JSON.stringify(data.raw_response)})'>${accuracyContent}</a>`;
+            const tooltipTriggerEl = resultCell.querySelector('[data-bs-toggle="tooltip"]');
+            if (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            }
+        } else {
+            const errorText = data.error || 'An unknown error occurred.';
+            resultCell.innerHTML = `<span class="text-danger" title="${errorText}" data-bs-toggle="tooltip" data-bs-placement="top">${errorText}</span>`;
+            accuracyCell.innerHTML = '0%';
+            const tooltipTriggerEl = resultCell.querySelector('[data-bs-toggle="tooltip"]');
+            if (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            }
+        }
+    } catch (error) {
+        resultCell.innerHTML = '<span class="text-danger">Request failed</span>';
+        accuracyCell.innerHTML = '0%';
+    }
+}
+
+function combinedSearch(productId, productName, country) {
+    // Perform Bing search in iframe
+    searchPrice(productId, productName, country);
+    // Perform AI search
+    aiSearchPrice(productId, productName, country);
 }
 </script>
 {% endblock %}
