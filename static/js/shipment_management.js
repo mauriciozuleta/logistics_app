@@ -835,6 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function createProductRow(product) {
         // This function creates the HTML for a single table row based on a product object.
         // The empty cells are placeholders for calculated values.
+        const comparativePrice = product.comparative_price ? `$${formatNumber(product.comparative_price)}` : '-';
         return `
             <tr>
                 <td style="text-align: center;">${product.product_code || '-'}</td>
@@ -870,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td id="import-taxes-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="dat-kg-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="dat-ea-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
-                <td id="comparative-price-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="comparative-price-${product.product_code}" style="text-align: right; color: #8f7d16;">${comparativePrice}</td>
                 <td id="sug-prod-prof-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
                 <td style="text-align: center; color: #8f7d16;">-</td>
@@ -897,7 +898,27 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             console.log('API response:', data);
             
-            const products = data.products;
+            let products = data.products;
+
+            // --- Fetch competitive prices for the destination country ---
+            let destinationCountryCode;
+            if (currentCargoContext === 'outbound') {
+                destinationCountryCode = document.getElementById('consignee_country_code').value;
+            } else if (currentCargoContext === 'return') {
+                destinationCountryCode = document.getElementById('shipper_country_code').value;
+            }
+
+            if (destinationCountryCode) {
+                const pricesResponse = await fetch(`/api/product_prices?consignee_country_code=${destinationCountryCode}`);
+                if (pricesResponse.ok) {
+                    const priceMap = await pricesResponse.json();
+                    // Add the competitive price to each product object
+                    products = products.map(p => {
+                        p.comparative_price = priceMap[p.id] || null;
+                        return p;
+                    });
+                }
+            }
             
             // Render products in the table
             productTableContainer.innerHTML = (products && products.length > 0) 
