@@ -1,0 +1,70 @@
+{
+    "country_code": "BS",
+    "analysis_date": "2025-10-01T21:35:47.859662",
+    "results": {
+        "1": {
+            "status": "good",
+            "tooltip": "Avocado is not produced locally in the Bahamas, creating a unique market opportunity. Additionally, avocados are highly sought after for their health benefits and versatility, indicating a potential strong demand in the Bahamas."
+        },
+        "2": {
+            "status": "good",
+            "tooltip": "There are no locally produced green onions in Bahamas and the list of potential imports does not include green onions either. This uniqueness can create a niche market for green onions, potentially driving demand among consumers looking for this particular produce."
+        },
+        "3": {
+            "status": "good",
+            "tooltip": "There is no local production of GRANADILLA in Bahamas, and it is not listed among the imported products, indicating a potential gap in the market. Additionally, GRANADILLA offers a unique taste and texture compared to other fruits like guanabana and passion fruit, which could attract consumers looking for something different. Given the absence of direct competition and the uniqueness of the product, there is a good opportunity for GRANADILLA to meet potential demand in Bahamas."
+        },
+        "4": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for GUANABANA."
+        },
+        "5": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PASSION FRUIT (PURPLE)."
+        },
+        "6": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for LIME."
+        },
+        "7": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for LULO."
+        },
+        "8": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for BLACKBERRY."
+        },
+        "9": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for ORANGE (TANGELO)."
+        },
+        "10": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for ORANGE (VALENCIA)."
+        },
+        "11": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PAPAYA."
+        },
+        "12": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PINEAPPLE."
+        },
+        "13": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for DRAGON FRUIT."
+        },
+        "14": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PLANTAIN."
+        },
+        "15": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for TREE TOMATO."
+        },
+        "16": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for UCHUVA."
+        }
+    }
+}

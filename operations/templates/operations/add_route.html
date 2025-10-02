@@ -116,17 +116,18 @@
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Route Fuel (Gls.)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">B/H Cost (USD)</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Fuel Cost (USD)</th>
+            <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Overflight Cost</th>
             <th style="min-width:110px; text-align:center; border: 0.5px solid #2196f3; font-weight: normal;">Total Leg Cost (USD)</th>
           </tr>
         </thead>
         <tbody style="font-weight: normal;">
           <tr>
-            <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+            <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
           </tr>
           <!-- Totals Row -->
           <tr style="font-weight: bold; background-color: #2a3038;">
             <td style="color: #FF5C00;">Totals</td>
-            <td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td>
+            <td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td><td style="color: #FF5C00;"></td>
           </tr>
         </tbody>
       </table>
@@ -433,6 +434,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const routeFuelLbs = aircraftData.fuel_burn_lbs * flightTime;
     const routeFuelGal = routeFuelLbs / 6.7;
 
+    const overflightCost = dist * 0.2;
+
     // The block hour cost is now calculated using the adjusted (billable) flight time.
     const bhCost = aircraftData.acmi_cost * adjustedFlightTime;
     // Fetch fuel cost
@@ -451,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error fetching fuel cost:', error);
     }
 
-    const totalLegCost = bhCost + fuelCost;
+    const totalLegCost = bhCost + fuelCost + overflightCost;
 
     // Store raw numbers in an object to avoid reading from the DOM later
     const routeMetrics = {
@@ -463,6 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
         routeFuelGal: routeFuelGal,
         bhCost: bhCost,
         fuelCost: fuelCost,
+        overflightCost: overflightCost,
         totalLegCost: totalLegCost
     };
 
@@ -474,7 +478,8 @@ document.addEventListener('DOMContentLoaded', function() {
     dataRow.cells[4].innerText = formatNumber(routeFuelGal, 0);
     dataRow.cells[5].innerText = formatCurrency(bhCost);
     dataRow.cells[6].innerText = formatCurrency(fuelCost);
-    dataRow.cells[7].innerText = formatCurrency(totalLegCost);
+    dataRow.cells[7].innerText = formatCurrency(overflightCost); // Overflight Cost
+    dataRow.cells[8].innerText = formatCurrency(totalLegCost);
 
     // --- Call subsequent functions ---
     calculateTotals();
@@ -613,6 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
           fuel_gallons: metrics.routeFuelGal,
           block_hours_cost: metrics.bhCost,
           fuel_cost: metrics.fuelCost,
+          overflight_cost: metrics.overflightCost,
           total_leg_cost: metrics.totalLegCost
         }],
         payloads: [{

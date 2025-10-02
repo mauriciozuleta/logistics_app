@@ -1,3 +1,4 @@
+
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, json, flash
 from extensions import db
 from models import Product, Country, Aircraft, Airport, Branch, Region, CountryTradeInfo, CompetitivePrice
@@ -8,6 +9,11 @@ import json
 import re
 
 coredata_bp = Blueprint("coredata", __name__, template_folder="templates")
+
+# Restore view-edit-traders route for redirect after saving prices
+@coredata_bp.route('/view-edit-traders')
+def view_edit_traders():
+    return render_template('coredata/view_edit_traders.html')
 
 @coredata_bp.route('/api/branches_by_country')
 def branches_by_country():
@@ -433,10 +439,12 @@ def save_competitive_prices():
                     errors.append(f"Invalid date for product_id {product_id}")
                     print('DEBUG: Invalid date for', product_id, updated_date)
                     continue
+            source = item.get('source', '')
             cp = CompetitivePrice.query.filter_by(product_id=product_id, country=country).first()
             if cp:
                 cp.price_to_compare = price_to_compare
                 cp.updated_date = updated_date
+                cp.source = source
             else:
                 cp = CompetitivePrice(
                     product_id=product_id,
@@ -444,7 +452,8 @@ def save_competitive_prices():
                     country=country,
                     origin=origin,
                     price_to_compare=price_to_compare,
-                    updated_date=updated_date
+                    updated_date=updated_date,
+                    source=source
                 )
                 db.session.add(cp)
         except Exception as e:

@@ -226,6 +226,7 @@
         <th class="fuel-col">Route Fuel (Gls.)</th>
         <th class="cost-col">B/H Cost (USD)</th>
         <th class="cost-col">Fuel Cost (USD)</th>
+        <th class="cost-col">Overflight Cost</th>
         <th class="cost-col">Total Leg Cost (USD)</th>
         <th class="weight-col">OEW (Lbs.)</th>
         <th class="weight-col">Fuel Weight (Lbs.)</th>
@@ -233,9 +234,6 @@
         <th class="weight-col">No-Tank T/O/W (Lbs.)</th>
         <th class="weight-col">Avail Extra Fuel (Lbs.)</th>
         <th class="weight-col">Tank T/O/W</th>
-      </tr>
-    </thead>
-    <tbody id="routesTableBody">
       {% if routes %}
         {% for route in routes %}
         <tr data-route-id="{{ route.id }}" class="route-row">
@@ -267,6 +265,9 @@
             {% if route.total_fuel_cost %}${{ "{:,.2f}".format(route.total_fuel_cost) }}{% else %}-{% endif %}
           </td>
           <td class="cost-col">
+            {% if route.total_overflight_cost %}${{ "{:,.2f}".format(route.total_overflight_cost) }}{% else %}-{% endif %}
+          </td>
+          <td class="cost-col">
             {% if route.total_cost %}${{ "{:,.2f}".format(route.total_cost) }}{% else %}-{% endif %}
           </td>
           <td class="weight-col">
@@ -291,7 +292,7 @@
         {% endfor %}
       {% else %}
         <tr>
-          <td colspan="18" class="no-routes">
+          <td colspan="19" class="no-routes">
             No routes available. <a href="/operations/add-route" style="color: #FF5C00;">Create your first route</a>
           </td>
         </tr>

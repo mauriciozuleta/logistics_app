@@ -1,7 +1,6 @@
+
 from datetime import datetime
 from extensions import db
-
-# Then define your models like normal
 
 # Optional BaseModel for shared fields
 class BaseModel(db.Model):
@@ -182,14 +181,6 @@ class Route(BaseModel):
     to_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
     finish_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'))  # Only for multiple routes
     
-    # Route Summary Data (Totals) - Original columns
-    total_distance = db.Column(db.Float)
-    total_flight_time = db.Column(db.Float)
-    total_route_fuel_gls = db.Column(db.Float)
-    total_bh_cost_usd = db.Column(db.Float)
-    total_fuel_cost_usd = db.Column(db.Float)
-    total_leg_cost_usd = db.Column(db.Float)
-    
     # Additional fields for enhanced saving functionality
     route_summary = db.Column(db.String(255))
     aircraft_name = db.Column(db.String(128))
@@ -197,54 +188,27 @@ class Route(BaseModel):
     to_airport_name = db.Column(db.String(255))
     finish_airport_name = db.Column(db.String(255))
     
-    # New fields to match the save functionality
+    # Fields for a single leg's data
     total_distance_nm = db.Column(db.Float)
     total_flight_time_hours = db.Column(db.Float)
     total_adjusted_flight_time_hours = db.Column(db.Float)
     total_fuel_gallons = db.Column(db.Float)
     total_fuel_cost = db.Column(db.Float)
     total_block_hours_cost = db.Column(db.Float)
+    total_overflight_cost = db.Column(db.Float)
     total_cost = db.Column(db.Float)
     
     # JSON fields for detailed leg and payload data
     leg_details = db.Column(db.Text)  # JSON string of leg details
     payload_details = db.Column(db.Text)  # JSON string of payload details
     
-    # Leg 1 Data
-    leg1_route = db.Column(db.String(128))
-    leg1_distance = db.Column(db.Float)
-    leg1_flight_time = db.Column(db.Float)
-    leg1_adjusted_flight_time = db.Column(db.Float)
-    leg1_route_fuel_gls = db.Column(db.Float)
-    leg1_bh_cost_usd = db.Column(db.Float)
-    leg1_fuel_cost_usd = db.Column(db.Float)
-    leg1_total_cost_usd = db.Column(db.Float)
-    
-    # Leg 1 Payload Data
+    # Payload Data for the leg
     leg1_oew_lbs = db.Column(db.Float)
     leg1_fuel_weight_lbs = db.Column(db.Float)
     leg1_max_payload_lbs = db.Column(db.Float)
     leg1_no_tank_tow_lbs = db.Column(db.Float)
     leg1_avail_extra_fuel_lbs = db.Column(db.Float)
     leg1_tank_tow_lbs = db.Column(db.Float)
-    
-    # Leg 2 Data (for round-trip and multiple routes)
-    leg2_route = db.Column(db.String(128))
-    leg2_distance = db.Column(db.Float)
-    leg2_flight_time = db.Column(db.Float)
-    leg2_adjusted_flight_time = db.Column(db.Float)
-    leg2_route_fuel_gls = db.Column(db.Float)
-    leg2_bh_cost_usd = db.Column(db.Float)
-    leg2_fuel_cost_usd = db.Column(db.Float)
-    leg2_total_cost_usd = db.Column(db.Float)
-    
-    # Leg 2 Payload Data
-    leg2_oew_lbs = db.Column(db.Float)
-    leg2_fuel_weight_lbs = db.Column(db.Float)
-    leg2_max_payload_lbs = db.Column(db.Float)
-    leg2_no_tank_tow_lbs = db.Column(db.Float)
-    leg2_avail_extra_fuel_lbs = db.Column(db.Float)
-    leg2_tank_tow_lbs = db.Column(db.Float)
     
     # Status and metadata
     status = db.Column(db.String(20), default='active')  # active, archived, draft

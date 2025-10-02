@@ -1,0 +1,70 @@
+{
+    "country_code": "BS",
+    "analysis_date": "2025-10-01T21:31:04.862418",
+    "results": {
+        "1": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for AVOCADO."
+        },
+        "2": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for GREEN ONIONS."
+        },
+        "3": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for GRANADILLA."
+        },
+        "4": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for GUANABANA."
+        },
+        "5": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PASSION FRUIT (PURPLE)."
+        },
+        "6": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for LIME."
+        },
+        "7": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for LULO."
+        },
+        "8": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for BLACKBERRY."
+        },
+        "9": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for ORANGE (TANGELO)."
+        },
+        "10": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for ORANGE (VALENCIA)."
+        },
+        "11": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PAPAYA."
+        },
+        "12": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PINEAPPLE."
+        },
+        "13": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for DRAGON FRUIT."
+        },
+        "14": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for PLANTAIN."
+        },
+        "15": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for TREE TOMATO."
+        },
+        "16": {
+            "status": "fail",
+            "tooltip": "An error occurred during AI analysis for UCHUVA."
+        }
+    }
+}

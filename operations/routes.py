@@ -270,20 +270,12 @@ def _create_route_from_leg_data(aircraft, from_airport, to_airport, leg_data, le
         total_flight_time_hours=safe_num(leg_data.get('flight_time_hours', 0)),
         total_adjusted_flight_time_hours=safe_num(leg_data.get('adjusted_flight_time_hours', 0)),
         total_fuel_gallons=safe_num(leg_data.get('fuel_gallons', 0)),
-        total_fuel_cost=safe_num(leg_data.get('fuel_cost', 0)),
         total_block_hours_cost=safe_num(leg_data.get('block_hours_cost', 0)),
+        total_fuel_cost=safe_num(leg_data.get('fuel_cost', 0)),
+        total_overflight_cost=safe_num(leg_data.get('overflight_cost', 0)),
         total_cost=safe_num(leg_data.get('total_leg_cost', 0)),
 
-        # Leg 1 route data (this record represents a single leg)
-        leg1_route=leg_data.get('route', ''),
-        leg1_distance=safe_num(leg_data.get('distance_nm', 0)),
-        leg1_flight_time=safe_num(leg_data.get('flight_time_hours', 0)),
-        leg1_route_fuel_gls=safe_num(leg_data.get('fuel_gallons', 0)),
-        leg1_bh_cost_usd=safe_num(leg_data.get('block_hours_cost', 0)),
-        leg1_fuel_cost_usd=safe_num(leg_data.get('fuel_cost', 0)),
-        leg1_total_cost_usd=safe_num(leg_data.get('total_leg_cost', 0)),
-
-        # Leg 1 payload data (this record represents a single leg)
+        # Payload data for the leg
         leg1_oew_lbs=safe_num(leg_payload.get('empty_weight_lbs', 0)),
         leg1_fuel_weight_lbs=safe_num(leg_payload.get('fuel_weight_lbs', 0)),
         leg1_max_payload_lbs=safe_num(leg_payload.get('max_payload_lbs', 0)),

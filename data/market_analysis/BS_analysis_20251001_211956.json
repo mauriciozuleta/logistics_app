@@ -1,0 +1,70 @@
+{
+    "country_code": "BS",
+    "analysis_date": "2025-10-01T21:19:56.604202",
+    "results": {
+        "1": {
+            "status": "restricted",
+            "tooltip": "While avocados aren't currently produced in the Bahamas, the existing produce market (including fruits like passion fruit and guava) suggests a potential, though likely limited, demand. The lack of established avocado production elsewhere in the Caribbean creates a market gap, but the Bahamas' smaller size and potentially higher import costs for specialty items could restrict initial uptake."
+        },
+        "2": {
+            "status": "restricted",
+            "tooltip": "While green onions aren't currently produced in the Bahamas, the existing produce market (avocado, guava, etc.) suggests a potentially low base demand. There's no obvious local competition, but importing green onions would face challenges due to unfamiliarity with the product and limited consumer preference \u2013 a 'niche' product likely requiring significant marketing investment to establish a sustainable market."
+        },
+        "3": {
+            "status": "restricted",
+            "tooltip": "While 'GRANADILLA' (a tropical fruit) isn't currently produced in the Bahamas, the existing produce market includes several similar fruits.  The potential demand is uncertain due to the lack of a pre-existing market and the need to demonstrate consumer appeal compared to more common tropical fruits like guava or mango, requiring targeted marketing and potentially significant import costs."
+        },
+        "4": {
+            "status": "restricted",
+            "tooltip": "While Guanabana is relatively unique among the listed imported products, the Bahamas market is already diverse in tropical fruits. There's no evidence of local production of Guanabana, but competition from other imported fruits like passion fruit, orange, and pineapple is high.  Demand could be niche, relying on consumer interest in exotic produce and potential tourism demand, requiring a targeted marketing strategy."
+        },
+        "5": {
+            "status": "restricted",
+            "tooltip": "While purple passion fruit is relatively rare, the Bahamas' existing produce imports suggest a limited, but potentially growing, interest in exotic fruits. Competition is minimal, but the market is already saturated with similar tropical fruits; success hinges on premium positioning (e.g., emphasizing unique flavor and origin) and effective marketing to a niche segment willing to pay a premium."
+        },
+        "6": {
+            "status": "restricted",
+            "tooltip": "While LIME (a produce item) isn't currently produced in the Bahamas, the presence of numerous related fruits suggests a potential but restricted market opportunity.  The lack of any locally grown alternatives means LIME would face competition from imported tropical fruits like guava, passion fruit, and dragon fruit, requiring a strong marketing strategy to differentiate and establish consumer preference.  Significant investment in import logistics and potentially higher pricing due to import costs would be necessary."
+        },
+        "7": {
+            "status": "restricted",
+            "tooltip": "While 'LULO' (passion fruit) is a recognized fruit, there's currently no locally produced passion fruit in the Bahamas, creating an initial opportunity. However, competition from other imported passion fruit varieties (particularly purple and traditional) and the overall market for exotic fruits is high, potentially limiting 'LULO\u2019s' market penetration and requiring significant marketing efforts to differentiate it."
+        },
+        "8": {
+            "status": "restricted",
+            "tooltip": "Given the lack of existing produce competition in the Bahamas market and considering the wide variety of tropical fruits already imported (including many similar in flavor profile), 'BLACKBERRY' faces significant hurdles. While there's potential demand for unique fruits, the product\u2019s relative unfamiliarity and potential higher import costs compared to established options will likely restrict its market entry success."
+        },
+        "9": {
+            "status": "restricted",
+            "tooltip": "While the Bahamas market lacks direct competition for 'ORANGE (TANGELO)' specifically, the presence of other citrus fruits like 'ORANGE (VALENCIA)' and the established local supply of 'LIME', 'LULO', and 'AVOCADO' indicates a potentially saturated citrus market.  Furthermore, the Bahamas already imports a wide variety of fruits, suggesting consumer preferences are well-established, making a successful launch challenging without a significant differentiation factor or targeted marketing."
+        },
+        "10": {
+            "status": "restricted",
+            "tooltip": "While 'ORANGE (Valencia)' is a desirable product, the Bahamas market currently lacks any orange production, meaning there's no direct local competition. However, several other citrus fruits are imported (Lime, Lulo, Tangelo), and the overall demand for specialty produce like Valencia oranges might be limited compared to more common fruits. Further market research would be needed to assess consumer willingness to pay a premium for this specific variety."
+        },
+        "11": {
+            "status": "restricted",
+            "tooltip": "While papaya isn't currently produced in the Bahamas, the limited range of imported fruits suggests a potentially restricted opportunity.  The availability of similar fruits like lulo, guava, and orange indicates a competitive landscape, and consumer preference for tropical fruits is likely already well-established. Further market research would be needed to assess specific demand and identify appropriate distribution channels."
+        },
+        "12": {
+            "status": "restricted",
+            "tooltip": "While pineapples are a globally traded fruit, the Bahamas currently doesn't have any listed local production of fresh pineapples. Existing imported fruits like avocado, passion fruit, and orange are relatively common. Demand could be present, particularly for a premium or unique tropical fruit, but establishing a viable market will require significant investment in distribution and marketing to differentiate 'PINEAPPLE' from other available imported options."
+        },
+        "13": {
+            "status": "restricted",
+            "tooltip": "While dragon fruit is a novel produce item in the Bahamas, the absence of any locally produced fruits suggests a potential market, but the limited list of imported options means competition is potentially high, particularly from established tropical fruits like pineapple and passion fruit. Furthermore, consumer familiarity with dragon fruit is likely low, requiring significant marketing investment to establish demand."
+        },
+        "14": {
+            "status": "restricted",
+            "tooltip": "While there's no readily available local competition for plantains, Bahamas' limited agricultural infrastructure and import-reliant food system suggest potential resistance. Plantains are not a staple crop in the Bahamas and lack established consumer familiarity, making market penetration challenging compared to other fruits readily available through imports. Further market research would be required to assess willingness to try a new produce item."
+        },
+        "15": {
+            "status": "restricted",
+            "tooltip": "While 'TREE TOMATO' offers a novel product within the existing Bahamian produce market, there's a significant reliance on imported fruits and vegetables. The Bahamas already imports many of the listed items, indicating established supply chains and consumer preferences, making market entry challenging without substantial marketing and potentially higher pricing to justify its origin from Vatican City State."
+        },
+        "16": {
+            "status": "restricted",
+            "tooltip": "UCHUVA, a tropical fruit, doesn't have any existing direct competition in the Bahamas market, as no similar produce is listed. However, the potential demand is uncertain given the limited range of imported fruits, suggesting a restricted market entry \u2013 further research is needed to determine if consumers would readily adopt a new exotic fruit and what the appropriate marketing strategy would be."
+        }
+    }
+}

@@ -12,7 +12,8 @@
               <a href="{{ url_for('coredata.regional_management') }}" class="btn btn-info" style="background-color: #00bcd4; border-color: #00bcd4; color: #fff; margin-right: 10px;">
                 ➕ Add Regional Manager
               </a>
-              <a href="{{ url_for('coredata.add_trader') }}" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff;">
+              <!-- The 'add_trader' route no longer exists, using regional_management instead -->
+              <a href="{{ url_for('coredata.regional_management') }}" class="btn btn-success" style="background-color: #176c3a; border: 1px solid #176c3a; color: #fff;">
                 ➕ Add Independent Trader
               </a>
             </div>

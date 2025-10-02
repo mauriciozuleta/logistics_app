@@ -1,0 +1,70 @@
+{
+    "country_code": "BS",
+    "analysis_date": "2025-10-01T21:16:01.811539",
+    "results": {
+        "1": {
+            "status": "fail",
+            "tooltip": "Ollama service error for AVOCADO: model 'llama3' not found"
+        },
+        "2": {
+            "status": "fail",
+            "tooltip": "Ollama service error for GREEN ONIONS: model 'llama3' not found"
+        },
+        "3": {
+            "status": "fail",
+            "tooltip": "Ollama service error for GRANADILLA: model 'llama3' not found"
+        },
+        "4": {
+            "status": "fail",
+            "tooltip": "Ollama service error for GUANABANA: model 'llama3' not found"
+        },
+        "5": {
+            "status": "fail",
+            "tooltip": "Ollama service error for PASSION FRUIT (PURPLE): model 'llama3' not found"
+        },
+        "6": {
+            "status": "fail",
+            "tooltip": "Ollama service error for LIME: model 'llama3' not found"
+        },
+        "7": {
+            "status": "fail",
+            "tooltip": "Ollama service error for LULO: model 'llama3' not found"
+        },
+        "8": {
+            "status": "fail",
+            "tooltip": "Ollama service error for BLACKBERRY: model 'llama3' not found"
+        },
+        "9": {
+            "status": "fail",
+            "tooltip": "Ollama service error for ORANGE (TANGELO): model 'llama3' not found"
+        },
+        "10": {
+            "status": "fail",
+            "tooltip": "Ollama service error for ORANGE (VALENCIA): model 'llama3' not found"
+        },
+        "11": {
+            "status": "fail",
+            "tooltip": "Ollama service error for PAPAYA: model 'llama3' not found"
+        },
+        "12": {
+            "status": "fail",
+            "tooltip": "Ollama service error for PINEAPPLE: model 'llama3' not found"
+        },
+        "13": {
+            "status": "fail",
+            "tooltip": "Ollama service error for DRAGON FRUIT: model 'llama3' not found"
+        },
+        "14": {
+            "status": "fail",
+            "tooltip": "Ollama service error for PLANTAIN: model 'llama3' not found"
+        },
+        "15": {
+            "status": "fail",
+            "tooltip": "Ollama service error for TREE TOMATO: model 'llama3' not found"
+        },
+        "16": {
+            "status": "fail",
+            "tooltip": "Ollama service error for UCHUVA: model 'llama3' not found"
+        }
+    }
+}
