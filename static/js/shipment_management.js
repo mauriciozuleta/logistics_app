@@ -967,14 +967,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         const exchangeRateField = document.getElementById('exchange_rate');
                         console.log('Exchange rate field element:', exchangeRateField);
                         
-                        if (exchangeRateField) {
-                            exchangeRateField.value = exchangeRateData.rate.toFixed(4);
-                            console.log(`Updated exchange rate: ${currencyCode} to USD = ${exchangeRateData.rate.toFixed(4)}`);
+                        if (exchangeRateField && exchangeRateData.rate > 0) {
+                            const directRate = exchangeRateData.rate;
+                            const inverseRate = 1 / directRate;
+
+                            const directRateStr = directRate.toFixed(4);
+                            const inverseRateStr = inverseRate.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+                            const displayText = `${directRateStr} usd / ${inverseRateStr} ${currencyCode.toLowerCase()}`;
+                            exchangeRateField.textContent = displayText;
+                            
+                            console.log(`Updated exchange rate display: ${displayText}`);
                             
                             // Hide manual search button if visible
                             const manualButton = document.getElementById('manual_exchange_search');
                             if (manualButton) {
-                                manualButton.style.display = 'none';
+                                manualButton.style.display = 'none'; // Hide button on success
                             }
                         } else {
                             console.error('Exchange rate field not found in DOM');
@@ -991,13 +999,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If currency is USD, set exchange rate to 1
                 const exchangeRateField = document.getElementById('exchange_rate');
                 if (exchangeRateField) {
-                    exchangeRateField.value = '1.0000';
+                    exchangeRateField.textContent = '1.0000 usd / 1.00 usd';
                     console.log('Currency is USD, set exchange rate to 1.0000');
                     
                     // Hide manual search button if visible
                     const manualButton = document.getElementById('manual_exchange_search');
                     if (manualButton) {
-                        manualButton.style.display = 'none';
+                        manualButton.style.display = 'none'; // Hide button on success
                     }
                 } else {
                     console.error('Exchange rate field not found in DOM');
@@ -1015,39 +1023,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function showManualExchangeRateOption(currencyCode) {
         const exchangeRateField = document.getElementById('exchange_rate');
         if (!exchangeRateField) return;
-        
-        // Set placeholder text
-        exchangeRateField.value = '';
-        exchangeRateField.placeholder = 'Search Manually for exchange rate';
-        
-        // Check if button already exists
-        let manualButton = document.getElementById('manual_exchange_search');
-        
-        // If button doesn't exist, create it
-        if (!manualButton) {
-            // Get the parent container of the exchange rate field
-            const container = exchangeRateField.parentElement;
-            
-            // Create button
-            manualButton = document.createElement('button');
-            manualButton.id = 'manual_exchange_search';
-            manualButton.type = 'button';
-            manualButton.className = 'btn btn-sm btn-primary ml-2';
-            manualButton.innerHTML = '<i class="fas fa-search"></i> Search';
-            manualButton.style.marginLeft = '10px';
-            
-            // Add event listener to the button
-            manualButton.addEventListener('click', function() {
-                // Open exchange rate search page in a new window/tab
-                window.open(`/operations/exchange_search?from_currency=${currencyCode}&to_currency=USD`, '_blank');
-            });
-            
-            // Add button after the exchange rate field
-            container.appendChild(manualButton);
-        } else {
-            // Update button visibility
-            manualButton.style.display = 'inline-block';
+
+        // Change the text to "Enter Manually" and make it clickable
+        exchangeRateField.textContent = 'Enter Manually';
+        exchangeRateField.style.cursor = 'pointer';
+        exchangeRateField.style.textDecoration = 'underline';
+
+        // Remove any existing click listener to avoid duplicates
+        if (exchangeRateField.manualSearchListener) {
+            exchangeRateField.removeEventListener('click', exchangeRateField.manualSearchListener);
         }
+
+        // Define the new listener
+        exchangeRateField.manualSearchListener = function() {
+            window.open(`/operations/exchange_search?from_currency=${currencyCode}&to_currency=USD`, '_blank', 'width=800,height=600');
+        };
+
+        // Add the new click listener
+        exchangeRateField.addEventListener('click', exchangeRateField.manualSearchListener);
     }
 
     // --- Calculation logic for product table ---
@@ -1085,10 +1078,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fcaCost = totalCost + exportTaxes + exporterProfit;
                 
                 // Calculate FCA USD (fcaCost * exchange_rate)
-                const exchangeRateField = document.getElementById('exchange_rate');
-                const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
-                const fcaUsd = fcaCost * exchangeRate;
+                const exchangeRateDiv = document.getElementById('exchange_rate');
+                let exchangeRate = 0;
+                if (exchangeRateDiv && exchangeRateDiv.textContent) {
+                    // Parse the rate from text like "0.0003 usd / 3,800 cop"
+                    const rateMatch = exchangeRateDiv.textContent.match(/^[0-9.]+/);
+                    exchangeRate = rateMatch ? parseFloat(rateMatch[0]) : 0;
+                }
                 
+                const fcaUsd = (exchangeRate > 0) ? fcaCost * exchangeRate : 0;
 
                 // Find the corresponding cells to update
                 const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
@@ -1272,10 +1270,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function recalculateAllFcaValues() {
         const rows = productTableContainer.querySelectorAll('tr');
         const exchangeRateField = document.getElementById('exchange_rate');
-        if (!productTableContainer || !exchangeRateField) {
+        if (!productTableContainer || !exchangeRateField || !exchangeRateField.textContent) {
             return;
         }
-        const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
+
+        let exchangeRate = 0;
+        if (exchangeRateField.textContent) {
+            // Parse the rate from text like "0.0003 usd / 3,800 cop"
+            const rateMatch = exchangeRateField.textContent.match(/^[0-9.]+/);
+            exchangeRate = rateMatch ? parseFloat(rateMatch[0]) : 0;
+        }
 
         rows.forEach(row => {
             const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
@@ -1315,7 +1319,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const exchangeRateField = document.getElementById('exchange_rate');
 
             if (exchangeRateField) {
-                exchangeRateField.value = rate;
+                // The field is a div, so we need to reconstruct the display text
+                if (rate && rate > 0) {
+                    const directRate = parseFloat(rate);
+                    const inverseRate = 1 / directRate;
+                    const directRateStr = directRate.toFixed(4);
+                    const inverseRateStr = inverseRate.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                    const displayText = `${directRateStr} usd / ${inverseRateStr} ${fromCurrency.toLowerCase()}`;
+                    exchangeRateField.textContent = displayText;
+                }
                 console.log(`Exchange rate updated from popup: ${fromCurrency} to ${toCurrency} = ${rate}`);
 
                 const manualButton = document.getElementById('manual_exchange_search');
@@ -1330,7 +1342,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listener to exchange rate field for manual changes
     const exchangeRateField = document.getElementById('exchange_rate');
     if (exchangeRateField) {
-        exchangeRateField.addEventListener('input', function() {
+        // Since it's a div, we can't use 'input'. We'll use a MutationObserver
+        // to detect when its content changes.
+        const observer = new MutationObserver(function(mutations) {
+            recalculateAllFcaValues();
+        });
+        observer.observe(exchangeRateField, { childList: true, characterData: true, subtree: true });
+        exchangeRateField.addEventListener('change', function() { // Fallback for any programmatic changes
             recalculateAllFcaValues();
         });
     }

@@ -21,19 +21,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-DEFAULT_BASE_CURRENCY = "USD"
-CACHE_EXPIRY_HOURS = 12  # Cache exchange rates for 12 hours
-
-# Cache for exchange rates to minimize API calls
-_exchange_rate_cache = {}
 
 
 def get_exchange_rate(
     from_currency: str, 
     to_currency: str, 
-    api_key: Optional[str] = None,
-    base_currency: str = DEFAULT_BASE_CURRENCY,
-    force_refresh: bool = False
+    api_key: Optional[str] = None
 ) -> float:
     """
     Get the exchange rate between two currencies.
@@ -42,8 +35,6 @@ def get_exchange_rate(
         from_currency: The source currency code (3-letter ISO code, e.g., "USD")
         to_currency: The target currency code (3-letter ISO code, e.g., "EUR")
         api_key: API key for the exchange rate service (optional)
-        base_currency: Base currency for exchange rates if direct conversion isn't available
-        force_refresh: Force refresh of exchange rate data even if cached
         
     Returns:
         The exchange rate as a float
@@ -60,58 +51,17 @@ def get_exchange_rate(
     if from_currency == to_currency:
         return 1.0
     
-    # Check cache first (unless forced refresh)
-    cache_key = f"{from_currency}_{to_currency}"
-    
-    if not force_refresh and cache_key in _exchange_rate_cache:
-        cache_entry = _exchange_rate_cache[cache_key]
-        cache_time = cache_entry['timestamp']
-        
-        # If cache is still valid (less than CACHE_EXPIRY_HOURS old)
-        if datetime.now() - cache_time < timedelta(hours=CACHE_EXPIRY_HOURS):
-            logger.debug(f"Using cached exchange rate for {cache_key}")
-            return cache_entry['rate']
-    
-    # Try multiple APIs in order of preference
+    # Use the primary API directly without fallbacks or caching.
     rate = None
-    error_messages = []
-    
-    # First try the Exchange Rate API
     try:
         rate = _get_rate_from_exchangerate_api(from_currency, to_currency, api_key)
     except Exception as e:
-        error_messages.append(f"ExchangeRate API error: {str(e)}")
-    
-    # If that fails, try Open Exchange Rates
-    if rate is None:
-        try:
-            rate = _get_rate_from_open_exchange_rates(from_currency, to_currency, api_key)
-        except Exception as e:
-            error_messages.append(f"Open Exchange Rates API error: {str(e)}")
-    
-    # If that fails, try European Central Bank
-    if rate is None:
-        try:
-            rate = _get_rate_from_ecb(from_currency, to_currency)
-        except Exception as e:
-            error_messages.append(f"ECB API error: {str(e)}")
-    
-    # If that fails, try static fallback
-    if rate is None:
-        try:
-            rate = _get_rate_from_static_fallback(from_currency, to_currency)
-        except Exception as e:
-            error_messages.append(f"Static fallback error: {str(e)}")
+        # If the primary API fails, raise an error immediately.
+        raise ConnectionError(f"Failed to get exchange rate from ExchangeRate-API: {e}") from e
     
     # If rate is still None, we couldn't get data from any API
     if rate is None:
-        raise ConnectionError(f"Failed to get exchange rate for {from_currency} to {to_currency}. Errors: {'; '.join(error_messages)}")
-    
-    # Cache the result
-    _exchange_rate_cache[cache_key] = {
-        'rate': rate,
-        'timestamp': datetime.now()
-    }
+        raise ConnectionError(f"ExchangeRate-API did not return a rate for {from_currency} to {to_currency}.")
     
     return rate
 
@@ -151,159 +101,11 @@ def _get_rate_from_exchangerate_api(from_currency: str, to_currency: str, api_ke
         return None
 
 
-def _get_rate_from_open_exchange_rates(
-    from_currency: str, 
-    to_currency: str, 
-    api_key: Optional[str] = None,
-    base_currency: str = DEFAULT_BASE_CURRENCY
-) -> Optional[float]:
-    """
-    Get exchange rate from Open Exchange Rates.
-    
-    API details: https://openexchangerates.org/
-    Free tier available with limited requests.
-    """
-    # Try to get API key from environment if not provided
-    if api_key is None:
-        api_key = os.environ.get('OPEN_EXCHANGE_RATES_API_KEY')
-    
-    # If still no API key, can't use this service
-    if not api_key:
-        logger.warning("No API key for Open Exchange Rates")
-        return None
-    
-    url = f"https://openexchangerates.org/api/latest.json?app_id={api_key}"
-    
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        
-        data = response.json()
-        
-        if 'rates' in data:
-            # Open Exchange Rates uses USD as base currency in free tier
-            # So convert to required rate using cross-rate calculation
-            rates = data['rates']
-            
-            if from_currency == 'USD':
-                # Direct USD to target conversion
-                if to_currency in rates:
-                    return rates[to_currency]
-            elif to_currency == 'USD':
-                # Direct source to USD conversion
-                if from_currency in rates:
-                    return 1.0 / rates[from_currency]
-            else:
-                # Cross-rate calculation
-                if from_currency in rates and to_currency in rates:
-                    return rates[to_currency] / rates[from_currency]
-        
-        logger.warning(f"Failed to get rate from Open Exchange Rates")
-        return None
-    
-    except requests.exceptions.RequestException as e:
-        logger.warning(f"Open Exchange Rates request failed: {str(e)}")
-        return None
-
-
-def _get_rate_from_ecb(from_currency: str, to_currency: str) -> Optional[float]:
-    """
-    Get exchange rate from European Central Bank.
-    
-    No API key needed, but only supports EUR-based conversions.
-    """
-    url = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
-    
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        
-        import xml.etree.ElementTree as ET
-        
-        # Parse XML response
-        root = ET.fromstring(response.content)
-        ns = {'ecb': 'http://www.ecb.int/vocabulary/2002-08-01/eurofxref'}
-        
-        # Extract rates
-        rates = {}
-        rates['EUR'] = 1.0  # Base currency
-        
-        for cube in root.findall('.//ecb:Cube[@currency]', ns):
-            currency = cube.attrib['currency']
-            rate = float(cube.attrib['rate'])
-            rates[currency] = rate
-        
-        # Calculate the exchange rate
-        if from_currency == 'EUR' and to_currency in rates:
-            return rates[to_currency]
-        elif to_currency == 'EUR' and from_currency in rates:
-            return 1.0 / rates[from_currency]
-        elif from_currency in rates and to_currency in rates:
-            # Cross-rate: from_currency to EUR to to_currency
-            return rates[to_currency] / rates[from_currency]
-        
-        logger.warning(f"ECB does not provide rate for {from_currency} to {to_currency}")
-        return None
-    
-    except Exception as e:
-        logger.warning(f"ECB request failed: {str(e)}")
-        return None
-
-
-def _get_rate_from_static_fallback(from_currency: str, to_currency: str) -> Optional[float]:
-    """
-    Get exchange rate from static fallback file.
-    
-    This is used as a last resort when all online APIs fail.
-    """
-    # Path to static exchange rates file
-    import os
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_dir, 'static_exchange_rates.json')
-    
-    try:
-        if not os.path.exists(file_path):
-            logger.warning(f"Static exchange rates file not found: {file_path}")
-            return None
-            
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-        
-        rates = data.get('rates', {})
-        
-        # Log available currencies for debugging
-        logger.debug(f"Static fallback available currencies: {', '.join(rates.keys())}")
-        
-        # All rates in the static file are relative to USD
-        if from_currency == 'USD' and to_currency in rates:
-            return rates[to_currency]
-        elif to_currency == 'USD' and from_currency in rates:
-            return 1.0 / rates[from_currency]
-        elif from_currency in rates and to_currency in rates:
-            # Cross-rate calculation
-            return rates[to_currency] / rates[from_currency]
-        
-        logger.warning(f"Static file does not provide rate for {from_currency} to {to_currency}")
-        return None
-    
-    except Exception as e:
-        logger.warning(f"Static fallback failed: {str(e)}")
-        return None
-
-
-def clear_cache() -> None:
-    """Clear the exchange rate cache."""
-    global _exchange_rate_cache
-    _exchange_rate_cache = {}
-    logger.info("Exchange rate cache cleared")
-
-
 def convert_amount(
     amount: float, 
     from_currency: str, 
     to_currency: str, 
-    api_key: Optional[str] = None,
-    force_refresh: bool = False
+    api_key: Optional[str] = None
 ) -> float:
     """
     Convert an amount from one currency to another.
@@ -313,12 +115,11 @@ def convert_amount(
         from_currency: The source currency code
         to_currency: The target currency code
         api_key: API key for exchange rate service (optional)
-        force_refresh: Force refresh of exchange rate data
         
     Returns:
         The converted amount as a float
     """
-    rate = get_exchange_rate(from_currency, to_currency, api_key, force_refresh=force_refresh)
+    rate = get_exchange_rate(from_currency, to_currency, api_key)
     return amount * rate
 
 
@@ -331,7 +132,6 @@ if __name__ == "__main__":
     parser.add_argument('--to', dest='to_currency', required=True, help='Target currency code (3-letter ISO)')
     parser.add_argument('--amount', type=float, default=1.0, help='Amount to convert (default: 1.0)')
     parser.add_argument('--api-key', help='API key for exchange rate service')
-    parser.add_argument('--refresh', action='store_true', help='Force refresh exchange rate data')
     
     args = parser.parse_args()
     
@@ -339,8 +139,7 @@ if __name__ == "__main__":
         rate = get_exchange_rate(
             args.from_currency, 
             args.to_currency, 
-            api_key=args.api_key,
-            force_refresh=args.refresh
+            api_key=args.api_key
         )
         
         converted = args.amount * rate

@@ -84,6 +84,12 @@
                             <input type="number" class="form-control" id="manualRate" step="0.0001" min="0.0001" required>
                             <small class="form-text text-muted">Enter the precise exchange rate</small>
                         </div>
+
+                        <div class="form-group">
+                            <label for="inverseRate">Inverse Rate (1 {{ to_currency }} = ? {{ from_currency }})</label>
+                            <input type="number" class="form-control" id="inverseRate" step="0.0001" min="0.0001" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                            <small class="form-text text-muted">This value is calculated automatically</small>
+                        </div>
                         
                         <button type="button" id="useRateBtn" class="btn btn-success btn-block">
                             <i class="fas fa-check"></i> Use This Rate
@@ -119,6 +125,7 @@
         const resultsContainer = document.getElementById('resultsContainer');
         const rateCards = document.getElementById('rateCards');
         const manualRateInput = document.getElementById('manualRate');
+        const inverseRateInput = document.getElementById('inverseRate');
         const useRateBtn = document.getElementById('useRateBtn');
         
         // Handle search form submission
@@ -177,6 +184,16 @@
                 });
             } catch (error) {
                 rateCards.innerHTML = `<div class="alert alert-danger">Error fetching exchange rates: ${error.message}</div>`;
+            }
+        });
+
+        // Handle automatic inverse rate calculation
+        manualRateInput.addEventListener('input', function() {
+            const rate = parseFloat(this.value);
+            if (rate && rate > 0) {
+                inverseRateInput.value = (1 / rate).toFixed(4);
+            } else {
+                inverseRateInput.value = '';
             }
         });
         
