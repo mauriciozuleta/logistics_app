@@ -206,8 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (returnPayloadField) returnPayloadField.value = data.payload_kg || '';
                     // Calculate and populate route cost
                     let totalCost = 0;
-                    if (data.leg1_total_cost_usd) totalCost += data.leg1_total_cost_usd;
-                    if (data.airport_fee) totalCost += data.airport_fee;
+                    if (data.total_cost) totalCost += data.total_cost; // Use the correct field 'total_cost'
+                    if (data.airport_fee) totalCost += data.airport_fee; 
                     if (data.turnaround_cost) totalCost += data.turnaround_cost;
                     if (returnRouteCostField) {
                         returnRouteCostField.value = totalCost ? ('$' + totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '';
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Sum both route cost values and populate total flight cost
                     const outboundRouteCostField = document.getElementById('route_cost');
                     const totalFlightCostDisplay = document.getElementById('total_flight_cost_display');
-                    let outboundCost = outboundRouteCostField && outboundRouteCostField.value ? parseFloat(outboundRouteCostField.value) : 0;
+                    let outboundCost = outboundRouteCostField ? parseNumber(outboundRouteCostField.value) : 0;
                     let returnCost = totalCost ? totalCost : 0;
                     let totalFlightCost = outboundCost + returnCost;
                     if (totalFlightCostDisplay) {
@@ -550,7 +550,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 availablePayloadField.value = data.payload_kg || '';
-                routeCostField.value = data.route_cost || '';
+                if (data.route_cost) {
+                    routeCostField.value = '$' + data.route_cost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } else {
+                    routeCostField.value = '';
+                }
             });
         // Get selected aircraft type from route name
         const selectedOption = departureRouteSelect.options[departureRouteSelect.selectedIndex];

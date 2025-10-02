@@ -44,13 +44,13 @@ def route_details():
 
     # Convert payload to kg
     payload_kg = None
-    if route.leg1_max_payload_lbs is not None:
-        payload_kg = round(route.leg1_max_payload_lbs / 2.2, 2)
+    if route.leg1_max_payload_lbs is not None: # This field is still correct from the model refactor
+        payload_kg = round(route.leg1_max_payload_lbs * 0.453592, 2)
 
     # Calculate route cost
     route_cost = None
-    if route.leg1_total_cost_usd is not None and airport.airport_fee is not None and airport.turnaround_cost is not None:
-        route_cost = round(route.leg1_total_cost_usd + airport.airport_fee + airport.turnaround_cost, 2)
+    if route.total_cost is not None and airport.airport_fee is not None and airport.turnaround_cost is not None:
+        route_cost = round(route.total_cost + airport.airport_fee + airport.turnaround_cost, 2)
 
     return jsonify({
         'payload_kg': payload_kg,
@@ -58,7 +58,7 @@ def route_details():
         'cargo_handling_cost': airport.cargo_handling_cost_kg,
         'airport_fee': airport.airport_fee,
         'turnaround_cost': airport.turnaround_cost,
-        'leg1_total_cost_usd': route.leg1_total_cost_usd
+        'total_cost': route.total_cost
     })
 
 @operations_api_new.route('/return-routes')
