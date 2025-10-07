@@ -24,9 +24,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_exchange_rate(
-    from_currency: str, 
-    to_currency: str, 
-    api_key: Optional[str] = None
+    from_currency: str,
+    to_currency: str,
+    api_key: Optional[str] = None,
+    force_refresh: bool = False
 ) -> float:
     """
     Get the exchange rate between two currencies.
@@ -35,7 +36,7 @@ def get_exchange_rate(
         from_currency: The source currency code (3-letter ISO code, e.g., "USD")
         to_currency: The target currency code (3-letter ISO code, e.g., "EUR")
         api_key: API key for the exchange rate service (optional)
-        
+        force_refresh: If True, ignore any cached data and fetch fresh from the API (currently unused)
     Returns:
         The exchange rate as a float
     
@@ -95,7 +96,8 @@ def _get_rate_from_exchangerate_api(from_currency: str, to_currency: str, api_ke
         else:
             logger.warning(f"ExchangeRate-API error: {data.get('error', 'Unknown error')}")
             return None
-    
+            # Build the API URL for v6.exchangerate-api.com
+            url = f"https://v6.exchangerate-api.com/v6/{api_key}/latest/{from_currency}"
     except requests.exceptions.RequestException as e:
         logger.warning(f"ExchangeRate-API request failed: {str(e)}")
         return None
