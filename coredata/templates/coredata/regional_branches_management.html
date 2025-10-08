@@ -7,18 +7,6 @@
         <div class="card-body" style="color: #fff;">
           <h2 class="mb-4" style="color: #2196f3; text-align: center;">Regional Trade Management</h2>
           <form>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              const form = document.querySelector('form');
-              if (form) {
-                form.addEventListener('keydown', function(e) {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                  }
-                });
-              }
-            });
-          </script>
             <div class="mb-4">
               <div id="regional-info-card" class="card" style="background-color: #23272e; border: 1px solid #2196f3; border-radius: 8px; margin-bottom: 1rem;">
                 <div class="card-body">
@@ -43,11 +31,7 @@
                       <div class="section-divider country-divider" style="height:1px;background-color:#FF5C00;margin-top:4px;margin-bottom:12px;clear:both;"></div>
                     </div>
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                      <label for="country" class="form-label" style="color:#fff;font-weight:500;margin-bottom:0;">Country</label>
-                        <select id="country" name="country" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #2196f3;display:inline-block;width:250px;">
-                        <option value="">Select Country</option>
-                        <!-- Add country options here as needed -->
-                      </select>
+                      <!-- Country dropdown removed: now handled by Available/Create Country above -->
                     </div>
                     <div id="country-extra-fields" style="display:flex;gap:12px;flex-wrap:nowrap;align-items:flex-end;">
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
@@ -78,12 +62,32 @@
                         <label for="country-import-profit" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Country Import Profit (%)</label>
                         <input type="text" class="form-control mb-2" id="country-import-profit" placeholder="Country Import Profit (%)" style="width:150px;">
                       </div>
-                      <div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;">
-                        <button type="button" class="btn btn-success btn-sm mb-2" id="add-country-branch-btn" style="width: 250px; background: none; border: 2px solid #FF5C00; color: #FF5C00; font-weight: bold;">Add country Branch</button>
+                      <div style="display:flex;flex-direction:row;align-items:flex-end;gap:8px;">
+                        <button type="button" class="btn btn-success btn-sm mb-2" id="add-country-branch-btn" style="min-width: 120px; max-width: 140px; background: none; border: 2px solid #FF5C00; color: #FF5C00; font-weight: bold;">Add Branch</button>
+                        <button type="button" class="btn btn-primary btn-sm mb-2" id="edit-country-branch-btn" style="min-width: 70px; max-width: 90px; background: none; border: 2px solid #2196f3; color: #2196f3; font-weight: bold;">Edit</button>
                       </div>
                     </div>
                   </div>
-                  <!-- New container for additional fields -->
+                  
+                  <!-- Branches container (yellow bordered container) -->
+                  <div class="mt-3 p-3 w-100" style="background-color:#23272e;border:2px solid yellow;border-radius:8px;min-height:60px;width:100%;box-sizing:border-box;">
+                    <div style="margin-bottom:8px;">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span style="color:yellow;font-size:1.2rem;font-weight:bold;">Branches</span>
+                        <div>
+                          <a href="#" id="products-competitiveness-btn" class="btn btn-info btn-sm" style="background-color: #00bcd4; border-color: #00bcd4; color: #fff; margin-right: 10px; display: none;" target="_blank">Products competitiveness</a>
+                          <button type="button" class="btn btn-outline-warning btn-sm" id="toggle-branches">Hide</button>
+                        </div>
+                      </div>
+                      <div class="section-divider branches-divider" style="height:1px;background-color:yellow;margin-top:4px;margin-bottom:12px;clear:both;"></div>
+                    </div>
+                    <!-- Container for branch list items -->
+                    <div id="country-branches-list">
+                      <span style="color:#FF5C00;">Select a country to see available branches.</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Branch Information container moved below Branches -->
                   <div class="mt-4 p-3 w-100" style="background-color:#23272e;border:1px solid #FF5C00;border-radius:8px;width:100%;box-sizing:border-box;">
                     <div style="margin-bottom:8px;">
                       <span style="color:#FF5C00;font-size:1.2rem;font-weight:bold;">Branch Information</span>
@@ -103,7 +107,6 @@
                       </div>
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
                         <label for="terminal" class="form-label" style="color:#fff;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:150px;">Terminal</label>
-                        <!-- JS moved to bottom of page for safety -->
                         <input type="text" class="form-control mb-2" id="terminal" placeholder="Terminal" style="width:150px;">
                       </div>
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
@@ -119,603 +122,274 @@
                         <input type="text" class="form-control mb-2" id="year-operation-cost" placeholder="Year Operation Cost" style="width:150px;">
                       </div>
                     </div>
-                  </div>
-                  <!-- Empty yellow bordered container -->
-                  <div style="width:100%;display:flex;justify-content:center;margin:24px 0;">
-                    <button type="button" class="btn btn-primary btn-lg" id="save-branch-btn" style="font-weight:bold;min-width:200px;">Save</button>
-                  </div>
-                  <div class="mt-3 p-3 w-100" style="background-color:#23272e;border:2px solid yellow;border-radius:8px;min-height:60px;width:100%;box-sizing:border-box;">
-                    <div style="margin-bottom:8px;">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <span style="color:yellow;font-size:1.2rem;font-weight:bold;">Branches</span>
-                        <div>
-                          <a href="#" id="products-competitiveness-btn" class="btn btn-info btn-sm" style="background-color: #00bcd4; border-color: #00bcd4; color: #fff; margin-right: 10px; display: none;" target="_blank">Products competitiveness</a>
-                          <button type="button" class="btn btn-outline-warning btn-sm" id="toggle-branches">Hide</button>
-                        </div>
-                      </div>
-                      <div class="section-divider branches-divider" style="height:1px;background-color:yellow;margin-top:4px;margin-bottom:12px;clear:both;"></div>
+                    <!-- Branch Save button -->
+                    <div style="width:100%;display:flex;justify-content:center;margin:24px 0;">
+                      <button type="button" class="btn btn-primary btn-lg" id="save-branch-btn" style="font-weight:bold;min-width:200px;">Save</button>
                     </div>
+                  </div>
+                  
+                  <!-- Add the main container save button -->
+                  <div style="width:100%;display:flex;justify-content:center;margin:24px 0;">
+                    <button type="button" class="btn btn-success btn-lg" id="save-country-info-btn" style="font-weight:bold;min-width:200px;background:none;border:3px solid #4caf50;color:#4caf50;display:none;">Save Country Information</button>
                   </div>
                 </div>
               </div>
             </div>
           </form>
-          <script>
-// --- IATA lookup for port name and city ---
-document.addEventListener('DOMContentLoaded', function() {
-  var iataInput = document.getElementById('terminal'); // Use terminal as IATA input
-  var portNameInput = document.getElementById('port-name');
-  var cityInput = document.getElementById('city');
-  var countrySelect = document.getElementById('country');
-  if (iataInput && portNameInput && cityInput && countrySelect) {
-    iataInput.addEventListener('blur', async function() {
-      const iataCode = iataInput.value.trim().toUpperCase();
-      if (!iataCode || iataCode.length !== 3) return;
-      const countryCode = countrySelect.value;
-      try {
-        const response = await fetch(`/coredata/api/find_airports_for_city?iata=${encodeURIComponent(iataCode)}&country_code=${encodeURIComponent(countryCode)}`);
-        const airports = await response.json();
-        if (airports.length > 0) {
-          const airport = airports[0];
-          portNameInput.value = airport.name || '';
-          cityInput.value = airport.city || '';
-        }
-      } catch (error) {
-        console.error('Error fetching airport by IATA:', error);
-      }
-    });
-  }
-});
-            document.getElementById('save-branch-btn').addEventListener('click', function() {
-              const freightType = document.getElementById('freight-type').value;
-              let airport_iata = '';
-              let port_code = '';
-              let ground_terminal_code = '';
-              const terminalValue = document.getElementById('terminal').value;
-              // Always use the IATA code entered for airport_iata if Air is selected
-              if (freightType === 'Air') {
-                airport_iata = document.getElementById('terminal').value.trim().toUpperCase();
-              } else if (freightType === 'Sea') {
-                port_code = terminalValue;
-              } else if (freightType === 'Ground') {
-                ground_terminal_code = terminalValue;
-              }
-              const payload = {
-                region: document.getElementById('region').value,
-                manager_name: document.getElementById('new-manager-name') ? document.getElementById('new-manager-name').value : '',
-                country_id: document.getElementById('country').value, // country code, not name
-                export_sales_tax: document.getElementById('export-sales-tax').value,
-                export_other_taxes: document.getElementById('export-other-tax').value,
-                export_profit_pct: document.getElementById('country-profit').value,
-                revenue_taxes: document.getElementById('country-revenue-tax').value,
-                import_taxes: document.getElementById('import-taxes').value,
-                other_taxes: document.getElementById('other-taxes').value,
-                import_profit_pct: document.getElementById('country-import-profit').value,
-                type_of_freight: freightType,
-                airport_iata: airport_iata,
-                port_code: port_code,
-                ground_terminal_code: ground_terminal_code,
-                port_name: document.getElementById('port-name').value,
-                city: document.getElementById('city').value,
-                year_operation_cost: document.getElementById('year-operation-cost').value
-              };
-              fetch('/coredata/save_branch', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-              })
-              .then(res => res.json())
-              .then(data => {
-                if (data.success) {
-                  alert('Branch saved!');
-                  // Clear form fields
-                  [
-                    'export-sales-tax', 'export-other-tax', 'country-profit', 'country-revenue-tax',
-                    'import-taxes', 'other-taxes', 'country-import-profit',
-                    'freight-type', 'terminal', 'port-name', 'city', 'year-operation-cost'
-                  ].forEach(id => {
-                    const field = document.getElementById(id);
-                    if (field) {
-                      if (field.tagName === 'SELECT') {
-                        field.selectedIndex = 0;
-                      } else {
-                        field.value = '';
-                      }
-                    }
-                  });
-
-                  // Fetch and display available branches for the selected country in the yellow container
-                  const countryCode = document.getElementById('country').value;
-                  fetch(`/coredata/api/branches_by_country?country_code=${encodeURIComponent(countryCode)}`)
-                    .then(res => res.json())
-                    .then(branches => {
-                      let display = '';
-                      if (branches.length > 0) {
-                        display = '<h5 style="color:#FF5C00;">Available Branches:</h5>';
-                        display += '<ul style="color:#fff;">';
-                        branches.forEach(b => {
-                          display += `<li>City: ${b.city || '-'}, Airport Name: ${b.port_name || '-'}, IATA: ${b.airport_iata || '-'}</li>`;
-                        });
-                        display += '</ul>';
-                      } else {
-                        display = '<span style="color:#FF5C00;">No branches found for this country.</span>';
-                      }
-                      // Insert into yellow container below the title
-                      const yellowContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid yellow"]');
-                      if (yellowContainer) {
-                        // Find or create a display div
-                        let branchListDiv = yellowContainer.querySelector('#country-branches-list');
-                        if (!branchListDiv) {
-                          branchListDiv = document.createElement('div');
-                          branchListDiv.id = 'country-branches-list';
-                          yellowContainer.appendChild(branchListDiv);
-                        }
-                        branchListDiv.innerHTML = display;
-                      }
-                    });
-                } else {
-                  alert('Error saving branch: ' + (data.error || 'Unknown error'));
-                }
-              });
-            });
-            document.addEventListener('DOMContentLoaded', function() {
-              // Change font color of label as type of return selection changes
-              var typeOfReturnSelect = document.getElementById('return-type');
-              var typeOfReturnLabel = document.querySelector('label[for="return-type"]');
-              if (typeOfReturnSelect && typeOfReturnLabel) {
-                typeOfReturnSelect.addEventListener('change', function() {
-                  if (typeOfReturnSelect.value) {
-                    typeOfReturnLabel.style.color = '#4caf50'; // green
-                  } else {
-                    typeOfReturnLabel.style.color = '#fff';
-                  }
-                });
-              }
-              // Helper to show/hide country warning
-              function showCountryWarning(msg) {
-                const warningDiv = document.getElementById('country-warning');
-                warningDiv.textContent = msg;
-                warningDiv.style.display = 'block';
-              }
-              function hideCountryWarning() {
-                const warningDiv = document.getElementById('country-warning');
-                warningDiv.textContent = '';
-                warningDiv.style.display = 'none';
-              }
-              // Helper to show/hide manager warning
-              function showManagerWarning(msg) {
-                const warningDiv = document.getElementById('manager-warning');
-                warningDiv.textContent = msg;
-                warningDiv.style.display = 'block';
-              }
-              function hideManagerWarning() {
-                const warningDiv = document.getElementById('manager-warning');
-                warningDiv.textContent = '';
-                warningDiv.style.display = 'none';
-              }
-              // Enable branch info fields helper
-              function enableBranchFields() {
-                const branchFields = [
-                  'freight-type', 'terminal', 'port-name', 'city', 'year-operation-cost'
-                ];
-                branchFields.forEach(id => {
-                  const field = document.getElementById(id);
-                  if (field) field.disabled = false;
-                });
-              }
-              // Hide all toggleable sections at page launch
-              const countryInfoContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]');
-              const branchInfoContainer = document.querySelector('.mt-4.p-3.w-100[style*="border:1px solid #FF5C00"]');
-              const branchesContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid yellow"]');
-              function hideSection(container) {
-                if (!container) return;
-                // Find the wrapper div containing the divider
-                const wrapper = Array.from(container.children).find(child =>
-                  child.querySelector && child.querySelector('.section-divider')
-                );
-                if (!wrapper) return;
-                // All siblings after the wrapper
-                let found = false;
-                Array.from(container.children).forEach(el => {
-                  if (found) el.style.display = 'none';
-                  if (el === wrapper) found = true;
-                });
-              }
-              hideSection(countryInfoContainer);
-              hideSection(branchInfoContainer);
-              hideSection(branchesContainer);
-              // Toggle buttons for containers
-              function setupToggle(containerSelector, toggleBtnId, dividerClass) {
-                const container = document.querySelector(containerSelector);
-                const toggleBtn = document.getElementById(toggleBtnId);
-                if (!container || !toggleBtn) return;
-                // Find the wrapper div containing the divider
-                const wrapper = Array.from(container.children).find(child =>
-                  child.querySelector && child.querySelector('.' + dividerClass)
-                );
-                if (!wrapper) return;
-                // All siblings after the wrapper
-                const contentEls = [];
-                let found = false;
-                Array.from(container.children).forEach(el => {
-                  if (found) contentEls.push(el);
-                  if (el === wrapper) found = true;
-                });
-                let hidden = false;
-                toggleBtn.addEventListener('click', function() {
-                  hidden = !hidden;
-                  contentEls.forEach(function(el) {
-                    if (!hidden) {
-                      // Restore flex layout for known row containers
-                      if (el.id === 'country-extra-fields' || el.classList.contains('branch-row-fields')) {
-                        el.style.display = 'flex';
-                        el.style.alignItems = 'flex-end';
-                        el.style.gap = '12px';
-                        el.style.flexWrap = 'nowrap';
-                      } else {
-                        el.style.display = '';
-                      }
-                    } else {
-                      el.style.display = 'none';
-                    }
-                  });
-                  toggleBtn.textContent = hidden ? 'Show' : 'Hide';
-                });
-              }
-              setupToggle('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]', 'toggle-country-info', 'country-divider');
-              // Unhide branch info section and enable fields when 'Add country Branch' is clicked
-              document.addEventListener('click', function(e) {
-                if (e.target && e.target.id === 'add-country-branch-btn') {
-                  // Check if a country is selected
-                  const countryDropdown = document.getElementById('country');
-                  if (!countryDropdown || !countryDropdown.value) {
-                    showCountryWarning('Please select a country before adding a branch.');
-                    return;
-                  } else {
-                    hideCountryWarning();
-                  }
-
-                  // Check required fields for warning
-                  const profit = document.getElementById('country-profit').value.trim();
-                  const revenueTax = document.getElementById('country-revenue-tax').value.trim();
-                  const importTaxes = document.getElementById('import-taxes').value.trim();
-                  if (!profit || !revenueTax || !importTaxes) {
-                    showCountryWarning('Please enter Country Profit, Country Revenue Tax, and Import Taxes before adding a branch.');
-                    return;
-                  } else {
-                    hideCountryWarning();
-                  }
-
-                  // Unhide branch info section
-                  if (branchInfoContainer) {
-                    const wrapper = Array.from(branchInfoContainer.children).find(child =>
-                      child.querySelector && child.querySelector('.section-divider')
-                    );
-                    if (wrapper) {
-                      let found = false;
-                      Array.from(branchInfoContainer.children).forEach(el => {
-                        if (found) {
-                          // Restore flex layout for known row containers
-                          if (el.classList.contains('branch-row-fields')) {
-                            el.style.display = 'flex';
-                            el.style.alignItems = 'flex-end';
-                            el.style.gap = '12px';
-                            el.style.flexWrap = 'nowrap';
-                          } else {
-                            el.style.display = '';
-                          }
-                        }
-                        if (el === wrapper) found = true;
-                      });
-                    }
-                  }
-                  enableBranchFields();
-                }
-              });
-              // Unhide country info section when 'Continue to Country / Branch' is clicked
-              document.addEventListener('click', function(e) {
-                if (e.target && e.target.id === 'continue-country-btn') {
-                  // Check if manager input exists and is empty
-                  const managerInput = document.getElementById('new-manager-name');
-                  if (managerInput && managerInput.value.trim() === '') {
-                    showManagerWarning('Please enter a Regional Manager name before continuing.');
-                    return;
-                  } else {
-                    hideManagerWarning();
-                  }
-                  // Unhide country info section
-                  if (countryInfoContainer) {
-                    const wrapper = Array.from(countryInfoContainer.children).find(child =>
-                      child.querySelector && child.querySelector('.section-divider')
-                    );
-                    if (wrapper) {
-                      let found = false;
-                      Array.from(countryInfoContainer.children).forEach(el => {
-                        if (found) {
-                          // Restore flex layout for known row containers
-                          if (el.id === 'country-extra-fields') {
-                            el.style.display = 'flex';
-                            el.style.alignItems = 'flex-end';
-                            el.style.gap = '12px';
-                            el.style.flexWrap = 'nowrap';
-                          } else {
-                            el.style.display = '';
-                          }
-                        }
-                        if (el === wrapper) found = true;
-                      });
-                    }
-                  }
-                }
-              });
-              setupToggle('.mt-4.p-3.w-100[style*="border:1px solid #FF5C00"]', 'toggle-branch-info', 'branch-divider');
-              setupToggle('.mt-3.p-3.w-100[style*="border:2px solid yellow"]', 'toggle-branches', 'branches-divider');
-              const regionDropdown = document.getElementById('region');
-              const managerInfoContainer = document.getElementById('manager-info-container');
-              const countryDropdown = document.getElementById('country');
-              const addCountryInfoBtn = document.getElementById('add-country-branch-btn');
-              // Input fields in green container
-              const countryFields = [
-                'export-sales-tax', 'export-other-tax', 'country-profit', 'country-revenue-tax',
-                'import-taxes', 'other-taxes', 'country-import-profit'
-              ];
-              const fieldHandlers = {}; // To store event handlers for removal
-
-              // Disable fields initially
-              addCountryInfoBtn.disabled = true;
-              countryFields.forEach(id => {
-                const field = document.getElementById(id);
-                field.disabled = true;
-                // ...existing code...
-                // Add dropdown for type_of_freight and Terminal input field
-                if (id === 'type-of-freight') {
-                  // Remove any previous dropdown
-                  let oldDropdown = document.getElementById('type-of-freight-dropdown');
-                  if (oldDropdown) oldDropdown.remove();
-                  let dropdown = document.createElement('select');
-                  dropdown.id = 'type-of-freight-dropdown';
-                  dropdown.className = 'form-control';
-                  dropdown.style.marginBottom = '10px';
-                  ['Air', 'Sea', 'Ground', 'Multi-modal'].forEach(opt => {
-                    let option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    dropdown.appendChild(option);
-                  });
-                  field.parentNode.insertBefore(dropdown, field);
-                  field.style.display = 'none';
-                  // Terminal input field
-                  let terminalInput = document.createElement('input');
-                  terminalInput.type = 'text';
-                  terminalInput.id = 'terminal';
-                  terminalInput.className = 'form-control';
-                  terminalInput.placeholder = 'Terminal';
-                  terminalInput.style.marginBottom = '10px';
-                  dropdown.parentNode.insertBefore(terminalInput, dropdown.nextSibling);
-                }
-              });
-
-              function fetchRegionalManager(region) {
-                return fetch(`/coredata/api/regional_manager_by_region?region=${encodeURIComponent(region)}`)
-                  .then(res => {
-                    if (!res.ok) {
-                      console.error('Error fetching manager:', res.status, res.statusText);
-                      return {};
-                    }
-                    return res.json();
-                  })
-                  .catch(err => {
-                    console.error('Fetch error:', err);
-                    return {};
-                  });
-              }
-              function fetchCountries(region) {
-                return fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(region)}`)
-                  .then(res => res.json());
-              }
-              function fetchCountryBranch(countryCode) {
-                return fetch(`/coredata/api/country_branch_info?country_code=${encodeURIComponent(countryCode)}`)
-                  .then(res => res.json());
-              }
-
-              regionDropdown.addEventListener('change', async function() {
-                const selectedRegion = regionDropdown.value;
-                managerInfoContainer.innerHTML = '';
-                countryDropdown.innerHTML = '<option value="">Select Country</option>';
-                document.getElementById('country').disabled = true;
-                addCountryInfoBtn.disabled = true;
-                if (!selectedRegion) return;
-
-                let managerData = await fetchRegionalManager(selectedRegion);
-                console.log('Manager data received:', managerData); // Debug: log manager data
-                let managerLabel = '<label style="color:#fff;font-weight:500;display:block;margin-bottom:4px;">Regional Manager</label>';
-                let managerContent = '';
-                
-                // More flexible check for manager name in various formats
-                const managerName = managerData && (
-                  managerData.manager_name || 
-                  managerData.name || 
-                  (managerData.manager && managerData.manager.name) || 
-                  ''
-                );
-                
-                if (managerName) {
-                  // Show existing manager name
-                  managerContent = `<span style='color:#4caf50;font-weight:bold;'>${managerName}</span>`;
-                } else {
-                  // Show input for new manager
-                  managerContent = `<input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:200px;display:inline-block;margin-right:10px;background-color:#fff;color:#000;' placeholder='Enter manager name'>`;
-                }
-                let continueBtn = `<button type='button' class='btn btn-primary btn-sm' id='continue-country-btn' style='margin-left:10px;'>Continue to Country / Branch</button>`;
-                managerInfoContainer.innerHTML = managerLabel + '<div style="display:flex;align-items:center;gap:10px;">' + managerContent + continueBtn + '</div>';
-
-                let countries = await fetchCountries(selectedRegion);
-                if (countries && countries.length > 0) {
-                  countries.forEach(c => {
-                    // Patch: Use correct field names from backend response
-                    let opt = document.createElement('option');
-                    opt.value = c.code || c.country_code;
-                    opt.textContent = c.name || c.country_name;
-                    countryDropdown.appendChild(opt);
-                  });
-                }
-
-                setTimeout(function() {
-                  const continueBtn = document.getElementById('continue-country-btn');
-                  const managerInput = document.getElementById('new-manager-name');
-                  if (managerInput) {
-                    managerInput.addEventListener('input', function() {
-                      if (managerInput.value.trim() !== '') {
-                        managerInput.style.setProperty('background-color', 'transparent', 'important');
-                        managerInput.style.setProperty('color', '#fff', 'important');
-                      } else {
-                        managerInput.style.setProperty('background-color', '#fff', 'important');
-                        managerInput.style.setProperty('color', '#000', 'important');
-                      }
-                    });
-                  }
-                  if (continueBtn) {
-                    continueBtn.onclick = function() {
-                      countryDropdown.disabled = false;
-                      addCountryInfoBtn.disabled = false;
-                    };
-                  }
-                }, 0);
-              });
-
-              countryDropdown.addEventListener('change', async function() {
-                const selectedCountry = countryDropdown.value;
-                // Reset all fields and remove old listeners
-                countryFields.forEach(id => {
-                  const field = document.getElementById(id);
-                  field.value = '';
-                  field.style.backgroundColor = 'transparent';
-                  field.style.color = '#fff';
-                  field.disabled = true;
-                  if (fieldHandlers[id]) {
-                    field.removeEventListener('input', fieldHandlers[id]);
-                    delete fieldHandlers[id];
-                  }
-                });
-                if (!selectedCountry) return;
-
-                // Display available branches for selected country
-                fetch(`/coredata/api/branches_by_country?country_code=${encodeURIComponent(selectedCountry)}`)
-                  .then(res => res.json())
-                  .then(branches => {
-                    let display = '';
-                    if (branches.length > 0) {
-                      display = '<h5 style="color:#FF5C00;">Available Branches:</h5>';
-                      display += '<ul style="color:#fff;">';
-                      branches.forEach(b => {
-                        display += `<li>City: ${b.city || '-'}, Airport Name: ${b.port_name || '-'}, IATA: ${b.airport_iata || '-'}</li>`;
-                      });
-                      display += '</ul>';
-                    } else {
-                      display = '<span style="color:#FF5C00;">No branches found for this country.</span>';
-                    }
-                    // Insert into yellow container below the title
-                    const yellowContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid yellow"]');
-                    if (yellowContainer) {
-                      // Find or create a display div
-                      let branchListDiv = yellowContainer.querySelector('#country-branches-list');
-                      if (!branchListDiv) {
-                        branchListDiv = document.createElement('div');
-                        branchListDiv.id = 'country-branches-list';
-                        yellowContainer.appendChild(branchListDiv);
-                      }
-                      branchListDiv.innerHTML = display;
-                    }
-                  });
-
-                // Enable all country info fields when a country is selected
-                  let branchInfo = await fetchCountryBranch(selectedCountry);
-                  console.log("Received branch info:", branchInfo); // Debug to see what's coming back
-
-                  // Map backend keys to frontend input IDs
-                  const backendToFrontend = {
-                    export_sales_tax: 'export-sales-tax',
-                    export_other_taxes: 'export-other-tax',
-                    export_profit_pct: 'country-profit',
-                    revenue_taxes: 'country-revenue-tax',
-                    import_taxes: 'import-taxes',
-                    other_taxes: 'other-taxes',
-                    import_profit_pct: 'country-import-profit'
-                  };
-
-                  // Always populate fields with values from the backend
-                  // If backend says record exists, use the values returned (will be 0 if null)
-                  // If no record exists, fields will be 0 and editable
-                  Object.entries(backendToFrontend).forEach(([backendKey, inputId]) => {
-                    const field = document.getElementById(inputId);
-                    if (field) {
-                      field.value = branchInfo[backendKey];
-                    }
-                  });
-
-                  // Enable or disable fields based on whether a record exists
-                  countryFields.forEach(id => {
-                    const field = document.getElementById(id);
-                    if (branchInfo.exists) {
-                      // If record exists, disable the fields
-                      field.disabled = true;
-                      field.style.backgroundColor = 'transparent';
-                      field.style.color = '#fff';
-                    } else {
-                      // No record exists, enable the fields for input
-                      field.disabled = false;
-                      field.style.setProperty('background-color', '#fff', 'important');
-                      field.style.setProperty('color', '#000', 'important');
-                      const handleInput = function() {
-                        if (field.value.trim() !== '') {
-                          field.style.setProperty('background-color', 'transparent', 'important');
-                          field.style.setProperty('color', '#fff', 'important');
-                        } else {
-                          field.style.setProperty('background-color', '#fff', 'important');
-                          field.style.setProperty('color', '#000', 'important');
-                        }
-                      };
-                      field.addEventListener('input', handleInput);
-                      fieldHandlers[id] = handleInput;
-                    }
-                  });
-              });
-
-              addCountryInfoBtn.addEventListener('click', function() {
-                countryFields.forEach(id => {
-                  const field = document.getElementById(id);
-                  field.disabled = false;
-                });
-              });
-
-              // --- Products Competitiveness Button Logic ---
-              const competitivenessBtn = document.getElementById('products-competitiveness-btn');
-              countryDropdown.addEventListener('change', function() {
-                const selectedCountryName = this.options[this.selectedIndex]?.text;
-                if (selectedCountryName && this.value) {
-                  competitivenessBtn.href = `{{ url_for('coredata.competitive_prices') }}?country=${encodeURIComponent(selectedCountryName)}`;
-                  competitivenessBtn.style.display = 'inline-block';
-                } else {
-                  competitivenessBtn.style.display = 'none';
-                }
-              });
-              addCountryInfoBtn.addEventListener('click', function() {
-                countryFields.forEach(id => {
-                  const field = document.getElementById(id);
-                  field.disabled = false;
-                });
-              });
-            });
-          </script>
         </div>
       </div>
     </div>
   </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  var freightType = document.getElementById('freight-type');
-  var terminalLabel = document.querySelector('label[for="terminal"]');
+  // Prevent form submission on Enter key
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+      }
+    });
+  }
+  
+  // Initialize variables
+  const countryFields = [
+    'export-sales-tax', 'export-other-tax', 'country-profit', 
+    'country-revenue-tax', 'import-taxes', 'other-taxes', 
+    'country-import-profit'
+  ];
+  
+  // Global state variables
+  window._isEditMode = false;
+  window._editingBranchId = null;
+  window._lastBranches = [];
+  let isEditMode = false;
+  const fieldHandlers = {};
+  
+  // Get DOM elements
+  const regionDropdown = document.getElementById('region');
+  const managerInfoContainer = document.getElementById('manager-info-container');
+  const addCountryInfoBtn = document.getElementById('add-country-branch-btn');
+  const editBtn = document.getElementById('edit-country-branch-btn');
+  const saveCountryInfoBtn = document.getElementById('save-country-info-btn');
+  const saveBranchBtn = document.getElementById('save-branch-btn');
+  const competitivenessBtn = document.getElementById('products-competitiveness-btn');
+  
+  // Create a hidden country dropdown for JS logic if it doesn't exist
+  let countryDropdown = document.getElementById('country');
+  if (!countryDropdown) {
+    countryDropdown = document.createElement('select');
+    countryDropdown.id = 'country';
+    countryDropdown.style.display = 'none';
+    document.body.appendChild(countryDropdown);
+  }
+  
+  // Disable fields initially
+  addCountryInfoBtn.disabled = true;
+  countryFields.forEach(id => {
+    const field = document.getElementById(id);
+    if (field) field.disabled = true;
+  });
+
+  // --- API Functions ---
+  function fetchRegionalManager(region) {
+    return fetch(`/coredata/api/regional_manager_by_region?region=${encodeURIComponent(region)}`)
+      .then(res => {
+        if (!res.ok) {
+          console.error('Error fetching manager:', res.status, res.statusText);
+          return {};
+        }
+        return res.json();
+      })
+      .catch(err => {
+        console.error('Fetch error:', err);
+        return {};
+      });
+  }
+  
+  function fetchCountries(region) {
+    return fetch(`/coredata/api/countries_by_region?region=${encodeURIComponent(region)}`)
+      .then(res => res.json());
+  }
+  
+  function fetchCountryBranch(countryCode) {
+    return fetch(`/coredata/api/country_branch_info?country_code=${encodeURIComponent(countryCode)}`)
+      .then(res => res.json());
+  }
+
+  // --- Helper Functions ---
+  function enableCountryInfoEditButton() {
+    if (editBtn) {
+      editBtn.onclick = function() {
+        // Set global edit mode and show visual confirmation
+        window._isEditMode = true;
+        isEditMode = true;
+        alert('Edit mode enabled - fields are now editable');
+        
+        // Show the save button
+        if (saveCountryInfoBtn) {
+          saveCountryInfoBtn.style.display = 'block';
+        }
+        
+        // Enable all country fields
+        countryFields.forEach(id => {
+          const field = document.getElementById(id);
+          if (field) {
+            field.disabled = false;
+            field.removeAttribute('disabled');
+            field.style.setProperty('background-color', '#fff', 'important');
+            field.style.setProperty('color', '#000', 'important');
+            field.style.pointerEvents = 'auto';
+            field.style.border = '2px solid #2196f3';
+          }
+        });
+      };
+    }
+  }
+  
+  // Helper to show/hide country warning
+  function showCountryWarning(msg) {
+    const warningDiv = document.getElementById('country-warning');
+    if (warningDiv) {
+      warningDiv.textContent = msg;
+      warningDiv.style.display = 'block';
+    }
+  }
+  
+  function hideCountryWarning() {
+    const warningDiv = document.getElementById('country-warning');
+    if (warningDiv) {
+      warningDiv.textContent = '';
+      warningDiv.style.display = 'none';
+    }
+  }
+  
+  // Helper to show/hide manager warning
+  function showManagerWarning(msg) {
+    const warningDiv = document.getElementById('manager-warning');
+    if (warningDiv) {
+      warningDiv.textContent = msg;
+      warningDiv.style.display = 'block';
+    }
+  }
+  
+  function hideManagerWarning() {
+    const warningDiv = document.getElementById('manager-warning');
+    if (warningDiv) {
+      warningDiv.textContent = '';
+      warningDiv.style.display = 'none';
+    }
+  }
+  
+  // Enable branch info fields helper
+  function enableBranchFields() {
+    const branchFields = [
+      'freight-type', 'terminal', 'port-name', 'city', 'year-operation-cost'
+    ];
+    branchFields.forEach(id => {
+      const field = document.getElementById(id);
+      if (field) field.disabled = false;
+    });
+  }
+
+  // Section visibility helpers
+  const countryInfoContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]');
+  const branchInfoContainer = document.querySelector('.mt-4.p-3.w-100[style*="border:1px solid #FF5C00"]');
+  const branchesContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid yellow"]');
+  
+  function hideSection(container) {
+    if (!container) return;
+    // Find the wrapper div containing the divider
+    const wrapper = Array.from(container.children).find(child =>
+      child.querySelector && child.querySelector('.section-divider')
+    );
+    if (!wrapper) return;
+    // All siblings after the wrapper
+    let found = false;
+    Array.from(container.children).forEach(el => {
+      if (found) el.style.display = 'none';
+      if (el === wrapper) found = true;
+    });
+  }
+  
+  function unhideSection(container) {
+    if (!container) return;
+    const wrapper = Array.from(container.children).find(child =>
+      child.querySelector && child.querySelector('.section-divider')
+    );
+    if (!wrapper) return;
+    let found = false;
+    Array.from(container.children).forEach(el => {
+      if (found) {
+        if (el.id === 'country-extra-fields' || el.classList?.contains('branch-row-fields')) {
+          el.style.display = 'flex';
+          el.style.alignItems = 'flex-end';
+          el.style.gap = '12px';
+          el.style.flexWrap = 'nowrap';
+        } else {
+          el.style.display = '';
+        }
+      }
+      if (el === wrapper) found = true;
+    });
+  }
+  
+  // Set up toggle buttons for sections
+  function setupToggle(containerSelector, toggleBtnId, dividerClass) {
+    const container = document.querySelector(containerSelector);
+    const toggleBtn = document.getElementById(toggleBtnId);
+    if (!container || !toggleBtn) return;
+    // Find the wrapper div containing the divider
+    const wrapper = Array.from(container.children).find(child =>
+      child.querySelector && child.querySelector('.' + dividerClass)
+    );
+    if (!wrapper) return;
+    // All siblings after the wrapper
+    const contentEls = [];
+    let found = false;
+    Array.from(container.children).forEach(el => {
+      if (found) contentEls.push(el);
+      if (el === wrapper) found = true;
+    });
+    let hidden = false;
+    toggleBtn.addEventListener('click', function() {
+      hidden = !hidden;
+      contentEls.forEach(function(el) {
+        if (!hidden) {
+          // Restore flex layout for known row containers
+          if (el.id === 'country-extra-fields' || el.classList.contains('branch-row-fields')) {
+            el.style.display = 'flex';
+            el.style.alignItems = 'flex-end';
+            el.style.gap = '12px';
+            el.style.flexWrap = 'nowrap';
+          } else {
+            el.style.display = '';
+          }
+        } else {
+          el.style.display = 'none';
+        }
+      });
+      toggleBtn.textContent = hidden ? 'Show' : 'Hide';
+    });
+  }
+
+  // Hide all sections initially
+  hideSection(countryInfoContainer);
+  hideSection(branchInfoContainer);
+  hideSection(branchesContainer);
+  
+  // Set up toggle buttons
+  setupToggle('.mt-3.p-3.w-100[style*="border:2px solid #4caf50"]', 'toggle-country-info', 'country-divider');
+  setupToggle('.mt-4.p-3.w-100[style*="border:1px solid #FF5C00"]', 'toggle-branch-info', 'branch-divider');
+  setupToggle('.mt-3.p-3.w-100[style*="border:2px solid yellow"]', 'toggle-branches', 'branches-divider');
+  
+  // --- Event Handlers ---
+  
+  // Change label for terminal based on freight type
+  const freightType = document.getElementById('freight-type');
+  const terminalLabel = document.querySelector('label[for="terminal"]');
   if (freightType && terminalLabel) {
     freightType.addEventListener('change', function() {
       switch (freightType.value) {
@@ -737,6 +411,588 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  
+  // IATA lookup for port name and city
+  const iataInput = document.getElementById('terminal');
+  const portNameInput = document.getElementById('port-name');
+  const cityInput = document.getElementById('city');
+  if (iataInput && portNameInput && cityInput && countryDropdown) {
+    iataInput.addEventListener('blur', async function() {
+      const iataCode = iataInput.value.trim().toUpperCase();
+      if (!iataCode || iataCode.length !== 3) return;
+      const countryCode = countryDropdown.value;
+      try {
+        const response = await fetch(`/coredata/api/find_airports_for_city?iata=${encodeURIComponent(iataCode)}&country_code=${encodeURIComponent(countryCode)}`);
+        const airports = await response.json();
+        if (airports.length > 0) {
+          const airport = airports[0];
+          portNameInput.value = airport.name || '';
+          cityInput.value = airport.city || '';
+        }
+      } catch (error) {
+        console.error('Error fetching airport by IATA:', error);
+      }
+    });
+  }
+  
+  // Region change handler
+  regionDropdown.addEventListener('change', async function() {
+    const selectedRegion = regionDropdown.value;
+    managerInfoContainer.innerHTML = '';
+    countryDropdown.innerHTML = '<option value="">Select Country</option>';
+    countryDropdown.disabled = true;
+    addCountryInfoBtn.disabled = true;
+    if (!selectedRegion) return;
+
+    // Ensure country info section becomes visible when region is chosen
+    unhideSection(countryInfoContainer);
+
+    let managerData = await fetchRegionalManager(selectedRegion);
+    let managerLabel = '<label style="color:#fff;font-weight:500;display:block;margin-bottom:4px;">Regional Manager</label>';
+    let managerContent = '';
+    
+    // More flexible check for manager name in various formats
+    const managerName = managerData && (
+      managerData.manager_name || 
+      managerData.name || 
+      (managerData.manager && managerData.manager.name) || 
+      ''
+    );
+    
+    if (managerName) {
+      // Show existing manager name
+      managerContent = `<span style='color:#4caf50;font-weight:bold;'>${managerName}</span>`;
+    } else {
+      // Show input for new manager
+      managerContent = `<input type='text' id='new-manager-name' class='form-control d-inline-block' style='width:200px;display:inline-block;margin-right:10px;background-color:#fff;color:#000;' placeholder='Enter manager name'>`;
+    }
+    managerInfoContainer.innerHTML = managerLabel + `
+      <div id="manager-country-row" style="display:flex;align-items:flex-end;gap:24px;flex-wrap:nowrap;min-width:700px;width:100%;overflow-x:auto;margin-top:2px;">
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;min-width:220px;">
+          ${managerContent}
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;min-width:220px;">
+          <label for="available-countries" style="color:#fff;font-weight:500;font-size:13px;margin-bottom:4px;">Available Countries</label>
+          <select id="available-countries" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #2196f3;min-width:200px;max-width:260px;">
+            <option value="">Select Country</option>
+            <option value="--create--">-- Create New Country --</option>
+          </select>
+        </div>
+        <div id="create-country-wrapper" style="display:none;flex-direction:column;justify-content:flex-end;min-width:220px;">
+          <label for="create-country" style="color:#fff;font-weight:500;font-size:13px;margin-bottom:4px;">Create Country</label>
+          <select id="create-country" class="form-control" style="background-color:#23272e;color:#fff;border:1px solid #FF5C00;min-width:200px;max-width:260px;">
+            <option value="">-- Select --</option>
+          </select>
+        </div>
+      </div>
+      <style>
+      @media (max-width: 800px) {
+        #manager-country-row {
+          flex-wrap: wrap !important;
+          min-width: 0 !important;
+        }
+      }
+      </style>
+    `;
+
+    let countries = await fetchCountries(selectedRegion);
+    const availableSelect = document.getElementById('available-countries');
+    const createSelect = document.getElementById('create-country');
+    if (countries && countries.length > 0) {
+      for (const c of countries) {
+        const countryCode = c.code || c.country_code;
+        const countryName = c.name || c.country_name;
+        let branchInfo = await fetchCountryBranch(countryCode);
+        if (branchInfo && branchInfo.exists) {
+          const opt1 = document.createElement('option');
+          opt1.value = countryCode; opt1.textContent = countryName; availableSelect.appendChild(opt1);
+          const optHidden = document.createElement('option');
+          optHidden.value = countryCode; optHidden.textContent = countryName; countryDropdown.appendChild(optHidden);
+        } else {
+          const opt2 = document.createElement('option');
+          opt2.value = countryCode; opt2.textContent = countryName; createSelect.appendChild(opt2);
+        }
+      }
+    }
+    
+    // Sync handlers: selecting from either updates the master #country select
+    if (availableSelect) {
+      // If there's at least one available country, select the first one by default
+      if (availableSelect.options.length > 1 && availableSelect.options[1].value !== '--create--') {
+          availableSelect.selectedIndex = 1; // Select the first actual country
+          availableSelect.dispatchEvent(new Event('change'));
+      }
+      const createCountryWrapper = document.getElementById('create-country-wrapper');
+      availableSelect.addEventListener('change', function() {
+        if (this.value === '--create--') {
+          // Show the "Create Country" dropdown
+          if (createCountryWrapper) createCountryWrapper.style.display = 'flex';
+          countryDropdown.value = ''; // Clear master selection
+          hideSection(branchesContainer); // Hide branches when creating a new country
+        } else if (this.value) {
+          // A real country was selected
+          if (createCountryWrapper) createCountryWrapper.style.display = 'none';
+          countryDropdown.value = this.value;
+          createSelect.value = '';
+          countryDropdown.dispatchEvent(new Event('change'));
+        } else {
+          // If 'Select Country' is chosen, clear selection and hide branches
+          countryDropdown.value = '';
+          hideSection(branchesContainer);
+        }
+      });
+    }
+    
+    if (createSelect) {
+      createSelect.addEventListener('change', function() {
+        if (this.value) {
+          countryDropdown.value = this.value;
+          availableSelect.value = '';
+          // Enable country info fields for creation (since no existing record)
+          countryFields.forEach(id => {
+            const field = document.getElementById(id);
+            field.disabled = false;
+            field.style.setProperty('background-color', '#fff', 'important');
+            field.style.setProperty('color', '#000', 'important');
+          });
+          countryDropdown.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+    
+    // If no countries appended, show an informational message
+    if (countryDropdown.options.length === 1) { // only placeholder
+      showCountryWarning('No countries in this region have trade information yet.');
+    } else {
+      hideCountryWarning();
+    }
+    
+    // Enable country dropdown and add-country-branch button immediately after region selection
+    countryDropdown.disabled = false;
+    addCountryInfoBtn.disabled = false;
+    
+    // Reset edit mode
+    isEditMode = false;
+    window._isEditMode = false;
+    
+    // Hide save button
+    if (saveCountryInfoBtn) {
+      saveCountryInfoBtn.style.display = 'none';
+    }
+    
+    enableCountryInfoEditButton();
+    
+    // Handle manager input field
+    const managerInput = document.getElementById('new-manager-name');
+    if (managerInput) {
+      managerInput.addEventListener('input', function() {
+        if (managerInput.value.trim() !== '') {
+          managerInput.style.setProperty('background-color', 'transparent', 'important');
+          managerInput.style.setProperty('color', '#fff', 'important');
+        } else {
+          managerInput.style.setProperty('background-color', '#fff', 'important');
+          managerInput.style.setProperty('color', '#000', 'important');
+        }
+      });
+    }
+  });
+
+  // Country change handler
+  countryDropdown.addEventListener('change', async function() {
+    const selectedCountry = countryDropdown.value;
+    // Reset all fields and remove old listeners
+    countryFields.forEach(id => {
+      const field = document.getElementById(id);
+      if (field) {
+        field.value = '';
+        field.style.backgroundColor = 'transparent';
+        field.style.color = '#fff';
+        field.disabled = true;
+        if (fieldHandlers[id]) {
+          field.removeEventListener('input', fieldHandlers[id]);
+          delete fieldHandlers[id];
+        }
+      }
+    });
+    
+    // Reset edit mode
+    isEditMode = false;
+    window._isEditMode = false;
+    
+    // Hide save button
+    if (saveCountryInfoBtn) {
+      saveCountryInfoBtn.style.display = 'none';
+    }
+    
+
+    if (!selectedCountry) {
+      hideSection(branchesContainer);
+      return;
+    }
+
+    // Always show the branches container when a country is selected
+    unhideSection(branchesContainer);
+
+    // Display available branches for selected country
+    fetch(`/coredata/api/branches_by_country?country_code=${encodeURIComponent(selectedCountry)}`)
+      .then(res => res.json())
+      .then(branches => {
+        let display = '';
+        if (branches.length > 0) {
+          // Store branches for later reference
+          window._lastBranches = branches;
+          
+          display = '<h5 style="color:#FF5C00;">Available Branches:</h5>';
+          display += '<ul style="color:#fff;list-style:none;padding-left:0;">';
+          branches.forEach((b, idx) => {
+            display += `
+              <li style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:5px;border-radius:4px;background-color:#2a2e35;">
+                <div style="display:flex;gap:5px;">
+                  <button type="button" class="btn btn-outline-primary btn-sm branch-edit-btn" data-idx="${idx}" title="Edit" style="padding:2px 8px;font-size:12px;">✎</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm branch-delete-btn" data-idx="${idx}" title="Delete" style="padding:2px 8px;font-size:12px;">🗑</button>
+                </div>
+                <span>City: ${b.city || '-'}, Airport Name: ${b.port_name || '-'}, IATA: ${b.airport_iata || '-'}</span>
+              </li>`;
+          });
+          display += '</ul>';
+        } else {
+          display = '<span style="color:#FF5C00;">No branches found for this country.</span>';
+        }
+        
+        // Insert into yellow container
+        const yellowContainer = document.querySelector('.mt-3.p-3.w-100[style*="border:2px solid yellow"]');
+        if (yellowContainer) {
+          // Find or create a display div
+          let branchListDiv = yellowContainer.querySelector('#country-branches-list');
+          if (!branchListDiv) {
+            branchListDiv = document.createElement('div');
+            branchListDiv.id = 'country-branches-list';
+            yellowContainer.appendChild(branchListDiv);
+          }
+          branchListDiv.innerHTML = display;
+        }
+      });
+
+    // Set up country info fields based on selected country
+    let branchInfo = await fetchCountryBranch(selectedCountry);
+    console.log("Received branch info:", branchInfo);
+
+    // Map backend keys to frontend input IDs
+    const backendToFrontend = {
+      export_sales_tax: 'export-sales-tax',
+      export_other_taxes: 'export-other-tax',
+      export_profit_pct: 'country-profit',
+      revenue_taxes: 'country-revenue-tax',
+      import_taxes: 'import-taxes',
+      other_taxes: 'other-taxes',
+      import_profit_pct: 'country-import-profit'
+    };
+
+    // Always populate fields with values from the backend
+    Object.entries(backendToFrontend).forEach(([backendKey, inputId]) => {
+      const field = document.getElementById(inputId);
+      if (field) {
+        field.value = branchInfo[backendKey];
+      }
+    });
+
+    // Enable or disable fields based on whether a record exists
+    countryFields.forEach(id => {
+      const field = document.getElementById(id);
+      if (field) {
+        // Check both local and global edit mode flags
+        if (branchInfo.exists && !isEditMode && !window._isEditMode) {
+          // If record exists and NOT in edit mode, disable the fields
+          field.disabled = true;
+          field.style.backgroundColor = 'transparent';
+          field.style.color = '#fff';
+        } else {
+          // Either no record exists OR in edit mode, enable the fields for input
+          field.disabled = false;
+          field.style.setProperty('background-color', '#fff', 'important');
+          field.style.setProperty('color', '#000', 'important');
+          // If in edit mode, add visual indicator
+          if (isEditMode || window._isEditMode) {
+            field.style.border = '2px solid #2196f3';
+          }
+          
+          // Handle input field changes
+          const handleInput = function() {
+            if (field.value.trim() !== '') {
+              field.style.setProperty('background-color', 'transparent', 'important');
+              field.style.setProperty('color', '#fff', 'important');
+            } else {
+              field.style.setProperty('background-color', '#fff', 'important');
+              field.style.setProperty('color', '#000', 'important');
+            }
+          };
+          field.addEventListener('input', handleInput);
+          fieldHandlers[id] = handleInput;
+        }
+      }
+    });
+    
+    // Update competitiveness button URL
+    const selectedCountryName = this.options[this.selectedIndex]?.text;
+    if (selectedCountryName && this.value && competitivenessBtn) {
+      competitivenessBtn.href = `{{ url_for('coredata.competitive_prices') }}?country=${encodeURIComponent(selectedCountryName)}`;
+      competitivenessBtn.style.display = 'inline-block';
+    } else if (competitivenessBtn) {
+      competitivenessBtn.style.display = 'none';
+    }
+    
+    enableCountryInfoEditButton();
+  });
+
+  // Branch edit/delete button handlers (event delegation)
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('branch-edit-btn')) {
+      const idx = e.target.getAttribute('data-idx');
+      if (window._lastBranches && window._lastBranches[idx]) {
+        const b = window._lastBranches[idx];
+        // Set branch info fields with data from the selected branch
+        document.getElementById('freight-type').value = b.type_of_freight || '';
+        document.getElementById('terminal').value = b.airport_iata || b.port_code || b.ground_terminal_code || '';
+        document.getElementById('port-name').value = b.port_name || '';
+        document.getElementById('city').value = b.city || '';
+        document.getElementById('year-operation-cost').value = b.operational_cost_year || '';
+
+        // Store the branch ID for reference when saving
+        window._editingBranchId = b.id;
+
+        // Enable all fields for editing
+        ['freight-type','terminal','port-name','city','year-operation-cost'].forEach(id => {
+          const field = document.getElementById(id);
+          if (field) {
+            field.disabled = false;
+            field.style.setProperty('background-color', '#fff', 'important');
+            field.style.setProperty('color', '#000', 'important');
+          }
+        });
+
+        // Always expand the Branch Information container when editing
+        if (branchInfoContainer) {
+          unhideSection(branchInfoContainer);
+          // Ensure the section is visible (not hidden)
+          const toggleBtn = document.getElementById('toggle-branch-info');
+          if (toggleBtn && toggleBtn.textContent.trim() === 'Show') {
+            toggleBtn.click(); // Show the section if it's hidden
+          }
+
+          // Highlight the branch info container to indicate editing mode
+          branchInfoContainer.style.borderColor = '#4caf50';
+          branchInfoContainer.style.borderWidth = '3px';
+          branchInfoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Change the save button text to indicate update
+          if (saveBranchBtn) {
+            saveBranchBtn.textContent = 'Update Branch';
+            saveBranchBtn.setAttribute('data-mode', 'update');
+          }
+
+          // Show a notification
+          alert('Branch information loaded for editing. Scroll down to the Branch Information section to make changes.');
+        }
+      }
+    }
+    
+    if (e.target.classList.contains('branch-delete-btn')) {
+      const idx = e.target.getAttribute('data-idx');
+      if (window._lastBranches && window._lastBranches[idx]) {
+        const b = window._lastBranches[idx];
+        if (confirm('Are you sure you want to delete this branch?')) {
+          fetch('/coredata/api/delete_branch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ branch_id: b.id })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Branch deleted!');
+              countryDropdown.dispatchEvent(new Event('change'));
+            } else {
+              alert('Error deleting branch: ' + (data.error || 'Unknown error'));
+            }
+          });
+        }
+      }
+    }
+    
+    if (e.target && e.target.id === 'add-country-branch-btn') {
+      // Check if a country is selected
+      if (!countryDropdown || !countryDropdown.value) {
+        showCountryWarning('Please select a country before adding a branch.');
+        return;
+      } else {
+        hideCountryWarning();
+      }
+
+      // Check required fields for warning
+      const profit = document.getElementById('country-profit').value.trim();
+      const revenueTax = document.getElementById('country-revenue-tax').value.trim();
+      const importTaxes = document.getElementById('import-taxes').value.trim();
+      if (!profit || !revenueTax || !importTaxes) {
+        showCountryWarning('Please enter Country Profit, Country Revenue Tax, and Import Taxes before adding a branch.');
+        return;
+      } else {
+        hideCountryWarning();
+      }
+
+      // Unhide branch info section and enable fields
+      unhideSection(branchInfoContainer);
+      enableBranchFields();
+    }
+  });
+  
+  // Save branch button handler
+  if (saveBranchBtn) {
+    saveBranchBtn.addEventListener('click', function() {
+      // Get values from form
+      const freightType = document.getElementById('freight-type').value;
+      let airport_iata = '';
+      let port_code = '';
+      let ground_terminal_code = '';
+      const terminalValue = document.getElementById('terminal').value;
+      
+      // Always use the IATA code entered for airport_iata if Air is selected
+      if (freightType === 'Air') {
+        airport_iata = terminalValue.trim().toUpperCase();
+      } else if (freightType === 'Sea') {
+        port_code = terminalValue;
+      } else if (freightType === 'Ground') {
+        ground_terminal_code = terminalValue;
+      }
+      
+      // Check if we're updating or creating
+      const isUpdate = this.getAttribute('data-mode') === 'update';
+      
+      // Create the payload
+      const payload = {
+        region: document.getElementById('region').value,
+        manager_name: document.getElementById('new-manager-name') ? document.getElementById('new-manager-name').value : '',
+        country_id: countryDropdown.value, // country code, not name
+        export_sales_tax: document.getElementById('export-sales-tax').value,
+        export_other_taxes: document.getElementById('export-other-tax').value,
+        export_profit_pct: document.getElementById('country-profit').value,
+        revenue_taxes: document.getElementById('country-revenue-tax').value,
+        import_taxes: document.getElementById('import-taxes').value,
+        other_taxes: document.getElementById('other-taxes').value,
+        import_profit_pct: document.getElementById('country-import-profit').value,
+        type_of_freight: freightType,
+        airport_iata: airport_iata,
+        port_code: port_code,
+        ground_terminal_code: ground_terminal_code,
+        port_name: document.getElementById('port-name').value,
+        city: document.getElementById('city').value,
+        year_operation_cost: document.getElementById('year-operation-cost').value
+      };
+      
+      // If updating, add the branch_id
+      if (isUpdate && window._editingBranchId) {
+        payload.branch_id = window._editingBranchId;
+      }
+      
+      // Determine which endpoint to use
+      const endpoint = isUpdate ? '/coredata/api/update_branch' : '/coredata/save_branch';
+      
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert(isUpdate ? 'Branch updated!' : 'Branch saved!');
+          
+          // Reset all branch form fields
+          ['freight-type', 'terminal', 'port-name', 'city', 'year-operation-cost'].forEach(id => {
+            const field = document.getElementById(id);
+            if (field) {
+              if (field.tagName === 'SELECT') {
+                field.selectedIndex = 0;
+              } else {
+                field.value = '';
+              }
+              // Reset styling
+              field.style.backgroundColor = 'transparent';
+              field.style.color = '#fff';
+            }
+          });
+          
+          // Reset branch info container styling
+          if (branchInfoContainer) {
+            branchInfoContainer.style.borderColor = '#FF5C00';
+            branchInfoContainer.style.borderWidth = '1px';
+          }
+          
+          // Reset the button to create mode
+          this.textContent = 'Save';
+          this.removeAttribute('data-mode');
+          
+          // Clear the editing branch ID
+          window._editingBranchId = null;
+          
+          // Refresh the branch display
+          countryDropdown.dispatchEvent(new Event('change'));
+        } else {
+          alert('Error saving branch: ' + (data.error || 'Unknown error'));
+        }
+      });
+    });
+  }
+  
+  // Save country info button handler
+  if (saveCountryInfoBtn) {
+    saveCountryInfoBtn.addEventListener('click', function() {
+      if (!countryDropdown.value) {
+        alert('Please select a country first');
+        return;
+      }
+      
+      // Create payload with updated values
+      const payload = {
+        country_id: countryDropdown.value,
+        export_sales_tax: document.getElementById('export-sales-tax').value,
+        export_other_taxes: document.getElementById('export-other-tax').value,
+        export_profit_pct: document.getElementById('country-profit').value,
+        revenue_taxes: document.getElementById('country-revenue-tax').value,
+        import_taxes: document.getElementById('import-taxes').value,
+        other_taxes: document.getElementById('other-taxes').value,
+        import_profit_pct: document.getElementById('country-import-profit').value
+      };
+      
+      // Send update request to server
+      fetch('/coredata/update_country_info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Country information updated successfully!');
+          // Reset edit mode
+          window._isEditMode = false;
+          isEditMode = false;
+          // Hide save button
+          saveCountryInfoBtn.style.display = 'none';
+          // Refresh data by triggering country change event
+          countryDropdown.dispatchEvent(new Event('change'));
+        } else {
+          alert('Error updating country information: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error updating country info:', error);
+        alert('Error saving data. Please check console for details.');
+      });
+    });
+  }
+  
+  // Initialize Edit button handler
+  enableCountryInfoEditButton();
 });
 </script>
 {% endblock %}

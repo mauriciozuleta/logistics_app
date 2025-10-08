@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from extensions import db
 
@@ -137,6 +136,7 @@ class Branch(BaseModel):
     name = db.Column(db.String(128), nullable=True)
     type_of_freight = db.Column(db.String(64), nullable=True)
     airport_iata = db.Column(db.String(3), nullable=True)
+    port_code = db.Column(db.String(64), nullable=True)
     ground_terminal_code = db.Column(db.String(64), nullable=True)
 
     def __repr__(self):

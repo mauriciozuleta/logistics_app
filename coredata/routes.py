@@ -24,9 +24,14 @@ def branches_by_country():
     if cti:
         for b in cti.branches:
             result.append({
+                'id': b.id,
                 'city': b.city,
                 'port_name': b.name,
-                'airport_iata': b.airport_iata
+                'airport_iata': b.airport_iata,
+                'port_code': b.port_code,
+                'ground_terminal_code': b.ground_terminal_code,
+                'type_of_freight': b.type_of_freight,
+                'operational_cost_year': b.operational_cost_year
             })
     return jsonify(result)
 
@@ -77,14 +82,104 @@ def country_branch_info():
 
 # ...existing code...
 
-@coredata_bp.route('/country_branch', methods=['GET', 'POST'])
-def country_branch():
-    # This route seems to be a duplicate or older version of regional_management.
-    # Let's keep it simple for now.
-    # TraderForm removed. Update to use CountryTradeInfoForm or other form as needed.
-    regions = db.session.query(Country.region).distinct().order_by(Country.region).all()
-    region_choices = [r[0] for r in regions if r[0]]
-    return render_template('coredata/country_branch.html', edit_id=None, regions=region_choices)
+@coredata_bp.route('/api/delete_branch', methods=['POST'])
+def delete_branch():
+    data = request.get_json()
+    branch_id = data.get('branch_id')
+    
+    if not branch_id:
+        return jsonify({'success': False, 'error': 'No branch ID provided'}), 400
+    
+    try:
+        branch = Branch.query.get(branch_id)
+        if not branch:
+            return jsonify({'success': False, 'error': f'Branch with ID {branch_id} not found'}), 404
+        
+        db.session.delete(branch)
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Branch {branch_id} deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting branch: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@coredata_bp.route('/api/update_branch', methods=['POST'])
+def update_branch():
+    data = request.get_json()
+    branch_id = data.get('branch_id')
+    
+    if not branch_id:
+        return jsonify({'success': False, 'error': 'No branch ID provided'}), 400
+    
+    try:
+        # Helper function to convert values to float or None if empty/invalid
+        def to_float_or_none(value):
+            if value is None or value == '':
+                return None
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return None
+        
+        branch = Branch.query.get(branch_id)
+        if not branch:
+            return jsonify({'success': False, 'error': f'Branch with ID {branch_id} not found'}), 404
+        
+        # Update branch fields
+        branch.type_of_freight = data.get('type_of_freight')
+        branch.airport_iata = data.get('airport_iata')
+        branch.port_code = data.get('port_code')
+        branch.ground_terminal_code = data.get('ground_terminal_code')
+        branch.name = data.get('port_name')
+        branch.city = data.get('city')
+        branch.operational_cost_year = to_float_or_none(data.get('year_operation_cost'))
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Branch {branch_id} updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating branch: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@coredata_bp.route('/update_country_info', methods=['POST'])
+def update_country_info():
+    data = request.get_json()
+    print("Updating country info:", data)  # Debug print
+    
+    try:
+        # Helper function to convert values to float or None if empty/invalid
+        def to_float_or_none(value):
+            if value is None or value == '':
+                return None
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return None
+        
+        # Find the CountryTradeInfo record
+        country_id = data.get('country_id')
+        cti = CountryTradeInfo.query.filter_by(country_id=country_id).first()
+        
+        if not cti:
+            return jsonify({'success': False, 'error': f'No trade info found for country code {country_id}'}), 404
+        
+        # Update the fields
+        cti.export_sales_tax = to_float_or_none(data.get('export_sales_tax'))
+        cti.export_other_taxes = to_float_or_none(data.get('export_other_taxes'))
+        cti.export_profit_pct = to_float_or_none(data.get('export_profit_pct'))
+        cti.revenue_taxes = to_float_or_none(data.get('revenue_taxes'))
+        cti.import_taxes = to_float_or_none(data.get('import_taxes'))
+        cti.other_taxes = to_float_or_none(data.get('other_taxes'))
+        cti.import_profit_pct = to_float_or_none(data.get('import_profit_pct'))
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Country trade info updated successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating country info: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @coredata_bp.route('/traders/Regional_Management', methods=['GET', 'POST'])
 def regional_management():
