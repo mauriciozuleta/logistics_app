@@ -8,40 +8,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // This function is now globally available to be called from other scripts.
     window.updateAirFreightCost = function(context) {
         const productTableContainer = document.getElementById('product-table-container');
-        const footerTotalWeightCell = document.getElementById('footer-total-weight');
-
-        // Determine which cost value to use based on the context
-        let costSourceElement;
-        if (context === 'outbound') {
-            costSourceElement = document.getElementById('outbound_cost_weight_value');
-        } else if (context === 'return') {
-            costSourceElement = document.getElementById('return_cost_weight_value');
+        if (!productTableContainer) return;
+        let kgCost = 0;
+        if (context === 'return') {
+            const estRetKgCostField = document.getElementById('est_ret_kg_cost');
+            if (estRetKgCostField) {
+                kgCost = parseFloat(estRetKgCostField.value || estRetKgCostField.textContent || '0') || 0;
+            }
         } else {
-            // If no context is set, we cannot calculate the cost.
-            return; 
+            const estOutbKgCostField = document.getElementById('est_outb_kg_cost');
+            if (estOutbKgCostField) {
+                kgCost = parseFloat(estOutbKgCostField.value || estOutbKgCostField.textContent || '0') || 0;
+            }
         }
-
-        if (!costSourceElement || !footerTotalWeightCell || !productTableContainer) return;
-
-        // The value is from an <input>, so we use .value instead of .textContent
-        const relevantFlightCost = parseFloat(costSourceElement.value.replace(/[$,]/g, '')) || 0;
-        const totalWeight = parseFloat(footerTotalWeightCell.textContent.replace(/[^\d.-]/g, '')) || 0;
-
-        // This is the "temporary kg cost"
-        const costPerKg = (totalWeight > 0) ? (relevantFlightCost / totalWeight) : 0;
-
-        // Iterate over each product row to calculate and update its air freight cost
         const rows = productTableContainer.querySelectorAll('tr');
         rows.forEach(row => {
             const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
             if (!productCode) return;
-
             const weightCell = document.getElementById(`total-weight-${productCode}`);
             const airFreightCostCell = document.getElementById(`air-freight-cost-${productCode}`);
-
             if (weightCell && airFreightCostCell) {
                 const rowWeight = parseFloat(weightCell.textContent.replace(/[^\d.-]/g, '')) || 0;
-                const airFreightCost = rowWeight * costPerKg;
+                const airFreightCost = rowWeight * kgCost;
                 airFreightCostCell.textContent = (airFreightCost > 0) ? `$${formatNumber(airFreightCost)}` : '-';
             }
         });
