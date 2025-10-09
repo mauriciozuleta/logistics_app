@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let rank = 0;
             if (comparativePrice > 0 && datKgCost > 0 && datKgCost < comparativePrice) {
                 const percentageCheaper = (1 - (datKgCost / comparativePrice)) * 100;
-                rank = Math.floor(percentageCheaper / 10);
+                rank = parseFloat((percentageCheaper / 10).toFixed(1));
             }
 
             if (packWeight > 0) {
@@ -81,9 +81,52 @@ document.addEventListener('DOMContentLoaded', function() {
         rankedProducts.sort((a, b) => b.rank - a.rank);
         console.log("Ranked products:", rankedProducts);
 
-        // Step 3: Iteratively fill payload
+        // Add/Update rank display next to amount input
+        rows.forEach(row => {
+            const amountInput = row.querySelector('.product-amount-input');
+            if (!amountInput) return;
+
+            const productCode = amountInput.dataset.productCode;
+            const productData = rankedProducts.find(p => p.productCode === productCode);
+            
+            // Remove existing rank display if any
+            let existingRank = amountInput.parentElement.querySelector('.rank-display');
+            if (existingRank) {
+                existingRank.remove();
+            }
+
+            if (productData) {
+                const { rank } = productData;
+                const rankDisplay = document.createElement('span');
+                rankDisplay.className = 'rank-display';
+                rankDisplay.textContent = `[${rank}]`;
+                let color = 'cyan'; // Default for >6
+                if (rank <= 2) color = 'red';
+                else if (rank <= 3) color = 'orange';
+                else if (rank <= 4) color = 'yellow';
+                else if (rank <= 6) color = 'green';
+                rankDisplay.style.color = color;
+                rankDisplay.style.marginLeft = '5px';
+                rankDisplay.style.fontWeight = 'bold';
+                rankDisplay.style.fontSize = '0.9em';
+                amountInput.parentElement.insertBefore(rankDisplay, amountInput.nextSibling);
+            }
+        });
+
+        // Step 3: Iteratively fill payload, excluding red-ranked items
         let currentTotalWeight = 0;
-        rankedProducts.forEach(product => {
+        const fillableProducts = rankedProducts.filter(p => p.rank > 2);
+        const excludedProducts = rankedProducts.filter(p => p.rank <= 2);
+
+        // Set amount to 0 for all excluded products
+        excludedProducts.forEach(product => {
+            const amountInput = product.row.querySelector('.product-amount-input');
+            if (amountInput) {
+                amountInput.value = 0;
+            }
+        });
+
+        fillableProducts.forEach(product => {
             const { rank, packWeight, row } = product;
             const amountInput = row.querySelector('.product-amount-input');
             if (!amountInput) return;
@@ -109,11 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Step 4: Top-up phase to fill remaining payload
         let remainingPayload = availablePayload - currentTotalWeight;
-        let smallestPackWeight = Math.min(...rankedProducts.map(p => p.packWeight).filter(w => w > 0));
+        let smallestPackWeight = Math.min(...fillableProducts.map(p => p.packWeight).filter(w => w > 0));
+        if (smallestPackWeight === Infinity) smallestPackWeight = 0;
 
-        while (remainingPayload >= smallestPackWeight) {
+
+        while (remainingPayload >= smallestPackWeight && smallestPackWeight > 0) {
             let itemAddedInLoop = false;
-            for (const product of rankedProducts) {
+            for (const product of fillableProducts) {
                 const { packWeight, row } = product;
                 if (packWeight > 0 && remainingPayload >= packWeight) {
                     const amountInput = row.querySelector('.product-amount-input');
