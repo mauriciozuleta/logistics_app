@@ -769,14 +769,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`Outbound context: Departure Cost=${outboundCargoHandlingCost}, Arrival Cost=${returnCargoHandlingCost}`);
                 
                 // Load products for country
-                loadProductsForCountry(countryCode);
+                await loadProductsForCountry(countryCode);
 
-                if (typeof window.updateCargoLoadCost === 'function') {
-                    window.updateCargoLoadCost('outbound', outboundCargoHandlingCost);
-                }
-                // Also calculate unload cost, which uses the consignee's airport cost
-                if (typeof window.updateCargoUnloadCost === 'function') {
-                    window.updateCargoUnloadCost('outbound', returnCargoHandlingCost);
+                if (typeof window.autoFillCargo === 'function') {
+                    await window.autoFillCargo('outbound');
                 }
                 
                 setTableHeaderColor('#257777'); // Shipper-related color
@@ -805,14 +801,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`Return context: Departure Cost=${outboundCargoHandlingCost}, Arrival Cost=${returnCargoHandlingCost}`);
                 
                 // Load products for country
-                loadProductsForCountry(countryCode);
+                await loadProductsForCountry(countryCode);
 
-                if (typeof window.updateCargoLoadCost === 'function') {
-                    window.updateCargoLoadCost('return', returnCargoHandlingCost);
-                }
-                // Also calculate unload cost, which uses the original shipper's airport cost
-                if (typeof window.updateCargoUnloadCost === 'function') {
-                    window.updateCargoUnloadCost('return', outboundCargoHandlingCost);
+                if (typeof window.autoFillCargo === 'function') {
+                    await window.autoFillCargo('return');
                 }
                 
                 setTableHeaderColor('#2b792b'); // Consignee-related color
