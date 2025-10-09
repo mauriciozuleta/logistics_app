@@ -11,6 +11,12 @@
 
     <!-- Dashboard Button Group -->
     <div class="dashboard-buttons-container">
+      <!-- User Management Button -->
+      <div class="dropdown-container">
+        <a class="main-button" id="user-management-btn" href="{{ url_for('coredata.regional_branches_management') }}" data-tooltip="Manage users and branches">
+          User Management
+        </a>
+      </div>
       <!-- Products Dropdown Section -->
       <div class="dropdown-container">
         <button class="main-button" id="products-btn" data-tooltip="Manage and organize product records">

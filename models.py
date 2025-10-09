@@ -138,6 +138,7 @@ class Branch(BaseModel):
     airport_iata = db.Column(db.String(3), nullable=True)
     port_code = db.Column(db.String(64), nullable=True)
     ground_terminal_code = db.Column(db.String(64), nullable=True)
+    operational_cost_year = db.Column(db.Float, nullable=True)
 
     def __repr__(self):
         return f"<Branch {self.name} ({self.city})>"

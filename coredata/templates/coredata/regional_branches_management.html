@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Hide all sections initially
   hideSection(countryInfoContainer);
-  hideSection(branchInfoContainer);
+  hideSection(branchInfoContainer); // Branch info hidden by default
   hideSection(branchesContainer);
   
   // Set up toggle buttons
@@ -630,8 +630,11 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    // Always show the branches container when a country is selected
-    unhideSection(branchesContainer);
+  // Always show the branches container when a country is selected
+  unhideSection(branchesContainer);
+
+  // Always hide the branch info section when changing country
+  hideSection(branchInfoContainer);
 
     // Display available branches for selected country
     fetch(`/coredata/api/branches_by_country?country_code=${encodeURIComponent(selectedCountry)}`)
