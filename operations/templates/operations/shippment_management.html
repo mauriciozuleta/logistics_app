@@ -19,9 +19,11 @@
 <div class="shipment-section" id="container-1">
     <div class="section-title" style="color: #FF5C00; text-align: left;">Shipment Reference</div>
     <div style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px;">
-        <button type="button" class="btn btn-primary" id="start-shipment-btn">Start New Shipment</button>
-        <input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
-        <div id="type-of-freight-wrapper" style="display:none; align-items:center; gap:4px;">
+    <label for="shipment_user" style="margin-bottom:0;">User</label>
+    <input type="text" id="shipment_user" name="shipment_user" style="width:120px;" placeholder="User...">
+    <button type="button" class="btn btn-primary" id="start-shipment-btn">Start New Shipment</button>
+    <input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
+    <div id="type-of-freight-wrapper" style="display:none; align-items:center; gap:4px;">
             <label for="type_of_freight" style="margin-bottom:0;">Type of Freight</label>
             <select id="type_of_freight" name="type_of_freight" class="form-control" style="border: 2px solid #257777; width:120px;">
                 <option value="">Select Type</option>
