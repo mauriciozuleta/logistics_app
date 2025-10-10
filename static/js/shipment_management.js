@@ -865,9 +865,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td id="dat-ea-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="comparative-price-${product.product_code}" style="text-align: right; color: #8f7d16;">${comparativePrice}</td>
                 <td id="sug-prod-prof-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
-                <td style="text-align: center; color: #8f7d16;">-</td>
+                <td id="product-profit-container-${product.product_code}" style="text-align: center; color: #8f7d16; white-space: nowrap;">
+                    <input type="number" class="product-profit-pct-input" data-product-code="${product.product_code}" style="width: 70px; text-align: right;" placeholder="%"> %
+                    <span id="product-profit-price-${product.product_code}" style="margin-left: 5px; font-weight: bold;"></span>
+                </td>
+                <td id="final-dat-price-${product.product_code}" style="text-align: center; color: #8f7d16;">-</td>
+                <td id="total-pr-cost-dat-${product.product_code}" style="text-align: center; color: #8f7d16;">-</td>
             </tr>
         `;
     }
@@ -1162,6 +1165,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 updateTableTotals(); // Final call to sum CIP costs into the footer
+            }
+        });
+
+        // --- Event delegation for new Product Profit % input ---
+        productTableContainer.addEventListener('input', function(event) {
+            if (event.target.classList.contains('product-profit-pct-input')) {
+                const input = event.target;
+                const productCode = input.dataset.productCode;
+                const profitPct = parseFloat(input.value) || 0;
+
+                const datEaCostCell = document.getElementById(`dat-ea-cost-${productCode}`);
+                const profitPriceCell = document.getElementById(`product-profit-price-${productCode}`);
+                const totalPrCostDatCell = document.getElementById(`total-pr-cost-dat-${productCode}`);
+
+                if (datEaCostCell && profitPriceCell && finalDatPriceCell) {
+                    const datEaCost = parseFloat(datEaCostCell.textContent.replace(/[$,]/g, '')) || 0;
+                    
+                    if (datEaCost > 0 && profitPct > 0) {
+                        const profitAmount = datEaCost * (profitPct / 100);
+                        const finalPrice = datEaCost + profitAmount;
+                        profitPriceCell.textContent = `$${formatNumber(finalPrice)}`;
+                        finalDatPriceCell.textContent = `$${formatNumber(finalPrice)}`;
+                    } else {
+                        profitPriceCell.textContent = '';
+                        finalDatPriceCell.textContent = '-';
+                    }
+                }
+            }
+        });
+
+        // --- Event delegation for the new copy-profit arrow ---
+        productTableContainer.addEventListener('click', function(event) {
+            if (event.target.classList.contains('copy-profit-arrow')) {
+                const productCode = event.target.dataset.productCode;
+                const sugProfitCell = document.getElementById(`sug-prod-prof-${productCode}`);
+                const profitPctInput = document.querySelector(`.product-profit-pct-input[data-product-code="${productCode}"]`);
+
+                if (sugProfitCell && profitPctInput) {
+                    const sugProfitText = sugProfitCell.innerText; // e.g., "111.27% / $9.00"
+                    const percentageMatch = sugProfitText.match(/^(-?\d+\.?\d*)/);
+                    profitPctInput.value = percentageMatch ? percentageMatch[1] : '';
+                    profitPctInput.dispatchEvent(new Event('input', { bubbles: true })); // Trigger calculation
+                }
             }
         });
     }

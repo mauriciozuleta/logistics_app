@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const weightCell = document.getElementById(`total-weight-${productCode}`);
             const amountInput = document.querySelector(`input[name="amount_${productCode}"]`);
 
-            if (cipCostCell && importTaxesCell && datKgCostCell && datEaCostCell && comparativePriceCell && sugProfitCell && weightCell && amountInput) {
+            if (cipCostCell && importTaxesCell && datKgCostCell && datEaCostCell && comparativePriceCell && weightCell && amountInput) {
                 const cipCost = parseFloat(cipCostCell.textContent.replace(/[$,]/g, '')) || 0;
                 const totalWeight = parseFloat(weightCell.textContent.replace(/[^\d.-]/g, '')) || 0;
                 const unitsPerPack = parseFloat(amountInput.dataset.unitsPerPack) || 1;
@@ -170,17 +170,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 const totalUnits = amount * unitsPerPack;
                 const datEaCost = (totalUnits > 0) ? (datCost / totalUnits) : 0;
 
-                // Calculate Suggested Product Profit (EA)
-                const comparativePrice = parseFloat(comparativePriceCell.textContent.replace(/[$,]/g, '')) || 0;
-                let suggestedProfit = 0;
-                if (comparativePrice > 0 && datEaCost > 0) {
-                    suggestedProfit = comparativePrice - datEaCost;
-                }
-
                 importTaxesCell.textContent = (importTaxes > 0) ? `$${formatNumber(importTaxes)}` : '-';
                 datKgCostCell.textContent = (datKgCost > 0) ? `$${formatNumber(datKgCost)}` : '-';
                 datEaCostCell.textContent = (datEaCost > 0) ? `$${formatNumber(datEaCost)}` : '-';
-                sugProfitCell.textContent = (suggestedProfit !== 0) ? `$${formatNumber(suggestedProfit)}` : '-';
+
+                // --- New "Sug. Prod. Prof (EA)" Calculation ---
+                if (sugProfitCell) {
+                    const rankDisplay = amountInput.parentElement.querySelector('.rank-display');
+                    const rank = rankDisplay ? parseFloat(rankDisplay.textContent.replace(/[\[\]]/g, '')) : 0;
+                    const comparativePrice = parseFloat(comparativePriceCell.textContent.replace(/[$,]/g, '')) || 0;
+
+                    let targetPriceMultiplier = 0;
+                    let fontColor = 'grey';
+
+                    if (rank > 6.0) {
+                        targetPriceMultiplier = 0.60;
+                        fontColor = 'green';
+                    } else if (rank >= 5.1 && rank <= 6.0) {
+                        targetPriceMultiplier = 0.70;
+                        fontColor = 'yellow';
+                    } else if (rank >= 3.0 && rank <= 5.0) {
+                        targetPriceMultiplier = 0.75;
+                        fontColor = 'orange';
+                    }
+
+                    if (targetPriceMultiplier > 0 && comparativePrice > 0 && datEaCost > 0) {
+                        const targetSellPrice = comparativePrice * targetPriceMultiplier;
+                        // Corrected Logic: Calculate profit based on DAT Kg Cost, not DAT Ea. Cost
+                        const datKgCost = parseFloat(datKgCostCell.textContent.replace(/[$,]/g, '')) || 0;
+                        const profitPerKg = targetSellPrice - datKgCost;
+                        const profitPct = (datKgCost > 0) ? (profitPerKg / datKgCost) * 100 : 0;
+
+                        sugProfitCell.innerHTML = `
+                            <span style="color: ${fontColor}; font-weight: bold; white-space: nowrap;">
+                                ${profitPct.toFixed(2)}% / $${targetSellPrice.toFixed(2)}
+                            </span>
+                            <span class="copy-profit-arrow" data-product-code="${productCode}" style="cursor: pointer; color: cyan; margin-left: 8px;" title="Copy to Product Profit %">➔</span>
+                        `;
+                    } else {
+                        sugProfitCell.textContent = '-';
+                    }
+                }
             }
         });
     }
