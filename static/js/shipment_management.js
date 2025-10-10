@@ -869,7 +869,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="number" class="product-profit-pct-input" data-product-code="${product.product_code}" style="width: 70px; text-align: right;" placeholder="%"> %
                     <span id="product-profit-price-${product.product_code}" style="margin-left: 5px; font-weight: bold;"></span>
                 </td>
-                <td id="final-dat-price-${product.product_code}" style="text-align: center; color: #8f7d16;">-</td>
+                <td id="final-dat-price-${product.product_code}" style="text-align: right; color: #8f7d16; white-space: nowrap;">-</td>
                 <td id="total-pr-cost-dat-${product.product_code}" style="text-align: center; color: #8f7d16;">-</td>
             </tr>
         `;
@@ -1175,21 +1175,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 const productCode = input.dataset.productCode;
                 const profitPct = parseFloat(input.value) || 0;
 
-                const datEaCostCell = document.getElementById(`dat-ea-cost-${productCode}`);
+                const datKgCostCell = document.getElementById(`dat-kg-cost-${productCode}`); // Correctly get the DAT Kg Cost cell
                 const profitPriceCell = document.getElementById(`product-profit-price-${productCode}`);
-                const totalPrCostDatCell = document.getElementById(`total-pr-cost-dat-${productCode}`);
+                const finalDatPriceCell = document.getElementById(`final-dat-price-${productCode}`); // Correctly get the final price cell
+                const unitsPerPack = parseFloat(input.dataset.unitsPerPack) || 1; // Get units per pack from the input's dataset
 
-                if (datEaCostCell && profitPriceCell && finalDatPriceCell) {
-                    const datEaCost = parseFloat(datEaCostCell.textContent.replace(/[$,]/g, '')) || 0;
+                if (datKgCostCell && profitPriceCell && finalDatPriceCell) { // Check for the correct final price cell
+                    const datKgCost = parseFloat(datKgCostCell.textContent.replace(/[$,]/g, '')) || 0;
                     
-                    if (datEaCost > 0 && profitPct > 0) {
-                        const profitAmount = datEaCost * (profitPct / 100);
-                        const finalPrice = datEaCost + profitAmount;
-                        profitPriceCell.textContent = `$${formatNumber(finalPrice)}`;
-                        finalDatPriceCell.textContent = `$${formatNumber(finalPrice)}`;
+                    if (datKgCost > 0 && profitPct > 0) {
+                        const finalKgPrice = datKgCost * (1 + (profitPct / 100)); // Calculate final price per KG
+                        const finalEaPrice = (unitsPerPack > 0) ? finalKgPrice / unitsPerPack : 0;
+
+                        profitPriceCell.textContent = `$${formatNumber(finalKgPrice)}`; // Update the price display next to the input
+                        finalDatPriceCell.innerHTML = `$${formatNumber(finalKgPrice)} / <span style="color: cyan;">$${formatNumber(finalEaPrice)}</span>`; // Update the final KG/EA price column
+
                     } else {
                         profitPriceCell.textContent = '';
-                        finalDatPriceCell.textContent = '-';
+                        finalDatPriceCell.textContent = '-'; // Clear the final price column if not valid
                     }
                 }
             }
@@ -1203,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const profitPctInput = document.querySelector(`.product-profit-pct-input[data-product-code="${productCode}"]`);
 
                 if (sugProfitCell && profitPctInput) {
-                    const sugProfitText = sugProfitCell.innerText; // e.g., "111.27% / $9.00"
+                    const sugProfitText = sugProfitCell.innerText; // Use innerText to get only the visible text
                     const percentageMatch = sugProfitText.match(/^(-?\d+\.?\d*)/);
                     profitPctInput.value = percentageMatch ? percentageMatch[1] : '';
                     profitPctInput.dispatchEvent(new Event('input', { bubbles: true })); // Trigger calculation
