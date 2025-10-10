@@ -17,13 +17,17 @@
     <input type="hidden" id="consignee_country_code" name="consignee_country_code" value="">
 
 <div class="shipment-section" id="container-1">
-    <div class="section-title" style="color: #FF5C00; text-align: left;">Shipment Reference</div>
-    <div style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px;">
-    <label for="shipment_user" style="margin-bottom:0;">User</label>
-    <input type="text" id="shipment_user" name="shipment_user" style="width:120px;" placeholder="User...">
-    <button type="button" class="btn btn-primary" id="start-shipment-btn">Start New Shipment</button>
-    <input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Enter reference...">
-    <div id="type-of-freight-wrapper" style="display:none; align-items:center; gap:4px;">
+    <div class="section-title" style="color: #FF5C00; text-align: left; display: flex; align-items: center; gap: 10px;">
+        <span>Shipment Reference</span>
+        <input type="text" id="shipment_reference" name="shipment_reference" style="width:250px;" placeholder="Shipment Reference (Auto-Generated)" readonly>
+    </div>
+    <div style="display: flex; flex-direction: row; align-items: flex-end; justify-content: flex-start; gap: 16px;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="shipment_user" style="margin-bottom:0;">User</label>
+            <input type="text" id="shipment_user" name="shipment_user" style="width:120px;" placeholder="User...">
+        </div>
+        <button type="button" class="btn btn-primary" id="start-shipment-btn" style="margin-bottom: 0;">Start New Shipment</button>
+        <div id="type-of-freight-wrapper" style="display:none; align-items:center; gap:4px;">
             <label for="type_of_freight" style="margin-bottom:0;">Type of Freight</label>
             <select id="type_of_freight" name="type_of_freight" class="form-control" style="border: 2px solid #257777; width:120px;">
                 <option value="">Select Type</option>
@@ -31,6 +35,16 @@
                 <option value="Sea">Sea</option>
                 <option value="Ground">Ground</option>
             </select>
+        </div>
+        <div id="ports-wrapper" style="display: none; flex-direction: row; align-items: flex-end; justify-content: flex-start; gap: 16px;">
+            <div class="form-group" style="width: 200px; margin-bottom: 0;">
+                <label for="port_of_shipping">Port of Shipping</label>
+                <input type="text" id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" placeholder="Enter Port Code">
+            </div>
+            <div class="form-group" style="width: 200px; margin-bottom: 0;">
+                <label for="consignee_port_of_shipping">Port of Arrival</label>
+                <input type="text" id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" placeholder="Enter Port Code">
+            </div>
         </div>
     </div>
 </div>
@@ -43,12 +57,6 @@
     <div id="trading-info-content" style="display: none;">
     <!-- Type of Freight moved to Shipment Reference section -->
         <div class="shipment-form-row" style="margin-top: 15px; align-items: center;">
-                
-                <div class="form-group" style="width: 250px;">
-                    <label for="port_of_shipping">Port of Shipping</label>
-                    <input type="text" id="port_of_shipping" name="port_of_shipping" class="form-control" style="border: 2px solid #257777;" placeholder="Enter Port Code">
-                    <input type="hidden" id="port_of_shipping_iata" name="port_of_shipping_iata" value="">
-                </div>
                 
                 <div class="form-group" style="min-width: 150px;">
                     <label for="trading_region">Region</label>
@@ -76,11 +84,6 @@
                 </div>
 		</div>
 		<div class="shipment-form-row" style="margin-top: 10px; align-items: center;">
-                <div class="form-group" style="width: 250px;">
-                    <label for="consignee_port_of_shipping">Port of Arrival</label>
-                    <input type="text" id="consignee_port_of_shipping" name="consignee_port_of_shipping" class="form-control" style="border: 2px solid #2b792b;" placeholder="Enter Port Code">
-                    <input type="hidden" id="consignee_port_of_shipping_iata" name="consignee_port_of_shipping_iata" value="">
-                </div>
                 <div class="form-group" style="min-width: 150px;">
                     <label for="consignee_region">Region</label>
                     <select id="consignee_region" name="consignee_region" class="form-control" style="border: 2px solid #2b792b;">

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const logisticToggleBtn = document.getElementById('toggle-logistic-btn');
     const productsContentWrapper = document.getElementById('products-content-wrapper');
     const productsToggleBtn = document.getElementById('toggle-products-btn');
+    const portsWrapper = document.getElementById('ports-wrapper');
 
     if (tradingInfoContent) tradingInfoContent.style.display = 'none';
     if (tradingToggleBtn) tradingToggleBtn.disabled = true;
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (logisticToggleBtn) logisticToggleBtn.disabled = true;
     if (productsContentWrapper) productsContentWrapper.style.display = 'none';
     if (productsToggleBtn) productsToggleBtn.disabled = true;
+    if (portsWrapper) portsWrapper.style.display = 'none';
 
     // Expand trading info when type_of_freight is selected
     if (typeOfFreight) {
@@ -25,6 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeOfFreight.value && tradingInfoContent) {
                 tradingInfoContent.style.display = '';
                 if (tradingToggleBtn) tradingToggleBtn.disabled = false;
+            }
+            // Also show the new ports wrapper
+            if (typeOfFreight.value && portsWrapper) {
+                portsWrapper.style.display = 'contents';
             }
         });
     }
