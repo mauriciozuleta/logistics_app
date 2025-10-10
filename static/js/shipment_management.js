@@ -1223,6 +1223,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         totalShipmentDatCostCell.textContent = '-';
                         totalDatProfitCell.textContent = '-';
                     }
+
+                    // Trigger a footer update after these calculations
+                    updateTableTotals();
                 }
             }
         });
@@ -1259,7 +1262,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalCipCost = 0;
         let totalImportTaxes = 0;
         let totalPrCostDat = 0;
-        // Add other total variables here as they are implemented
+        let totalDatProfit = 0;
+        let totalShipmentDatCost = 0;
 
         rows.forEach(row => {
             const productCode = row.querySelector('.product-amount-input')?.dataset.productCode;
@@ -1336,6 +1340,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (totalPrCostDatCell && totalPrCostDatCell.textContent !== '-') {
                 totalPrCostDat += parseFloat(totalPrCostDatCell.textContent.replace(/[^\d.-]/g, '')) || 0;
             }
+
+            // Sum Total DAT Profit
+            const totalDatProfitCell = document.getElementById(`total-dat-profit-${productCode}`);
+            if (totalDatProfitCell && totalDatProfitCell.textContent !== '-') {
+                totalDatProfit += parseFloat(totalDatProfitCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
+
+            // Sum Total Shipment DAT Cost
+            const totalShipmentDatCostCell = document.getElementById(`total-shipment-dat-cost-${productCode}`);
+            if (totalShipmentDatCostCell && totalShipmentDatCostCell.textContent !== '-') {
+                totalShipmentDatCost += parseFloat(totalShipmentDatCostCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
         });
 
         // Update the footer cells with the calculated totals
@@ -1351,6 +1367,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const footerCipCostCell = document.getElementById('footer-cip-cost');
         const footerImportTaxesCell = document.getElementById('footer-import-taxes');
         const footerTotalPrCostDatCell = document.getElementById('footer-total-pr-cost-dat');
+        const footerTotalDatProfitCell = document.getElementById('footer-total-dat-profit');
+        const footerTotalShipmentDatCostCell = document.getElementById('footer-total-shipment-dat-cost');
 
         if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
@@ -1364,6 +1382,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (footerCipCostCell) footerCipCostCell.textContent = totalCipCost > 0 ? `$${formatNumber(totalCipCost)}` : '-';
         if (footerImportTaxesCell) footerImportTaxesCell.textContent = totalImportTaxes > 0 ? `$${formatNumber(totalImportTaxes)}` : '-';
         if (footerTotalPrCostDatCell) footerTotalPrCostDatCell.textContent = totalPrCostDat > 0 ? `$${formatNumber(totalPrCostDat)}` : '-';
+        if (footerTotalDatProfitCell) footerTotalDatProfitCell.textContent = totalDatProfit > 0 ? `$${formatNumber(totalDatProfit)}` : '-';
+        if (footerTotalShipmentDatCostCell) footerTotalShipmentDatCostCell.textContent = totalShipmentDatCost > 0 ? `$${formatNumber(totalShipmentDatCost)}` : '-';
     }
 
     // Function to recalculate all FCA values when exchange rate changes

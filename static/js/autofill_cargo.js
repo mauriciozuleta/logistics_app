@@ -113,76 +113,96 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Step 3: Iteratively fill payload, excluding red-ranked items
+        // --- New "Meet-in-the-Middle" Autofill Logic ---
+
+        // Step 3: Initial Setup
         let currentTotalWeight = 0;
-        const fillableProducts = rankedProducts.filter(p => p.rank > 2);
+        const fillableProducts = rankedProducts.filter(p => p.rank > 2); // Products profitable enough to consider
         const excludedProducts = rankedProducts.filter(p => p.rank <= 2);
+        const productAmounts = new Map(); // Use a map to store calculated amounts before setting them
 
-        // Set amount to 0 for all excluded products
+        // Set amounts for all products to 0 initially
+        rankedProducts.forEach(p => productAmounts.set(p.productCode, 0));
         excludedProducts.forEach(product => {
-            const amountInput = product.row.querySelector('.product-amount-input');
-            if (amountInput) {
-                amountInput.value = 0;
-            }
+            productAmounts.set(product.productCode, 0);
         });
 
-        fillableProducts.forEach(product => {
-            const { rank, packWeight, row } = product;
-            const amountInput = row.querySelector('.product-amount-input');
-            if (!amountInput) return;
+        // Step 4: "Meet-in-the-Middle" Allocation
+        let topIndex = 0;
+        let bottomIndex = fillableProducts.length - 1;
+        const allocatedProducts = new Set();
 
-            // Determine max weight for this product based on its rank (500kg to 2500kg)
-            const maxWeightForProduct = 500 + (rank / 10) * (2500 - 500);
-            product.maxWeightForProduct = maxWeightForProduct; // Store for top-up phase
+        while (topIndex <= bottomIndex && currentTotalWeight < availablePayload) {
+            // 1. Allocate for the TOP-ranked product
+            const topProduct = fillableProducts[topIndex];
+            if (topIndex <= bottomIndex && !allocatedProducts.has(topProduct.productCode)) {
+                const weightToAllocate = Math.min(2500, availablePayload - currentTotalWeight);
+                if (weightToAllocate <= 0) break;
 
-            // Determine available weight for this product
-            const remainingPayload = availablePayload - currentTotalWeight;
-            const weightAllowance = Math.min(maxWeightForProduct, remainingPayload);
-
-            let amount = 0;
-            if (weightAllowance > 0 && packWeight > 0) {
-                amount = Math.floor(weightAllowance / packWeight);
+                const amount = Math.floor(weightToAllocate / topProduct.packWeight);
+                if (amount > 0) {
+                    productAmounts.set(topProduct.productCode, amount);
+                    currentTotalWeight += amount * topProduct.packWeight;
+                    allocatedProducts.add(topProduct.productCode);
+                }
             }
+            topIndex++;
 
-            amountInput.value = amount;
-            // We'll dispatch the event after the top-up phase
-            currentTotalWeight += amount * packWeight;
-        });
+            // If top and bottom are the same product, don't process it twice
+            if (topIndex > bottomIndex) break;
 
-        console.log("After initial distribution, weight is:", currentTotalWeight);
+            // 2. Allocate for the BOTTOM-ranked product
+            const bottomProduct = fillableProducts[bottomIndex];
+            if (topIndex <= bottomIndex && !allocatedProducts.has(bottomProduct.productCode)) {
+                // Ensure we allocate at least 500kg, but not more than the remaining payload
+                const weightToAllocate = Math.min(500, availablePayload - currentTotalWeight);
+                if (weightToAllocate <= 0) break;
 
-        // Step 4: Top-up phase to fill remaining payload
+                const amount = Math.floor(weightToAllocate / bottomProduct.packWeight);
+                if (amount > 0) {
+                    productAmounts.set(bottomProduct.productCode, amount);
+                    currentTotalWeight += amount * bottomProduct.packWeight;
+                    allocatedProducts.add(bottomProduct.productCode);
+                }
+            }
+            bottomIndex--;
+        }
+
+        // Step 5: Final Top-Up phase to fill any small remaining gaps
         let remainingPayload = availablePayload - currentTotalWeight;
-        let smallestPackWeight = Math.min(...fillableProducts.map(p => p.packWeight).filter(w => w > 0));
-        if (smallestPackWeight === Infinity) smallestPackWeight = 0;
+        console.log(`After meet-in-the-middle, remaining payload is: ${remainingPayload}`);
 
+        // Sort by highest rank to prioritize top-up
+        const topUpCandidates = fillableProducts.filter(p => allocatedProducts.has(p.productCode));
+        topUpCandidates.sort((a, b) => b.rank - a.rank);
+
+        let smallestPackWeight = Math.min(...topUpCandidates.map(p => p.packWeight).filter(w => w > 0));
+        if (smallestPackWeight === Infinity) smallestPackWeight = 0;
 
         while (remainingPayload >= smallestPackWeight && smallestPackWeight > 0) {
             let itemAddedInLoop = false;
-            for (const product of fillableProducts) {
-                const { packWeight, row, maxWeightForProduct } = product;
-                const amountInput = row.querySelector('.product-amount-input');
-                let currentAmount = parseInt(amountInput.value, 10) || 0;
-                const currentProductWeight = currentAmount * packWeight;
+            for (const product of topUpCandidates) {
+                const currentAmount = productAmounts.get(product.productCode) || 0;
+                const currentWeight = currentAmount * product.packWeight;
 
-                if (packWeight > 0 && remainingPayload >= packWeight && (currentProductWeight + packWeight) <= maxWeightForProduct) {
-                    amountInput.value = currentAmount + 1;
-                    currentTotalWeight += packWeight;
-                    remainingPayload -= packWeight;
-                    
+                // Check if we can add one more pack without exceeding the 2500kg limit for this product
+                if (remainingPayload >= product.packWeight && (currentWeight + product.packWeight) <= 2500) {
+                    productAmounts.set(product.productCode, currentAmount + 1);
+                    currentTotalWeight += product.packWeight;
+                    remainingPayload -= product.packWeight;
                     itemAddedInLoop = true;
-                    break; // Restart with the highest-ranked product
+                    break; // Restart the loop to prioritize the highest-ranked products again
                 }
             }
-            if (!itemAddedInLoop) {
-                break; // No product could fit in the remaining space
-            }
+            if (!itemAddedInLoop) break; // No product could be added
         }
 
-        // Step 5: Trigger all input events at the end
+        // Final Step: Apply all calculated amounts to the DOM and trigger events
+        console.log("Applying final amounts to DOM...");
         rows.forEach(row => {
             const amountInput = row.querySelector('.product-amount-input');
-            if (amountInput) {
+            if (amountInput && productAmounts.has(amountInput.dataset.productCode)) {
+                amountInput.value = productAmounts.get(amountInput.dataset.productCode);
                 amountInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
         });
