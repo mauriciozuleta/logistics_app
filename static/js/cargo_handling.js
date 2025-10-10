@@ -174,6 +174,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 datKgCostCell.textContent = (datKgCost > 0) ? `$${formatNumber(datKgCost)}` : '-';
                 datEaCostCell.textContent = (datEaCost > 0) ? `$${formatNumber(datEaCost)}` : '-';
 
+                // --- Calculate "Total Pr. Cost DAT" ---
+                const totalPrCostDatCell = document.getElementById(`total-pr-cost-dat-${productCode}`);
+                if (totalPrCostDatCell) {
+                    const totalPrCostDat = datKgCost * totalWeight;
+                    totalPrCostDatCell.textContent = (totalPrCostDat > 0) ? `$${formatNumber(totalPrCostDat)}` : '-';
+                    totalPrCostDatCell.style.textAlign = 'right'; // Align right for consistency
+                }
+
                 // --- New "Sug. Prod. Prof (EA)" Calculation ---
                 if (sugProfitCell) {
                     const rankDisplay = amountInput.parentElement.querySelector('.rank-display');

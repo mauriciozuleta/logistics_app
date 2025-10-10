@@ -866,11 +866,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td id="comparative-price-${product.product_code}" style="text-align: right; color: #8f7d16;">${comparativePrice}</td>
                 <td id="sug-prod-prof-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
                 <td id="product-profit-container-${product.product_code}" style="text-align: center; color: #8f7d16; white-space: nowrap;">
-                    <input type="number" class="product-profit-pct-input" data-product-code="${product.product_code}" style="width: 70px; text-align: right;" placeholder="%"> %
-                    <span id="product-profit-price-${product.product_code}" style="margin-left: 5px; font-weight: bold;"></span>
+                    <input type="number" class="product-profit-pct-input" data-product-code="${product.product_code}" style="width: 60px; text-align: right;" placeholder="%"> % /
+                    <span id="product-profit-amount-${product.product_code}" style="margin: 0 5px; font-weight: bold; color: cyan;"></span> /
+                    <span id="product-profit-price-${product.product_code}" style="font-weight: bold;"></span>
                 </td>
                 <td id="final-dat-price-${product.product_code}" style="text-align: right; color: #8f7d16; white-space: nowrap;">-</td>
-                <td id="total-pr-cost-dat-${product.product_code}" style="text-align: center; color: #8f7d16;">-</td>
+                <td id="total-pr-cost-dat-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="total-dat-profit-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
+                <td id="total-shipment-dat-cost-${product.product_code}" style="text-align: right; color: #8f7d16;">-</td>
             </tr>
         `;
     }
@@ -1175,24 +1178,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 const productCode = input.dataset.productCode;
                 const profitPct = parseFloat(input.value) || 0;
 
-                const datKgCostCell = document.getElementById(`dat-kg-cost-${productCode}`); // Correctly get the DAT Kg Cost cell
+                // --- Rebuilt logic for 'final DAT price (KG/EA)' ---
+                const amountInput = document.querySelector(`.product-amount-input[data-product-code="${productCode}"]`);
+                const datKgCostCell = document.getElementById(`dat-kg-cost-${productCode}`);
+                const profitAmountCell = document.getElementById(`product-profit-amount-${productCode}`);
                 const profitPriceCell = document.getElementById(`product-profit-price-${productCode}`);
-                const finalDatPriceCell = document.getElementById(`final-dat-price-${productCode}`); // Correctly get the final price cell
-                const unitsPerPack = parseFloat(input.dataset.unitsPerPack) || 1; // Get units per pack from the input's dataset
+                const finalDatPriceCell = document.getElementById(`final-dat-price-${productCode}`);
+                const totalShipmentDatCostCell = document.getElementById(`total-shipment-dat-cost-${productCode}`);
+                const totalDatProfitCell = document.getElementById(`total-dat-profit-${productCode}`);
+                const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
+                const totalPrCostDatCell = document.getElementById(`total-pr-cost-dat-${productCode}`);
 
-                if (datKgCostCell && profitPriceCell && finalDatPriceCell) { // Check for the correct final price cell
-                    const datKgCost = parseFloat(datKgCostCell.textContent.replace(/[$,]/g, '')) || 0;
-                    
+                if (amountInput && datKgCostCell && profitAmountCell && profitPriceCell && finalDatPriceCell && totalShipmentDatCostCell && totalDatProfitCell && totalWeightCell && totalPrCostDatCell) {
+                    const datKgCost = parseNumber(datKgCostCell.textContent);
+                    const packWeight = parseFloat(amountInput.dataset.packWeight) || 0;
+                    const unitsPerPack = parseFloat(amountInput.dataset.unitsPerPack) || 1;
+
                     if (datKgCost > 0 && profitPct > 0) {
-                        const finalKgPrice = datKgCost * (1 + (profitPct / 100)); // Calculate final price per KG
-                        const finalEaPrice = (unitsPerPack > 0) ? finalKgPrice / unitsPerPack : 0;
+                        // 1. Calculate the final price per KG ($ Kg.)
+                        const finalKgPrice = datKgCost * (1 + (profitPct / 100));
+                        profitPriceCell.textContent = `$${formatNumber(finalKgPrice)}`; // This is the $ Kg value
 
-                        profitPriceCell.textContent = `$${formatNumber(finalKgPrice)}`; // Update the price display next to the input
-                        finalDatPriceCell.innerHTML = `$${formatNumber(finalKgPrice)} / <span style="color: cyan;">$${formatNumber(finalEaPrice)}</span>`; // Update the final KG/EA price column
+                        // 2. Calculate the profit amount ($ Profit)
+                        const profitAmount = finalKgPrice - datKgCost;
+                        profitAmountCell.textContent = `$${formatNumber(profitAmount)}`;
 
+                        // 3. Calculate the final price per EA using the new logic.
+                        const finalEaPrice = (packWeight > 0 && unitsPerPack > 0) ? (finalKgPrice * packWeight) / unitsPerPack : 0;
+                        finalDatPriceCell.innerHTML = `$${formatNumber(finalKgPrice)} / <span style="color: cyan;">$${formatNumber(finalEaPrice)}</span>`;
+
+                        // 4. Calculate "Total Shipment DAT cost"
+                        const totalWeight = parseNumber(totalWeightCell.textContent);
+                        const totalShipmentDatCost = finalKgPrice * totalWeight;
+                        totalShipmentDatCostCell.textContent = `$${formatNumber(totalShipmentDatCost)}`;
+
+                        // 5. Calculate "Total DAT Profit"
+                        const totalPrCostDat = parseNumber(totalPrCostDatCell.textContent);
+                        const totalDatProfit = totalShipmentDatCost - totalPrCostDat;
+                        totalDatProfitCell.textContent = `$${formatNumber(totalDatProfit)}`;
                     } else {
+                        profitAmountCell.textContent = '';
                         profitPriceCell.textContent = '';
-                        finalDatPriceCell.textContent = '-'; // Clear the final price column if not valid
+                        finalDatPriceCell.textContent = '-';
+                        totalShipmentDatCostCell.textContent = '-';
+                        totalDatProfitCell.textContent = '-';
                     }
                 }
             }
@@ -1229,6 +1258,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalCargoUnloadCost = 0;
         let totalCipCost = 0;
         let totalImportTaxes = 0;
+        let totalPrCostDat = 0;
         // Add other total variables here as they are implemented
 
         rows.forEach(row => {
@@ -1300,6 +1330,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (importTaxesCell && importTaxesCell.textContent !== '-') {
                 totalImportTaxes += parseFloat(importTaxesCell.textContent.replace(/[^\d.-]/g, '')) || 0;
             }
+
+            // Sum Total Pr. Cost DAT
+            const totalPrCostDatCell = document.getElementById(`total-pr-cost-dat-${productCode}`);
+            if (totalPrCostDatCell && totalPrCostDatCell.textContent !== '-') {
+                totalPrCostDat += parseFloat(totalPrCostDatCell.textContent.replace(/[^\d.-]/g, '')) || 0;
+            }
         });
 
         // Update the footer cells with the calculated totals
@@ -1314,6 +1350,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const footerCargoUnloadCostCell = document.getElementById('footer-cargo-unload-cost');
         const footerCipCostCell = document.getElementById('footer-cip-cost');
         const footerImportTaxesCell = document.getElementById('footer-import-taxes');
+        const footerTotalPrCostDatCell = document.getElementById('footer-total-pr-cost-dat');
 
         if (footerWeightCell) footerWeightCell.textContent = totalWeight > 0 ? `${formatNumber(totalWeight)} kg` : '-';
         if (footerCostCell) footerCostCell.textContent = totalCost > 0 ? `$${formatNumber(totalCost)}` : '-';
@@ -1326,6 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (footerCargoUnloadCostCell) footerCargoUnloadCostCell.textContent = totalCargoUnloadCost > 0 ? `$${formatNumber(totalCargoUnloadCost)}` : '-';
         if (footerCipCostCell) footerCipCostCell.textContent = totalCipCost > 0 ? `$${formatNumber(totalCipCost)}` : '-';
         if (footerImportTaxesCell) footerImportTaxesCell.textContent = totalImportTaxes > 0 ? `$${formatNumber(totalImportTaxes)}` : '-';
+        if (footerTotalPrCostDatCell) footerTotalPrCostDatCell.textContent = totalPrCostDat > 0 ? `$${formatNumber(totalPrCostDat)}` : '-';
     }
 
     // Function to recalculate all FCA values when exchange rate changes

@@ -133,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Determine max weight for this product based on its rank (500kg to 2500kg)
             const maxWeightForProduct = 500 + (rank / 10) * (2500 - 500);
+            product.maxWeightForProduct = maxWeightForProduct; // Store for top-up phase
 
             // Determine available weight for this product
             const remainingPayload = availablePayload - currentTotalWeight;
@@ -159,11 +160,12 @@ document.addEventListener('DOMContentLoaded', function() {
         while (remainingPayload >= smallestPackWeight && smallestPackWeight > 0) {
             let itemAddedInLoop = false;
             for (const product of fillableProducts) {
-                const { packWeight, row } = product;
-                if (packWeight > 0 && remainingPayload >= packWeight) {
-                    const amountInput = row.querySelector('.product-amount-input');
-                    let currentAmount = parseInt(amountInput.value, 10) || 0;
-                    
+                const { packWeight, row, maxWeightForProduct } = product;
+                const amountInput = row.querySelector('.product-amount-input');
+                let currentAmount = parseInt(amountInput.value, 10) || 0;
+                const currentProductWeight = currentAmount * packWeight;
+
+                if (packWeight > 0 && remainingPayload >= packWeight && (currentProductWeight + packWeight) <= maxWeightForProduct) {
                     amountInput.value = currentAmount + 1;
                     currentTotalWeight += packWeight;
                     remainingPayload -= packWeight;
