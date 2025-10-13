@@ -349,6 +349,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     consigneeCountryCodeField.dataset.importTaxes = data.import_taxes || 0;
                     consigneeCountryCodeField.dataset.importOtherTaxes = data.import_other_taxes || 0;
                 }
+
+                // --- Generate Shipment Reference ---
+                generateShipmentReference();
             })
             .catch(error => {
                 console.error('Error fetching trader info for arrival:', error);
@@ -1191,8 +1194,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const profitPriceCell = document.getElementById(`product-profit-price-${productCode}`);
                 const finalDatPriceCell = document.getElementById(`final-dat-price-${productCode}`);
                 const totalShipmentDatCostCell = document.getElementById(`total-shipment-dat-cost-${productCode}`);
-                const totalDatProfitCell = document.getElementById(`total-dat-profit-${productCode}`);
-                const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
+                const totalDatProfitCell = document.getElementById(`total-dat-profit-${product.product_code}`);
+                const totalWeightCell = document.getElementById(`total-weight-${product.product_code}`);
                 const totalPrCostDatCell = document.getElementById(`total-pr-cost-dat-${productCode}`);
 
                 if (amountInput && datKgCostCell && profitAmountCell && profitPriceCell && finalDatPriceCell && totalShipmentDatCostCell && totalDatProfitCell && totalWeightCell && totalPrCostDatCell) {
@@ -1494,4 +1497,29 @@ document.addEventListener('DOMContentLoaded', function() {
         iata_code = request.args.get('iata_code')
         # ... logic to find airport and return its details ...
     */
+
+    // --- Shipment Reference Generation ---
+    function generateShipmentReference() {
+        const portOfShippingField = document.getElementById('port_of_shipping');
+        const portOfArrivalField = document.getElementById('consignee_port_of_shipping');
+        const shipmentRefField = document.getElementById('shipment_reference');
+
+        if (!portOfShippingField || !portOfArrivalField || !shipmentRefField) {
+            console.warn('Could not generate shipment reference: one or more fields are missing.');
+            return;
+        }
+
+        const portOfShipping = portOfShippingField.value.toUpperCase();
+        const portOfArrival = portOfArrivalField.value.toUpperCase();
+
+        if (portOfShipping && portOfArrival) {
+            const now = new Date();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const year = now.getFullYear();
+            const dateStr = `${month}-${day}-${year}`;
+            
+            shipmentRefField.value = `${portOfShipping}-${portOfArrival}-${dateStr}`;
+        }
+    }
 });
