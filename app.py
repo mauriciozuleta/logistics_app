@@ -37,6 +37,7 @@ def create_app():
     from operations.api import operations_api_new
     from operations.airport_api import airport_api
     from operations.diagnostic_routes import operations_diagnostic
+    from operations.shipment_routes import shipments_bp  # Import the new blueprint
 
     # Register blueprints in proper order
     app.register_blueprint(coredata_bp, url_prefix='/coredata')
@@ -56,6 +57,7 @@ def create_app():
     app.register_blueprint(exchange_api, url_prefix='/api/exchange')
     csrf.exempt(exchange_api)  # Exempt exchange_api from CSRF protection
     app.register_blueprint(operations_diagnostic, url_prefix='/diagnostic')
+    app.register_blueprint(shipments_bp)  # Register the new blueprint
 
     # Homepage route
     @app.route('/')

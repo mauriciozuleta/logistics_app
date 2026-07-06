@@ -5,7 +5,7 @@ from flask.cli import with_appcontext
 
 from app import app, create_app
 from data.seed_all_from_csv import seed_all
-from models import Aircraft, Country, Route, Product, Airport, Shipment
+from models import Aircraft, Country, Route, Product, Airport, Shipment, ShipmentProduct
 
 
 # The app instance from app.py is now exposed for Flask run and CLI

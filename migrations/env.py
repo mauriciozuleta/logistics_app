@@ -93,6 +93,9 @@ def run_migrations_online():
     conf_args = current_app.extensions['migrate'].configure_args
     if conf_args.get("process_revision_directives") is None:
         conf_args["process_revision_directives"] = process_revision_directives
+    
+    # Add render_as_batch for SQLite support
+    conf_args['render_as_batch'] = True
 
     connectable = get_engine()
 

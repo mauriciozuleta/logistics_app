@@ -174,13 +174,13 @@ class Route(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     route_name = db.Column(db.String(128))
-    aircraft_id = db.Column(db.String, db.ForeignKey('aircraft.id'), nullable=False)
+    aircraft_id = db.Column(db.String, nullable=False)
     route_type = db.Column(db.String(20), nullable=False)  # one-way, round-trip, multiple
     
     # Airport references
-    from_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
-    to_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'), nullable=False)
-    finish_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id'))  # Only for multiple routes
+    from_airport_id = db.Column(db.Integer, nullable=False)
+    to_airport_id = db.Column(db.Integer, nullable=False)
+    finish_airport_id = db.Column(db.Integer)  # Only for multiple routes
     
     # Additional fields for enhanced saving functionality
     route_summary = db.Column(db.String(255))
@@ -222,6 +222,13 @@ class Route(BaseModel):
     to_airport = db.relationship('Airport', foreign_keys=[to_airport_id], backref='routes_to')
     finish_airport = db.relationship('Airport', foreign_keys=[finish_airport_id], backref='routes_finish')
     
+    __table_args__ = (
+        db.ForeignKeyConstraint(['aircraft_id'], ['aircraft.id'], name='fk_route_aircraft_id'),
+        db.ForeignKeyConstraint(['from_airport_id'], ['airports.id'], name='fk_route_from_airport_id'),
+        db.ForeignKeyConstraint(['to_airport_id'], ['airports.id'], name='fk_route_to_airport_id'),
+        db.ForeignKeyConstraint(['finish_airport_id'], ['airports.id'], name='fk_route_finish_airport_id'),
+    )
+
     def __repr__(self):
         return f"<Route {self.route_name or f'{self.leg1_route}'} ({self.route_type})>"
 
@@ -231,42 +238,115 @@ class Shipment(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     shipment_reference = db.Column(db.String(64), unique=True, nullable=False)
+    shipment_user = db.Column(db.String(128))
+    type_of_freight = db.Column(db.String(64))
+    port_of_shipping = db.Column(db.String(128))
+    consignee_port_of_shipping = db.Column(db.String(128))
+    status = db.Column(db.String(32), default='Draft')
 
-    # Relationships to other models for data integrity
-    # shipper_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
-    # consignee_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
-    departure_route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), nullable=False)
-    return_route_id = db.Column(db.Integer, db.ForeignKey('routes.id'))
+    # Trading Information
+    trading_region = db.Column(db.String(128))
+    trading_regional_manager = db.Column(db.String(128))
+    trading_country = db.Column(db.String(128))
+    trading_branch = db.Column(db.String(128))
+    consignee_region = db.Column(db.String(128))
+    consignee_regional_manager = db.Column(db.String(128))
+    consignee_country = db.Column(db.String(128))
+    consignee_branch = db.Column(db.String(128))
 
-    # Denormalized/calculated fields from the form
-    first_leg_route = db.Column(db.String(64), nullable=False) # Kept for display/reference
-    first_leg_distance = db.Column(db.Float)
-    first_leg_ft = db.Column(db.Float)
-    first_leg_cost = db.Column(db.Float)
-    first_leg_payload = db.Column(db.Float)
-    second_leg_route = db.Column(db.String(64)) # Kept for display/reference
-    second_leg_distance = db.Column(db.Float)
-    second_leg_ft = db.Column(db.Float)
-    second_leg_cost = db.Column(db.Float)
-    second_leg_payload = db.Column(db.Float)
-    selected_aircraft = db.Column(db.String(64))
-    return_type = db.Column(db.String(32))
-
+    # Logistic Information
+    departure_route = db.Column(db.String(128))
+    route_cost = db.Column(db.Float)
+    available_payload = db.Column(db.Float)
+    type_of_return = db.Column(db.String(32))
     outbound_cost_weight = db.Column(db.Float)
-    outbound_tcl = db.Column(db.Float)
-    outbound_kg_cost = db.Column(db.Float)
+    target_cargo_load = db.Column(db.Float)
+    est_outb_kg_cost = db.Column(db.Float)
+    
+    return_route = db.Column(db.String(128))
+    route_cost_return = db.Column(db.Float)
+    available_payload_return = db.Column(db.Float)
+    total_flight_cost_display = db.Column(db.Float)
     return_cost_weight = db.Column(db.Float)
-    return_tcl = db.Column(db.Float)
-    return_kg_cost = db.Column(db.Float)
+    target_cargo_load_return_percentage = db.Column(db.Float)
+    est_ret_kg_cost = db.Column(db.Float)
 
-    # Relationships for easy access to related objects
-    # shipper = db.relationship('Branch', foreign_keys=[shipper_id], backref='shipments_as_shipper')
-    # consignee = db.relationship('Branch', foreign_keys=[consignee_id], backref='shipments_as_consignee')
-    departure_route = db.relationship('Route', foreign_keys=[departure_route_id], backref='shipments_departing')
-    return_route = db.relationship('Route', foreign_keys=[return_route_id], backref='shipments_returning')
+    # Footer Totals from Product Table
+    total_weight = db.Column(db.Float)
+    total_product_cost = db.Column(db.Float)
+    total_export_taxes = db.Column(db.Float)
+    total_exporter_profit = db.Column(db.Float)
+    total_fca_cost = db.Column(db.Float)
+    total_fca_usd = db.Column(db.Float)
+    total_cargo_load_cost = db.Column(db.Float)
+    total_air_freight_cost = db.Column(db.Float)
+    total_cargo_unload_cost = db.Column(db.Float)
+    total_cip_cost = db.Column(db.Float)
+    total_import_taxes = db.Column(db.Float)
+    total_pr_cost_dat = db.Column(db.Float)
+    total_dat_profit = db.Column(db.Float)
+    total_shipment_dat_cost = db.Column(db.Float)
+
+    # Relationships
+    products = db.relationship('ShipmentProduct', backref='shipment', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<Shipment {self.shipment_reference}>'
+
+
+class ShipmentProduct(BaseModel):
+    __tablename__ = 'shipment_products'
+
+    id = db.Column(db.Integer, primary_key=True)
+    shipment_id = db.Column(db.Integer, db.ForeignKey('shipments.id'), nullable=False)
+    shipment_reference = db.Column(db.String(64), nullable=False)
+
+    # Product Info from original Product model
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    product_code = db.Column(db.String(16))
+    product_name = db.Column(db.String(128), nullable=False)
+    product_category = db.Column(db.String(64))
+    country_id = db.Column(db.String(10))
+    packaging = db.Column(db.String(64))
+    pack_weight = db.Column(db.Float)
+    units_per_pack = db.Column(db.Integer)
+    packaging_cost = db.Column(db.Float)
+    currency = db.Column(db.String(4))
+
+    # User input
+    quantity = db.Column(db.Integer) # 'Amount' in the table
+
+    # Calculated fields based on user input and product data
+    total_weight = db.Column(db.Float)
+    total_product_cost = db.Column(db.Float)
+    export_taxes = db.Column(db.Float)
+    exporter_profit = db.Column(db.Float)
+    fca_cost = db.Column(db.Float)
+    fca_usd = db.Column(db.Float)
+    cargo_load_cost = db.Column(db.Float)
+    air_freight_cost = db.Column(db.Float)
+    cargo_unload_cost = db.Column(db.Float)
+    cip_cost = db.Column(db.Float)
+    import_taxes = db.Column(db.Float)
+    dat_kg_cost = db.Column(db.Float)
+    dat_ea_cost = db.Column(db.Float)
+    
+    # Pricing and Profitability
+    comparative_price = db.Column(db.Float)
+    sug_prod_prof_ea = db.Column(db.Float)
+    product_profit_percentage = db.Column(db.Float)
+    product_profit_amount = db.Column(db.Float)
+    product_profit_per_kg = db.Column(db.Float)
+    final_dat_price_ea = db.Column(db.Float)
+    total_pr_cost_dat = db.Column(db.Float)
+    total_dat_profit = db.Column(db.Float)
+    total_shipment_dat_cost = db.Column(db.Float)
+
+    product = db.relationship('Product', backref='shipment_products')
+
+    def __repr__(self):
+        return f'<ShipmentProduct {self.product_name} for Shipment {self.shipment_id}>'
+
 
 class CompetitivePrice(db.Model):
     __tablename__ = 'competitive_prices'

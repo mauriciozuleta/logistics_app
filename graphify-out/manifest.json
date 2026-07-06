@@ -1,0 +1,677 @@
+{
+  "D:\\OneDrive\\logistics_app\\app.py": {
+    "mtime": 1760371632.131605,
+    "ast_hash": "b36ab30278d255e62460b12942ab9cb2",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\config.py": {
+    "mtime": 1754623745.7387993,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\__init__.py": {
+    "mtime": 1754623745.7408009,
+    "ast_hash": "3df37b888695dfc7bdb2b543d9352d84",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\api.py": {
+    "mtime": 1759858416.6608996,
+    "ast_hash": "5139878556cb63dd45fe4ee57da9c0b1",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\forms.py": {
+    "mtime": 1756936665.3463993,
+    "ast_hash": "a090e3ba1ea8e49d70466241a14719b3",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\reference_price.py": {
+    "mtime": 1755540109.340032,
+    "ast_hash": "78119bce5938aacfe1c7da21eb7533a1",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\routes.py": {
+    "mtime": 1759944359.9447937,
+    "ast_hash": "c531bb22eac7e16694b9f654c81b2e94",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\exchange_rate.py": {
+    "mtime": 1759857060.6713033,
+    "ast_hash": "dc846ba7dec8639e9381550cb886bbbe",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\market_analysis\\BS_analysis_20251001_211601.json": {
+    "mtime": 1759851604.7538302,
+    "ast_hash": "87b8251488abed90865d912ed3b0dc95",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\market_analysis\\BS_analysis_20251001_211956.json": {
+    "mtime": 1759851604.7698305,
+    "ast_hash": "4322673c380b106044d0081e876c4c4e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\market_analysis\\BS_analysis_20251001_213104.json": {
+    "mtime": 1759851604.7859163,
+    "ast_hash": "7ce3f4b817cba6cea71a17fc47790f60",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\market_analysis\\BS_analysis_20251001_213234.json": {
+    "mtime": 1759851604.7978365,
+    "ast_hash": "b7d54e55be02ab7550d2c089c338fdbd",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\market_analysis\\BS_analysis_20251001_213547.json": {
+    "mtime": 1759851604.7988298,
+    "ast_hash": "8d6887c48b918747a1217ca981ce54e9",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\market_analysis\\BS_latest.json": {
+    "mtime": 1759851604.7988298,
+    "ast_hash": "8d6887c48b918747a1217ca981ce54e9",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\populate_country_regions.py": {
+    "mtime": 1755631527.1536963,
+    "ast_hash": "1dd5b71b60f43d5b0ae90720aa5d2a26",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\seed_all_from_csv.py": {
+    "mtime": 1756936665.3463993,
+    "ast_hash": "d988712eb525ba136370d277d1fa66bb",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\static_exchange_rates.json": {
+    "mtime": 1758298901.2688367,
+    "ast_hash": "2f63627b5551821df95941b56653c445",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\test_exchange_rate.py": {
+    "mtime": 1758297579.8078387,
+    "ast_hash": "0743cf801724fd47ee59fb79b6c4584c",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\debug_price_search.py": {
+    "mtime": 1759183325.7854178,
+    "ast_hash": "cac6e3069afa6a8f3fe86185453b1eba",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\direct_test.py": {
+    "mtime": 1759183325.8392446,
+    "ast_hash": "d1fd44b639f3eb9b1e1bd9dcc3494985",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\export_functions\\airport_utils.py": {
+    "mtime": 1766686480.9065776,
+    "ast_hash": "21e78d6df9eea4084db23aa9f0d5c556",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\extensions.py": {
+    "mtime": 1755295294.7156284,
+    "ast_hash": "461dabaccb3a7b130be57724f709ddf7",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\financial\\__init__.py": {
+    "mtime": 1754623745.784799,
+    "ast_hash": "10088dd6867aa838fd26331197bf25ac",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\financial\\routes.py": {
+    "mtime": 1754623745.7868085,
+    "ast_hash": "0a87b74abc0a5c1f0b088aa546984c5c",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\financial\\utils.py": {
+    "mtime": 1754623745.7907994,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\flight_distances.py": {
+    "mtime": 1754623745.7907994,
+    "ast_hash": "7d3371ea5112df7e73ec09f278682152",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\kill_python.py": {
+    "mtime": 1755015656.9238088,
+    "ast_hash": "21d78be1119d0b1ab9201e633b0c210e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\manage.py": {
+    "mtime": 1760371632.2480974,
+    "ast_hash": "f61e70fcc138ec503af1a66f4873ef2f",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\migrations\\env.py": {
+    "mtime": 1760371632.4287775,
+    "ast_hash": "783f49ab2e05b509b2c1217d400316dc",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\migrations\\versions\\0ab1ea16c365_add_shipment_and_shipmentproduct_models.py": {
+    "mtime": 1760371632.3679028,
+    "ast_hash": "3f2aa73651924542062ac375fe8b8eee",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\migrations\\versions\\a48290861735_add_status_field_to_shipment_model.py": {
+    "mtime": 1760371436.3724968,
+    "ast_hash": "caeaaa70f00c1659b7969bc4f87926e4",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\migrations\\versions\\ca78769b12a6_final_migration_with_named_constraints.py": {
+    "mtime": 1760370599.62685,
+    "ast_hash": "f471064dc2dcaac4838e2197fe9bb26e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\models.py": {
+    "mtime": 1760371632.1849275,
+    "ast_hash": "d64bf75c35034959c4f9cb2bfad79a33",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\__init__.py": {
+    "mtime": 1754623745.8100886,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\airport_api.py": {
+    "mtime": 1758468962.8585467,
+    "ast_hash": "d7bd29ec571106116eb181e358c742b6",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\api.py": {
+    "mtime": 1760129986.4805057,
+    "ast_hash": "cf64705c51ea31b9d83d49e855d2bc9f",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\diagnostic_routes.py": {
+    "mtime": 1756939510.9470985,
+    "ast_hash": "836ef55c275012a0decef6104a36bfb8",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\exchange_api.py": {
+    "mtime": 1758298901.2232592,
+    "ast_hash": "9856cb1870ded656588f91b7b5e5e467",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\flight_distances.py": {
+    "mtime": 1755015656.9668093,
+    "ast_hash": "048ad56e08402fea443e121c48d2e64e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\flight_distances_db.py": {
+    "mtime": 1755015656.9668093,
+    "ast_hash": "c556a07f734eff1c1a628ad5ac71b151",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\market_analysis.py": {
+    "mtime": 1759851604.8835173,
+    "ast_hash": "f7268f67a2db17ddd89bbb3ae3be0017",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\routes.py": {
+    "mtime": 1760367149.8736825,
+    "ast_hash": "81c0bb6a4fa377ce34e438bd4c46a279",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\shipment_routes.py": {
+    "mtime": 1760464238.1021497,
+    "ast_hash": "3748ccaccda011a1349dbf93cd72968c",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\utils.py": {
+    "mtime": 1754623745.8230932,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\ops\\__init__.py": {
+    "mtime": 1754623745.826094,
+    "ast_hash": "94e47c39881dfcdf37e7e719cde71f30",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\ops\\routes.py": {
+    "mtime": 1754623745.8290927,
+    "ast_hash": "19789a1b99eff203bc0da2e3dc851209",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\ops\\utils.py": {
+    "mtime": 1754623745.8290927,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\price_search_test_suite.py": {
+    "mtime": 1759183325.8698218,
+    "ast_hash": "d5469397d95bc04ce8401fa10ce5a827",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\print_traders.py": {
+    "mtime": 1756936665.3463993,
+    "ast_hash": "21b333bcd6a370ced495c076737a0768",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\product_selection.js": {
+    "mtime": 1755015656.988809,
+    "ast_hash": "a7e5108bbfe97c16f00152de854ede72",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\region_country_mapping.py": {
+    "mtime": 1756938405.8804684,
+    "ast_hash": "bf998ab563a9d9ba076bfab52d62d450",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\run_dev_server.py": {
+    "mtime": 1758298901.2688367,
+    "ast_hash": "e6cbec616f96622b1d4e36e32fffe502",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\seed_countries.py": {
+    "mtime": 1755297710.435588,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\setup_regions.py": {
+    "mtime": 1756939510.9227238,
+    "ast_hash": "585eab2662dbf393af468deabba7245d",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\css\\routes_utils.py": {
+    "mtime": 1766770266.6426134,
+    "ast_hash": "1cb2df6d2ca33408c74bd1e3b566d653",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\aircraft_routes.js": {
+    "mtime": 1754623745.8430934,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\api_dropdowns.js": {
+    "mtime": 1757688894.9408796,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\autofill_cargo.js": {
+    "mtime": 1760116253.8506038,
+    "ast_hash": "fb1d35c079784c2e42f053546a39bb8e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\cargo_handling.js": {
+    "mtime": 1760464238.033616,
+    "ast_hash": "2a12e570a358794a9f8944b3554da830",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\dashboardCharts.js": {
+    "mtime": 1754623745.8430934,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\dropdowns.js": {
+    "mtime": 1757688894.8516977,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\navbar.js": {
+    "mtime": 1755708965.9497688,
+    "ast_hash": "c7c93a48a020b51d5dccaf31fda15e60",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\product_debug.js": {
+    "mtime": 1757688893.9107633,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\product_table.js": {
+    "mtime": 1756928022.1453767,
+    "ast_hash": "571d733ed7fa1916c8f10f0802cd0cbf",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\routeSummary.js": {
+    "mtime": 1754623745.8440926,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\shipment_form.js": {
+    "mtime": 1760135415.5948374,
+    "ast_hash": "b2299f9f801b220eb43c22d0180faca2",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\shipment_management.js": {
+    "mtime": 1760464237.9357822,
+    "ast_hash": "b5f7e2a29ada75efccc5f22061018d7b",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\shipment_management_update.js": {
+    "mtime": 1757688892.641428,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\totals_calculator.js": {
+    "mtime": 1757688894.3540947,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_altitude.py": {
+    "mtime": 1755015657.0248086,
+    "ast_hash": "c5964aef143c71dafb699de6af4fa185",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_api.py": {
+    "mtime": 1759183325.8385057,
+    "ast_hash": "d820f594044ef7e6c40d975e0384c7d1",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_api_directly.py": {
+    "mtime": 1758298901.269355,
+    "ast_hash": "f199c25acb3a7264dcf432e0f9a4fb28",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_coordinates.py": {
+    "mtime": 1755015657.0248086,
+    "ast_hash": "8c2c76a7410dceefbf13a5509dc2b600",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_exchange_rate.py": {
+    "mtime": 1758298901.2688367,
+    "ast_hash": "3150e68f69922e2f7bd34f487e1d0808",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_exchange_search.py": {
+    "mtime": 1758298901.269355,
+    "ast_hash": "1af0e9f90bd2f89b38070267c66e5be6",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_openflights.py": {
+    "mtime": 1755015657.0248086,
+    "ast_hash": "3e6d36b53262467218ce489f3c88c366",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_price_search.py": {
+    "mtime": 1759183325.7849097,
+    "ast_hash": "5e95e055eed76dd89bf65ca0a3a34924",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\test_routes.py": {
+    "mtime": 1755373911.6355982,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\update_all_altitudes.py": {
+    "mtime": 1755015657.0258095,
+    "ast_hash": "27bb3ad80747a933a25c6855ffc04c6f",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\update_shipment_template.py": {
+    "mtime": 1758298901.269355,
+    "ast_hash": "88980962c5fc1f72d8f3baa2645801c6",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\users\\__init__.py": {
+    "mtime": 1754623745.8540924,
+    "ast_hash": "177facb613ca822533da26d0f70baa60",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\users\\forms.py": {
+    "mtime": 1754623745.8570864,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\users\\routes.py": {
+    "mtime": 1754623745.8581045,
+    "ast_hash": "80ba90d47d0ddecc368588050cc01224",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\verify_schema.py": {
+    "mtime": 1755298855.2442062,
+    "ast_hash": "66c46ba8bbe529ec5215e33a038d382d",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\version.py": {
+    "mtime": 1765212908.3422039,
+    "ast_hash": "f63b08e6895654b5113a07537c905a0f",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\DEBUG_INSTRUCTIONS.txt": {
+    "mtime": 1755015656.824347,
+    "ast_hash": "b8a617f04237d1e454d6e4226222ed78",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\EXCHANGE_RATE_README.md": {
+    "mtime": 1758298901.2688367,
+    "ast_hash": "c81c4708aac946c9c5d4d73fa17261bd",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\PRICE_SEARCH_IMPROVEMENTS.md": {
+    "mtime": 1759189136.7699797,
+    "ast_hash": "b45326b600d7770a7f6f7bc89bad2483",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\RESTART_CHECKLIST.txt": {
+    "mtime": 1755015656.825348,
+    "ast_hash": "338f4f7ad998deb39683966f20f6f5e5",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\add_aircraft.html": {
+    "mtime": 1755015656.8948102,
+    "ast_hash": "d09ff20da5e69dc7de2659730ff52224",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\add_airport.html": {
+    "mtime": 1755807479.5687099,
+    "ast_hash": "d73b24ff2e92377bd7d047c192d79b61",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\add_product.html": {
+    "mtime": 1755447040.014856,
+    "ast_hash": "796163869acbf788299ff88245f06996",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\competitive_prices.html": {
+    "mtime": 1759851604.7218778,
+    "ast_hash": "838b526b85b8065c4c83a6e8c7b67ae8",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\coredata_dashboard.html": {
+    "mtime": 1760027860.1598012,
+    "ast_hash": "45d2f094d7744715493df7e12f4047b1",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\regional_branches_management.html": {
+    "mtime": 1760027860.15881,
+    "ast_hash": "eda6aeaf6f233d6f06aa5d29c19851e4",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_edit_aircraft.html": {
+    "mtime": 1755015656.9018095,
+    "ast_hash": "307b5fd4ae4e7a57d2d139d60f1823e9",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_edit_airport.html": {
+    "mtime": 1755015656.9018095,
+    "ast_hash": "5829d507aae8e5843a9b76956cfd98e5",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_edit_product.html": {
+    "mtime": 1755026878.1525638,
+    "ast_hash": "92af778d1e272d030cc5b57fff2a8884",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_edit_routes.html": {
+    "mtime": 1754623745.7688022,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_edit_schedule.html": {
+    "mtime": 1754623745.7688022,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_edit_shipment.html": {
+    "mtime": 1754623745.7698076,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_edit_traders.html": {
+    "mtime": 1759943796.531533,
+    "ast_hash": "0b502590c0067cba4ee5733ed4320af6",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\coredata\\templates\\coredata\\view_imported_data_structure.html": {
+    "mtime": 1755015656.9058087,
+    "ast_hash": "d4e9eb8f5ec414f3f43bb60cbc7b969a",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\data\\EXCHANGE_RATE_README.md": {
+    "mtime": 1758297579.8078387,
+    "ast_hash": "d4bc828383b2248facccbb722a1141d2",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\financial\\templates\\financial\\cash_flow.html": {
+    "mtime": 1754623745.788799,
+    "ast_hash": "4a8a08f09d37b73795649038408b5f33",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\financial\\templates\\financial\\competitiveness.html": {
+    "mtime": 1754623745.788799,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\financial\\templates\\financial\\financial_dashboard.html": {
+    "mtime": 1754623745.788799,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\financial\\templates\\financial\\profit_loss.html": {
+    "mtime": 1754623745.789877,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\add_route.html": {
+    "mtime": 1759851604.90579,
+    "ast_hash": "a4af14825d080a07a341b658821ce0fe",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\add_shipment.html": {
+    "mtime": 1756256627.9796436,
+    "ast_hash": "3da7728a3b7a3c63f70309ec971646e4",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\exchange_search.html": {
+    "mtime": 1759851604.9077878,
+    "ast_hash": "94a406be066bf660028ae50dab8f825e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\mock_calendar.html": {
+    "mtime": 1755203623.8932557,
+    "ast_hash": "3e58b45f1b2d88be94ef5e36a7b173a5",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\operations_dashboard.html": {
+    "mtime": 1755015656.971808,
+    "ast_hash": "34156cde5e008c7c4770d7525c0483cd",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\preview_shipment.html": {
+    "mtime": 1755015656.972808,
+    "ast_hash": "14de0332110ece64245d03b0978ec573",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\schedule.html": {
+    "mtime": 1755189460.7203903,
+    "ast_hash": "f23451238af6197ac48b50789988c5a7",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\shippment_management.html": {
+    "mtime": 1760119260.6557794,
+    "ast_hash": "66afc0287de4cd22ca956261c2f83e51",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\view_edit_shipments.html": {
+    "mtime": 1755015656.972808,
+    "ast_hash": "ed306dd92675b12c7dc50572332ac619",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\view_routes.html": {
+    "mtime": 1759851604.9107852,
+    "ast_hash": "0cff11f3aa405b817e44e22675dd1626",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\operations\\templates\\operations\\view_routes_backup.html": {
+    "mtime": 1755015656.9738078,
+    "ast_hash": "3f9b3377cd2c60fa434cb805c00721a3",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\reference_price_test.html": {
+    "mtime": 1755540289.9661129,
+    "ast_hash": "cb8bc511a7b75d30ed92d203fdca7fa9",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\required_upgrades.txt": {
+    "mtime": 1756911833.1591277,
+    "ast_hash": "906577e788714dfe256090302e027e0c",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\requirements.txt": {
+    "mtime": 1765212908.3296585,
+    "ast_hash": "85209842d7412840796287d2e5d2f6a8",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\js\\functionallity_sumary.txt": {
+    "mtime": 1755015656.991809,
+    "ast_hash": "f38cd2fe8907e365ef6069df2083aa7b",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\base.html": {
+    "mtime": 1755373563.9343078,
+    "ast_hash": "d7c37455c5d22984bef28d1782ba6400",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\home.html": {
+    "mtime": 1755184497.2982068,
+    "ast_hash": "19d7dae89bfc1c4032523490611be163",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\home_screen_copy.html": {
+    "mtime": 1765213141.51192,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\macros\\product_table_macro.html": {
+    "mtime": 1757001488.554638,
+    "ast_hash": "f3e8ee3a8775220b15be2ef78feeaead",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\modals\\confirm_action.html": {
+    "mtime": 1754623745.8480928,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\modals\\form_modal.html": {
+    "mtime": 1754623745.8490932,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\navbar.html": {
+    "mtime": 1759944016.415813,
+    "ast_hash": "e83ddc7c206874f37d9f2f86140b5254",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\templates\\shipment_list.html": {
+    "mtime": 1760371632.4875925,
+    "ast_hash": "bdc50b2ee45bb5004fcfb381358f759f",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\users\\templates\\users\\login.html": {
+    "mtime": 1754623745.8600945,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\users\\templates\\users\\profile.html": {
+    "mtime": 1754623745.8610933,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\users\\templates\\users\\register.html": {
+    "mtime": 1754623745.8610933,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\OneDrive\\logistics_app\\static\\images\\background.png": {
+    "mtime": 1754623745.842094,
+    "ast_hash": "95f1a455a5bdf9c49b7c948ebbd625b3",
+    "semantic_hash": ""
+  }
+}

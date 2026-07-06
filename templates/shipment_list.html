@@ -1,0 +1,350 @@
+{% extends "layout.html" %}
+
+{% block title %}Shipment Management{% endblock %}
+
+{% block styles %}
+<style>
+    .search-container {
+        margin-bottom: 20px;
+    }
+    .shipment-table {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .table-responsive {
+        margin-bottom: 20px;
+    }
+    .action-buttons .btn {
+        margin-right: 5px;
+    }
+    #searchResults {
+        margin-top: 10px;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Shipment Management</h1>
+        <a href="{{ url_for('new_shipment') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Shipment
+        </a>
+    </div>
+
+    <!-- Search Box -->
+    <div class="card search-container">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by reference, freight type, origin, destination...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    </div>
+                    <div id="searchResults" class="text-muted"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-end">
+                        <select id="filterFreight" class="form-select me-2" style="max-width: 150px;">
+                            <option value="">All Freight Types</option>
+                            <option value="AIR">Air</option>
+                            <option value="OCEAN">Ocean</option>
+                            <option value="ROAD">Road</option>
+                            <option value="MULTI">Multi-Modal</option>
+                        </select>
+                        <select id="sortBy" class="form-select" style="max-width: 200px;">
+                            <option value="date_desc">Date (Newest First)</option>
+                            <option value="date_asc">Date (Oldest First)</option>
+                            <option value="ref_asc">Reference (A-Z)</option>
+                            <option value="ref_desc">Reference (Z-A)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipments Table -->
+    <div class="table-responsive shipment-table">
+        <table class="table table-striped table-hover" id="shipmentTable">
+            <thead class="table-primary">
+                <tr>
+                    <th>Reference</th>
+                    <th>Freight Type</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Total Weight (kg)</th>
+                    <th>Total Cost</th>
+                    <th>Created By</th>
+                    <th>Date Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- No Results Message -->
+    <div id="noResults" class="alert alert-info d-none">
+        <i class="bi bi-info-circle"></i> No shipments found matching your search criteria.
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading shipments...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // CSRF token management
+        let csrfToken;
+        
+        // Get CSRF token
+        async function getCSRFToken() {
+            try {
+                const response = await fetch('/api/get_csrf_token');
+                const data = await response.json();
+                csrfToken = data.csrf_token;
+            } catch (error) {
+                console.error('Error getting CSRF token:', error);
+            }
+        }
+
+        // Initialize data
+        let allShipments = [];
+        
+        // Load all shipments from the server
+        async function loadShipments() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/api/shipments');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                allShipments = data.shipments || [];
+                
+                displayShipments(allShipments);
+                updateSearchResults(allShipments.length);
+            } catch (error) {
+                console.error('Error loading shipments:', error);
+                showError('Failed to load shipments. Please try again later.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Display shipments in the table
+        function displayShipments(shipments) {
+            const tableBody = document.querySelector('#shipmentTable tbody');
+            tableBody.innerHTML = '';
+            
+            if (shipments.length === 0) {
+                document.getElementById('noResults').classList.remove('d-none');
+                return;
+            }
+            
+            document.getElementById('noResults').classList.add('d-none');
+            
+            shipments.forEach(shipment => {
+                const row = document.createElement('tr');
+                
+                // Format date
+                const createdDate = new Date(shipment.created_at);
+                const formattedDate = createdDate.toLocaleDateString() + ' ' + 
+                                     createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                row.innerHTML = `
+                    <td>${shipment.shipment_reference || '-'}</td>
+                    <td>${shipment.type_of_freight || '-'}</td>
+                    <td>${shipment.origin_airport || '-'}</td>
+                    <td>${shipment.destination_airport || '-'}</td>
+                    <td><span class="badge bg-${getStatusColor(shipment.status)}">${shipment.status || 'Draft'}</span></td>
+                    <td>${formatNumber(shipment.total_weight) || '0'}</td>
+                    <td>${formatCurrency(shipment.total_cip_cost) || '$0.00'}</td>
+                    <td>${shipment.shipment_user || '-'}</td>
+                    <td>${formattedDate}</td>
+                    <td class="action-buttons">
+                        <a href="/shipments/${shipment.id}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${shipment.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const shipmentId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to delete this shipment?')) {
+                        deleteShipment(shipmentId);
+                    }
+                });
+            });
+        }
+        
+        // Search functionality
+        function searchShipments() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const freightType = document.getElementById('filterFreight').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            // Filter by search term and freight type
+            let filteredShipments = allShipments.filter(shipment => {
+                const matchesSearch = !searchTerm || 
+                    (shipment.shipment_reference && shipment.shipment_reference.toLowerCase().includes(searchTerm)) ||
+                    (shipment.origin_airport && shipment.origin_airport.toLowerCase().includes(searchTerm)) ||
+                    (shipment.destination_airport && shipment.destination_airport.toLowerCase().includes(searchTerm)) ||
+                    (shipment.shipment_user && shipment.shipment_user.toLowerCase().includes(searchTerm));
+                    
+                const matchesFreight = !freightType || shipment.type_of_freight === freightType;
+                
+                return matchesSearch && matchesFreight;
+            });
+            
+            // Sort results
+            filteredShipments.sort((a, b) => {
+                switch(sortBy) {
+                    case 'date_desc':
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    case 'date_asc':
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    case 'ref_asc':
+                        return (a.shipment_reference || '').localeCompare(b.shipment_reference || '');
+                    case 'ref_desc':
+                        return (b.shipment_reference || '').localeCompare(a.shipment_reference || '');
+                    default:
+                        return new Date(b.created_at) - new Date(a.created_at);
+                }
+            });
+            
+            displayShipments(filteredShipments);
+            updateSearchResults(filteredShipments.length);
+        }
+        
+        // Helper function to get status color
+        function getStatusColor(status) {
+            switch(status) {
+                case 'Completed': return 'success';
+                case 'In Progress': return 'warning';
+                case 'Cancelled': return 'danger';
+                default: return 'secondary'; // Draft or undefined
+            }
+        }
+        
+        // Helper function to format numbers
+        function formatNumber(value) {
+            if (!value) return '0';
+            return parseFloat(value).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        // Helper function to format currency
+        function formatCurrency(value) {
+            if (!value) return '$0.00';
+            return '$' + formatNumber(value);
+        }
+        
+        // Update search results text
+        function updateSearchResults(count) {
+            const resultsElement = document.getElementById('searchResults');
+            if (count === allShipments.length) {
+                resultsElement.textContent = `Showing all ${count} shipments`;
+            } else {
+                resultsElement.textContent = `Found ${count} shipments matching your search`;
+            }
+        }
+        
+        // Helper function to show/hide loading indicator
+        function showLoading(show) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (show) {
+                loadingIndicator.classList.remove('d-none');
+            } else {
+                loadingIndicator.classList.add('d-none');
+            }
+        }
+        
+        // Helper function to show error
+        function showError(message) {
+            // Implementation depends on your UI design for error messages
+            alert(message);
+        }
+        
+        // Delete a shipment
+        async function deleteShipment(shipmentId) {
+            if (!csrfToken) {
+                await getCSRFToken();
+            }
+            
+            try {
+                const response = await fetch(`/api/shipments/${shipmentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Reload shipments after successful deletion
+                await loadShipments();
+                
+            } catch (error) {
+                console.error('Error deleting shipment:', error);
+                showError('Failed to delete shipment. Please try again later.');
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('searchButton').addEventListener('click', searchShipments);
+        document.getElementById('searchInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                searchShipments();
+            }
+        });
+        
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterFreight').value = '';
+            document.getElementById('sortBy').value = 'date_desc';
+            searchShipments();
+        });
+        
+        document.getElementById('filterFreight').addEventListener('change', searchShipments);
+        document.getElementById('sortBy').addEventListener('change', searchShipments);
+        
+        // Initialize
+        getCSRFToken().then(() => {
+            loadShipments();
+        });
+    });
+</script>
+{% endblock %}

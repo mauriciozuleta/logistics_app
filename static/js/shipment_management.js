@@ -251,7 +251,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const addCargoOutboundBtn = document.getElementById('add_cargo_outbound_btn');
     const addCargoReturnBtn = document.getElementById('add_cargo_return_btn');
     const productTableContainer = document.getElementById('product-table-container');
+    const filterCategoryInput = document.getElementById('filter_category');
     let currentCargoContext = null; // To track if we are editing outbound or return cargo
+
+    // Filter the rendered product rows by category as the user types
+    function applyCategoryFilter() {
+        if (!filterCategoryInput || !productTableContainer) return;
+        const term = filterCategoryInput.value.trim().toLowerCase();
+        productTableContainer.querySelectorAll('tr[data-product-id]').forEach(row => {
+            const category = (row.getAttribute('data-category') || '').toLowerCase();
+            row.style.display = (!term || category.includes(term)) ? '' : 'none';
+        });
+    }
+
+    if (filterCategoryInput) {
+        filterCategoryInput.addEventListener('input', applyCategoryFilter);
+    }
     
     // Global variables for cargo handling costs
     let outboundCargoHandlingCost = 0;
@@ -838,7 +853,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // The empty cells are placeholders for calculated values.
         const comparativePrice = product.comparative_price ? `$${formatNumber(product.comparative_price)}` : '-';
         return `
-            <tr>
+            <tr data-product-id="${product.id || product.product_id}" data-category="${product.product_type || ''}">
                 <td style="text-align: center;">${product.product_code || '-'}</td>
                 <td style="text-align: left;">${product.name || '-'}</td>
                 <td style="text-align: center;">${product.product_type || '-'}</td>
@@ -928,10 +943,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Render products in the table
-            productTableContainer.innerHTML = (products && products.length > 0) 
-                ? products.map(createProductRow).join('') 
+            productTableContainer.innerHTML = (products && products.length > 0)
+                ? products.map(createProductRow).join('')
                 : `<tr><td colspan="29" style="text-align: center;">No products found for this country.</td></tr>`;
-            
+
+            // Re-apply any active category filter to the newly rendered rows
+            applyCategoryFilter();
+
             // Initialize/clear totals when table is reloaded
             updateTableTotals();
             
@@ -1194,8 +1212,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const profitPriceCell = document.getElementById(`product-profit-price-${productCode}`);
                 const finalDatPriceCell = document.getElementById(`final-dat-price-${productCode}`);
                 const totalShipmentDatCostCell = document.getElementById(`total-shipment-dat-cost-${productCode}`);
-                const totalDatProfitCell = document.getElementById(`total-dat-profit-${product.product_code}`);
-                const totalWeightCell = document.getElementById(`total-weight-${product.product_code}`);
+                const totalDatProfitCell = document.getElementById(`total-dat-profit-${productCode}`);
+                const totalWeightCell = document.getElementById(`total-weight-${productCode}`);
                 const totalPrCostDatCell = document.getElementById(`total-pr-cost-dat-${productCode}`);
 
                 if (amountInput && datKgCostCell && profitAmountCell && profitPriceCell && finalDatPriceCell && totalShipmentDatCostCell && totalDatProfitCell && totalWeightCell && totalPrCostDatCell) {
@@ -1203,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const packWeight = parseFloat(amountInput.dataset.packWeight) || 0;
                     const unitsPerPack = parseFloat(amountInput.dataset.unitsPerPack) || 1;
 
-                    if (datKgCost > 0 && profitPct > 0) {
+                    if (datKgCost > 0) {
                         // 1. Calculate the final price per KG ($ Kg.)
                         const finalKgPrice = datKgCost * (1 + (profitPct / 100));
                         profitPriceCell.textContent = `$${formatNumber(finalKgPrice)}`; // This is the $ Kg value
@@ -1521,5 +1539,761 @@ document.addEventListener('DOMContentLoaded', function() {
             
             shipmentRefField.value = `${portOfShipping}-${portOfArrival}-${dateStr}`;
         }
+    }
+    
+    // --- Shipment Save and Edit Functionality ---
+    let currentShipmentId = null; // Used to track if we're editing an existing shipment
+    
+    // Add buttons to the top of the form
+    function addActionButtons() {
+        const container = document.querySelector('#container-1 .section-title');
+        if (!container) return;
+        
+        // Create button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.marginLeft = 'auto';
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '10px';
+        
+        // Save button
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.id = 'save-shipment-btn';
+        saveBtn.className = 'btn btn-success';
+        saveBtn.textContent = 'Save Shipment';
+        saveBtn.addEventListener('click', saveShipment);
+        
+        // New button
+        const newBtn = document.createElement('button');
+        newBtn.type = 'button';
+        newBtn.id = 'new-shipment-btn';
+        newBtn.className = 'btn btn-primary';
+        newBtn.textContent = 'New Shipment';
+        newBtn.addEventListener('click', resetForm);
+        
+        // Load button
+        const loadBtn = document.createElement('button');
+        loadBtn.type = 'button';
+        loadBtn.id = 'load-shipment-btn';
+        loadBtn.className = 'btn btn-info';
+        loadBtn.textContent = 'Load Shipment';
+        loadBtn.addEventListener('click', showLoadShipmentModal);
+        
+        // Add buttons to container
+        buttonContainer.appendChild(saveBtn);
+        buttonContainer.appendChild(newBtn);
+        buttonContainer.appendChild(loadBtn);
+        
+        // Add button container to the section title
+        container.appendChild(buttonContainer);
+    }
+    
+    // Initialize buttons
+    addActionButtons();
+    
+    // Reset form for a new shipment
+    function resetForm() {
+        document.querySelector('form').reset();
+        currentShipmentId = null;
+        
+        // Clear product table
+        const productTableContainer = document.getElementById('product-table-container');
+        if (productTableContainer) {
+            productTableContainer.innerHTML = '';
+        }
+        
+        // Reset footer totals
+        resetFooterTotals();
+        
+        // Generate new shipment reference
+        generateShipmentReference();
+        
+        // Enable the "Start New Shipment" button
+        const startShipmentBtn = document.getElementById('start-shipment-btn');
+        if (startShipmentBtn) {
+            startShipmentBtn.disabled = false;
+        }
+    }
+    
+    // Reset footer total fields
+    function resetFooterTotals() {
+        const totalFields = [
+            'footer-total-weight',
+            'footer-total-cost',
+            'footer-export-taxes',
+            'footer-exporter-profit',
+            'footer-fca-cost',
+            'footer-fca-usd',
+            'footer-cargo-load-cost',
+            'footer-air-freight-cost',
+            'footer-cargo-unload-cost',
+            'footer-cip-cost',
+            'footer-import-taxes',
+            'footer-total-pr-cost-dat',
+            'footer-total-dat-profit',
+            'footer-total-shipment-dat-cost'
+        ];
+        
+        totalFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) field.textContent = '-';
+        });
+    }
+    
+    // Show modal to load existing shipment
+    function showLoadShipmentModal() {
+        // Check if modal exists, if not create it
+        let modal = document.getElementById('load-shipment-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'load-shipment-modal';
+            modal.className = 'modal fade';
+            modal.tabIndex = '-1';
+            modal.role = 'dialog';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Load Existing Shipment</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-group mb-3">
+                                <input type="text" id="shipment-search" class="form-control" placeholder="Search by reference, user, country...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="search-shipments-btn">Search</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>User</th>
+                                            <th>Type</th>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Created</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="shipments-table-body"></tbody>
+                                </table>
+                            </div>
+                            <div id="pagination-controls" class="mt-3"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Initialize search button
+            document.getElementById('search-shipments-btn').addEventListener('click', function() {
+                loadShipmentsList(1);
+            });
+            
+            // Allow search on enter key
+            document.getElementById('shipment-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loadShipmentsList(1);
+                }
+            });
+        }
+        
+        // Show the modal and load initial data
+        $(modal).modal('show');
+        loadShipmentsList(1);
+    }
+    
+    // Load shipments list for the modal
+    function loadShipmentsList(page = 1) {
+        const searchTerm = document.getElementById('shipment-search').value;
+        const tableBody = document.getElementById('shipments-table-body');
+        const paginationControls = document.getElementById('pagination-controls');
+        
+        // Show loading state
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Loading shipments...</td></tr>';
+        
+        // Fetch shipments from API
+        fetch(`/api/shipments?page=${page}&per_page=10&search=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.shipments) {
+                    if (data.shipments.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No shipments found</td></tr>';
+                        paginationControls.innerHTML = '';
+                        return;
+                    }
+                    
+                    // Populate table with shipments
+                    tableBody.innerHTML = '';
+                    data.shipments.forEach(shipment => {
+                        const row = document.createElement('tr');
+                        const createdDate = new Date(shipment.created_at).toLocaleDateString();
+                        
+                        row.innerHTML = `
+                            <td>${shipment.shipment_reference || 'N/A'}</td>
+                            <td>${shipment.shipment_user || 'N/A'}</td>
+                            <td>${shipment.type_of_freight || 'N/A'}</td>
+                            <td>${shipment.trading_country || 'N/A'}</td>
+                            <td>${shipment.consignee_country || 'N/A'}</td>
+                            <td>${createdDate}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary load-btn" data-id="${shipment.id}">Load</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // Add click handlers to load buttons
+                    document.querySelectorAll('.load-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const shipmentId = this.getAttribute('data-id');
+                            loadShipmentData(shipmentId);
+                            $('#load-shipment-modal').modal('hide');
+                        });
+                    });
+                    
+                    // Set up pagination
+                    paginationControls.innerHTML = '';
+                    if (data.pages > 1) {
+                        const paginationNav = document.createElement('nav');
+                        paginationNav.innerHTML = '<ul class="pagination justify-content-center"></ul>';
+                        const paginationList = paginationNav.querySelector('.pagination');
+                        
+                        // Previous button
+                        const prevItem = document.createElement('li');
+                        prevItem.className = `page-item ${page === 1 ? 'disabled' : ''}`;
+                        prevItem.innerHTML = `<a class="page-link" href="#" data-page="${page-1}">&laquo; Previous</a>`;
+                        paginationList.appendChild(prevItem);
+                        
+                        // Page numbers
+                        for (let i = 1; i <= data.pages; i++) {
+                            const pageItem = document.createElement('li');
+                            pageItem.className = `page-item ${i === page ? 'active' : ''}`;
+                            pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                            paginationList.appendChild(pageItem);
+                        }
+                        
+                        // Next button
+                        const nextItem = document.createElement('li');
+                        nextItem.className = `page-item ${page === data.pages ? 'disabled' : ''}`;
+                        nextItem.innerHTML = `<a class="page-link" href="#" data-page="${page+1}">Next &raquo;</a>`;
+                        paginationList.appendChild(nextItem);
+                        
+                        paginationControls.appendChild(paginationNav);
+                        
+                        // Add event listeners to pagination links
+                        paginationNav.querySelectorAll('.page-link').forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const pageNum = parseInt(this.getAttribute('data-page'), 10);
+                                if (!isNaN(pageNum) && pageNum > 0 && pageNum <= data.pages) {
+                                    loadShipmentsList(pageNum);
+                                }
+                            });
+                        });
+                    }
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Error loading shipments</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading shipments:', error);
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Error loading shipments</td></tr>';
+            });
+    }
+    
+    // Load a specific shipment for editing
+    function loadShipmentData(shipmentId) {
+        fetch(`/api/shipments/${shipmentId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.shipment) {
+                    const shipment = data.shipment;
+                    currentShipmentId = shipment.id;
+                    
+                    // Set the form fields from the shipment data
+                    document.getElementById('shipment_reference').value = shipment.shipment_reference || '';
+                    document.getElementById('shipment_user').value = shipment.shipment_user || '';
+                    
+                    // Set type of freight and show appropriate sections
+                    const typeOfFreightSelect = document.getElementById('type_of_freight');
+                    typeOfFreightSelect.value = shipment.type_of_freight || '';
+                    if (shipment.type_of_freight) {
+                        document.getElementById('type-of-freight-wrapper').style.display = 'flex';
+                        document.getElementById('ports-wrapper').style.display = 'contents';
+                        document.getElementById('trading-info-content').style.display = '';
+                        document.getElementById('toggle-trading-btn').disabled = false;
+                    }
+                    
+                    // Set ports
+                    document.getElementById('port_of_shipping').value = shipment.port_of_shipping || '';
+                    document.getElementById('consignee_port_of_shipping').value = shipment.consignee_port_of_shipping || '';
+                    
+                    // Enable logistic section if port of arrival is set
+                    if (shipment.consignee_port_of_shipping) {
+                        document.getElementById('logistic-info-content').style.display = '';
+                        document.getElementById('toggle-logistic-btn').disabled = false;
+                    }
+                    
+                    // Trading info
+                    setSelectValue('trading_region', shipment.trading_region);
+                    document.getElementById('trading_regional_manager').value = shipment.trading_regional_manager || '';
+                    setSelectValue('trading_country', shipment.trading_country);
+                    setSelectValue('trading_branch', shipment.trading_branch);
+                    
+                    setSelectValue('consignee_region', shipment.consignee_region);
+                    document.getElementById('consignee_regional_manager').value = shipment.consignee_regional_manager || '';
+                    setSelectValue('consignee_country', shipment.consignee_country);
+                    setSelectValue('consignee_branch', shipment.consignee_branch);
+                    
+                    // Logistic info
+                    setSelectValue('departure_route', shipment.departure_route);
+                    document.getElementById('route_cost').value = shipment.route_cost || '';
+                    document.getElementById('available_payload').value = shipment.available_payload || '';
+                    setSelectValue('type_of_return', shipment.type_of_return);
+                    document.getElementById('outbound_cost_weight').value = shipment.outbound_cost_weight || '';
+                    document.getElementById('target_cargo_load').value = shipment.target_cargo_load || '';
+                    document.getElementById('est_outb_kg_cost').value = shipment.est_outb_kg_cost || '';
+                    
+                    // Return route
+                    setSelectValue('return_route', shipment.return_route);
+                    document.getElementById('route_cost_return').value = shipment.route_cost_return || '';
+                    document.getElementById('available_payload_return').value = shipment.available_payload_return || '';
+                    document.getElementById('total_flight_cost_display').textContent = formatCurrency(shipment.total_flight_cost_display);
+                    document.getElementById('return_cost_weight').value = shipment.return_cost_weight || '';
+                    document.getElementById('target_cargo_load_return_percentage').value = shipment.target_cargo_load_return_percentage || '';
+                    document.getElementById('est_ret_kg_cost').value = shipment.est_ret_kg_cost || '';
+                    
+                    // Enable products section if type_of_return is set
+                    if (shipment.type_of_return) {
+                        document.getElementById('products-content-wrapper').style.display = '';
+                        document.getElementById('toggle-products-btn').disabled = false;
+                    }
+                    
+                    // Load products into the table
+                    loadProductsToTable(shipment.products || []);
+                    
+                    // Update calculated fields and footer totals
+                    updateCalculatedFields();
+                    updateFooterTotals();
+                    
+                    // Disable the "Start New Shipment" button if editing
+                    const startShipmentBtn = document.getElementById('start-shipment-btn');
+                    if (startShipmentBtn) {
+                        startShipmentBtn.disabled = true;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading shipment:', error);
+                alert('Error loading shipment data. Please try again.');
+            });
+    }
+    
+    // Helper function to set select values (with proper event triggering if needed)
+    function setSelectValue(selectId, value) {
+        const select = document.getElementById(selectId);
+        if (select && value) {
+            select.value = value;
+            // Trigger change event if needed for dependent selects
+            const event = new Event('change', { bubbles: true });
+            select.dispatchEvent(event);
+        }
+    }
+    
+    // Helper to format currency values
+    function formatCurrency(value) {
+        if (!value) return '';
+        const num = parseFloat(value);
+        if (isNaN(num)) return '';
+        return '$' + num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    
+    // Load products into the product table
+    function loadProductsToTable(products) {
+        const tableBody = document.getElementById('product-table-container');
+        if (!tableBody) return;
+        
+        tableBody.innerHTML = '';
+        
+        if (!products.length) return;
+        
+        // Global map (attach to window once) to resolve product ids by code
+        if (!window.productIdByCode) window.productIdByCode = {};
+
+        products.forEach(product => {
+            const row = document.createElement('tr');
+            // API returns 'id' not 'product_id'; normalize
+            const resolvedId = product.product_id || product.id;
+            if (!resolvedId) {
+                console.warn('[loadProductsToTable] Product missing id field', product);
+            }
+            row.dataset.productId = resolvedId || '';
+            row.dataset.category = product.product_type || product.product_category || '';
+            // Also keep code mapping for later fallback
+            const codeForMap = product.product_code || '';
+            if (codeForMap) {
+                window.productIdByCode[codeForMap] = resolvedId;
+            }
+            
+            row.innerHTML = `
+                <td>${product.product_code || ''}</td>
+                <td>${product.name || product.product_name || ''}</td>
+                <td>${product.product_type || product.product_category || ''}</td>
+                <td>${product.country_id || ''}</td>
+                <td>${product.packaging || ''}</td>
+                <td>${formatNumber(product.packaging_weight || product.pack_weight)}</td>
+                <td>${formatNumber(product.units_per_pack)}</td>
+                <td>${formatNumber(product.packaging_cost)}</td>
+                <td>${product.currency || ''}</td>
+                <td><input type="number" class="form-control product-quantity product-amount-input" data-product-code="${product.product_code || ''}" value="${product.quantity || 0}" min="0" step="1"></td>
+                <td>${formatNumber(product.total_weight)}</td>
+                <td>${formatCurrency(product.total_product_cost)}</td>
+                <td>${formatCurrency(product.export_taxes)}</td>
+                <td>${formatCurrency(product.exporter_profit)}</td>
+                <td>${formatCurrency(product.fca_cost)}</td>
+                <td>${formatCurrency(product.fca_usd)}</td>
+                <td>${formatCurrency(product.cargo_load_cost)}</td>
+                <td>${formatCurrency(product.air_freight_cost)}</td>
+                <td>${formatCurrency(product.cargo_unload_cost)}</td>
+                <td>${formatCurrency(product.cip_cost)}</td>
+                <td>${formatCurrency(product.import_taxes)}</td>
+                <td>${formatCurrency(product.dat_kg_cost)}</td>
+                <td>${formatCurrency(product.dat_ea_cost)}</td>
+                <td>${formatCurrency(product.comparative_price)}</td>
+                <td>${formatCurrency(product.sug_prod_prof_ea)}</td>
+                <td>${formatNumber(product.product_profit_percentage)}% / ${formatCurrency(product.product_profit_amount)} / ${formatCurrency(product.product_profit_per_kg)}</td>
+                <td>${formatCurrency(product.final_dat_price_ea)}</td>
+                <td>${formatCurrency(product.total_pr_cost_dat)}</td>
+                <td>${formatCurrency(product.total_dat_profit)}</td>
+                <td>${formatCurrency(product.total_shipment_dat_cost)}</td>
+            `;
+            
+            tableBody.appendChild(row);
+            
+            // Add event listener to quantity input
+            const quantityInput = row.querySelector('.product-quantity');
+            if (quantityInput) {
+                quantityInput.addEventListener('change', function() {
+                    // Recalculate product values based on new quantity
+                    // This would need to call your existing calculation functions
+                });
+            }
+        });
+        
+        updateFooterTotals();
+        applyCategoryFilter();
+    }
+
+    // Helper to format numbers
+    function formatNumber(value) {
+        if (value === null || value === undefined) return '';
+        const num = parseFloat(value);
+        return isNaN(num) ? '' : num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    
+    // Update footer totals based on product table values
+    function updateFooterTotals() {
+        // Implementation depends on your table structure and calculation needs
+        // This is a placeholder for the actual implementation
+        console.log('Updating footer totals...');
+        
+        // Example implementation:
+        const footerFields = {
+            'total_weight': 'footer-total-weight',
+            'total_product_cost': 'footer-total-cost',
+            'export_taxes': 'footer-export-taxes',
+            'exporter_profit': 'footer-exporter-profit',
+            'fca_cost': 'footer-fca-cost',
+            'fca_usd': 'footer-fca-usd',
+            'cargo_load_cost': 'footer-cargo-load-cost',
+            'air_freight_cost': 'footer-air-freight-cost',
+            'cargo_unload_cost': 'footer-cargo-unload-cost',
+            'cip_cost': 'footer-cip-cost',
+            'import_taxes': 'footer-import-taxes',
+            'total_pr_cost_dat': 'footer-total-pr-cost-dat',
+            'total_dat_profit': 'footer-total-dat-profit',
+            'total_shipment_dat_cost': 'footer-total-shipment-dat-cost'
+        };
+        
+        // Get all product rows
+        const rows = document.querySelectorAll('#product-table-container tr');
+        
+        // Initialize totals
+        const totals = {
+            'total_weight': 0,
+            'total_product_cost': 0,
+            'export_taxes': 0,
+            'exporter_profit': 0,
+            'fca_cost': 0,
+            'fca_usd': 0,
+            'cargo_load_cost': 0,
+            'air_freight_cost': 0,
+            'cargo_unload_cost': 0,
+            'cip_cost': 0,
+            'import_taxes': 0,
+            'total_pr_cost_dat': 0,
+            'total_dat_profit': 0,
+            'total_shipment_dat_cost': 0
+        };
+        
+        // Sum up the values from each row
+        // This would need to be adjusted based on your actual table structure
+        // and which columns correspond to which totals
+    }
+    
+    // Save the shipment data
+    function saveShipment() {
+        // Validate form data first
+        if (!validateShipmentForm()) {
+            return;
+        }
+        
+        // Collect form data
+        const formData = collectShipmentFormData();
+        
+        // Determine if this is a create or update operation
+        const url = currentShipmentId ? `/api/shipments/${currentShipmentId}` : '/api/shipments';
+        const method = currentShipmentId ? 'PUT' : 'POST';
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        
+        console.debug('[SAVE_SHIPMENT] About to send request', { method, url, csrfTokenPresent: !!csrfToken, formDataPreview: { ...formData, products: `count:${formData.products.length}` } });
+
+        // Send data to server
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('[SAVE_SHIPMENT] Non-OK HTTP status', response.status, response.statusText);
+                return response.text().then(t => { throw new Error(`HTTP ${response.status}: ${t}`); });
+            }
+            return response.json().catch(err => {
+                console.error('[SAVE_SHIPMENT] Failed to parse JSON', err);
+                throw new Error('Failed to parse server response as JSON');
+            });
+        })
+        .then(data => {
+            console.debug('[SAVE_SHIPMENT] Server response', data);
+            if (data.success) {
+                alert(`Shipment ${data.shipment_reference || ''} saved successfully!`);
+                // If this was a new shipment, update the current ID
+                if (!currentShipmentId && data.shipment_id) {
+                    currentShipmentId = data.shipment_id;
+                }
+            } else {
+                alert(`Error saving shipment: ${data.error || 'Unknown error'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving shipment:', error);
+            alert('Error saving shipment. Please try again.');
+        });
+    }
+    
+    // Validate the shipment form
+    function validateShipmentForm() {
+        // Required fields to check
+        const requiredFields = [
+            { id: 'shipment_user', name: 'Shipment User' },
+            { id: 'type_of_freight', name: 'Type of Freight' },
+            { id: 'port_of_shipping', name: 'Port of Shipping' },
+            { id: 'consignee_port_of_shipping', name: 'Port of Arrival' }
+        ];
+        
+        let isValid = true;
+        let errorMessage = 'Please fill in the following required fields:\n';
+        
+        // Check each required field
+        requiredFields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (!element || !element.value.trim()) {
+                errorMessage += `- ${field.name}\n`;
+                isValid = false;
+                
+                // Highlight the field
+                if (element) {
+                    element.classList.add('is-invalid');
+                    element.addEventListener('input', function() {
+                        if (this.value.trim()) {
+                            this.classList.remove('is-invalid');
+                        }
+                    });
+                }
+            }
+        });
+        
+        if (!isValid) {
+            alert(errorMessage);
+        }
+        
+        return isValid;
+    }
+    
+    // Collect form data for submission
+    function collectShipmentFormData() {
+        const formData = {
+            shipment_reference: document.getElementById('shipment_reference').value,
+            shipment_user: document.getElementById('shipment_user').value,
+            type_of_freight: document.getElementById('type_of_freight').value,
+            port_of_shipping: document.getElementById('port_of_shipping').value,
+            consignee_port_of_shipping: document.getElementById('consignee_port_of_shipping').value,
+            
+            // Trading Info
+            trading_region: getSelectValue('trading_region'),
+            trading_regional_manager: document.getElementById('trading_regional_manager').value,
+            trading_country: getSelectValue('trading_country'),
+            trading_branch: getSelectValue('trading_branch'),
+            consignee_region: getSelectValue('consignee_region'),
+            consignee_regional_manager: document.getElementById('consignee_regional_manager').value,
+            consignee_country: getSelectValue('consignee_country'),
+            consignee_branch: getSelectValue('consignee_branch'),
+            
+            // Logistic Info
+            departure_route: getSelectValue('departure_route'),
+            route_cost: parseNumber(document.getElementById('route_cost').value),
+            available_payload: parseNumber(document.getElementById('available_payload').value),
+            type_of_return: getSelectValue('type_of_return'),
+            outbound_cost_weight: parseNumber(document.getElementById('outbound_cost_weight').value),
+            target_cargo_load: parseNumber(document.getElementById('target_cargo_load').value),
+            est_outb_kg_cost: parseNumber(document.getElementById('est_outb_kg_cost').value),
+            return_route: getSelectValue('return_route'),
+            route_cost_return: parseNumber(document.getElementById('route_cost_return').value),
+            available_payload_return: parseNumber(document.getElementById('available_payload_return').value),
+            total_flight_cost_display: parseNumber(document.getElementById('total_flight_cost_display').textContent),
+            return_cost_weight: parseNumber(document.getElementById('return_cost_weight').value),
+            target_cargo_load_return_percentage: parseNumber(document.getElementById('target_cargo_load_return_percentage').value),
+            est_ret_kg_cost: parseNumber(document.getElementById('est_ret_kg_cost').value),
+            
+            // Footer Totals (get these from the footer cells)
+            total_weight: parseNumber(document.getElementById('footer-total-weight').textContent),
+            total_product_cost: parseNumber(document.getElementById('footer-total-cost').textContent),
+            total_export_taxes: parseNumber(document.getElementById('footer-export-taxes').textContent),
+            total_exporter_profit: parseNumber(document.getElementById('footer-exporter-profit').textContent),
+            total_fca_cost: parseNumber(document.getElementById('footer-fca-cost').textContent),
+            total_fca_usd: parseNumber(document.getElementById('footer-fca-usd').textContent),
+            total_cargo_load_cost: parseNumber(document.getElementById('footer-cargo-load-cost').textContent),
+            total_air_freight_cost: parseNumber(document.getElementById('footer-air-freight-cost').textContent),
+            total_cargo_unload_cost: parseNumber(document.getElementById('footer-cargo-unload-cost').textContent),
+            total_cip_cost: parseNumber(document.getElementById('footer-cip-cost').textContent),
+            total_import_taxes: parseNumber(document.getElementById('footer-import-taxes').textContent),
+            total_pr_cost_dat: parseNumber(document.getElementById('footer-total-pr-cost-dat').textContent),
+            total_dat_profit: parseNumber(document.getElementById('footer-total-dat-profit').textContent),
+            total_shipment_dat_cost: parseNumber(document.getElementById('footer-total-shipment-dat-cost').textContent),
+            
+            // Products data
+            products: collectProductsData()
+        };
+        
+        return formData;
+    }
+    
+    // Helper to get select value safely
+    function getSelectValue(id) {
+        const select = document.getElementById(id);
+        return select ? select.value : '';
+    }
+    
+    // Collect data from the product table
+    function collectProductsData() {
+        const products = [];
+        const rows = document.querySelectorAll('#product-table-container tr');
+        
+        rows.forEach(row => {
+            // Defensive guards & logging
+            if (!row || !row.cells || row.cells.length < 30) {
+                console.warn('[collectProductsData] Skipping row due to insufficient cells', row);
+                return;
+            }
+            let qtyInput = row.querySelector('.product-quantity');
+            if (!qtyInput) {
+                // Try alternate class
+                qtyInput = row.querySelector('.product-amount-input');
+            }
+            if (!qtyInput) {
+                console.warn('[collectProductsData] Missing .product-quantity input, using 0. Row index:', Array.prototype.indexOf.call(row.parentNode.children, row));
+            }
+            // Resolve product id; fallback by product code mapping
+            let resolvedProductId = parseInt(row.dataset.productId, 10);
+            if (!resolvedProductId || isNaN(resolvedProductId)) {
+                const codeCell = row.cells[0].textContent.trim();
+                if (codeCell && window.productIdByCode && window.productIdByCode[codeCell]) {
+                    resolvedProductId = window.productIdByCode[codeCell];
+                }
+            }
+            if (!resolvedProductId) {
+                console.warn('[collectProductsData] Could not resolve product_id for row with code', row.cells[0].textContent.trim());
+            }
+            // Fallback quantity parse from cell (index 9) if input missing
+            let quantityVal = qtyInput ? qtyInput.value : row.cells[9].textContent;
+            const product = {
+                product_id: parseInt(resolvedProductId, 10) || null,
+                product_code: row.cells[0].textContent.trim(),
+                product_name: row.cells[1].textContent.trim(),
+                product_category: row.cells[2].textContent.trim(),
+                country_id: row.cells[3].textContent.trim(),
+                packaging: row.cells[4].textContent.trim(),
+                pack_weight: parseNumber(row.cells[5].textContent),
+                units_per_pack: parseNumber(row.cells[6].textContent),
+                packaging_cost: parseNumber(row.cells[7].textContent),
+                currency: row.cells[8].textContent.trim(),
+                quantity: parseNumber(quantityVal),
+                
+                // Calculated fields
+                total_weight: parseNumber(row.cells[10].textContent),
+                total_product_cost: parseNumber(row.cells[11].textContent),
+                export_taxes: parseNumber(row.cells[12].textContent),
+                exporter_profit: parseNumber(row.cells[13].textContent),
+                fca_cost: parseNumber(row.cells[14].textContent),
+                fca_usd: parseNumber(row.cells[15].textContent),
+                cargo_load_cost: parseNumber(row.cells[16].textContent),
+                air_freight_cost: parseNumber(row.cells[17].textContent),
+                cargo_unload_cost: parseNumber(row.cells[18].textContent),
+                cip_cost: parseNumber(row.cells[19].textContent),
+                import_taxes: parseNumber(row.cells[20].textContent),
+                dat_kg_cost: parseNumber(row.cells[21].textContent),
+                dat_ea_cost: parseNumber(row.cells[22].textContent),
+                
+                // Pricing and Profitability
+                comparative_price: parseNumber(row.cells[23].textContent),
+                sug_prod_prof_ea: parseNumber(row.cells[24].textContent),
+                product_profit_percentage: parseNumber(row.cells[25].textContent),
+                final_dat_price_ea: parseNumber(row.cells[26].textContent),
+                total_pr_cost_dat: parseNumber(row.cells[27].textContent),
+                total_dat_profit: parseNumber(row.cells[28].textContent),
+                total_shipment_dat_cost: parseNumber(row.cells[29].textContent)
+            };
+            
+            products.push(product);
+        });
+        
+        return products;
+    }
+    
+    // Add event listener to the "Start New Shipment" button
+    const startNewShipmentBtn = document.getElementById('start-shipment-btn');
+    if (startNewShipmentBtn) {
+        startNewShipmentBtn.addEventListener('click', function() {
+            const typeOfFreightWrapper = document.getElementById('type-of-freight-wrapper');
+            if (typeOfFreightWrapper) {
+                typeOfFreightWrapper.style.display = 'flex';
+            }
+            // Generate shipment reference when starting a new shipment
+            generateShipmentReference();
+        });
     }
 });

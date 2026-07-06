@@ -37,11 +37,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Function to calculate Cargo Load Cost ---
     // This function is now globally available to be called from other scripts.
+    let cargoLoadLogCounter = 0;
     window.updateCargoLoadCost = function(context, handlingCost) {
         const productTableContainer = document.getElementById('product-table-container');
         if (!productTableContainer || !context || handlingCost === undefined) return;
-
-        console.log(`Updating Cargo Load Cost for context: ${context} with cost/kg: ${handlingCost}`);
+        if (cargoLoadLogCounter % 10 === 0) {
+            console.log(`[CargoLoadCost] context=${context} cost/kg=${handlingCost} (log #${cargoLoadLogCounter})`);
+        }
+        cargoLoadLogCounter++;
 
         // Iterate over each product row to calculate and update its cargo load cost
         const rows = productTableContainer.querySelectorAll('tr');
@@ -66,11 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Function to calculate Cargo Unload Cost ---
     // This function is globally available to be called from other scripts.
+    let cargoUnloadLogCounter = 0;
     window.updateCargoUnloadCost = function(context, handlingCost) {
         const productTableContainer = document.getElementById('product-table-container');
         if (!productTableContainer || !context || handlingCost === undefined) return;
-
-        console.log(`Updating Cargo Unload Cost for context: ${context} with cost/kg: ${handlingCost}`);
+        if (cargoUnloadLogCounter % 10 === 0) {
+            console.log(`[CargoUnloadCost] context=${context} cost/kg=${handlingCost} (log #${cargoUnloadLogCounter})`);
+        }
+        cargoUnloadLogCounter++;
 
         // Iterate over each product row to calculate and update its cargo unload cost
         const rows = productTableContainer.querySelectorAll('tr');

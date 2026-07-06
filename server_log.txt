@@ -1,0 +1,30 @@
+=== Starting Flask Development Server ===
+URL: http://localhost:5000/
+Debug mode: ON
+Press CTRL+C to stop the server
+=====================================
+ * Serving Flask app 'app'
+ * Debug mode: on
+2026-07-06 11:01:30,759 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-07-06 11:01:30,759 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-07-06 11:01:30,770 - werkzeug - INFO -  * Restarting with stat
+2026-07-06 11:01:32,176 - werkzeug - WARNING -  * Debugger is active!
+2026-07-06 11:01:32,182 - werkzeug - INFO -  * Debugger PIN: 120-915-099
+2026-07-06 11:01:32,594 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:32] "GET / HTTP/1.1" 200 -
+2026-07-06 11:01:32,741 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:32] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2026-07-06 11:01:32,805 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:32] "[36mGET /static/js/navbar.js HTTP/1.1[0m" 304 -
+2026-07-06 11:01:32,814 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:32] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-07-06 11:01:52,537 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:52] "GET /operations/shipments HTTP/1.1" 200 -
+2026-07-06 11:01:52,548 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:52] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2026-07-06 11:01:52,552 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:52] "[36mGET /static/js/shipment_management.js HTTP/1.1[0m" 304 -
+2026-07-06 11:01:52,559 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:52] "[36mGET /static/js/navbar.js HTTP/1.1[0m" 304 -
+2026-07-06 11:01:52,578 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:52] "[36mGET /static/js/cargo_handling.js HTTP/1.1[0m" 304 -
+2026-07-06 11:01:52,619 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:52] "[36mGET /static/js/autofill_cargo.js HTTP/1.1[0m" 304 -
+2026-07-06 11:01:52,624 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:01:52] "[36mGET /static/css/shipment.css HTTP/1.1[0m" 304 -
+2026-07-06 11:02:05,645 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:05] "GET /api/trader-info?port_code=MDE HTTP/1.1" 200 -
+2026-07-06 11:02:09,360 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:09] "GET /api/find-routes?from_airport=MDE&to_airport=NAS HTTP/1.1" 200 -
+2026-07-06 11:02:09,364 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:09] "GET /api/trader-info?port_code=NAS HTTP/1.1" 200 -
+2026-07-06 11:02:15,616 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:15] "GET /api/route-details?route_id=1&arrival_iata=NAS HTTP/1.1" 200 -
+2026-07-06 11:02:15,621 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:15] "GET /api/return-routes?departure_iata=NAS&aircraft_type=A321F HTTP/1.1" 200 -
+2026-07-06 11:02:16,901 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:16] "GET /api/route-details?route_id=2&arrival_iata=MDE HTTP/1.1" 200 -
