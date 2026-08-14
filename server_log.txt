@@ -28,3 +28,184 @@ Press CTRL+C to stop the server
 2026-07-06 11:02:15,616 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:15] "GET /api/route-details?route_id=1&arrival_iata=NAS HTTP/1.1" 200 -
 2026-07-06 11:02:15,621 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:15] "GET /api/return-routes?departure_iata=NAS&aircraft_type=A321F HTTP/1.1" 200 -
 2026-07-06 11:02:16,901 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:02:16] "GET /api/route-details?route_id=2&arrival_iata=MDE HTTP/1.1" 200 -
+2026-07-06 11:11:02,020 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:11:02] "GET /api/airport-details?iata_code=MDE HTTP/1.1" 200 -
+2026-07-06 11:11:02,025 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:11:02] "GET /api/airport-details?iata_code=NAS HTTP/1.1" 200 -
+2026-07-06 11:11:02,035 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:11:02] "GET /api/products-by-country?country_id=CO HTTP/1.1" 200 -
+2026-07-06 11:11:02,044 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:11:02] "GET /api/product_prices?consignee_country_code=BS HTTP/1.1" 200 -
+2026-07-06 11:11:02,682 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:11:02] "GET /api/exchange/get_exchange_rate?from_currency=COP&to_currency=USD HTTP/1.1" 200 -
+2026-07-06 11:46:39,150 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:39] "GET /api/airport-details?iata_code=MDE HTTP/1.1" 200 -
+2026-07-06 11:46:39,156 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:39] "GET /api/airport-details?iata_code=NAS HTTP/1.1" 200 -
+2026-07-06 11:46:39,163 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:39] "GET /api/products-by-country?country_id=BS HTTP/1.1" 200 -
+2026-07-06 11:46:39,168 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:39] "GET /api/product_prices?consignee_country_code=CO HTTP/1.1" 200 -
+2026-07-06 11:46:40,050 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:40] "GET /api/exchange/get_exchange_rate?from_currency=BSD&to_currency=USD HTTP/1.1" 200 -
+2026-07-06 11:46:41,951 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:41] "GET /api/airport-details?iata_code=MDE HTTP/1.1" 200 -
+2026-07-06 11:46:41,955 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:41] "GET /api/airport-details?iata_code=NAS HTTP/1.1" 200 -
+2026-07-06 11:46:41,961 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:41] "GET /api/products-by-country?country_id=CO HTTP/1.1" 200 -
+2026-07-06 11:46:41,968 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:41] "GET /api/product_prices?consignee_country_code=BS HTTP/1.1" 200 -
+2026-07-06 11:46:42,543 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 11:46:42] "GET /api/exchange/get_exchange_rate?from_currency=COP&to_currency=USD HTTP/1.1" 200 -
+2026-07-06 12:17:16,586 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:16] "GET /operations/add-route HTTP/1.1" 200 -
+2026-07-06 12:17:16,632 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:16] "[36mGET /static/js/navbar.js HTTP/1.1[0m" 304 -
+2026-07-06 12:17:16,635 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:16] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2026-07-06 12:17:25,002 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:25] "POST /api/check-route-exists HTTP/1.1" 200 -
+2026-07-06 12:17:34,447 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:34] "[35m[1mGET /operations/view-routes HTTP/1.1[0m" 500 -
+Traceback (most recent call last):
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1591, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1570, in wsgi_app
+    response = self.handle_exception(ctx, e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1567, in wsgi_app
+    response = self.full_dispatch_request(ctx)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1006, in full_dispatch_request
+    rv = self.handle_user_exception(ctx, e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1004, in full_dispatch_request
+    rv = self.dispatch_request(ctx)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 989, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\operations\routes.py", line 438, in view_routes
+    print(f"Route ID: {route.id}, Summary: {route.route_summary}, Cost: {route.total_cost}")  # Debug log
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 26: character maps to <undefined>
+2026-07-06 12:17:34,493 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:34] "GET /operations/view-routes?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2026-07-06 12:17:34,498 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:34] "GET /operations/view-routes?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2026-07-06 12:17:34,543 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:34] "GET /operations/view-routes?__debugger__=yes&cmd=resource&f=console.png&s=As8eCL3ZXuivXNzstKDB HTTP/1.1" 200 -
+2026-07-06 12:17:34,548 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:34] "GET /operations/view-routes?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2026-07-06 12:17:59,236 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:59] "GET /operations/shipments HTTP/1.1" 200 -
+2026-07-06 12:17:59,244 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:59] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2026-07-06 12:17:59,250 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:59] "[36mGET /static/js/navbar.js HTTP/1.1[0m" 304 -
+2026-07-06 12:17:59,291 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:59] "[36mGET /static/css/shipment.css HTTP/1.1[0m" 304 -
+2026-07-06 12:17:59,297 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:59] "[36mGET /static/js/cargo_handling.js HTTP/1.1[0m" 304 -
+2026-07-06 12:17:59,298 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:59] "[36mGET /static/js/autofill_cargo.js HTTP/1.1[0m" 304 -
+2026-07-06 12:17:59,329 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:17:59] "[36mGET /static/js/shipment_management.js HTTP/1.1[0m" 304 -
+2026-07-06 12:18:07,737 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:18:07] "GET /api/trader-info?port_code=MDE HTTP/1.1" 200 -
+2026-07-06 12:18:11,005 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:18:11] "GET /api/find-routes?from_airport=MDE&to_airport=NAS HTTP/1.1" 200 -
+2026-07-06 12:18:11,009 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:18:11] "GET /api/trader-info?port_code=NAS HTTP/1.1" 200 -
+2026-07-06 12:23:59,734 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:23:59] "GET /operations/add-route HTTP/1.1" 200 -
+2026-07-06 12:23:59,745 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:23:59] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2026-07-06 12:23:59,746 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:23:59] "[36mGET /static/js/navbar.js HTTP/1.1[0m" 304 -
+2026-07-06 12:24:07,856 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:24:07] "[35m[1mGET /operations/view-routes HTTP/1.1[0m" 500 -
+Traceback (most recent call last):
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1591, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1570, in wsgi_app
+    response = self.handle_exception(ctx, e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1567, in wsgi_app
+    response = self.full_dispatch_request(ctx)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1006, in full_dispatch_request
+    rv = self.handle_user_exception(ctx, e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 1004, in full_dispatch_request
+    rv = self.dispatch_request(ctx)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\venv\Lib\site-packages\flask\app.py", line 989, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\OneDrive\logistics_app\operations\routes.py", line 438, in view_routes
+    print(f"Route ID: {route.id}, Summary: {route.route_summary}, Cost: {route.total_cost}")  # Debug log
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 26: character maps to <undefined>
+2026-07-06 12:24:07,863 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:24:07] "[36mGET /operations/view-routes?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2026-07-06 12:24:07,864 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:24:07] "[36mGET /operations/view-routes?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2026-07-06 12:24:07,871 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:24:07] "[36mGET /operations/view-routes?__debugger__=yes&cmd=resource&f=console.png&s=As8eCL3ZXuivXNzstKDB HTTP/1.1[0m" 304 -
+2026-07-06 12:25:55,673 - werkzeug - INFO -  * Detected change in 'd:\\OneDrive\\logistics_app\\operations\\routes.py', reloading
+=== Starting Flask Development Server ===
+URL: http://localhost:5000/
+Debug mode: ON
+Press CTRL+C to stop the server
+=====================================
+Region list: [{'id': 4, 'name': 'Africa', 'manager_name': 'Africa Manager'}, {'id': 3, 'name': 'Asia Pacific', 'manager_name': 'Asia Pacific Manager'}, {'id': 8, 'name': 'Caribbean', 'manager_name': 'FRESH24-caribbean'}, {'id': 7, 'name': 'Europe', 'manager_name': 'Europe Manager'}, {'id': 6, 'name': 'Latin America', 'manager_name': 'Latin America Manager'}, {'id': 5, 'name': 'Middle East', 'manager_name': 'Middle East Manager'}, {'id': 2, 'name': 'North America', 'manager_name': 'B&L Manuacturing'}, {'id': 1, 'name': 'South-Central America', 'manager_name': '24 Fresh, Latin america'}]
+Region manager map: {4: 'Africa Manager', 3: 'Asia Pacific Manager', 8: 'FRESH24-caribbean', 7: 'Europe Manager', 6: 'Latin America Manager', 5: 'Middle East Manager', 2: 'B&L Manuacturing', 1: '24 Fresh, Latin america'}
+Sample countries with their regions:
+  Afghanistan: region=None, geographic_region=Asia-Pacific
+  Aland Islands: region=None, geographic_region=Western Europe
+  Albania: region=None, geographic_region=Eastern Europe
+  Algeria: region=None, geographic_region=Africa
+  American Samoa: region=None, geographic_region=Oceania
+Countries with null regions: 243
+  Afghanistan: null region, geographic_region=Asia-Pacific
+  Aland Islands: null region, geographic_region=Western Europe
+  Albania: null region, geographic_region=Eastern Europe
+  Algeria: null region, geographic_region=Africa
+  American Samoa: null region, geographic_region=Oceania
+DEBUG: Trader Info Object: {'branch': 'Rio Negro / Jose Maria Córdova International Airport', 'country': 'Colombia', 'region': 'South-Central America', 'manager': '24 Fresh, Latin america', 'branch_id': 1, 'branch_code': None, 'branch_city': 'Rio Negro', 'branch_name': 'Jose Maria Córdova International Airport', 'type_of_freight': 'Air', 'airport_iata': 'MDE', 'ground_terminal_code': '', 'country_trade_info_id': 1, 'country_id': 'CO', 'currency_code': 'COP', 'region_id': 1, 'region_manager': '24 Fresh, Latin america', 'id': 1, 'operational_cost_year': 200000.0, 'revenue_taxes': 28.0, 'export_profit_pct': 10.0, 'export_sales_tax': 0.0, 'export_other_taxes': 0.0, 'export_other_cost': None, 'import_profit_pct': 0.0, 'import_taxes': 20.0, 'import_other_taxes': None, 'import_other_cost': None, 'other_taxes': 0.0, 'other_costs': None, 'additional_info': None, 'created_at': datetime.datetime(2025, 9, 3, 21, 35, 36, 493607), 'updated_at': datetime.datetime(2025, 10, 8, 16, 12, 15, 324967)}
+DEBUG: Trader Info Object: {'branch': 'Nassau / Lynden Pindling International Airport', 'country': 'Bahamas', 'region': 'Caribbean', 'manager': 'FRESH24-caribbean', 'branch_id': 3, 'branch_code': None, 'branch_city': 'Nassau', 'branch_name': 'Lynden Pindling International Airport', 'type_of_freight': 'Air', 'airport_iata': 'NAS', 'ground_terminal_code': '', 'country_trade_info_id': 173, 'country_id': 'BS', 'currency_code': 'BSD', 'region_id': 8, 'region_manager': 'FRESH24-caribbean', 'id': 173, 'operational_cost_year': 125000.0, 'revenue_taxes': 0.1, 'export_profit_pct': 0.15, 'export_sales_tax': 0.05, 'export_other_taxes': 0.0, 'export_other_cost': None, 'import_profit_pct': 0.15, 'import_taxes': 10.0, 'import_other_taxes': None, 'import_other_cost': None, 'other_taxes': 0.0, 'other_costs': None, 'additional_info': None, 'created_at': datetime.datetime(2025, 9, 30, 3, 14, 45, 646210), 'updated_at': datetime.datetime(2025, 10, 9, 17, 4, 7, 476719)}
+[RETURN ROUTES] Received: departure_iata=NAS, aircraft_type=A321F
+DEBUG: Found airport ID 5 for IATA NAS
+DEBUG: Found 1 matching routes from airport NAS with aircraft A321F
+DEBUG: Return route found: NAS-MDE-A321F, destination: MDE
+[RETURN ROUTES] Returning 1 return routes: [{'id': 2, 'name': 'NAS-MDE-A321F', 'destination': 'MDE'}]
+Found country: CO, currency: COP
+Returning data with country_currency: COP
+Exchange rate request: COP to USD, amount: 1.0, refresh: False
+Exchange rate result: 0.00029796, converted amount: 0.00029796
+Found country: BS, currency: BSD
+Returning data with country_currency: BSD
+Exchange rate request: BSD to USD, amount: 1.0, refresh: False
+Exchange rate result: 1.0, converted amount: 1.0
+Found country: CO, currency: COP
+Returning data with country_currency: COP
+Exchange rate request: COP to USD, amount: 1.0, refresh: False
+Exchange rate result: 0.00029796, converted amount: 0.00029796
+=== DEBUG: Fetched 4 routes from database ===
+Region list: [{'id': 4, 'name': 'Africa', 'manager_name': 'Africa Manager'}, {'id': 3, 'name': 'Asia Pacific', 'manager_name': 'Asia Pacific Manager'}, {'id': 8, 'name': 'Caribbean', 'manager_name': 'FRESH24-caribbean'}, {'id': 7, 'name': 'Europe', 'manager_name': 'Europe Manager'}, {'id': 6, 'name': 'Latin America', 'manager_name': 'Latin America Manager'}, {'id': 5, 'name': 'Middle East', 'manager_name': 'Middle East Manager'}, {'id': 2, 'name': 'North America', 'manager_name': 'B&L Manuacturing'}, {'id': 1, 'name': 'South-Central America', 'manager_name': '24 Fresh, Latin america'}]
+Region manager map: {4: 'Africa Manager', 3: 'Asia Pacific Manager', 8: 'FRESH24-caribbean', 7: 'Europe Manager', 6: 'Latin America Manager', 5: 'Middle East Manager', 2: 'B&L Manuacturing', 1: '24 Fresh, Latin america'}
+Sample countries with their regions:
+  Afghanistan: region=None, geographic_region=Asia-Pacific
+  Aland Islands: region=None, geographic_region=Western Europe
+  Albania: region=None, geographic_region=Eastern Europe
+  Algeria: region=None, geographic_region=Africa
+  American Samoa: region=None, geographic_region=Oceania
+Countries with null regions: 243
+  Afghanistan: null region, geographic_region=Asia-Pacific
+  Aland Islands: null region, geographic_region=Western Europe
+  Albania: null region, geographic_region=Eastern Europe
+  Algeria: null region, geographic_region=Africa
+  American Samoa: null region, geographic_region=Oceania
+DEBUG: Trader Info Object: {'branch': 'Rio Negro / Jose Maria Córdova International Airport', 'country': 'Colombia', 'region': 'South-Central America', 'manager': '24 Fresh, Latin america', 'branch_id': 1, 'branch_code': None, 'branch_city': 'Rio Negro', 'branch_name': 'Jose Maria Córdova International Airport', 'type_of_freight': 'Air', 'airport_iata': 'MDE', 'ground_terminal_code': '', 'country_trade_info_id': 1, 'country_id': 'CO', 'currency_code': 'COP', 'region_id': 1, 'region_manager': '24 Fresh, Latin america', 'id': 1, 'operational_cost_year': 200000.0, 'revenue_taxes': 28.0, 'export_profit_pct': 10.0, 'export_sales_tax': 0.0, 'export_other_taxes': 0.0, 'export_other_cost': None, 'import_profit_pct': 0.0, 'import_taxes': 20.0, 'import_other_taxes': None, 'import_other_cost': None, 'other_taxes': 0.0, 'other_costs': None, 'additional_info': None, 'created_at': datetime.datetime(2025, 9, 3, 21, 35, 36, 493607), 'updated_at': datetime.datetime(2025, 10, 8, 16, 12, 15, 324967)}
+DEBUG: Trader Info Object: {'branch': 'Nassau / Lynden Pindling International Airport', 'country': 'Bahamas', 'region': 'Caribbean', 'manager': 'FRESH24-caribbean', 'branch_id': 3, 'branch_code': None, 'branch_city': 'Nassau', 'branch_name': 'Lynden Pindling International Airport', 'type_of_freight': 'Air', 'airport_iata': 'NAS', 'ground_terminal_code': '', 'country_trade_info_id': 173, 'country_id': 'BS', 'currency_code': 'BSD', 'region_id': 8, 'region_manager': 'FRESH24-caribbean', 'id': 173, 'operational_cost_year': 125000.0, 'revenue_taxes': 0.1, 'export_profit_pct': 0.15, 'export_sales_tax': 0.05, 'export_other_taxes': 0.0, 'export_other_cost': None, 'import_profit_pct': 0.15, 'import_taxes': 10.0, 'import_other_taxes': None, 'import_other_cost': None, 'other_taxes': 0.0, 'other_costs': None, 'additional_info': None, 'created_at': datetime.datetime(2025, 9, 30, 3, 14, 45, 646210), 'updated_at': datetime.datetime(2025, 10, 9, 17, 4, 7, 476719)}
+=== DEBUG: Fetched 4 routes from database ===
+2026-07-06 12:25:56,026 - werkzeug - INFO -  * Restarting with stat
+2026-07-06 12:26:01,416 - werkzeug - WARNING -  * Debugger is active!
+2026-07-06 12:26:01,421 - werkzeug - INFO -  * Debugger PIN: 120-915-099
+2026-07-06 12:26:10,924 - werkzeug - INFO -  * Detected change in 'd:\\OneDrive\\logistics_app\\operations\\routes.py', reloading
+=== Starting Flask Development Server ===
+URL: http://localhost:5000/
+Debug mode: ON
+Press CTRL+C to stop the server
+=====================================
+2026-07-06 12:26:11,071 - werkzeug - INFO -  * Restarting with stat
+2026-07-06 12:26:12,224 - werkzeug - WARNING -  * Debugger is active!
+2026-07-06 12:26:12,228 - werkzeug - INFO -  * Debugger PIN: 120-915-099
+2026-07-06 12:29:36,086 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 12:29:36] "GET /operations/view-routes HTTP/1.1" 200 -
+2026-07-06 14:46:33,330 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 14:46:33] "GET /operations/shipments HTTP/1.1" 200 -
+2026-07-06 14:46:33,694 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 14:46:33] "[36mGET /static/js/autofill_cargo.js HTTP/1.1[0m" 304 -
+2026-07-06 14:46:33,699 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 14:46:33] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2026-07-06 14:46:33,709 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 14:46:33] "[36mGET /static/css/shipment.css HTTP/1.1[0m" 304 -
+2026-07-06 14:46:33,713 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 14:46:33] "[36mGET /static/js/shipment_management.js HTTP/1.1[0m" 304 -
+2026-07-06 14:46:33,716 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 14:46:33] "[36mGET /static/js/cargo_handling.js HTTP/1.1[0m" 304 -
+2026-07-06 14:46:33,720 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 14:46:33] "[36mGET /static/js/navbar.js HTTP/1.1[0m" 304 -
+2026-07-06 15:19:11,269 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:11] "GET /api/trader-info?port_code=MDE HTTP/1.1" 200 -
+2026-07-06 15:19:14,392 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:14] "GET /api/trader-info?port_code=NAS HTTP/1.1" 200 -
+2026-07-06 15:19:14,423 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:14] "GET /api/find-routes?from_airport=MDE&to_airport=NAS HTTP/1.1" 200 -
+2026-07-06 15:19:15,713 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:15] "GET /api/find-routes?from_airport=MDE&to_airport=NAS HTTP/1.1" 200 -
+2026-07-06 15:19:15,715 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:15] "GET /api/trader-info?port_code=NAS HTTP/1.1" 200 -
+2026-07-06 15:19:22,803 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:22] "GET /api/return-routes?departure_iata=NAS&aircraft_type=A321F HTTP/1.1" 200 -
+2026-07-06 15:19:22,804 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:22] "GET /api/route-details?route_id=1&arrival_iata=NAS HTTP/1.1" 200 -
+2026-07-06 15:19:25,092 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:19:25] "GET /api/route-details?route_id=2&arrival_iata=MDE HTTP/1.1" 200 -
+2026-07-06 15:20:24,129 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:20:24] "GET /api/airport-details?iata_code=MDE HTTP/1.1" 200 -
+2026-07-06 15:20:24,134 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:20:24] "GET /api/airport-details?iata_code=NAS HTTP/1.1" 200 -
+2026-07-06 15:20:24,219 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:20:24] "GET /api/products-by-country?country_id=CO HTTP/1.1" 200 -
+2026-07-06 15:20:24,244 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:20:24] "GET /api/product_prices?consignee_country_code=BS HTTP/1.1" 200 -
+2026-07-06 15:20:25,255 - werkzeug - INFO - 127.0.0.1 - - [06/Jul/2026 15:20:25] "GET /api/exchange/get_exchange_rate?from_currency=COP&to_currency=USD HTTP/1.1" 200 -

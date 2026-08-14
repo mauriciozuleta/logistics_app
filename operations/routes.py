@@ -387,19 +387,18 @@ def add_route():
             
             print(f"=== DEBUG: Route records created ===")  # Debug log
             for i, route in enumerate(created_routes):
-                print(f"Route {i+1} summary: {route.route_summary}")  # Debug log
                 print(f"Route {i+1} cost: {route.total_cost}")  # Debug log
-            
+
             # Add all route records to database
             for route in created_routes:
                 db.session.add(route)
             print("Committing to database...")  # Debug log
             db.session.commit()
-            
+
             print(f"=== DEBUG: {len(created_routes)} route records saved to database ===")  # Debug log
             for route in created_routes:
-                print(f"Saved route ID={route.id}, Summary={route.route_summary}")  # Debug log
-            
+                print(f"Saved route ID={route.id}")  # Debug log
+
             # Handle AJAX requests
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'success': True, 'message': f'{len(created_routes)} route records saved successfully!'})
@@ -434,9 +433,7 @@ def add_route():
 def view_routes():
     routes = Route.query.order_by(Route.created_at.desc()).all()
     print(f"=== DEBUG: Fetched {len(routes)} routes from database ===")  # Debug log
-    for route in routes:
-        print(f"Route ID: {route.id}, Summary: {route.route_summary}, Cost: {route.total_cost}")  # Debug log
-    return render_template('operations/view_routes.html', 
+    return render_template('operations/view_routes.html',
                          routes=routes,
                          csrf_token=generate_csrf())
 
